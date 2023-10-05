@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for ${PROJECT_NAME}, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -17,14 +17,26 @@ project(${PROJECT_NAME})
 # Headers/Sources
 set(SOURCES
 	
+	#"external/imgui/imgui.cpp"
+	
+	#"external/imgui/backends/imgui_impl_glfw.cpp"
+	
+	#"external/imgui/backends/imgui_impl_vulkan.cpp"
 )
 
+#include_directories(${CMAKE_CURRENT_BINARY_DIR}/external/imgui/)
 
 set(HEADERS
-	
+	#"external/imgui/imgui.h"
+	#"external/imgui/backends/imgui_impl_glfw.h"
+	#"external/imgui/backends/imgui_impl_vulkan.h"
 )
 
-#include_directories(include)
+#TODO: Add another implementation
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui/)
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
+
+#include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 #include_directories(src)
 
 # Add source to this project's executable.
@@ -63,7 +75,18 @@ add_subdirectory(external/glm)
 target_link_libraries(${PROJECT_NAME} glm)
 
 # imgui
-#add_subdirectory(external/imgui)
+#add_library(imgui
+	#"external/imgui/imgui.h"
+	#"external/imgui/imgui.cpp"
+	#"external/imgui/backends/imgui_impl_glfw.h"
+	#"external/imgui/backends/imgui_impl_glfw.cpp"
+	#"external/imgui/backends/imgui_impl_vulkan.h"
+	#"external/imgui/backends/imgui_impl_vulkan.cpp"
+#)
+
+#find_package(imgui REQUIRED)
+
+#add_subdirectory(external/imgui2)
 #target_link_libraries(${PROJECT_NAME} imgui)
 
 # CATCH 2
