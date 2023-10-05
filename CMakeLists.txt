@@ -4,39 +4,50 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Enable Hot Reload for MSVC compilers if supported.
-#if (POLICY CMP0141)
-#  cmake_policy(SET CMP0141 NEW)
-#  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-#endif()
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
 
 
 # Project Name
-set(PROJECT_NAME BladeForge)
+set(PROJECT_NAME "BladeForge")
 project(${PROJECT_NAME})
 
 # Headers/Sources
 set(SOURCES
-	"src/main.cpp" 
+	
 )
 
-include_directories(include)
+
 set(HEADERS
-	"include/BladeForge.h"
+	
 )
 
-
+#include_directories(include)
+#include_directories(src)
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
+	"main.cpp"
+	
 	${SOURCES}
 	${HEADERS}
 )
 
-#if (CMAKE_VERSION VERSION_GREATER 3.12)
-#  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
-#endif()
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+endif()
 
 # External libraries
+
+# Vulkan
+set(ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.261.1")
+find_package(Vulkan REQUIRED)
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
+
 
 # GLFW LIBRARY
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
