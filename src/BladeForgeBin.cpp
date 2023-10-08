@@ -72,6 +72,10 @@ void BladeForge::cleanup()
 
 void BladeForge::createInstance()
 {
+	if (enableValidationLayers)
+	{
+		std::cout << "::DEBUG MODE::" << std::endl;
+	}
 	/* 
 	* Проверяем, доступность всех подключенных слоев:
 	*/
@@ -225,7 +229,7 @@ std::vector<const char*> BladeForge::getRequiredExtensions()
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
 
-	return std::vector<const char*>();
+	return extensions;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL BladeForge::debugCallback(
@@ -235,7 +239,24 @@ VKAPI_ATTR VkBool32 VKAPI_CALL BladeForge::debugCallback(
 	void* pUserData
 ) 
 {
-	std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
+	char* severity_type;
+	switch (messageSeverity)
+	{
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: 
+			severity_type = const_cast<char*>("[INFO]"); break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: 
+			severity_type = const_cast<char*>("[VERB]"); break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+			severity_type = const_cast<char*>("[WARN]"); break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+			severity_type = const_cast<char*>("[WARN]"); break;
+	}
+		
+		
+	
+	
+	std::cerr << severity_type << " Validation layer: " << pCallbackData->pMessage << std::endl;
+
 
 	return VK_FALSE;
 }
@@ -244,6 +265,7 @@ void BladeForge::populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
 {
 	if (!enableValidationLayers) return;
 	
+	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = {
 		//VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |		// Just info (e.g. creation info)
