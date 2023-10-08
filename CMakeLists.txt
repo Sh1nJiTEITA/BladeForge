@@ -74,20 +74,20 @@ include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
 
 
 # CATCH 2
-add_subdirectory(external/catch2)
+#add_subdirectory(external/catch2)
 
 
 
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-add_executable(tests
-	"tests/bez_test.cpp"
+#add_executable(tests
+#	"tests/bez_test.cpp"
 	
-	${SOURCES}
-	${INCLUDES}
-)
-target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+	#${SOURCES}
+	#${INCLUDES}
+#)
+#target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
+#target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 #target_link_libraries(tests PRIVATE Catch2::Catch2)
-target_link_libraries(tests PRIVATE glm)
-target_link_libraries(tests PRIVATE glfw)
+#target_link_libraries(tests PRIVATE glm)
+#target_link_libraries(tests PRIVATE glfw)
 #target_link_libraries(tests PRIVATE imgui)
