@@ -94,6 +94,10 @@ private:
 	*/
 	VkDebugUtilsMessengerEXT debugMessenger;
 
+	/*
+	* Praphics-card Handler
+	*/
+	VkPhysicalDevice physicalDevice;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
@@ -178,7 +182,8 @@ private:
 	);
 
 	void populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-
+	void pickPhysicalDevice();
+	bool isDeviceSuitable(VkPhysicalDevice device);
 };
 
 

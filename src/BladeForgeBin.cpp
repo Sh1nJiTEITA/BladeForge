@@ -12,6 +12,7 @@ void BladeForge::initVulkan()
 {
 	createInstance();
 	setupDebugMessenger();
+	pickPhysicalDevice();
 }
 
 void BladeForge::setupDebugMessenger()
@@ -29,6 +30,51 @@ void BladeForge::setupDebugMessenger()
 	}
 
 }
+
+
+void BladeForge::pickPhysicalDevice()
+{
+	physicalDevice = VK_NULL_HANDLE;
+
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+	// If no GPU's
+	if (deviceCount == 0)
+		throw std::runtime_error("No GPU with Vulkan support detected :/");
+	// Else:
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	
+	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+	// Check devices for suitablity
+	for (const auto& device : devices) {
+		if (isDeviceSuitable(device)) {
+			physicalDevice = device;
+			break;
+		}
+	}
+
+	if (physicalDevice == VK_NULL_HANDLE) {
+		throw std::runtime_error("There are some devices with Vulkan support, but no suitable.");
+	}
+
+}
+
+
+// TODO Device selection
+bool BladeForge::isDeviceSuitable(VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
+	vkGetPhysicalDeviceProperties(device, &properties);
+	vkGetPhysicalDeviceFeatures(device, &features);
+
+
+
+	return true;
+}
+
 
 void BladeForge::initWindow()
 {
@@ -239,7 +285,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL BladeForge::debugCallback(
 	void* pUserData
 ) 
 {
-	char* severity_type;
+	char* severity_type{};
 	switch (messageSeverity)
 	{
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: 
@@ -249,11 +295,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL BladeForge::debugCallback(
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
 			severity_type = const_cast<char*>("[WARN]"); break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-			severity_type = const_cast<char*>("[WARN]"); break;
+			severity_type = const_cast<char*>("[ERR]"); break;
 	}
-		
-		
-	
 	
 	std::cerr << severity_type << " Validation layer: " << pCallbackData->pMessage << std::endl;
 
@@ -281,6 +324,7 @@ void BladeForge::populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
 	createInfo.pfnUserCallback = debugCallback;
 	//createInfo.pUserData = nullptr; // Optional
 }
+
 
 VkResult CreateDebugUtilsMessengerEXT(
 	VkInstance instance, 
