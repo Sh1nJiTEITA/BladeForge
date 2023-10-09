@@ -13,6 +13,7 @@ void BladeForge::initVulkan()
 	createInstance();
 	setupDebugMessenger();
 	pickPhysicalDevice();
+	createLogicalDevice();
 }
 
 void BladeForge::setupDebugMessenger()
@@ -65,14 +66,14 @@ void BladeForge::pickPhysicalDevice()
 // TODO Device selection
 bool BladeForge::isDeviceSuitable(VkPhysicalDevice device)
 {
-	VkPhysicalDeviceProperties properties;
+	/*VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
 	vkGetPhysicalDeviceProperties(device, &properties);
-	vkGetPhysicalDeviceFeatures(device, &features);
+	vkGetPhysicalDeviceFeatures(device, &features);*/
 
+	QueueFamilyIndices indices = findQueueFamilies(device);
 
-
-	return true;
+	return indices.isComplete();
 }
 
 
@@ -110,7 +111,10 @@ void BladeForge::cleanup()
 		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 	}
 	
+	vkDestroyDevice(device, nullptr);
 	vkDestroyInstance(instance, nullptr);
+	
+	
 	glfwDestroyWindow(window);
 	
 	glfwTerminate();
@@ -204,6 +208,80 @@ void BladeForge::createInstance()
 	}
 
 	std::cout << "Vulkan initialization is done." << std::endl;
+}
+
+void BladeForge::createLogicalDevice()
+{
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+	VkDeviceQueueCreateInfo queueCreateInfo{};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+
+	float queuePriority = 1.0f;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+
+	VkPhysicalDeviceFeatures deviceFeatures{};
+
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pEnabledFeatures = &deviceFeatures;
+
+	createInfo.enabledExtensionCount = 0;
+	if (enableValidationLayers) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+	}
+	else {
+		createInfo.enabledLayerCount = 0;
+	}
+
+	if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create logical device.");
+	}
+
+	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+}
+
+QueueFamilyIndices BladeForge::findQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+
+	uint32_t queueFamiliesCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamiliesCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamiliesCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamiliesCount, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies) {
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			indices.graphicsFamily = i;
+		}
+
+		if (indices.isComplete()) {
+			break;
+		}
+
+		i++;
+	}
+	std::cout << "\n";
+	std::cout << "Found chosen physical device properties:\n";
+	std::cout << "minImageTransferGranularity (depth, height, width): ("
+		<< queueFamilies[i].minImageTransferGranularity.depth << ", "
+		<< queueFamilies[i].minImageTransferGranularity.height << ", "
+		<< queueFamilies[i].minImageTransferGranularity.width << ")\n";
+	std::cout << "queueCount: " << queueFamilies[i].queueCount << "\n";
+	std::cout << "queueFlags: " << queueFamilies[i].queueFlags << "\n";
+	std::cout << "timestampValidBits: " << queueFamilies[i].timestampValidBits << "\n";
+
+
+	return indices;
 }
 
 bool BladeForge::checkValidationLayersSupport()

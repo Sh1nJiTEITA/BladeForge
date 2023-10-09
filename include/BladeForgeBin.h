@@ -19,16 +19,13 @@
 
 #include <GLFW/glfw3.h>
 
-// IO-console output
+// STL
 #include <iostream>
 #include <vector>
 #include <cstring>
-
-// Standart exception
-#include <stdexcept>
-
-// Main-function return codes
-#include <cstdlib>
+#include <stdexcept> // Standart exception
+#include <cstdlib> // Main-function return codes
+#include <optional>
 
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {
@@ -42,6 +39,8 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+
+// Creates debug-messenger
 VkResult CreateDebugUtilsMessengerEXT(
 	VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -49,6 +48,7 @@ VkResult CreateDebugUtilsMessengerEXT(
 	VkDebugUtilsMessengerEXT* pDebugMessenger
 );
 
+// Destroys debug-messenger
 void DestroyDebugUtilsMessengerEXT(
 	VkInstance instance, 
 	VkDebugUtilsMessengerEXT debugMessenger, 
@@ -57,13 +57,24 @@ void DestroyDebugUtilsMessengerEXT(
 
 
 
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value();
+	}
+};
+
+
+
+
+
 /*
 * Размеры окна, пока что будут константой.
 */
 const int WWIDTH = 800;
 const int WHEIGHT = 600;
-
-
 
 class BladeForge
 {
@@ -79,71 +90,73 @@ private:
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ VARIABLES ~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/*
-	* Handles window.
-	*/
+	/* Handles window.*/
 	GLFWwindow* window;
 
-	/*
-	* VK-connection handler.
-	*/
+	/* VK-connection handler. */
 	VkInstance instance;
 
-	/*
-	* Debug Messenger.
-	*/
+	/* Debug Messenger. */
 	VkDebugUtilsMessengerEXT debugMessenger;
 
-	/*
-	* Praphics-card Handler
-	*/
+	/* Praphics-card Handler */
 	VkPhysicalDevice physicalDevice;
+
+	/* Logical device */
+	VkDevice device;
+
+	VkQueue graphicsQueue;
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/*
-	* Initialize Vulkan parts.
-	*/
-	void initVulkan();
 
-
-	void setupDebugMessenger();
-
-	/*
-	* Initialize GLFW-window parts.
-	*/
-	void initWindow();
-	
-	/*
-	* Render loop.
-	*/
+// ~~~~~~~~~~ MAINS ~~~~~~~~~~~~~~
+	/* Render loop. */
 	void mainLoop();
-	
-	/*
-	* Terminates applicaion: stops all process and cleans memory.
-	*/
+
+	/* Terminates applicaion: stops all process and cleans memory. */
 	void cleanup();
 
+// ~~~~~~~~~~ SET UP ~~~~~~~~~~~~~
 
-	/*
-	* Создает Instance - связь между приложением и драйверами видеокарты.
-	*/
+	/* Initialize Vulkan parts. */
+	void initVulkan();
+
+	/* ... */
+	void setupDebugMessenger();
+
+	/* Initialize GLFW-window parts. */
+	void initWindow();
+	
+	/* ... */
 	void createInstance();
 
-	/*
-	* Проверка работоспособности слоев
-	*/
+	void createLogicalDevice();
+
+// ~~~~~~~~~ QUEUE FAMALY & PHYSICAL DEVICE ~~~~~
+	/* Finds QueueFamilies supported by device */
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
+	/* Choose graphics card */
+	void pickPhysicalDevice();
+	
+	/* Checks if graphics card is suitable with vk */
+	bool isDeviceSuitable(VkPhysicalDevice device);
+
+
+	// ~~~~~~~~~~ DEBUG HELP ~~~~~~~~~
+	/* Check if debug-layers is supported */
 	bool checkValidationLayersSupport();
 
-	/*
-	* Возвращает список необходмых дополнений основанный на включенных слоях
-	*/
+	/* Provides list of needed extetnsions */
 	std::vector<const char*> getRequiredExtensions();
 
-	/*
-	* Vk-messages printer to console
-	*/
+	/* Messanger-info filler */
+	void populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+
+	/* Vk-messages printer to console */
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		// Строгость сообщения
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -181,18 +194,10 @@ private:
 		void* pUserData
 	);
 
-	void populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void pickPhysicalDevice();
-	bool isDeviceSuitable(VkPhysicalDevice device);
+	
 };
 
 
 
 
-
-
-
-
-
 #endif
-
