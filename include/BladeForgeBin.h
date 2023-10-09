@@ -14,10 +14,12 @@
 #define VULKAN_APP_H
 
 // Vulkan binaries
-#define GLFW_INCLUDE_VULKAN
-//#include <vulkan/vulkan.h>
 
+#define VK_USE_PLATFORM_WIN32_KHR
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include "GLFW/glfw3native.h"
 
 // STL
 #include <iostream>
@@ -26,6 +28,7 @@
 #include <stdexcept> // Standart exception
 #include <cstdlib> // Main-function return codes
 #include <optional>
+#include <set> // For queues
 
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {
@@ -60,9 +63,10 @@ void DestroyDebugUtilsMessengerEXT(
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
 
 	bool isComplete() {
-		return graphicsFamily.has_value();
+		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
 };
 
@@ -105,8 +109,11 @@ private:
 	/* Logical device */
 	VkDevice device;
 
+	/* Queues */
 	VkQueue graphicsQueue;
+	VkQueue presentQueue;
 
+	VkSurfaceKHR surface;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
@@ -134,6 +141,8 @@ private:
 	void createInstance();
 
 	void createLogicalDevice();
+
+	void createSurface();
 
 // ~~~~~~~~~ QUEUE FAMALY & PHYSICAL DEVICE ~~~~~
 	/* Finds QueueFamilies supported by device */
