@@ -5,6 +5,11 @@ cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
 include_directories(include)
 #include_directories(src)
+add_custom_target(shader_dir 
+	ALL
+	COMMAND ${CMAKE_COMMAND} 
+	-E make_directory ${directory}
+)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -66,9 +71,12 @@ endif()
 
 
 # Copies allShaderFiles to binary.
+
+
+
 file(GLOB SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.spv)
 foreach(shaderi ${SHADERS})
-	configure_file(${shaderi} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+	configure_file(${shaderi} ${CMAKE_CURRENT_BINARY_DIR}/shaders/ COPYONLY)
 	message("-- [SHADER-COPY] File ${shaderi} is copied to binary dir.")
 endforeach()
 

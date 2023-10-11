@@ -424,7 +424,7 @@ void BladeForge::createSwapChain()
 	createInfo.surface = surface;
 
 	createInfo.minImageCount = imageCount;
-	
+	createInfo.imageFormat = surfaceFormat.format;
 	createInfo.imageColorSpace = surfaceFormat.colorSpace;
 	
 	createInfo.imageExtent = extent;
@@ -491,7 +491,7 @@ void BladeForge::createImageViews()
 
 		// What image for?
 		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 1;
+		createInfo.subresourceRange.baseMipLevel = 0;
 		createInfo.subresourceRange.levelCount = 1;
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
@@ -506,7 +506,8 @@ void BladeForge::createImageViews()
 
 void BladeForge::createGraphicsPipeline()
 {
-
+	auto vertShaderCode = readFile("shader/vert.spv");
+	auto fragShaderCode = readFile("shader/frag.spv");
 }
 
 QueueFamilyIndices BladeForge::findQueueFamilies(VkPhysicalDevice device)
@@ -695,5 +696,31 @@ void DestroyDebugUtilsMessengerEXT(
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		func(instance, debugMessenger, pAllocator);
+	}
+}
+
+std::vector<char> readFile(const std::string& filename)
+{
+	std::ifstream file(
+		// FILE-name
+		filename, 
+		// Modes
+			std::ios::ate |  // Read from the end
+			std::ios::binary // Read file as binary (avoid text transformations)
+	);
+
+	if (!file.is_open()) {
+		std::stringstream ss;
+		ss << "Failed to open file " << filename;
+		throw std::runtime_error(ss.str());
+	}
+	else {
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<char> buffer(fileSize);
+
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+		file.close();
+		return buffer;
 	}
 }

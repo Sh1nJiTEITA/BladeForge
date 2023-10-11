@@ -34,7 +34,8 @@
 #include <string> // Device Extensions
 #include <limits>
 #include <algorithm>
-
+#include <fstream> // Read shaderfiles
+#include <sstream>
 
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {
@@ -70,6 +71,10 @@ void DestroyDebugUtilsMessengerEXT(
 	VkDebugUtilsMessengerEXT debugMessenger, 
 	const VkAllocationCallbacks* pAllocator
 );
+
+
+
+std::vector<char> readFile(const std::string& filename);
 
 
 struct SwapChainSupportDetails {
