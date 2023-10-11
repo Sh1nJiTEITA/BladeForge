@@ -12,10 +12,37 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# VULKAN PATH
+set(VULKAN_DIR
+	"C:/VulkanSDK/1.3.261.1"
+)
+
+
+
+
+
 
 # Project Name
 set(PROJECT_NAME "BladeForge")
 project(${PROJECT_NAME})
+
+# Shaders (PRE-BUILD) 
+# Shader files must be compiled from GLSL to SPIR-V before build is done.
+if (WIN32)
+	execute_process(
+		COMMAND cmd /C ${CMAKE_SOURCE_DIR}/compile.bat
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+		RESULT_VARIABLE command_result
+		OUTPUT_VARIABLE command_output
+	)
+	if (command_result EQUAL 0)
+		message(STATUS "All shaders is correctly compiled.")
+	else()
+		message(STATUS "Shader compile failed with error code: ${command_result}")
+		message(STATUS "Shader output: ${command_output}")
+	endif()
+endif()
+
 
 # Headers/Sources
 set(SOURCES
@@ -26,6 +53,7 @@ set(SOURCES
 set(HEADERS
 	"include/BladeForgeBin.h"	
 )
+
 
 
 
@@ -42,6 +70,42 @@ add_executable(${PROJECT_NAME}
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
+
+
+
+# Shaders
+
+
+
+#if (WIN32)
+#add_custom_command(
+	#TARGET ${PROJECT_NAME}
+	#PRE_BUILD
+	#COMMAND cmd /C #"C:/VulkanSDK/1.3.261.1/Bin/glslc.exe basic.vert -o vert.spv"# &&
+	 #C:/VulkanSDK/1.3.261.1/Bin/glslc.exe basic.frag -o frag.spv"
+	#${CMAKE_SOURCE_DIR}/compile.bat
+	#WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/shaders/
+#)
+#message("-- Shaders-compile was done.")
+#endif()
+
+
+
+
+
+
+#ADD_CUSTOM_TARGET(
+#    compile_shaders
+#    COMMAND cmd /c C:/prog/repos/cpppp/Some/BladeForge/compile.bat
+#)
+
+#ADD_DEPENDENCIES(compile_shaders ${SOURCES})
+
+file(GLOB SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*)
+foreach(shaderi ${SHADERS})
+configure_file(${shaderi} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+endforeach()
+
 
 ### External libraries ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -12,7 +12,7 @@
 
 #ifndef VULKAN_APP_H
 #define VULKAN_APP_H
-
+//#undef max
 // Vulkan binaries
 
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -20,6 +20,8 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
+
+
 
 // STL
 #include <iostream>
@@ -29,11 +31,22 @@
 #include <cstdlib> // Main-function return codes
 #include <optional>
 #include <set> // For queues
+#include <string> // Device Extensions
+#include <limits>
+#include <algorithm>
+
 
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
 };
+
+// Store device extensions
+const std::vector<const char*> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	//GL_KHR_vulkan_glsl
+};
+
 
 // Enable additional debug info.
 #ifdef NDEBUG
@@ -58,6 +71,15 @@ void DestroyDebugUtilsMessengerEXT(
 	const VkAllocationCallbacks* pAllocator
 );
 
+
+struct SwapChainSupportDetails {
+	// min/max number of images, min/max width height of images
+	VkSurfaceCapabilitiesKHR capabilities;
+	// Support formats: pixel/color space
+	std::vector<VkSurfaceFormatKHR> formats;
+	// ???
+	std::vector<VkPresentModeKHR> presentModes;
+};
 
 
 
@@ -115,6 +137,14 @@ private:
 
 	VkSurfaceKHR surface;
 
+	VkSwapchainKHR swapChain;
+	std::vector<VkImage> swapChainImages;
+	VkFormat swapChainImageFormat;
+	VkExtent2D swapChainExtent;
+
+	std::vector<VkImageView> swapChainImageViews;
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,6 +173,17 @@ private:
 	void createLogicalDevice();
 
 	void createSurface();
+// ~~~~~~~~~ RENDERING (SWAP-CHAIN) ~~~~~~~~~~~~~
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	void createSwapChain();
+	void createImageViews();
+
+// ~~~~~~~~~ GRAPHICS PIPELINE ~~~~~~~~~~~~~~~~~~
+	void createGraphicsPipeline();
 
 // ~~~~~~~~~ QUEUE FAMALY & PHYSICAL DEVICE ~~~~~
 	/* Finds QueueFamilies supported by device */
