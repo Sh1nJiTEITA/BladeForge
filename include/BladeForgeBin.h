@@ -149,6 +149,8 @@ private:
 
 	std::vector<VkImageView> swapChainImageViews;
 
+	VkPipelineLayout pipelineLayout;
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
@@ -178,7 +180,7 @@ private:
 	void createLogicalDevice();
 
 	void createSurface();
-// ~~~~~~~~~ RENDERING (SWAP-CHAIN) ~~~~~~~~~~~~~
+// ~~~~~~~~~ SWAP-CHAIN ~~~~~~~~~~~~~~~~~~~~~~~~~
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -186,9 +188,14 @@ private:
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	void createSwapChain();
 	void createImageViews();
+// ~~~~~~~~~ RenderPass ~~~~~~~~~~~~~~~~~~~~~~~~~
+	void createRenderPass();
+
 
 // ~~~~~~~~~ GRAPHICS PIPELINE ~~~~~~~~~~~~~~~~~~
 	void createGraphicsPipeline();
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+
 
 // ~~~~~~~~~ QUEUE FAMALY & PHYSICAL DEVICE ~~~~~
 	/* Finds QueueFamilies supported by device */
