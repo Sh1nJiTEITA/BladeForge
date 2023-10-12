@@ -149,8 +149,10 @@ private:
 
 	std::vector<VkImageView> swapChainImageViews;
 
+	// Pipeline / RenderPass / Subpass
+	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
-
+	VkPipeline graphicsPipeline;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~
