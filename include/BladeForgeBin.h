@@ -37,6 +37,20 @@
 #include <fstream> // Read shaderfiles
 #include <sstream>
 
+// cocal
+#include "bfVertex.h"
+
+const std::vector<bfVertex> vertices = {
+	{{0.0f, -0.5f}, {1.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 0.0f, 0.5f}},
+	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+
+	{{-0.7f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{-0.2f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{-0.5f, -0.1f}, {0.0f, 1.0f, 1.0f}},
+};
+
+
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
@@ -124,7 +138,7 @@ private:
 // ~~~~~~~~~~ VARIABLES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/* Handles window.*/
-	GLFWwindow* window;
+	GLFWwindow*	window;
 
 	/* VK-connection handler. */
 	VkInstance instance;
@@ -139,34 +153,38 @@ private:
 	VkDevice device;
 
 	/* Queues */
-	VkQueue graphicsQueue;
+	VkQueue	graphicsQueue;
 	VkQueue presentQueue;
 
 	VkSurfaceKHR surface;
 
-	VkSwapchainKHR swapChain;
+	VkSwapchainKHR		 swapChain;
 	std::vector<VkImage> swapChainImages;
-	VkFormat swapChainImageFormat;
-	VkExtent2D swapChainExtent;
+	VkFormat			 swapChainImageFormat;
+	VkExtent2D			 swapChainExtent;
 
 	std::vector<VkImageView> swapChainImageViews;
 
 	// Pipeline / RenderPass / Subpass
-	VkRenderPass renderPass;
+	VkRenderPass	 renderPass;
 	VkPipelineLayout pipelineLayout;
-	VkPipeline graphicsPipeline;
+	VkPipeline		 graphicsPipeline;
 
 	// Framebuffers
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
+	// FrameBuffers
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+
 	// Command pools
-	VkCommandPool commandPool;
+	VkCommandPool				 commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
 
 	// SYNCHRONIZATION 
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
-	std::vector<VkFence> inFlightFences;
+	std::vector<VkFence>	 inFlightFences;
 	bool frameBufferResized = false;
 
 
@@ -218,6 +236,10 @@ private:
 	void createGraphicsPipeline();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
+// ~~~~~~~~~ VERTEX BUFFERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	void createVertexbuffers();
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
 
 // ~~~~~~~~~ FrameBuffers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createFramebuffers();
@@ -234,7 +256,7 @@ private:
 // ~~~~~~~~~ SYNCHRONIZATION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createSyncObjects();
 
-// ~~~~~~~~~ QUEUE FAMALY & PHYSICAL DEVICE ~~~~~
+// ~~~~~~~~~ QUEUE FAMALY & PHYSICAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/* Finds QueueFamilies supported by device */
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 

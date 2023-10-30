@@ -46,17 +46,19 @@ endif()
 # Headers/Sources
 set(SOURCES
 	"src/BladeForgeBin.cpp"
+	"src/bfVertex.cpp"
 )
 
 set(HEADERS
 	"include/BladeForgeBin.h"	
+	"include/bfVertex.h"
 )
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
 	"main.cpp"
-	"include/BladeForgeBin.h"
-	"src/BladeForgeBin.cpp"
+	#"include/BladeForgeBin.h"
+	#"src/BladeForgeBin.cpp"
 	${SOURCES}
 	${HEADERS}
 )
