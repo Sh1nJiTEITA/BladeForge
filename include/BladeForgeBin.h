@@ -167,6 +167,7 @@ private:
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
 	std::vector<VkFence> inFlightFences;
+	bool frameBufferResized = false;
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -190,6 +191,7 @@ private:
 
 	/* Initialize GLFW-window parts. */
 	void initWindow();
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	
 	/* ... */
 	void createInstance();
@@ -205,6 +207,9 @@ private:
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	void createSwapChain();
 	void createImageViews();
+	void recreateSwapChain();
+	void cleanupSwapChain();
+
 // ~~~~~~~~~ RenderPass ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createRenderPass();
 
