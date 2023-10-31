@@ -40,15 +40,53 @@
 // cocal
 #include "bfVertex.h"
 
-const std::vector<bfVertex> vertices = {
-	{{0.0f, -0.5f}, {1.0f, 1.0f, 0.0f}},
-	{{0.5f, 0.5f}, {0.0f, 0.0f, 0.5f}},
-	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+//const std::vector<bfVertex> vertices = {
+//	{{0.0f, -0.5f}, {1.0f, 1.0f, 0.0f}},
+//	{{0.5f, 0.5f}, {0.0f, 0.0f, 0.5f}},
+//	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+//};
 
-	{{-0.7f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{{-0.2f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.5f, -0.1f}, {0.0f, 1.0f, 1.0f}},
+const std::vector<bfVertex> vertices = {
+	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 };
+
+const std::vector<uint16_t> indices = {
+	0, 1, 2, 2, 3, 0
+};
+
+//const std::vector<bfVertex> vertices2 = {
+//	{{-0.7f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+//	{{-0.2f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+//	{{-0.5f, -0.1f}, {0.0f, 1.0f, 1.0f}},
+//};
+
+//const std::vector<bfVertex> vertices = {
+//	{{0.0, 0.0}, {1.0, 1.0, 1.0}},
+//	{{0.05, 0.2}, {1.0, 1.0, 1.0}},
+//	{{0.1, -0.3}, {1.0, 1.0, 1.0}},
+//	{{0.15, 0.1}, {1.0, 1.0, 1.0}},
+//	{{0.2, 0.4}, {1.0, 1.0, 1.0}},
+//	{{0.25, -0.2}, {1.0, 1.0, 1.0}},
+//	{{0.3, 0.0}, {1.0, 1.0, 1.0}},
+//	{{0.35, 0.2}, {1.0, 1.0, 1.0}},
+//	{{0.4, -0.4}, {1.0, 1.0, 1.0}},
+//	{{0.45, -0.1}, {1.0, 1.0, 1.0}},
+//	{{0.5, 0.3}, {1.0, 1.0, 1.0}},
+//	{{0.55, 0.1}, {1.0, 1.0, 1.0}},
+//	{{0.6, 0.2}, {1.0, 1.0, 1.0}},
+//	{{0.65, -0.3}, {1.0, 1.0, 1.0}},
+//	{{0.7, -0.1}, {1.0, 1.0, 1.0}},
+//	{{0.75, 0.2}, {1.0, 1.0, 1.0}},
+//	{{0.8, 0.4}, {1.0, 1.0, 1.0}},
+//	{{0.85, -0.2}, {1.0, 1.0, 1.0}},
+//	{{0.9, 0.1}, {1.0, 1.0, 1.0}},
+//	{{0.95, -0.3}, {1.0, 1.0, 1.0}},
+//	{{1.0, 0.0}, {1.0, 1.0, 1.0}}
+//};
+
 
 
 // Store validation layers here:
@@ -176,6 +214,9 @@ private:
 	// FrameBuffers
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+
 
 	// Command pools
 	VkCommandPool				 commandPool;
@@ -237,14 +278,22 @@ private:
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
 // ~~~~~~~~~ VERTEX BUFFERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	void createVertexbuffers();
-	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void createVertexbuffer();
+	void createIndexBuffer();
 
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void createBuffer(VkDeviceSize size, 
+					  VkBufferUsageFlags usage, 
+					  VkMemoryPropertyFlags properties, 
+					  VkBuffer& buffer, 
+					  VkDeviceMemory& bufferMemory);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 // ~~~~~~~~~ FrameBuffers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createFramebuffers();
 
 // ~~~~~~~~~ COMMANDS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	
 	void createCommandPool();
 	void createCommandBuffers();
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);

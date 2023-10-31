@@ -84,7 +84,7 @@ endforeach()
 # Vulkan
 set(ENV{VULKAN_SDK} ${VULKAN_DIR})
 find_package(Vulkan REQUIRED)
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+#target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${VULKAN_DIR}/Include")
 
@@ -97,17 +97,22 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(external/glfw)
-target_link_libraries(${PROJECT_NAME} glfw)
+#target_link_libraries(${PROJECT_NAME} glfw)
 
 # GLM
+set(IMGUI_IMPL_VULKAN ON CACHE BOOL "" FORCE)
+
 add_subdirectory(external/glm)
-target_link_libraries(${PROJECT_NAME} glm)
+#target_link_libraries(${PROJECT_NAME} glm)
 
 # imgui
 #TODO: Add another implementation
-set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui/)
-include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
+#set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui/)
+#include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
+#set(imgui-glfw imglfw CACHE STRING "" FORCE)
 
+add_subdirectory(external/imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 
 # CATCH 2
 add_subdirectory(external/catch2)
