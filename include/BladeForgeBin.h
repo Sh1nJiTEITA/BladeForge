@@ -21,6 +21,10 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 
 // STL
@@ -36,6 +40,7 @@
 #include <algorithm>
 #include <fstream> // Read shaderfiles
 #include <sstream>
+#include <chrono> // For time-stop rotation
 
 // cocal
 #include "bfVertex.h"
@@ -152,7 +157,11 @@ struct QueueFamilyIndices {
 };
 
 
-
+struct UniformBufferObject {
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
 
 
 /*
@@ -208,6 +217,12 @@ private:
 	VkPipelineLayout pipelineLayout;
 	VkPipeline		 graphicsPipeline;
 
+	// Uniforms
+	VkDescriptorSetLayout descriptorSetLayout;
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<void*> uniformBuffersMapped;
+
 	// Framebuffers
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
@@ -216,6 +231,7 @@ private:
 	VkDeviceMemory vertexBufferMemory;
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
+	
 
 
 	// Command pools
@@ -277,6 +293,11 @@ private:
 	void createGraphicsPipeline();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
+// ~~~~~~~~~ UNIFORMS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	void createDescriptorSetLayout();
+	void createUniformBuffers();
+	void updateUniformBuffer(uint32_t currentImage);
+
 // ~~~~~~~~~ VERTEX BUFFERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createVertexbuffer();
 	void createIndexBuffer();
@@ -316,7 +337,7 @@ private:
 	bool isDeviceSuitable(VkPhysicalDevice device);
 
 
-	// ~~~~~~~~~~ DEBUG HELP ~~~~~~~~~
+// ~~~~~~~~~~ DEBUG HELP ~~~~~~~~~
 	/* Check if debug-layers is supported */
 	bool checkValidationLayersSupport();
 
