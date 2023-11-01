@@ -22,6 +22,7 @@
 #include "GLFW/glfw3native.h"
 
 #define GLM_FORCE_RADIANS
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -158,9 +159,9 @@ struct QueueFamilyIndices {
 
 
 struct UniformBufferObject {
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
 };
 
 
@@ -218,7 +219,10 @@ private:
 	VkPipeline		 graphicsPipeline;
 
 	// Uniforms
+	VkDescriptorPool descriptorPool;
 	VkDescriptorSetLayout descriptorSetLayout;
+
+	std::vector<VkDescriptorSet> descriptorSets;
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 	std::vector<void*> uniformBuffersMapped;
@@ -295,8 +299,11 @@ private:
 
 // ~~~~~~~~~ UNIFORMS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createDescriptorSetLayout();
+	void createDescriptorPool();
+	void createDescriptorSets();
 	void createUniformBuffers();
 	void updateUniformBuffer(uint32_t currentImage);
+
 
 // ~~~~~~~~~ VERTEX BUFFERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void createVertexbuffer();
