@@ -117,25 +117,27 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 # CATCH 2
 add_subdirectory(external/catch2)
 #find_package(catch2)
-add_executable(tests ${CMAKE_SOURCE_DIR}/tests/bez_test.cpp)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+#add_executable(tests ${CMAKE_SOURCE_DIR}/tests/bez_test.cpp)
+
 
 #target_link_libraries(${PROJECT_NAME} catch2)
 
 
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#add_executable(tests
-#	"tests/bez_test.cpp"
-	
+add_executable(tests
+	#"tests/bez_test.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
 	#${SOURCES}
 	#${INCLUDES}
-#)
+)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
-find_package(Vulkan REQUIRED)
-target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES})
+#find_package(Vulkan REQUIRED)
+#target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES})
+target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
 target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
 
 
 target_link_libraries(tests PRIVATE glm)
-target_link_libraries(tests PRIVATE glfw)
+#target_link_libraries(tests PRIVATE glfw)
 #target_link_libraries(tests PRIVATE imgui)

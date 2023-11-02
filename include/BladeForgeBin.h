@@ -15,6 +15,9 @@
 //#undef max
 // Vulkan binaries
 
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -92,7 +95,14 @@ const std::vector<uint16_t> indices = {
 //	{{0.95, -0.3}, {1.0, 1.0, 1.0}},
 //	{{1.0, 0.0}, {1.0, 1.0, 1.0}}
 //};
-
+static void check_vk_result(VkResult err)
+{
+	if (err == 0)
+		return;
+	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+	if (err < 0)
+		abort();
+};
 
 
 // Store validation layers here:
@@ -229,6 +239,7 @@ private:
 
 	// Framebuffers
 	std::vector<VkFramebuffer> swapChainFramebuffers;
+	std::vector<VkFramebuffer> ImGUIFrameBuffers;
 
 	// FrameBuffers
 	VkBuffer vertexBuffer;
@@ -241,6 +252,8 @@ private:
 	// Command pools
 	VkCommandPool				 commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
+	std::vector<VkCommandBuffer> ImGUIcommandBuffers;
+
 
 	// SYNCHRONIZATION 
 	std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -248,6 +261,11 @@ private:
 	std::vector<VkFence>	 inFlightFences;
 	bool frameBufferResized = false;
 
+	// ImGUI
+	
+	VkRenderPass imGuiRenderPass;
+	uint32_t minImageCount;
+	VkDescriptorPool imGuiDescriptorPool;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~ METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -270,6 +288,15 @@ private:
 
 	/* Initialize GLFW-window parts. */
 	void initWindow();
+
+	/* IMGUI */
+	void initImGUI();
+	void createImGUIRenderPass();
+	void createImGUIDescriptorPool();
+	void createImGUICommandBuffers();
+	void createImGUIFrameBuffers();
+
+
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 	
 	/* ... */
@@ -278,6 +305,9 @@ private:
 	void createLogicalDevice();
 
 	void createSurface();
+
+	VkCommandBuffer beginSingleTimeCommands();
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 // ~~~~~~~~~ SWAP-CHAIN ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
@@ -324,7 +354,7 @@ private:
 	
 	void createCommandPool();
 	void createCommandBuffers();
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBuffer ImGUICommandBuffer, uint32_t imageIndex);
 
 // ~~~~~~~~~ DRAW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void drawFrame();

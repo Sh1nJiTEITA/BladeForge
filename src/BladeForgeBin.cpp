@@ -4,6 +4,7 @@ void BladeForge::run()
 {
 	initWindow();
 	initVulkan();
+	initImGUI();
 	mainLoop();
 	cleanup();
 }
@@ -12,16 +13,20 @@ void BladeForge::run()
 void BladeForge::initVulkan()
 {
 	createInstance();
-	setupDebugMessenger();
+ 	setupDebugMessenger();
 	createSurface();
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
+	createImGUIRenderPass();
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
+
 	createFramebuffers();
+	createImGUIFrameBuffers();
+
 	createCommandPool();
 	createVertexbuffer();
 	createIndexBuffer();
@@ -29,6 +34,7 @@ void BladeForge::initVulkan()
 	createDescriptorPool();
 	createDescriptorSets();
 	createCommandBuffers();
+	createImGUICommandBuffers();
 	createSyncObjects();
 }
 
@@ -123,10 +129,165 @@ void BladeForge::initWindow()
 	
 }
 
+void BladeForge::initImGUI()
+{
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer bindings
+	ImGui_ImplGlfw_InitForVulkan(window, true);
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = instance;
+	init_info.PhysicalDevice = physicalDevice;
+	init_info.Device = device;
+
+	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+	init_info.QueueFamily = queueFamilyIndices.graphicsFamily.value();
+	
+	init_info.Queue = graphicsQueue;
+	init_info.PipelineCache = VK_NULL_HANDLE;
+
+	createImGUIDescriptorPool();
+
+	init_info.DescriptorPool = imGuiDescriptorPool;
+	init_info.Allocator = nullptr;
+
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+
+	if (
+		swapChainSupport.capabilities.maxImageCount > 0
+		&& imageCount > swapChainSupport.capabilities.maxImageCount
+		) {
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+
+
+	init_info.MinImageCount = imageCount;
+
+	this->minImageCount = imageCount;
+
+	init_info.ImageCount = imageCount;
+	init_info.CheckVkResultFn = check_vk_result;
+
+
+	ImGui_ImplVulkan_Init(&init_info, imGuiRenderPass);
+
+	VkCommandBuffer command_buffer = beginSingleTimeCommands();
+	ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+	endSingleTimeCommands(command_buffer);
+}
+
+void BladeForge::createImGUIRenderPass()
+{
+	VkAttachmentDescription attachment = {};
+	attachment.format = swapChainImageFormat;
+	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference color_attachment = {};
+	color_attachment.attachment = 0;
+	color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass = {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &color_attachment;
+
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;  // or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkRenderPassCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	info.attachmentCount = 1;
+	info.pAttachments = &attachment;
+	info.subpassCount = 1;
+	info.pSubpasses = &subpass;
+	info.dependencyCount = 1;
+	info.pDependencies = &dependency;
+
+	if (vkCreateRenderPass(device, &info, nullptr, &imGuiRenderPass) != VK_SUCCESS) {
+		throw std::runtime_error("Could not create Dear ImGui's render pass");
+	}
+}
+
 void BladeForge::framebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
 	auto app = reinterpret_cast<BladeForge*>(glfwGetWindowUserPointer(window));
 	app->frameBufferResized = true;
+}
+
+void BladeForge::createImGUIDescriptorPool()
+{
+	VkDescriptorPoolSize pool_sizes[] =
+	{
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+	};
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+	pool_info.pPoolSizes = pool_sizes;
+	if (vkCreateDescriptorPool(device, &pool_info, nullptr, &imGuiDescriptorPool) != VK_SUCCESS) {
+		throw std::runtime_error("ImGUI descriptor pool wasn't created");
+	}
+}
+
+void BladeForge::createImGUICommandBuffers()
+{	
+	ImGUIcommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = static_cast<uint32_t>(ImGUIcommandBuffers.size());
+
+	if (vkAllocateCommandBuffers(device, &allocInfo, ImGUIcommandBuffers.data()) != VK_SUCCESS) {
+		throw std::runtime_error("ImGUI Command buffer was not allocated");
+	}
+}
+
+void BladeForge::createImGUIFrameBuffers()
+{
+	ImGUIFrameBuffers.resize(this->swapChainImageViews.size());
+	VkImageView attachment[1];
+	
+	VkFramebufferCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	info.renderPass = imGuiRenderPass;
+	info.attachmentCount = 1;
+	info.pAttachments = attachment;
+	info.width = swapChainExtent.width;
+	info.height = swapChainExtent.height;
+	info.layers = 1;
+
+	for (uint32_t i = 0; i < swapChainImageViews.size(); i++)
+	{
+		attachment[0] = swapChainImageViews[i];
+
+		if (vkCreateFramebuffer(device, &info, nullptr, &ImGUIFrameBuffers[i]) != VK_SUCCESS) {
+			throw std::runtime_error("ImGUI Framebuffer wasn't created");
+		}
+	}
 }
 
 void BladeForge::mainLoop()
@@ -135,6 +296,13 @@ void BladeForge::mainLoop()
 	while (!glfwWindowShouldClose(this->window))
 	{
 		glfwPollEvents();
+		
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
+		ImGui::Render();
+		
 		drawFrame();
 	}
 
@@ -143,6 +311,10 @@ void BladeForge::mainLoop()
 
 void BladeForge::cleanup()
 {
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	cleanupSwapChain();
 	
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -150,6 +322,7 @@ void BladeForge::cleanup()
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
 
+	vkDestroyDescriptorPool(device, imGuiDescriptorPool, nullptr);
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
@@ -162,14 +335,15 @@ void BladeForge::cleanup()
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);	
 
+	vkDestroyRenderPass(device, imGuiRenderPass, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
 	
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
 		vkDestroyFence(device, inFlightFences[i], nullptr);
 	}
-
 
 	vkDestroyCommandPool(device, commandPool, nullptr);
 	vkDestroyDevice(device, nullptr);
@@ -342,6 +516,41 @@ void BladeForge::createSurface()
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create window surface!");
 	}
+}
+
+VkCommandBuffer BladeForge::beginSingleTimeCommands()
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = commandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	return commandBuffer;
+}
+
+void BladeForge::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(graphicsQueue);
+
+	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
 bool BladeForge::checkDeviceExtensionSupport(VkPhysicalDevice device)
@@ -559,6 +768,8 @@ void BladeForge::recreateSwapChain()
 		glfwWaitEvents();
 	}
 
+	ImGui_ImplVulkan_SetMinImageCount(this->minImageCount);
+
 	vkDeviceWaitIdle(device);
 	
 	cleanupSwapChain();
@@ -566,6 +777,7 @@ void BladeForge::recreateSwapChain()
 	createSwapChain();
 	createImageViews();
 	createFramebuffers();
+	createImGUIFrameBuffers();
 }
 
 void BladeForge::cleanupSwapChain()
@@ -573,9 +785,13 @@ void BladeForge::cleanupSwapChain()
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
 	}
+	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+		vkDestroyFramebuffer(device, ImGUIFrameBuffers[i], nullptr);
+	}
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
 		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
 	}
+
 	
 	vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
@@ -590,7 +806,8 @@ void BladeForge::createRenderPass()
 	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		//VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 	// What image/buffer to use?
 	VkAttachmentReference colorAttachmentRef{};
@@ -1141,11 +1358,19 @@ void BladeForge::createCommandBuffers()
 	}
 }
 
-void BladeForge::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void BladeForge::recordCommandBuffer(
+	VkCommandBuffer commandBuffer,
+	VkCommandBuffer ImGUICommandBuffer,
+	uint32_t imageIndex)
 {
+	/*if (vkResetCommandPool(device, commandPool, 0) != VK_SUCCESS) {
+		throw std::runtime_error("command pool wasn't reseted");
+	};*/
+	
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0;
+	//beginInfo.flags = 0;
+	beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	beginInfo.pInheritanceInfo = nullptr;
 
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
@@ -1204,8 +1429,30 @@ void BladeForge::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recoding command buffer");
+	}
+
+	// IMGUI
+	if (vkBeginCommandBuffer(ImGUICommandBuffer, &beginInfo) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recoding command buffer");
+	}
+
+	VkRenderPassBeginInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	info.renderPass = imGuiRenderPass;
+	info.framebuffer = ImGUIFrameBuffers[imageIndex];
+	info.renderArea.extent = swapChainExtent;
+	info.clearValueCount = 1;
+	info.pClearValues = &clearColor;
+
+	vkCmdBeginRenderPass(ImGUICommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), ImGUICommandBuffer);
+	vkCmdEndRenderPass(ImGUICommandBuffer);
+
+	if (vkEndCommandBuffer(ImGUICommandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");
 	}
+
 }
 
 void BladeForge::drawFrame()
@@ -1224,6 +1471,7 @@ void BladeForge::drawFrame()
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		recreateSwapChain();
+
 		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -1235,7 +1483,7 @@ void BladeForge::drawFrame()
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-	recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+	recordCommandBuffer(commandBuffers[currentFrame], ImGUIcommandBuffers[currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1246,8 +1494,12 @@ void BladeForge::drawFrame()
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+	std::array<VkCommandBuffer, 2> submitCommandBuffers = {
+		commandBuffers[currentFrame], ImGUIcommandBuffers[currentFrame]
+	};
+
+	submitInfo.pCommandBuffers = submitCommandBuffers.data();
+	submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
 
 	VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
 	submitInfo.signalSemaphoreCount = 1;
@@ -1273,6 +1525,7 @@ void BladeForge::drawFrame()
 		result == VK_SUBOPTIMAL_KHR	|| 
 		frameBufferResized) 
 	{
+		ImGui_ImplVulkan_SetMinImageCount(minImageCount);
 		recreateSwapChain();
 	}
 	else if (result != VK_SUCCESS) {
