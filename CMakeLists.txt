@@ -47,12 +47,17 @@ endif()
 set(SOURCES
 	"src/BladeForgeBin.cpp"
 	"src/bfVertex.cpp"
-)
+	"src/bfBase.cpp"
+	"src/bfEvent.cpp" 
+	"src/bfWindow.cpp")
 
 set(HEADERS
 	"include/BladeForgeBin.h"	
 	"include/bfVertex.h"
-)
+	"include/bfBase.h"
+	"include/bfVariative.hpp"
+	"include/bfEvent.h" 
+	"include/bfWindow.h")
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -125,6 +130,15 @@ add_subdirectory(external/catch2)
 
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
+	"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
+	"${CMAKE_SOURCE_DIR}/include/bfBase.h"
+	"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
+	"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
+	"${CMAKE_SOURCE_DIR}/include/bfVariative.hpp"
+	"${CMAKE_SOURCE_DIR}/src/bfBase.cpp"
+	
+	"${CMAKE_SOURCE_DIR}/include/bfWindow.h"
+	"${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
 	#"tests/bez_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
 	#${SOURCES}

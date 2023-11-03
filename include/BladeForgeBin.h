@@ -146,6 +146,12 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 std::vector<char> readFile(const std::string& filename);
 
+static glm::vec3 test_scale = glm::vec3(1.0f, 1.0f, 1.0f);
+static bool isRotating = false;
+
+
+
+
 
 struct SwapChainSupportDetails {
 	// min/max number of images, min/max width height of images
