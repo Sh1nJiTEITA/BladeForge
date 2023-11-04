@@ -45,25 +45,34 @@ endif()
 
 # Headers/Sources
 set(SOURCES
-	"src/BladeForgeBin.cpp"
+	#"src/BladeForgeBin.cpp"
 	"src/bfVertex.cpp"
 	"src/bfBase.cpp"
 	"src/bfEvent.cpp" 
-	"src/bfWindow.cpp")
+	"src/bfWindow.cpp" 
+	"src/bfPhysicalDevice.cpp"
+	"src/bfSwapChain.cpp"
+	"src/bfConsole.cpp"
+)
 
 set(HEADERS
-	"include/BladeForgeBin.h"	
+	#"include/BladeForgeBin.h"	
+	"include/bfVariative.hpp"
+
 	"include/bfVertex.h"
 	"include/bfBase.h"
-	"include/bfVariative.hpp"
 	"include/bfEvent.h" 
-	"include/bfWindow.h")
+	"include/bfWindow.h"
+	"include/bfPhysicalDevice.h"
+	"include/bfSwapChain.h"
+	"include/bfConsole.h"
+)
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
 	"main.cpp"
-	#"include/BladeForgeBin.h"
-	#"src/BladeForgeBin.cpp"
+	"include/BladeForgeBin.h"
+	"src/BladeForgeBin.cpp"
 	${SOURCES}
 	${HEADERS}
 )
@@ -131,18 +140,18 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	"${CMAKE_SOURCE_DIR}/include/bfBase.h"
-	"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
-	"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
-	"${CMAKE_SOURCE_DIR}/include/bfVariative.hpp"
-	"${CMAKE_SOURCE_DIR}/src/bfBase.cpp"
+	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
+	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
+	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
+	#"${CMAKE_SOURCE_DIR}/include/bfVariative.hpp"
+	#"${CMAKE_SOURCE_DIR}/src/bfBase.cpp"
 	
-	"${CMAKE_SOURCE_DIR}/include/bfWindow.h"
-	"${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
+	#"${CMAKE_SOURCE_DIR}/include/bfWindow.h"
+	#"${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
 	#"tests/bez_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
-	#${SOURCES}
-	#${INCLUDES}
+	${SOURCES}
+	${INCLUDES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 

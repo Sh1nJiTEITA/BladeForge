@@ -63,7 +63,8 @@ struct BfBase {
 BfEvent bfCreateInstance();
 BfEvent bfCreateDebugMessenger();
 BfEvent bfCreateSurface();
-
+BfEvent bfCreatePhysicalDevice();
+BfEvent bfCreateLogicalDevice();
 // Populate
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 

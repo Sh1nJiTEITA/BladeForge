@@ -54,6 +54,7 @@ const std::map<int, std::string> bfSetActionsStr{
 enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT = 0,
 	BF_SINGLE_EVENT_TYPE_USER_EVENT = 1,
+	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 2
 };
 
 enum class BfEnMultipleEventType {

@@ -168,26 +168,6 @@ BfEvent bfCreateDebugMessenger()
 	}
 }
 
-//BfEvent bfCreateWindow()
-//{
-//	// Инициализация GLFW.
-//	glfwInit();
-//
-//	/*
-//	* Так как основное API - vk, то необходимо выключить
-//	* встроенное подключение к OpenGL.
-//	*/
-//	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-//	// Размеры окна меняться не будут.
-//	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-//	//glfwWindowHint(GLFW_FPS_COUNTER, GLFW_TRUE);
-//	glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
-//
-//	BfBase::window = glfwCreateWindow(WWIDTH, WHEIGHT, "BladeForge", nullptr, nullptr);
-//	glfwSetWindowUserPointer(BfBase::window, this);
-//	glfwSetFramebufferSizeCallback(BfBase::window, framebufferResizeCallback);
-//}
-
 BfEvent bfCreateSurface()
 {
 	if (glfwCreateWindowSurface(BfBase::instance, BfBase::window->pWindow, nullptr, &BfBase::surface) != VK_SUCCESS) {
@@ -196,6 +176,11 @@ BfEvent bfCreateSurface()
 	
 	return BfEvent();
 }
+
+//BfEvent bfCreatePhysicalDevice()
+//{
+//	
+//}
 
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
