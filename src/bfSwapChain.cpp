@@ -2,14 +2,11 @@
 
 BfEvent bfGetSwapChainSupport(VkPhysicalDevice physical_device, VkSurfaceKHR surface,BfSwapChainSupport& support)
 {
-	std::stringstream ss;
-
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &support.capabilities);
 	
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &formatCount, nullptr);
 
-	ss << " Formats (" << formatCount << ")"
 
 	if (formatCount != 0) {
 		support.formats.resize(formatCount);
@@ -25,6 +22,8 @@ BfEvent bfGetSwapChainSupport(VkPhysicalDevice physical_device, VkSurfaceKHR sur
 	}
 	
 
-
-
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CHECK_EVENT;
+	event.action = BfEnActionType::BF_ACTION_TYPE_GET_SWAPCHAIN_SUPPORT;
+	return BfEvent(event);
 }

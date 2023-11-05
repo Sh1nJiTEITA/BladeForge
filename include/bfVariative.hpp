@@ -11,6 +11,7 @@
 #include "GLFW/glfw3native.h"
 
 #include <vector>
+#include <set>
 #include <iostream>
 #include <sstream>
 
@@ -82,8 +83,23 @@ inline void bfvSetGLFWProperties() {
 	glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 }
 
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Window properties //
+
+
+enum BfvEnQueueType {
+	BF_QUEUE_GRAPHICS_TYPE,
+	BF_QUEUE_COMPUTE_TYPE,
+	BF_QUEUE_PRESENT_TYPE,
+	BF_QUEUE_TRANSFER_TYPE
+};
+
+const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
+	BF_QUEUE_GRAPHICS_TYPE,
+	//BF_QUEUE_COMPUTE_TYPE,
+	BF_QUEUE_PRESENT_TYPE,
+	BF_QUEUE_TRANSFER_TYPE
+};
+
+
 
 #endif

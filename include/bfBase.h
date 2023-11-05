@@ -6,6 +6,7 @@
 #include "bfVariative.hpp"
 #include "bfEvent.h"
 #include "bfWindow.h"
+#include "bfPhysicalDevice.h"
 /*
 	void BladeForge::run()
 {
@@ -47,13 +48,13 @@ void BladeForge::initVulkan()
 
 
 */
-
+static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 
 struct BfBase {
 	static BfWindow*				window;
 	static VkInstance				instance;
 	static VkSurfaceKHR				surface;
-	static VkPhysicalDevice			physical_device;
+	static BfPhysicalDevice*		physical_device;
 	static VkDevice					device;
 	static VkSwapchainKHR			swap_chain;
 	static VkDebugUtilsMessengerEXT debug_messenger;

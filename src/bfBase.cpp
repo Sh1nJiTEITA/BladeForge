@@ -3,7 +3,7 @@
 BfWindow*				 BfBase::window			 = nullptr;
 VkInstance				 BfBase::instance		 = VK_NULL_HANDLE;
 VkSurfaceKHR			 BfBase::surface		 = VK_NULL_HANDLE;
-VkPhysicalDevice		 BfBase::physical_device = VK_NULL_HANDLE;
+BfPhysicalDevice*		 BfBase::physical_device = nullptr;
 VkDevice				 BfBase::device			 = VK_NULL_HANDLE;
 VkSwapchainKHR			 BfBase::swap_chain		 = VK_NULL_HANDLE;
 VkDebugUtilsMessengerEXT BfBase::debug_messenger = VK_NULL_HANDLE;
@@ -177,10 +177,65 @@ BfEvent bfCreateSurface()
 	return BfEvent();
 }
 
-//BfEvent bfCreatePhysicalDevice()
+BfEvent bfCreatePhysicalDevice()
+{
+	
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(BfBase::instance, &deviceCount, nullptr);
+
+	// If no GPU's
+	if (deviceCount == 0)
+	{
+		BfSingleEvent event{};
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_NO_GPU;
+		return BfEvent(event);
+	}
+		
+	// Else:
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(BfBase::instance, &deviceCount, devices.data());
+
+	
+
+	// Check devices for suitablity
+	for (const auto& device : devices) {
+		BfPhysicalDevice bf_device{};
+		bf_device.physical_device = device;
+		
+		bfPhysicalDeviceHolder.push_back(bf_device);
+		BfPhysicalDevice* pPhysicalDevice = &bfPhysicalDeviceHolder.back();
+
+		bool is_suitable;
+		bfIsDeviceSuitable(pPhysicalDevice, BfBase::surface, is_suitable);
+
+		if (is_suitable) {
+			BfBase::physical_device = pPhysicalDevice;
+			break;
+		}
+	}
+
+	if (BfBase::physical_device->physical_device == VK_NULL_HANDLE) {
+		BfSingleEvent event{};
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_FAILURE;
+		return BfEvent(event);
+	} 
+	else {
+		BfSingleEvent event{};
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_SUCCESS;
+		return BfEvent(event);
+	}
+
+}
+
+//BfEvent bfCreateLogicalDevice()
 //{
 //	
 //}
+
+
 
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {

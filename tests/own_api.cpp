@@ -63,6 +63,7 @@ TEST_CASE("BfHandler-test") {
     bfCreateInstance();
     bfCreateDebugMessenger();
     bfCreateSurface();
+    bfCreatePhysicalDevice();
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
 }
