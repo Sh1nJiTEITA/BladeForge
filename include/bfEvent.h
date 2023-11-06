@@ -52,7 +52,14 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_NO_GPU				 =  0x12A,
 
 	BF_ACTION_TYPE_HOLDER_ADD_BF_WINDOW						 =  0x13,
-	BF_ACTION_TYPE_HOLDER_ADD_BF_PHYSICAL_DEVICE			 =  0x14
+	BF_ACTION_TYPE_HOLDER_ADD_BF_PHYSICAL_DEVICE			 =  0x14,
+
+	BF_ACTION_TYPE_INIT_LOGICAL_DEVICE_SUCCESS				 =  0x15,
+	BF_ACTION_TYPE_INIT_LOGICAL_DEVICE_FAILURE				 = -0x15,
+
+	BF_ACTION_TYPE_GET_SWAPCHAIN_SURFACE_FORMAT				 =  0x16,
+	BF_ACTION_TYPE_GET_SWAPCHAIN_PRESENT_MODE				 =  0x17,
+	BF_ACTION_TYPE_GET_SWAPCHAIN_EXTENT						 =  0x18,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -94,7 +101,16 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x12A, "VkPHysicalDevice wasn't created, bacause there are no GPU"},
 
 	{ 0x13,  "New bfWindow was added to holder"},
-	{ 0x14,  "New BfPhysicalDevice was added to holder"}
+	{ 0x14,  "New BfPhysicalDevice was added to holder"},
+
+	{ 0x15,  "VkLogicalDevice was created sucessfully"},
+	{-0x15,  "VkLogicalDevice wasn't created"},
+
+	{ 0x16,  "Swapchain surface format was chosen:"},
+
+	{ 0x17,  "Swapchain surface present mode was chosen:"},
+
+	{ 0x18,  "Swapchain surface extent was chosen:"}
 };
 
 

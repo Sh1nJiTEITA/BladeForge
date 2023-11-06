@@ -15,6 +15,7 @@
 struct BfPhysicalDevice {
 	VkPhysicalDevice physical_device;
 	std::map<BfvEnQueueType, std::optional<uint32_t>> queue_family_indices;
+	std::map<BfvEnQueueType, VkQueue> queues;
 
 	int holder_index;
 };

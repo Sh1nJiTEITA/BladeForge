@@ -69,7 +69,9 @@ BfEvent bfCreateInstance(BfBase& base);
 BfEvent bfCreateDebugMessenger(BfBase& base);
 BfEvent bfCreateSurface(BfBase& base);
 BfEvent bfCreatePhysicalDevice(BfBase& base);
-BfEvent bfCreateLogicalDevice();
+BfEvent bfCreateLogicalDevice(BfBase& base);
+BfEvent bfCreateSwapchain(BfBase& base);
+
 // Populate
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 

@@ -77,6 +77,9 @@ TEST_CASE("BfHandler-test") {
     bfCreateDebugMessenger(mBase);
     bfCreateSurface(mBase);
     bfCreatePhysicalDevice(mBase);
+    bfCreateLogicalDevice(mBase);
+    bfCreateSwapchain(mBase);
+
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
     BfConsole::print_all_single_events(
