@@ -2,11 +2,12 @@
 #define BF_CONSOLE_H
 
 #include "bfVariative.hpp"
+#include "bfEvent.h"
 #include <string>
 
 
 struct BfConsole {
-	
+	static void print_all_single_events(int types);
 	static std::string make_str(VkExtent2D extent2d);
 	static std::string make_str(VkSurfaceTransformFlagBitsKHR in);
 	static std::string make_str(VkCompositeAlphaFlagBitsKHR in);

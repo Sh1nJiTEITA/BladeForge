@@ -125,3 +125,33 @@
 //
 //
 //}
+
+void BfConsole::print_all_single_events(int types)
+{
+	auto getTimeStr = [](const time_t& timeValue) {
+		struct tm* timeInfo = std::localtime(&timeValue);
+		int hours = timeInfo->tm_hour;
+		int minutes = timeInfo->tm_min;
+		int seconds = timeInfo->tm_sec;
+		
+		std::stringstream ss;
+		ss << "[" << hours << ":" << minutes << ":" << seconds << "]";
+		return ss.str();
+	};
+	
+	for (const auto& it : BfEventHandler::single_events) {
+		
+		if (!(types & (int)it.type)) continue;
+		
+		auto it_standart_messege = bfSetActionsStr.find((int)it.action);
+		if (it_standart_messege != bfSetActionsStr.end()) {
+			std::cout << getTimeStr(it.time) << " " << it_standart_messege->second
+				      << " " << it.info << "\n";
+		}
+		else {
+			std::cout << "INVALID_PRINT_PARAMETERS" << std::endl;
+		}
+
+	}
+	std::cout << std::endl;
+}

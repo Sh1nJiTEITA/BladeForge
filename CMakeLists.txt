@@ -53,7 +53,7 @@ set(SOURCES
 	"src/bfPhysicalDevice.cpp"
 	"src/bfSwapChain.cpp"
 	"src/bfConsole.cpp"
-)
+ "src/bfHolder.cpp")
 
 set(HEADERS
 	#"include/BladeForgeBin.h"	
@@ -66,7 +66,7 @@ set(HEADERS
 	"include/bfPhysicalDevice.h"
 	"include/bfSwapChain.h"
 	"include/bfConsole.h"
-)
+ "include/bfHolder.h")
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 

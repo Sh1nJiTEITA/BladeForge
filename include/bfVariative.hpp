@@ -15,6 +15,11 @@
 #include <iostream>
 #include <sstream>
 
+
+
+
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Defines //
 
 // Vulkan properties ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -85,7 +90,7 @@ inline void bfvSetGLFWProperties() {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Window properties //
 
-
+// Queues ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 enum BfvEnQueueType {
 	BF_QUEUE_GRAPHICS_TYPE,
 	BF_QUEUE_COMPUTE_TYPE,
@@ -99,6 +104,9 @@ const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
 	BF_QUEUE_PRESENT_TYPE,
 	BF_QUEUE_TRANSFER_TYPE
 };
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queues //
+
+
 
 
 

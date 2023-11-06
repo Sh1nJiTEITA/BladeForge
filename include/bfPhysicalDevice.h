@@ -15,6 +15,8 @@
 struct BfPhysicalDevice {
 	VkPhysicalDevice physical_device;
 	std::map<BfvEnQueueType, std::optional<uint32_t>> queue_family_indices;
+
+	int holder_index;
 };
 
 BfEvent bfIsQueueFamilyIndicesCorrect(const BfPhysicalDevice* physical_device, bool& is_suitable);

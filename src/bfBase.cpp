@@ -1,5 +1,6 @@
 #include "bfBase.h"
 
+/*
 BfWindow*				 BfBase::window			 = nullptr;
 VkInstance				 BfBase::instance		 = VK_NULL_HANDLE;
 VkSurfaceKHR			 BfBase::surface		 = VK_NULL_HANDLE;
@@ -7,10 +8,10 @@ BfPhysicalDevice*		 BfBase::physical_device = nullptr;
 VkDevice				 BfBase::device			 = VK_NULL_HANDLE;
 VkSwapchainKHR			 BfBase::swap_chain		 = VK_NULL_HANDLE;
 VkDebugUtilsMessengerEXT BfBase::debug_messenger = VK_NULL_HANDLE;
-
+*/
 
 // Function definitions
-BfEvent bfCreateInstance()
+BfEvent bfCreateInstance(BfBase& base)
 {
 	if (enableValidationLayers)
 	{
@@ -116,7 +117,7 @@ BfEvent bfCreateInstance()
 		instanceInfo.pNext = nullptr;
 	}
 
-	VkResult is_instance_created = vkCreateInstance(&instanceInfo, nullptr, &BfBase::instance);
+	VkResult is_instance_created = vkCreateInstance(&instanceInfo, nullptr, &base.instance);
 	if (is_instance_created != VK_SUCCESS)
 	{
 		BfSingleEvent event{};
@@ -135,7 +136,7 @@ BfEvent bfCreateInstance()
 	}
 }
 
-BfEvent bfCreateDebugMessenger()
+BfEvent bfCreateDebugMessenger(BfBase& base)
 {
 	// If layer is disabled, то DebugMessenger is not neccesery
 	if (!enableValidationLayers) {
@@ -149,9 +150,9 @@ BfEvent bfCreateDebugMessenger()
 	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 	bfPopulateMessengerCreateInfo(createInfo);
 
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(BfBase::instance, "vkCreateDebugUtilsMessengerEXT");
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(base.instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
-		func(BfBase::instance, &createInfo, nullptr, &BfBase::debug_messenger);
+		func(base.instance, &createInfo, nullptr, &base.debug_messenger);
 		
 		BfSingleEvent event{};
 		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_SUCCESS;
@@ -168,22 +169,27 @@ BfEvent bfCreateDebugMessenger()
 	}
 }
 
-BfEvent bfCreateSurface()
+BfEvent bfCreateSurface(BfBase& base)
 {
-	if (glfwCreateWindowSurface(BfBase::instance, BfBase::window->pWindow, nullptr, &BfBase::surface) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create window surface!");
+	BfSingleEvent event{};
+	if (glfwCreateWindowSurface(base.instance, base.window->pWindow, nullptr, &base.surface) != VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_SURFACE_FAILURE;
+	}
+	else
+	{
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_SURFACE_SUCCESS;
 	}
 	
-	return BfEvent();
+	return BfEvent(event);
 }
 
-BfEvent bfCreatePhysicalDevice()
+BfEvent bfCreatePhysicalDevice(BfBase& base)
 {
 	
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(BfBase::instance, &deviceCount, nullptr);
-
-	// If no GPU's
+	vkEnumeratePhysicalDevices(base.instance, &deviceCount, nullptr);
 	if (deviceCount == 0)
 	{
 		BfSingleEvent event{};
@@ -194,7 +200,7 @@ BfEvent bfCreatePhysicalDevice()
 		
 	// Else:
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(BfBase::instance, &deviceCount, devices.data());
+	vkEnumeratePhysicalDevices(base.instance, &deviceCount, devices.data());
 
 	
 
@@ -207,15 +213,15 @@ BfEvent bfCreatePhysicalDevice()
 		BfPhysicalDevice* pPhysicalDevice = &bfPhysicalDeviceHolder.back();
 
 		bool is_suitable;
-		bfIsDeviceSuitable(pPhysicalDevice, BfBase::surface, is_suitable);
+		bfIsDeviceSuitable(pPhysicalDevice, base.surface, is_suitable);
 
 		if (is_suitable) {
-			BfBase::physical_device = pPhysicalDevice;
+			base.physical_device = pPhysicalDevice;
 			break;
 		}
 	}
 
-	if (BfBase::physical_device->physical_device == VK_NULL_HANDLE) {
+	if (base.physical_device->physical_device == VK_NULL_HANDLE) {
 		BfSingleEvent event{};
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_FAILURE;
@@ -256,3 +262,4 @@ void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInf
 	};
 	createInfo.pfnUserCallback = bfvDebugCallback;
 }
+

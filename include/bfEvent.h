@@ -26,10 +26,13 @@ enum class BfEnActionType {
 															 
 	BF_ACTION_TYPE_INIT_GLFW_WINDOW_SUCCESS					 =  0x5,
 	BF_ACTION_TYPE_INIT_GLFW_WINDOW_FAILURE					 = -0x5,
-															 
+	
+	BF_ACTION_TYPE_INIT_NEW_BF_WINDOW						 =  0x5A,
+
 	BF_ACTION_TYPE_SET_WINDOW_SIZE_SUCCESS					 =  0x6,
 	BF_ACTION_TYPE_SET_WINDOW_SIZE_FAILURE					 = -0x6,
-															 
+	BF_ACTION_TYPE_SET_WINDOW_NAME							 =  0x6A,
+							 
 	BF_ACTION_TYPE_GET_SWAPCHAIN_SUPPORT					 =  0x7,
 															 
 	BF_ACTION_TYPE_CHECK_EXTENSION_SUPPORT_SUCCESS			 =  0x8,
@@ -47,25 +50,30 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_SUCCESS				 =  0x12,
 	BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_FAILURE				 = -0x12,
 	BF_ACTION_TYPE_INIT_PHYSICAL_DEVICE_NO_GPU				 =  0x12A,
+
+	BF_ACTION_TYPE_HOLDER_ADD_BF_WINDOW						 =  0x13,
+	BF_ACTION_TYPE_HOLDER_ADD_BF_PHYSICAL_DEVICE			 =  0x14
 };
 
 const std::map<int, std::string> bfSetActionsStr{
 	// Initializations
 	{ 0x2,   "Vulkan Instance was created successfully"},
 	{-0x2,   "Vulkan Instance wasn't created"},
-		     
+
 	{ 0x3,   "Vulkan Debug messenger was created successfully"},
 	{-0x3,   "Vulkan Debug messenger wasn't created"},
 	{ 0x3A,  "Vulkan Debug messenger wasn't created due to disabled validation layers"},
-		     
+
 	{ 0x4,   "Vulkan Surface was created successfully"},
 	{-0x4,   "Vulkan Surface wasn't created"},
-		     
+
 	{ 0x5,   "GLFW window was created successfully"},
 	{-0x5,   "GLFW window wasn't created"},
-		     
+	{ 0x5A,  "BfWindow was initialized"},
+
 	{ 0x6,   "Window size was successfully resized"},
 	{-0x6,   "Window size wasn't resized: w <= 0 or h <= 0"},
+	{ 0x6A,  "Window name was set"},
 		     
 	{ 0x7,   "Swapchain support was checked"},
 		     
@@ -83,14 +91,18 @@ const std::map<int, std::string> bfSetActionsStr{
 			 
 	{ 0x12,  "VkPhysicalDevice was created successfully"},
 	{-0x12,  "VkPhysicalDevice wasn't created"},
-	{ 0x12A, "VkPHysicalDevice wasn't created, bacause there are no GPU"}
+	{ 0x12A, "VkPHysicalDevice wasn't created, bacause there are no GPU"},
+
+	{ 0x13,  "New bfWindow was added to holder"},
+	{ 0x14,  "New BfPhysicalDevice was added to holder"}
 };
 
 
 enum class BfEnSingleEventType {
-	BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT = 0,
-	BF_SINGLE_EVENT_TYPE_USER_EVENT = 1,
-	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 2
+	BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT = 0x1,
+	BF_SINGLE_EVENT_TYPE_HOLDER_EVENT = 0x2,
+	BF_SINGLE_EVENT_TYPE_USER_EVENT = 0x4,
+	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 0x8
 };
 
 enum class BfEnMultipleEventType {

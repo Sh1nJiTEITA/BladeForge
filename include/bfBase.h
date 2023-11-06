@@ -49,22 +49,26 @@ void BladeForge::initVulkan()
 
 */
 static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
+static std::vector<BfWindow> bfWindowHolder{};
+
+
+
 
 struct BfBase {
-	static BfWindow*				window;
-	static VkInstance				instance;
-	static VkSurfaceKHR				surface;
-	static BfPhysicalDevice*		physical_device;
-	static VkDevice					device;
-	static VkSwapchainKHR			swap_chain;
-	static VkDebugUtilsMessengerEXT debug_messenger;
+	BfWindow*				 window;
+	VkInstance				 instance;
+	VkSurfaceKHR			 surface;
+	BfPhysicalDevice*		 physical_device;
+	VkDevice				 device;
+	VkSwapchainKHR			 swap_chain;
+	VkDebugUtilsMessengerEXT debug_messenger;
 };
 
 // Main functions
-BfEvent bfCreateInstance();
-BfEvent bfCreateDebugMessenger();
-BfEvent bfCreateSurface();
-BfEvent bfCreatePhysicalDevice();
+BfEvent bfCreateInstance(BfBase& base);
+BfEvent bfCreateDebugMessenger(BfBase& base);
+BfEvent bfCreateSurface(BfBase& base);
+BfEvent bfCreatePhysicalDevice(BfBase& base);
 BfEvent bfCreateLogicalDevice();
 // Populate
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);

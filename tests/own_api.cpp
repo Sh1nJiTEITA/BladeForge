@@ -3,6 +3,8 @@
 #include "bfBase.h"
 #include "bfEvent.h"
 #include "bfWindow.h"
+#include "bfHolder.h"
+#include "bfConsole.h"
 
 BfEvent return_event() {
     BfSingleEvent se{};
@@ -58,12 +60,29 @@ TEST_CASE("BF_EVENT_H", "[single-file]") {
 }
 
 TEST_CASE("BfHandler-test") {
-    bfSetWindowSize(800, 600);
-    bfCreateWindow();
-    bfCreateInstance();
-    bfCreateDebugMessenger();
-    bfCreateSurface();
-    bfCreatePhysicalDevice();
+    
+    BfHolder mHolder{};
+    BfBindHolder(&mHolder);
+    
+    BfBase mBase{};
+    
+    bfHoldWindow(mBase.window);
+    bfHoldPhysicalDevice(mBase.physical_device);
+    
+    bfSetWindowSize(mBase.window, 800, 600);
+    bfSetWindowName(mBase.window, "BladeForge1001");
+    bfCreateWindow(mBase.window);
+
+    bfCreateInstance(mBase);
+    bfCreateDebugMessenger(mBase);
+    bfCreateSurface(mBase);
+    bfCreatePhysicalDevice(mBase);
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
+    BfConsole::print_all_single_events(
+        (int)BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CHECK_EVENT |
+        (int)BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_HOLDER_EVENT |
+        (int)BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT |
+        (int)BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_USER_EVENT
+    );
 }

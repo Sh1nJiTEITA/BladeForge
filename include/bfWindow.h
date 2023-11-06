@@ -5,15 +5,21 @@
 #include "bfEvent.h"
 
 
+
+
+
 struct BfWindow {
-	static GLFWwindow* pWindow;
-	static std::string name;
-	static int width;
-	static int height;
-	static bool resized;
+	GLFWwindow* pWindow;
+	std::string name;
+	int width;
+	int height;
+	bool resized;
+
+	int holder_index;
 };
 
-BfEvent bfCreateWindow();
-BfEvent bfSetWindowSize(int width, int height);
+BfEvent bfCreateWindow(BfWindow* window);
+BfEvent bfSetWindowSize(BfWindow* window, int width, int height);
+BfEvent bfSetWindowName(BfWindow* window, std::string name);
 
 #endif
