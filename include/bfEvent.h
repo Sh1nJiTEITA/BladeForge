@@ -60,6 +60,12 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_GET_SWAPCHAIN_SURFACE_FORMAT				 =  0x16,
 	BF_ACTION_TYPE_GET_SWAPCHAIN_PRESENT_MODE				 =  0x17,
 	BF_ACTION_TYPE_GET_SWAPCHAIN_EXTENT						 =  0x18,
+
+	BF_ACTION_TYPE_INIT_SWAPCHAIN_SUCCESS					 =  0x19,
+	BF_ACTION_TYPE_INIT_SWAPCHAIN_FAILURE					 = -0x19,
+
+	BF_ACTION_TYPE_INIT_IMAGE_VIEWS_SUCCESS					 =  0x20,
+	BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE					 = -0x20
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -107,10 +113,14 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x15,  "VkLogicalDevice wasn't created"},
 
 	{ 0x16,  "Swapchain surface format was chosen:"},
-
 	{ 0x17,  "Swapchain surface present mode was chosen:"},
+	{ 0x18,  "Swapchain surface extent was chosen:"},
 
-	{ 0x18,  "Swapchain surface extent was chosen:"}
+	{ 0x19,  "Swapchain was created successfully"},
+	{-0x19,  "Swapchain wasn't created"},
+
+	{ 0x20,  "VkImageView was created sucessfully:"},
+	{-0x20,  "VkImageView wasn't created:"}
 };
 
 

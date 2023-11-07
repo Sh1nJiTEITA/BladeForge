@@ -209,8 +209,9 @@ BfEvent bfCreatePhysicalDevice(BfBase& base)
 		BfPhysicalDevice bf_device{};
 		bf_device.physical_device = device;
 		
-		bfPhysicalDeviceHolder.push_back(bf_device);
-		BfPhysicalDevice* pPhysicalDevice = &bfPhysicalDeviceHolder.back();
+		BfHolder::__bfpHolder->physical_devices.push_back(bf_device);
+
+		BfPhysicalDevice* pPhysicalDevice = &BfHolder::__bfpHolder->physical_devices.back();
 
 		bool is_suitable;
 		bfIsDeviceSuitable(pPhysicalDevice, base.surface, is_suitable);
@@ -375,17 +376,74 @@ BfEvent bfCreateSwapchain(BfBase& base)
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
+	BfSingleEvent event{};
 	if (vkCreateSwapchainKHR(base.device, &createInfo, nullptr, &base.swap_chain) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create swap chain!");
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_SWAPCHAIN_FAILURE;
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_SWAPCHAIN_SUCCESS;
 	}
 
-	return BfEvent();
-	/*vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+	vkGetSwapchainImagesKHR(base.device, base.swap_chain, &imageCount, nullptr);
+	base.image_packs.resize(imageCount);
+	bfGetpHolder()->images.resize(imageCount);
+	vkGetSwapchainImagesKHR(base.device, base.swap_chain, &imageCount, bfGetpHolder()->images.data());
 
-	swapChainImageFormat = surfaceFormat.format;
-	swapChainExtent = extent;*/
+	for (size_t i = 0; i < bfGetpHolder()->images.size(); i++) {
+		base.image_packs[i].pImage = &bfGetpHolder()->images[i];
+	}
+
+	base.swap_chain_format = surfaceFormat.format;
+	base.swap_chain_extent = extent;
+	base.image_pack_count = imageCount;
+
+	return BfEvent(event);
+}
+
+BfEvent bfCreateImageViews(BfBase& base)
+{
+	// NUMBER OF IMAGES -> NUMBER OF VIEWS
+	BfHolder* holder = bfGetpHolder();
+	holder->image_views.resize(base.image_pack_count);
+	
+	for (size_t i = 0; i < base.image_pack_count; i++) {
+		base.image_packs[i].pImage_view = &holder->image_views[i];
+	}
+
+	// Go through all images
+	for (size_t i = 0; i < holder->image_views.size(); i++) {
+		// Create single image-view inside loop-iteration
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = *base.image_packs[i].pImage;
+
+		// 1D, 2D, 3D textures ...
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = base.swap_chain_format;
+
+		// Color mapping
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+		// What image for?
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		BfSingleEvent event{};
+		if (vkCreateImageView(base.device, &createInfo, nullptr, base.image_packs[i].pImage_view) == VK_SUCCESS) {
+			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+			event.action
+		}
+
+	}
+
 }
 
 

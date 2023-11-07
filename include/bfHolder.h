@@ -15,6 +15,9 @@ struct BfHolder {
 	std::vector<BfWindow> windows;
 	std::vector<BfPhysicalDevice> physical_devices;
 
+	std::vector<VkImage> images;
+	std::vector<VkImageView> image_views;
+
 	static BfHolder* __bfpHolder;
 
 	BfHolder();
