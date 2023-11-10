@@ -439,7 +439,12 @@ BfEvent bfCreateImageViews(BfBase& base)
 		BfSingleEvent event{};
 		if (vkCreateImageView(base.device, &createInfo, nullptr, base.image_packs[i].pImage_view) == VK_SUCCESS) {
 			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-			event.action
+			event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_SUCCESS;
+			event.
+		}
+		else {
+			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+			event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE;
 		}
 
 	}
