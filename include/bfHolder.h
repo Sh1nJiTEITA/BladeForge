@@ -17,6 +17,8 @@ struct BfHolder {
 
 	std::vector<VkImage> images;
 	std::vector<VkImageView> image_views;
+	std::vector<VkFramebuffer> standart_framebuffers;
+	std::vector<VkFramebuffer> gui_framebuffers;
 
 	static BfHolder* __bfpHolder;
 

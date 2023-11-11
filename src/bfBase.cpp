@@ -412,6 +412,14 @@ BfEvent bfCreateImageViews(BfBase& base)
 		base.image_packs[i].pImage_view = &holder->image_views[i];
 	}
 
+	std::stringstream ss_s;
+	std::stringstream ss_f;
+
+	ss_s << "Successfully done image indices = [";
+	ss_f << "Unsuccessfully done image indices = [";
+
+	bool is_image_views_created = true;
+
 	// Go through all images
 	for (size_t i = 0; i < holder->image_views.size(); i++) {
 		// Create single image-view inside loop-iteration
@@ -438,17 +446,159 @@ BfEvent bfCreateImageViews(BfBase& base)
 
 		BfSingleEvent event{};
 		if (vkCreateImageView(base.device, &createInfo, nullptr, base.image_packs[i].pImage_view) == VK_SUCCESS) {
-			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-			event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_SUCCESS;
-			event.
+			if (i != base.image_pack_count - 1)
+				ss_s << i << "][";
+			else
+				ss_s << i << "] ";
 		}
 		else {
-			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-			event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE;
+			is_image_views_created = false;
+			if (i != base.image_pack_count - 1)
+				ss_f << i << "][";
+			else
+				ss_f << i << "] ";
 		}
-
 	}
 
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+	if (is_image_views_created) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_SUCCESS;
+		event.info = ss_s.str();
+	}
+	else {
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE;
+		ss_s << ss_f.str();
+		event.info = ss_s.str();
+	}
+	return BfEvent(event);
+}
+
+BfEvent bfCreateStandartRenderPass(BfBase& base)
+{
+	VkAttachmentDescription colorAttachment{};
+	colorAttachment.format = base.swap_chain_format;
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	//VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+// What image/buffer to use?
+	VkAttachmentReference colorAttachmentRef{};
+	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	// How to use subPass
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorAttachmentRef;
+
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.attachmentCount = 1;
+	renderPassInfo.pAttachments = &colorAttachment;
+
+	BfSingleEvent event{};
+	if (vkCreateRenderPass(base.device, &renderPassInfo, nullptr, &base.standart_render_pass) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_RENDER_PASS_SUCCESS;
+		event.info = " Standart render pass";
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_RENDER_PASS_FAILURE;
+		event.info = " Standart render pass";
+	}
+	
+	return BfEvent(event);
+}
+
+BfEvent bfCreateGUIRenderPass(BfBase& base)
+{
+	VkAttachmentDescription attachment = {};
+	attachment.format = base.swap_chain_format;
+	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference color_attachment = {};
+	color_attachment.attachment = 0;
+	color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass = {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &color_attachment;
+
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;  // or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkRenderPassCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	info.attachmentCount = 1;
+	info.pAttachments = &attachment;
+	info.subpassCount = 1;
+	info.pSubpasses = &subpass;
+	info.dependencyCount = 1;
+	info.pDependencies = &dependency;
+
+	BfSingleEvent event{};
+	if (vkCreateRenderPass(base.device, &info, nullptr, &base.gui_render_pass) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_RENDER_PASS_SUCCESS;
+		event.info = " GUI render pass";
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_RENDER_PASS_FAILURE;
+		event.info = " GUI render pass";
+	}
+	
+	return BfEvent(event);
+}
+
+BfEvent bfCreateDescriptorSetLayout(BfBase& base)
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.pImmutableSamplers = nullptr;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	BfSingleEvent event{};
+	if (vkCreateDescriptorSetLayout(
+		base.device, &layoutInfo, nullptr, &base.descriptor_set_layout
+	) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_SUCCESS;
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_FAILURE;
+	}
+	return BfEvent(event);
 }
 
 
@@ -470,5 +620,436 @@ void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInf
 		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT		// Potential non-optimal use of VK
 	};
 	createInfo.pfnUserCallback = bfvDebugCallback;
+}
+
+BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
+{
+	std::ifstream file(
+		// FILE-name
+		filename,
+		// Modes
+		std::ios::ate |  // Read from the end
+		std::ios::binary // Read file as binary (avoid text transformations)
+	);
+
+	BfSingleEvent event{};
+
+	std::stringstream ss;
+	ss << "File path = " << filename;
+	event.info = ss.str();
+	
+	if (!file.is_open()) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS;
+		return BfSingleEvent(event);
+	}
+	else {
+		
+
+		size_t fileSize = (size_t)file.tellg();
+		data.clear();
+		data.resize(fileSize);
+
+		file.seekg(0);
+		file.read(data.data(), fileSize);
+		file.close();
+
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS;
+		return BfSingleEvent(event);
+	}
+}
+
+BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path)
+{
+	// Shader Modules Creation
+	std::vector<char> vertShaderCode;
+	std::vector<char> fragShaderCode;
+	
+	if (!vert_shader_path.empty()) {
+		bfaReadFile(vertShaderCode, vert_shader_path);
+	}
+	if (!vert_shader_path.empty()) {
+		bfaReadFile(fragShaderCode, frag_shader_path);
+	}
+	
+	
+	VkShaderModule vertShaderModule;
+	VkShaderModule fragShaderModule;
+
+	bfaCreateShaderModule(vertShaderModule, base.device, vertShaderCode);
+	bfaCreateShaderModule(fragShaderModule, base.device, fragShaderCode);
+
+	// Pipeline creation
+	VkPipelineShaderStageCreateInfo vertShaderCreateInfo{};
+	vertShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderCreateInfo.module = vertShaderModule;
+	vertShaderCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragShaderCreateInfo{};
+	fragShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragShaderCreateInfo.module = fragShaderModule;
+	fragShaderCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStages[] = {
+		vertShaderCreateInfo,
+		fragShaderCreateInfo
+	};
+
+	// Vertex Data
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+	auto bindingDescription = bfVertex::getBindingDescription();
+	auto attributeDescriptions = bfVertex::getAttributeDescriptions();
+
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(
+		attributeDescriptions.size());
+
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+	// How to use vertex data
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly_triangles{};
+	inputAssembly_triangles.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssembly_triangles.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly_triangles.primitiveRestartEnable = VK_FALSE;
+
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly_lines{};
+	inputAssembly_lines.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssembly_lines.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+	inputAssembly_lines.primitiveRestartEnable = VK_FALSE;
+
+	//// Viewports 
+	//VkViewport viewport{};
+	//viewport.x = 0.0f;
+	//viewport.y = 0.0f;
+
+	//viewport.width = (float)swapChainExtent.width;
+	//viewport.height = (float)swapChainExtent.height;
+
+	//viewport.minDepth = 0.0f;
+	//viewport.maxDepth = 1.0f;
+
+	//// Scissors
+	//VkRect2D scissor{};
+	//scissor.offset = { 0, 0 };
+	//scissor.extent = swapChainExtent;
+
+	// Dynamic viewport/scissors
+	std::vector<VkDynamicState> dynamicStates = {
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+
+	VkPipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+	dynamicState.pDynamicStates = dynamicStates.data();
+
+	VkPipelineViewportStateCreateInfo viewportState{};
+	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportState.viewportCount = 1;
+	viewportState.scissorCount = 1;
+
+	// Rasterizer
+	VkPipelineRasterizationStateCreateInfo rasterizer{};
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.depthClampEnable = VK_FALSE;
+	rasterizer.rasterizerDiscardEnable = VK_FALSE;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizer.lineWidth = 1.0f;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	rasterizer.depthBiasEnable = VK_FALSE;
+	//rasterizer.depthBiasConstantFactor = 0.0f; // Optional
+	//rasterizer.depthBiasClamp = 0.0f; // Optional
+	//rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
+
+	// Multisampling
+	VkPipelineMultisampleStateCreateInfo multisampling{};
+	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampling.sampleShadingEnable = VK_FALSE;
+	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	multisampling.minSampleShading = 1.0f; // Optional
+	multisampling.pSampleMask = nullptr; // Optional
+	multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
+	multisampling.alphaToOneEnable = VK_FALSE; // Optional
+
+	// Color blending
+	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment.colorWriteMask = {
+		VK_COLOR_COMPONENT_R_BIT |
+		VK_COLOR_COMPONENT_G_BIT |
+		VK_COLOR_COMPONENT_B_BIT |
+		VK_COLOR_COMPONENT_A_BIT
+	};
+	colorBlendAttachment.blendEnable = VK_FALSE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
+
+	VkPipelineColorBlendStateCreateInfo colorBlending{};
+	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorBlending.logicOpEnable = VK_FALSE;
+	colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
+	colorBlending.attachmentCount = 1;
+	colorBlending.pAttachments = &colorBlendAttachment;
+	colorBlending.blendConstants[0] = 0.0f; // Optional
+	colorBlending.blendConstants[1] = 0.0f; // Optional
+	colorBlending.blendConstants[2] = 0.0f; // Optional
+	colorBlending.blendConstants[3] = 0.0f; // Optional
+
+	// Uniforms
+	bfaCreateGraphicsPipelineLayouts(base);
+
+	VkGraphicsPipelineCreateInfo pipelineInfo{};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = 2;
+	pipelineInfo.pStages = shaderStages;
+	pipelineInfo.pVertexInputState = &vertexInputInfo;
+	pipelineInfo.pViewportState = &viewportState;
+	pipelineInfo.pRasterizationState = &rasterizer;
+	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pDepthStencilState = nullptr;
+	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.pDynamicState = &dynamicState;
+	pipelineInfo.renderPass = base.standart_render_pass;
+	pipelineInfo.subpass = 0;
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	//pipelineInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+	// basic
+	pipelineInfo.pInputAssemblyState = &inputAssembly_triangles;
+	pipelineInfo.layout = base.triangle_pipeline_layout;
+	pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
+
+
+	bool is_pipelines_created = true;
+	std::stringstream ss;
+
+	if (vkCreateGraphicsPipelines(
+		base.device,
+		VK_NULL_HANDLE,
+		1,
+		&pipelineInfo,
+		nullptr,
+		&base.triangle_pipeline
+	) != VK_SUCCESS) {
+		is_pipelines_created = false;
+		ss << "Base pipeline (triangles) wasn't created;";
+	}
+	
+	pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
+	pipelineInfo.layout = base.line_pipeline_layout;
+	pipelineInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+	pipelineInfo.basePipelineIndex = -1;
+	pipelineInfo.basePipelineHandle = base.triangle_pipeline;
+
+	if (vkCreateGraphicsPipelines(
+		base.device,
+		VK_NULL_HANDLE,
+		1,
+		&pipelineInfo,
+		nullptr,
+		&base.line_pipeline
+	) != VK_SUCCESS) {
+		is_pipelines_created = false;
+		ss << "Derivative pipeline (lines) wasn't created;";
+	}
+
+	vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
+	vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
+
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+	
+	if (is_pipelines_created) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_SUCCESS;
+		event.info = "All pipelines is OK";
+	}
+	else {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE;
+		event.info = ss.str();
+	}
+	return BfEvent(event);
+}
+
+BfEvent bfCreateStandartFrameBuffers(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+	holder->standart_framebuffers.resize(base.image_pack_count);
+
+	std::stringstream ss_s; ss_s << "Correctly created standart framebuffers indices = [";
+	std::stringstream ss_f; ss_f << "Incorrectly created standart framebuffers indices = [";
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	bool is_all_framebuffers_was_created = true;
+
+	for (size_t i = 0; i < base.image_pack_count; i++) {
+		base.image_packs[i].pStandart_Buffer = &holder->standart_framebuffers[i];
+		
+		VkImageView attachments[] = {
+			*base.image_packs[i].pImage_view
+		};
+
+		VkFramebufferCreateInfo framebufferInfo{};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = base.standart_render_pass;
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.width = base.swap_chain_extent.width;
+		framebufferInfo.height = base.swap_chain_extent.height;
+		framebufferInfo.layers = 1;
+
+		if (vkCreateFramebuffer(base.device,
+								&framebufferInfo,
+								nullptr,
+								base.image_packs[i].pStandart_Buffer) == VK_SUCCESS) {
+			if (i != base.image_pack_count - 1) ss_s << i << "]["; 
+			else								ss_s << i << "]";
+		}
+		else {
+			is_all_framebuffers_was_created = false;
+			
+			if (i != base.image_pack_count - 1) ss_f << i << "][";
+			else								ss_f << i << "]";
+		}
+
+	}
+
+	if (is_all_framebuffers_was_created) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_FRAME_BUFFER_SUCCESS;
+		event.info = ss_s.str();
+	}
+	else {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_FRAME_BUFFER_FAILURE;
+		event.info = ss_s.str().append(ss_f.str());
+	}
+
+
+	return BfEvent(event);
+}
+
+BfEvent bfCreateGUIFrameBuffers(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+	holder->gui_framebuffers.resize(base.image_pack_count);
+
+	std::stringstream ss_s; ss_s << "Correctly created GUI framebuffers indices = [";
+	std::stringstream ss_f; ss_f << "Incorrectly created GUI framebuffers indices = [";
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	VkImageView attachment[1];
+
+	VkFramebufferCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	info.renderPass = base.gui_render_pass;
+	info.attachmentCount = 1;
+	info.pAttachments = attachment;
+	info.width = base.swap_chain_extent.width;
+	info.height = base.swap_chain_extent.height;
+	info.layers = 1;
+	
+	bool is_all_framebuffers_was_created = true;
+
+	for (uint32_t i = 0; i < base.image_pack_count; i++)
+	{
+		base.image_packs[i].pGUI_buffer = &holder->gui_framebuffers[i];
+		attachment[0] = *base.image_packs[i].pImage_view;
+
+		if (vkCreateFramebuffer(base.device, 
+								&info, 
+								nullptr, 
+								base.image_packs[i].pGUI_buffer) == VK_SUCCESS) {
+			if (i != base.image_pack_count - 1) ss_s << i << "][";
+			else								ss_s << i << "]";
+		}
+		else {
+			is_all_framebuffers_was_created = false;
+
+			if (i != base.image_pack_count - 1) ss_f << i << "][";
+			else								ss_f << i << "]";
+		}
+	}
+	
+	if (is_all_framebuffers_was_created) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_FRAME_BUFFER_SUCCESS;
+		event.info = ss_s.str();
+	}
+	else {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_FRAME_BUFFER_FAILURE;
+		event.info = ss_s.str().append(ss_f.str());
+	}
+
+	return BfEvent(event);
+}
+
+BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data)
+{
+	VkShaderModuleCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = data.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>(data.data());
+
+	BfSingleEvent event{};
+	if (vkCreateShaderModule(device, &createInfo, nullptr, &module) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_SHADER_MODULE_SUCCESS;
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_SHADER_MODULE_FAILURE;
+	}
+
+	return BfEvent(event);
+}
+
+BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
+{
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutCreateInfo.setLayoutCount = 1;
+	pipelineLayoutCreateInfo.pSetLayouts = &base.descriptor_set_layout; // Optional
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 0; // Optional
+	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr; // Optional
+
+	bool is_pipeline_layouts_done = true;
+
+	std::stringstream ss;
+	
+	if (vkCreatePipelineLayout(base.device, &pipelineLayoutCreateInfo, nullptr, &base.triangle_pipeline_layout) == VK_SUCCESS) {
+		ss << "Triangle pipeline layout is done;";
+	}
+	else {
+		ss << "Triangle pipeline layout isn't done;";
+		is_pipeline_layouts_done = false;
+	}
+	if (vkCreatePipelineLayout(base.device, &pipelineLayoutCreateInfo, nullptr, &base.line_pipeline_layout) == VK_SUCCESS) {
+		ss << "Line pipeline layout is done;";
+	}
+	else {
+		ss << "Line pipeline layout isn't done;";
+		is_pipeline_layouts_done = false;
+	}
+
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+	if (is_pipeline_layouts_done) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_SUCCESS;
+	} 
+	else {
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_FAILURE;
+	}
+	event.info = ss.str();
+
+	return BfEvent(event);
 }
 

@@ -65,7 +65,28 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_INIT_SWAPCHAIN_FAILURE					 = -0x19,
 
 	BF_ACTION_TYPE_INIT_IMAGE_VIEWS_SUCCESS					 =  0x20,
-	BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE					 = -0x20
+	BF_ACTION_TYPE_INIT_IMAGE_VIEWS_FAILURE					 = -0x20,
+
+	BF_ACTION_TYPE_INIT_RENDER_PASS_SUCCESS					 =  0x21,
+	BF_ACTION_TYPE_INIT_RENDER_PASS_FAILURE					 = -0x21,
+	
+	BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_SUCCESS		 =  0x22,
+	BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_FAILURE		 = -0x22,
+
+	BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS					 =  0x23,
+	BF_ACTION_TYPE_READ_SHADER_FILE_FAILURE					 = -0x23,
+
+	BF_ACTION_TYPE_CREATE_SHADER_MODULE_SUCCESS				 =  0x24,
+	BF_ACTION_TYPE_CREATE_SHADER_MODULE_FAILURE				 = -0x24,
+
+	BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_SUCCESS			 =  0x25,
+	BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_FAILURE			 = -0x25,
+
+	BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_SUCCESS			 =  0x26,
+	BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE			 = -0x26,
+
+	BF_ACTION_TYPE_CREATE_FRAME_BUFFER_SUCCESS				 =  0x27,
+	BF_ACTION_TYPE_CREATE_FRAME_BUFFER_FAILURE				 = -0x27
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -120,7 +141,28 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x19,  "Swapchain wasn't created"},
 
 	{ 0x20,  "VkImageView was created sucessfully:"},
-	{-0x20,  "VkImageView wasn't created:"}
+	{-0x20,  "VkImageView wasn't created:"},
+
+	{ 0x21,  "VkRenderpass was created successfully:"},
+	{-0x21,  "VkRenderpass wasn't created:"},
+
+	{ 0x22,  "VkDescriptorSetLayout was created successfully"},
+	{-0x22,  "VkDescriptorSetLayout wasn't created sucessfully"},
+
+	{ 0x23,  "Shader file was read successfully:"},
+	{-0x23,  "Shader file wasn't read successfully:"},
+
+	{ 0x24,  "VkShaderModule was created successfully:"},
+	{-0x24,  "VkShaderModule wasn't created:"},
+
+	{ 0x25,  "VkPipelineLayout was created successfully"},
+	{-0x25,  "VkPipelineLayout wasn't created"},
+
+	{ 0x26,  "VkPipeline's was created sucessfully:"},
+	{-0x26,  "VkPipeline's wasn't created:"},
+
+	{ 0x27,  "VkFramebuffer was created successfully:"},
+	{-0x27,  "VkFramebuffer wasn't created:"}
 };
 
 
@@ -128,7 +170,8 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT = 0x1,
 	BF_SINGLE_EVENT_TYPE_HOLDER_EVENT = 0x2,
 	BF_SINGLE_EVENT_TYPE_USER_EVENT = 0x4,
-	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 0x8
+	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 0x8,
+	BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT = 0x10
 };
 
 enum class BfEnMultipleEventType {
@@ -184,4 +227,4 @@ struct BfEventHandler {
 
 
 
-#endif
+#endif,

@@ -79,6 +79,13 @@ TEST_CASE("BfHandler-test") {
     bfCreatePhysicalDevice(mBase);
     bfCreateLogicalDevice(mBase);
     bfCreateSwapchain(mBase);
+    bfCreateImageViews(mBase);
+    bfCreateStandartRenderPass(mBase);
+    bfCreateGUIRenderPass(mBase);
+    bfCreateDescriptorSetLayout(mBase);
+    bfCreateGraphicsPipelines(mBase, "shaders/vert.spv", "shaders/frag.spv");
+    bfCreateStandartFrameBuffers(mBase);
+    bfCreateGUIFrameBuffers(mBase);
 
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
