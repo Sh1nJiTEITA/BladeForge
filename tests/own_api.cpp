@@ -87,7 +87,30 @@ TEST_CASE("BfHandler-test") {
     bfCreateStandartFrameBuffers(mBase);
     bfCreateGUIFrameBuffers(mBase);
     bfCreateCommandPool(mBase);
+    bfCreateAllocator(mBase);
 
+    BfMesh mesh{};
+    mesh.vertices = {
+        {{ 0.5,  0.5},{1.0,1.0,1.0}},
+        {{-0.5,  0.5},{1.0,1.0,1.0}},
+        {{-0.5, -0.5},{1.0,1.0,1.0}},
+        {{ 0.5, -0.5},{1.0,1.0,1.0}},
+    };
+    mesh.indices = {
+        1,2,3,
+        3,4,1
+    };
+
+    
+    bfUploadMesh(mBase, mesh);
+    bfCreateUniformBuffers(mBase);
+    bfCreateStandartDescriptorPool(mBase);
+    bfCreateGUIDescriptorPool(mBase);
+    bfCreateDescriptorSets(mBase);
+    bfCreateStandartCommandBuffers(mBase);
+    bfCreateGUICommandBuffers(mBase);
+    bfCreateSyncObjects(mBase);
+    bfInitImGUI(mBase);
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
     BfConsole::print_all_single_events(

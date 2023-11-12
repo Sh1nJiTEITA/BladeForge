@@ -10,13 +10,20 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 
+#define GLM_FORCE_RADIANS
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <vector>
 #include <set>
 #include <iostream>
 #include <sstream>
 #include <fstream> // Read shaderfiles
 
-
+//#define VMA_IMPLEMENTATION
+//#include <vma/vk_mem_alloc.h>
+#include "vma/vk_mem_alloc.h"
 
 
 
@@ -107,7 +114,14 @@ const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queues //
 
 
-
+static void check_vk_result(VkResult err)
+{
+	if (err == 0)
+		return;
+	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+	if (err < 0)
+		abort();
+};
 
 
 #endif

@@ -10,9 +10,10 @@
 
 // STL
 #include <array>
-
+#include <vector>
 // External
 #include <glm/glm.hpp>
+
 
 struct bfVertex {
 	glm::vec2 pos;
@@ -22,7 +23,6 @@ struct bfVertex {
 	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 
 };
-
 
 
 

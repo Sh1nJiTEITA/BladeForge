@@ -53,11 +53,14 @@ set(SOURCES
 	"src/bfPhysicalDevice.cpp"
 	"src/bfSwapChain.cpp"
 	"src/bfConsole.cpp"
- "src/bfHolder.cpp")
+	"src/bfHolder.cpp"
+	#"src/bfBuffer.cpp"
+ "src/bfUniforms.cpp")
 
 set(HEADERS
 	#"include/BladeForgeBin.h"	
 	"include/bfVariative.hpp"
+	"include/bfVertex2.hpp"
 
 	"include/bfVertex.h"
 	"include/bfBase.h"
@@ -66,7 +69,9 @@ set(HEADERS
 	"include/bfPhysicalDevice.h"
 	"include/bfSwapChain.h"
 	"include/bfConsole.h"
- "include/bfHolder.h")
+	"include/bfHolder.h"
+	#"include/bfBuffer.h"
+ "include/bfUniforms.h")
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -124,6 +129,9 @@ add_subdirectory(external/glm)
 #set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui/)
 #include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
 #set(imgui-glfw imglfw CACHE STRING "" FORCE)
+add_subdirectory(external/VulkanMemoryAllocator)
+target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
+
 
 add_subdirectory(external/imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
@@ -154,7 +162,7 @@ add_executable(tests
 	${INCLUDES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-
+target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
 #find_package(Vulkan REQUIRED)
 #target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES})
 target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)

@@ -1014,6 +1014,433 @@ BfEvent bfCreateCommandPool(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfCreateUniformBuffers(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+	holder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) {
+		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		base.frame_pack[i].uniform_view_buffer = &holder->uniform_view_buffers[i];
+
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = sizeof(BfViewUniform);
+		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
+		VmaAllocationCreateInfo allocationInfo{};
+		allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
+		if (vmaCreateBuffer(base.allocator, 
+							&bufferInfo,
+							&allocationInfo, 
+							&base.frame_pack[i].uniform_view_buffer->buffer, 
+							&base.frame_pack[i].uniform_view_buffer->allocation, 
+							nullptr) != VK_SUCCESS) 
+		{ 
+			throw std::runtime_error("vmaCrateBuffer didn't work"); 
+		}
+
+		vmaMapMemory(base.allocator, 
+					 base.frame_pack[i].uniform_view_buffer->allocation, 
+					 &base.frame_pack[i].uniform_view_buffer->data);
+
+		/*glm::mat4 local_mat = glm::mat4(1.0f);
+		BfViewUniform uniform{ local_mat,local_mat,local_mat };
+
+		memcpy(base.frame_pack[i].uniform_view_buffer->data, &uniform, sizeof(BfViewUniform));*/
+	}
+
+	return BfEvent();
+}
+
+BfEvent bfCreateStandartDescriptorPool(BfBase& base)
+{
+	VkDescriptorPoolSize poolSize{};
+	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	if (vkCreateDescriptorPool(base.device, &poolInfo, nullptr, &base.standart_descriptor_pool) != VK_SUCCESS) {
+		throw std::runtime_error("Descriptor pool wasn't created");
+	}
+	return BfEvent();
+}
+
+BfEvent bfCreateGUIDescriptorPool(BfBase& base)
+{
+	VkDescriptorPoolSize pool_sizes[] =
+	{
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+	};
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+	pool_info.pPoolSizes = pool_sizes;
+	if (vkCreateDescriptorPool(base.device, &pool_info, nullptr, &base.gui_descriptor_pool) != VK_SUCCESS) {
+		throw std::runtime_error("ImGUI descriptor pool wasn't created");
+	}
+	return BfEvent();
+}
+
+BfEvent bfCreateDescriptorSets(BfBase& base)
+{
+	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, base.descriptor_set_layout);
+	
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = base.standart_descriptor_pool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.pSetLayouts = layouts.data();
+
+	BfHolder* holder = bfGetpHolder();
+	if (holder->uniform_view_descriptor_set.size() != MAX_FRAMES_IN_FLIGHT) {
+		holder->uniform_view_descriptor_set.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+	
+	if (vkAllocateDescriptorSets(base.device, &allocInfo, holder->uniform_view_descriptor_set.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Descriptor sets wasn't created");
+	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		holder->uniform_view_buffers[i].descriptor_set = &holder->uniform_view_descriptor_set[i];
+		
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = base.frame_pack[i].uniform_view_buffer->buffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(BfViewUniform);
+
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = *base.frame_pack[i].uniform_view_buffer->descriptor_set;
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(base.device, 1, &descriptorWrite, 0, nullptr);
+	}
+	
+	return BfEvent();
+}
+
+
+BfEvent bfCreateStandartCommandBuffers(BfBase& base) {
+	BfHolder* holder = bfGetpHolder();
+	
+	if (holder->standart_command_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+		holder->standart_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = base.command_pool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = static_cast<uint32_t>(holder->standart_command_buffers.size());
+
+	if (vkAllocateCommandBuffers(base.device, &allocInfo, holder->standart_command_buffers.data()) != VK_SUCCESS) {
+		throw std::runtime_error("Command buffer was not allocated");
+	}
+	
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		base.frame_pack[i].standart_command_buffer = &holder->standart_command_buffers[i];
+	}
+
+	return BfEvent();
+}
+
+BfEvent bfCreateGUICommandBuffers(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+
+	if (holder->gui_command_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+		holder->gui_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = base.command_pool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = static_cast<uint32_t>(holder->gui_command_buffers.size());
+
+	if (vkAllocateCommandBuffers(base.device, &allocInfo, holder->gui_command_buffers.data()) != VK_SUCCESS) {
+		throw std::runtime_error("ImGUI Command buffer was not allocated");
+	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		base.frame_pack[i].gui_command_buffer = &holder->gui_command_buffers[i];
+	}
+
+	
+	return BfEvent();
+}
+
+BfEvent bfCreateSyncObjects(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+	
+	if (holder->available_image_semaphores.size() != MAX_FRAMES_IN_FLIGHT)
+		holder->available_image_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
+
+	if (holder->finish_render_image_semaphores.size() != MAX_FRAMES_IN_FLIGHT)
+		holder->finish_render_image_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	
+	if (holder->frame_in_flight_fences.size() != MAX_FRAMES_IN_FLIGHT)
+		holder->frame_in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+
+
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; // For first frame render
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		base.frame_pack[i].available_image_semaphore = &holder->available_image_semaphores[i];
+		base.frame_pack[i].finish_render_image_semaphore = &holder->finish_render_image_semaphores[i];
+		base.frame_pack[i].frame_in_flight_fence = &holder->frame_in_flight_fences[i];
+		
+		if (vkCreateSemaphore(base.device, &semaphoreInfo, nullptr,
+			base.frame_pack[i].available_image_semaphore) != VK_SUCCESS ||
+
+			vkCreateSemaphore(base.device, &semaphoreInfo, nullptr,
+			base.frame_pack[i].finish_render_image_semaphore) != VK_SUCCESS ||
+
+			vkCreateFence(base.device, &fenceInfo, nullptr,
+			base.frame_pack[i].frame_in_flight_fence) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Semaphore or fence weren't created");
+		}
+	}
+
+	return BfEvent();
+}
+
+BfEvent bfInitImGUI(BfBase& base)
+{
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer bindings
+	ImGui_ImplGlfw_InitForVulkan(base.window->pWindow, true);
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = base.instance;
+	init_info.PhysicalDevice = base.physical_device->physical_device;
+	init_info.Device = base.device;
+	init_info.QueueFamily = base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE].value();
+	init_info.Queue = base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE];
+	init_info.PipelineCache = VK_NULL_HANDLE;
+	init_info.DescriptorPool = base.gui_descriptor_pool;
+	init_info.Allocator = nullptr;
+
+	BfSwapChainSupport swapChainSupport; 
+	bfGetSwapChainSupport(base.physical_device->physical_device, base.surface, swapChainSupport);
+	
+	VkSurfaceFormatKHR surfaceFormat;
+	bfGetSwapSurfaceFormat(swapChainSupport, surfaceFormat);
+
+	VkPresentModeKHR presentMode;
+	bfGetSwapPresentMode(swapChainSupport, presentMode);
+
+	VkExtent2D extent;
+	bfGetSwapExtent(swapChainSupport, base.window->pWindow, extent);
+
+	uint32_t imageCount = base.image_pack_count;
+
+	/*if (
+		swapChainSupport.capabilities.maxImageCount > 0
+		&& imageCount > swapChainSupport.capabilities.maxImageCount
+		) {
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+
+
+	init_info.MinImageCount = imageCount;
+
+	this->minImageCount = imageCount;*/
+
+	init_info.ImageCount = imageCount;
+	init_info.MinImageCount = imageCount;
+	init_info.CheckVkResultFn = check_vk_result;
+
+
+	ImGui_ImplVulkan_Init(&init_info, base.gui_render_pass);
+
+	VkCommandBuffer command_buffer; 
+	bfBeginSingleTimeCommands(base, command_buffer);
+		ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+	bfEndSingleTimeCommands(base, command_buffer);
+	return BfEvent();
+}
+
+void bfCreateAllocator(BfBase& base)
+{
+	VmaAllocatorCreateInfo info{};
+	info.device = base.device;
+	info.instance = base.instance;
+	info.physicalDevice = base.physical_device->physical_device;
+	
+	if (vmaCreateAllocator(&info, &base.allocator) != VK_SUCCESS) {
+		throw std::runtime_error("allocator wasn't created");
+	}
+}
+
+void bfUploadMesh(BfBase& base, BfMesh& mesh)
+{
+	bfUploadVertices(base, mesh);
+	bfUploadIndices(base, mesh);
+}
+
+void bfUploadVertices(BfBase& base, BfMesh& mesh)
+{
+	VkBuffer local_buffer;
+	VmaAllocation local_allocation;
+
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = mesh.vertices.size() * sizeof(bfVertex);
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	
+	VmaAllocationCreateInfo allocationInfo{};
+	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
+
+	if (vmaCreateBuffer(base.allocator, &bufferInfo, &allocationInfo, &local_buffer, &local_allocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("vmaCrateBuffer didn't work");
+	}
+
+	void* data;
+	vmaMapMemory(base.allocator, local_allocation, &data);
+		memcpy(data, mesh.vertices.data(), bufferInfo.size);
+	vmaUnmapMemory(base.allocator, local_allocation);
+
+
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	allocationInfo.flags = 0;
+
+	if (vmaCreateBuffer(base.allocator, &bufferInfo, &allocationInfo, &mesh.vertex_buffer.buffer, &mesh.vertex_buffer.allocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("vmaCrateBuffer didn't work");
+	}
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = base.command_pool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	VkBufferCopy copyRegion{};
+	copyRegion.srcOffset = 0; // Optional
+	copyRegion.dstOffset = 0; // Optional
+	copyRegion.size = bufferInfo.size;
+	vkCmdCopyBuffer(commandBuffer, local_buffer, mesh.vertex_buffer.buffer, 1, &copyRegion);
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE], 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
+
+	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
+
+	vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
+}
+
+void bfUploadIndices(BfBase& base, BfMesh& mesh)
+{
+	VkBuffer local_buffer;
+	VmaAllocation local_allocation;
+
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = mesh.indices.size() * sizeof(uint32_t);
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	//bufferInfo.flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+	// VMA_ALLOCATION_CREATE_HOST_ACCESS_
+
+	VmaAllocationCreateInfo allocationInfo{};
+	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
+
+	if (vmaCreateBuffer(base.allocator, &bufferInfo, &allocationInfo, &local_buffer, &local_allocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("vmaCrateBuffer didn't work");
+	}
+
+	void* data;
+	vmaMapMemory(base.allocator, local_allocation, &data);
+	memcpy(data, mesh.indices.data(), bufferInfo.size);
+	vmaUnmapMemory(base.allocator, local_allocation);
+
+
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	allocationInfo.flags = 0;
+
+	if (vmaCreateBuffer(base.allocator, &bufferInfo, &allocationInfo, &mesh.index_buffer.buffer, &mesh.index_buffer.allocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("vmaCrateBuffer didn't work");
+	}
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = base.command_pool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+		VkBufferCopy copyRegion{};
+		copyRegion.srcOffset = 0; // Optional
+		copyRegion.dstOffset = 0; // Optional
+		copyRegion.size = bufferInfo.size;
+		vkCmdCopyBuffer(commandBuffer, local_buffer, mesh.index_buffer.buffer, 1, &copyRegion);
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE], 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
+
+	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
+
+	vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
+}
+
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data)
 {
 	VkShaderModuleCreateInfo createInfo{};
@@ -1073,5 +1500,38 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 	event.info = ss.str();
 
 	return BfEvent(event);
+}
+
+void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = base.command_pool;
+	allocInfo.commandBufferCount = 1;
+
+	//VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+}
+
+void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE], 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
+
+	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
 }
 

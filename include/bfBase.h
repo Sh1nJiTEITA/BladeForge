@@ -8,10 +8,13 @@
 #include "bfWindow.h"
 #include "bfPhysicalDevice.h"
 #include "bfHolder.h"
-#include "bfVertex.h"
+#include "bfVertex2.hpp"
+#include "bfUniforms.h"
 
 //static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 //static std::vector<BfWindow> bfWindowHolder{};
+
+static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 struct BfImagePack {
 	VkImage* pImage;
@@ -20,6 +23,15 @@ struct BfImagePack {
 	VkFramebuffer* pGUI_buffer;
 };
 
+struct BfFramePack {
+	BfAllocatedUniformBuffer* uniform_view_buffer;
+	VkCommandBuffer* standart_command_buffer;
+	VkCommandBuffer* gui_command_buffer;
+
+	VkSemaphore* available_image_semaphore;
+	VkSemaphore* finish_render_image_semaphore;
+	VkFence* frame_in_flight_fence;
+};
 
 
 struct BfBase {				 
@@ -36,6 +48,7 @@ struct BfBase {
 	VkExtent2D				 swap_chain_extent;
 							 
 	std::vector<BfImagePack> image_packs;
+	std::vector<BfFramePack> frame_pack;
 	uint32_t				 image_pack_count;
 							 
 	VkRenderPass			 standart_render_pass;
@@ -47,6 +60,10 @@ struct BfBase {
 	VkPipelineLayout		 line_pipeline_layout;
 
 	VkCommandPool			 command_pool;
+	VkDescriptorPool		 standart_descriptor_pool;
+	VkDescriptorPool		 gui_descriptor_pool;
+
+	VmaAllocator			 allocator;
 };
 
 // Main functions
@@ -64,7 +81,19 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);
 BfEvent bfCreateCommandPool(BfBase& base);
+BfEvent bfCreateUniformBuffers(BfBase& base);
+BfEvent bfCreateStandartDescriptorPool(BfBase& base);
+BfEvent bfCreateGUIDescriptorPool(BfBase& base);
+BfEvent bfCreateDescriptorSets(BfBase& base);
+BfEvent bfCreateStandartCommandBuffers(BfBase& base);
+BfEvent bfCreateGUICommandBuffers(BfBase& base);
+BfEvent bfCreateSyncObjects(BfBase& base);
+BfEvent bfInitImGUI(BfBase& base);
 
+void bfCreateAllocator(BfBase& base);
+void bfUploadMesh(BfBase& base, BfMesh& mesh);
+void bfUploadVertices(BfBase& base, BfMesh& mesh);
+void bfUploadIndices(BfBase& base, BfMesh& mesh);
 
 // Populate
 void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -75,4 +104,6 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 
+void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
+void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 #endif
