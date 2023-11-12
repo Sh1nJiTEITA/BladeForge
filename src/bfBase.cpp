@@ -992,6 +992,28 @@ BfEvent bfCreateGUIFrameBuffers(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfCreateCommandPool(BfBase& base)
+{
+	
+
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolInfo.queueFamilyIndex = base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE].value();
+
+	BfSingleEvent event{};
+	if (vkCreateCommandPool(base.device, &poolInfo, nullptr, &base.command_pool) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_COMMAND_POOL_SUCCESS;
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_CREATE_COMMAND_POOL_FAILURE;
+	}
+	
+	return BfEvent(event);
+}
+
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data)
 {
 	VkShaderModuleCreateInfo createInfo{};

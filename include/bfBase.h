@@ -41,11 +41,12 @@ struct BfBase {
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
 	VkDescriptorSetLayout	 descriptor_set_layout;
-
 	VkPipeline				 triangle_pipeline;
 	VkPipelineLayout		 triangle_pipeline_layout;
 	VkPipeline				 line_pipeline;
 	VkPipelineLayout		 line_pipeline_layout;
+
+	VkCommandPool			 command_pool;
 };
 
 // Main functions
@@ -62,7 +63,7 @@ BfEvent bfCreateDescriptorSetLayout(BfBase& base);
 BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);
-
+BfEvent bfCreateCommandPool(BfBase& base);
 
 
 // Populate

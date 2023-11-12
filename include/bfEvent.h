@@ -86,7 +86,10 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE			 = -0x26,
 
 	BF_ACTION_TYPE_CREATE_FRAME_BUFFER_SUCCESS				 =  0x27,
-	BF_ACTION_TYPE_CREATE_FRAME_BUFFER_FAILURE				 = -0x27
+	BF_ACTION_TYPE_CREATE_FRAME_BUFFER_FAILURE				 = -0x27,
+
+	BF_ACTION_TYPE_CREATE_COMMAND_POOL_SUCCESS				 =  0x28,
+	BF_ACTION_TYPE_CREATE_COMMAND_POOL_FAILURE				 = -0x28,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -162,7 +165,10 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x26,  "VkPipeline's wasn't created:"},
 
 	{ 0x27,  "VkFramebuffer was created successfully:"},
-	{-0x27,  "VkFramebuffer wasn't created:"}
+	{-0x27,  "VkFramebuffer wasn't created:"},
+
+	{ 0x28,  "VkCommandPool was created successfully"},
+	{-0x29,  "VkCommandPool wasn't created"}
 };
 
 

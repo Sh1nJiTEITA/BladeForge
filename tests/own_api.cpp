@@ -86,6 +86,7 @@ TEST_CASE("BfHandler-test") {
     bfCreateGraphicsPipelines(mBase, "shaders/vert.spv", "shaders/frag.spv");
     bfCreateStandartFrameBuffers(mBase);
     bfCreateGUIFrameBuffers(mBase);
+    bfCreateCommandPool(mBase);
 
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
