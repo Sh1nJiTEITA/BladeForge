@@ -22,11 +22,11 @@ struct BfAllocatedUniformBuffer : BfAllocatedBuffer {
 };
 
 
-BfEvent bfCreateBuffer(VkDeviceSize size, 
-					   VkBufferUsageFlags usage,
-					   VkMemoryPropertyFlags properties,
-					   VkBuffer& buffer,
-					   VkDeviceMemory& bufferMemory);
+BfEvent bfCreateBuffer(BfAllocatedBuffer* allocatedBuffer, 
+					   VmaAllocator allocator, 
+					   size_t allocSize, 
+					   VkBufferUsageFlags usage, 
+					   VmaMemoryUsage memoryUsage);
 
 
 

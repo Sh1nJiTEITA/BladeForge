@@ -79,16 +79,17 @@ TEST_CASE("BfHandler-test") {
     bfCreateSurface(mBase);
     bfCreatePhysicalDevice(mBase);
     bfCreateLogicalDevice(mBase);
+    bfCreateAllocator(mBase);
     bfCreateSwapchain(mBase);
     bfCreateImageViews(mBase);
     bfCreateStandartRenderPass(mBase);
     bfCreateGUIRenderPass(mBase);
-    bfCreateDescriptorSetLayout(mBase);
+    //bfCreateDescriptorSetLayout(mBase);
+    bfInitDescriptors(mBase);
     bfCreateGraphicsPipelines(mBase, "shaders/vert.spv", "shaders/frag.spv");
     bfCreateStandartFrameBuffers(mBase);
     bfCreateGUIFrameBuffers(mBase);
     bfCreateCommandPool(mBase);
-    bfCreateAllocator(mBase);
 
     BfMesh mesh{};
     mesh.vertices = {
@@ -103,10 +104,10 @@ TEST_CASE("BfHandler-test") {
 
     
     bfUploadMesh(mBase, mesh);
-    bfCreateUniformBuffers(mBase);
-    bfCreateStandartDescriptorPool(mBase);
+    //bfCreateUniformBuffers(mBase);
+    //bfCreateStandartDescriptorPool(mBase);
     bfCreateGUIDescriptorPool(mBase);
-    bfCreateDescriptorSets(mBase);
+    //bfCreateDescriptorSets(mBase);
     bfCreateStandartCommandBuffers(mBase);
     bfCreateGUICommandBuffers(mBase);
     bfCreateSyncObjects(mBase);

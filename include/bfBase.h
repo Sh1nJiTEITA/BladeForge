@@ -18,20 +18,24 @@
 static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 struct BfImagePack {
-	VkImage* pImage;
-	VkImageView* pImage_view;
-	VkFramebuffer* pStandart_Buffer;
-	VkFramebuffer* pGUI_buffer;
+	VkImage*				pImage;
+	VkImageView*			pImage_view;
+	VkFramebuffer*			pStandart_Buffer;
+	VkFramebuffer*			pGUI_buffer;
 };
 
 struct BfFramePack {
-	BfAllocatedUniformBuffer* uniform_view_buffer;
-	VkCommandBuffer* standart_command_buffer;
-	VkCommandBuffer* gui_command_buffer;
+	BfAllocatedBuffer*		uniform_view_buffer;
+	void*					uniform_view_data;
+	
+	VkCommandBuffer*		standart_command_buffer;
+	VkCommandBuffer*		gui_command_buffer;
 
-	VkSemaphore* available_image_semaphore;
-	VkSemaphore* finish_render_image_semaphore;
-	VkFence* frame_in_flight_fence;
+	VkSemaphore*			available_image_semaphore;
+	VkSemaphore*			finish_render_image_semaphore;
+	VkFence*				frame_in_flight_fence;
+	
+	VkDescriptorSet*		global_descriptor_set;
 };
 
 
@@ -56,7 +60,7 @@ struct BfBase {
 
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
-	VkDescriptorSetLayout	 descriptor_set_layout;
+	VkDescriptorSetLayout	 global_set_layout;
 	VkPipeline				 triangle_pipeline;
 	VkPipelineLayout		 triangle_pipeline_layout;
 	VkPipeline				 line_pipeline;
@@ -81,6 +85,7 @@ BfEvent bfCreateImageViews(BfBase& base);
 BfEvent bfCreateStandartRenderPass(BfBase& base);
 BfEvent bfCreateGUIRenderPass(BfBase& base);
 BfEvent bfCreateDescriptorSetLayout(BfBase& base);
+BfEvent bfInitDescriptors(BfBase& base); //
 BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);

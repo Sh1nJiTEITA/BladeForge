@@ -90,6 +90,12 @@ enum class BfEnActionType {
 
 	BF_ACTION_TYPE_CREATE_COMMAND_POOL_SUCCESS				 =  0x28,
 	BF_ACTION_TYPE_CREATE_COMMAND_POOL_FAILURE				 = -0x28,
+
+	BF_ACTION_TYPE_ALLOC_BUFFER_SUCCESS						 =  0x29,
+	BF_ACTION_TYPE_ALLOC_BUFFER_FAILURE						 = -0x29,
+
+	BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS				 =  0x30,
+	BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE				 = -0x30
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -168,7 +174,13 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x27,  "VkFramebuffer wasn't created:"},
 
 	{ 0x28,  "VkCommandPool was created successfully"},
-	{-0x29,  "VkCommandPool wasn't created"}
+	{-0x28,  "VkCommandPool wasn't created"},
+
+	{ 0x29,  "VkBuffer was created succesfully"},
+	{-0x29,  "VkBuffer wasn't created"},
+
+	{ 0x32,  "Whole descriptors stuff was made successfully:"},
+	{-0x32,  "Not whole descriptors stuff was made successfully:"}
 };
 
 

@@ -598,7 +598,7 @@ BfEvent bfCreateDescriptorSetLayout(BfBase& base)
 
 	BfSingleEvent event{};
 	if (vkCreateDescriptorSetLayout(
-		base.device, &layoutInfo, nullptr, &base.descriptor_set_layout
+		base.device, &layoutInfo, nullptr, &base.global_set_layout
 	) == VK_SUCCESS) {
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_SUCCESS;
@@ -607,6 +607,179 @@ BfEvent bfCreateDescriptorSetLayout(BfBase& base)
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_FAILURE;
 	}
+	return BfEvent(event);
+}
+
+BfEvent bfInitDescriptors(BfBase& base)
+{
+// BfEvent recording
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+	
+	bool is_descriptors_init_successfull = true;
+	// Additional Infolog for bfSingleEvent
+	std::stringstream ss;
+
+// BfHolder bindings
+	BfHolder* pHolder = bfGetpHolder();
+
+// Uniform-bindings enumeration ----------------------------------------------------------
+
+	// View-uniform 
+	VkDescriptorSetLayoutBinding camBufferBinding{};
+	camBufferBinding.binding		 = 0;
+	camBufferBinding.descriptorCount = 1;
+	camBufferBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	camBufferBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;
+
+
+	// Bindings to desctiptor set layout
+	std::vector<VkDescriptorSetLayoutBinding> bindings = {
+		camBufferBinding
+	};
+
+// Create desctiptor-pool layout ---------------------------------------------------------
+	// Descriptor set layout
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
+	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorSetLayoutInfo.bindingCount = 1;
+	descriptorSetLayoutInfo.pNext		 = nullptr;
+	descriptorSetLayoutInfo.flags		 = 0;
+	descriptorSetLayoutInfo.pBindings	 = bindings.data();
+
+	if (vkCreateDescriptorSetLayout(base.device, 
+									&descriptorSetLayoutInfo, 
+									nullptr, 
+									&base.global_set_layout) == VK_SUCCESS) {
+		ss << "VkDescriptorSetLayout for " << bindings.size() << "bindings was"
+			"created successfully;";
+	}
+	else {
+		is_descriptors_init_successfull = false;
+		ss << "VkDescriptorSetLayout for " << bindings.size() << "bindings wasn't"
+			"created;";
+	}
+
+// Create descriptor pool ----------------------------------------------------------------
+	std::vector<VkDescriptorPoolSize> sizes = {
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10}
+	};
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.pNext		   = nullptr;
+	poolInfo.flags		   = 0;
+	poolInfo.maxSets	   = 10;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
+	poolInfo.pPoolSizes	   = sizes.data();
+
+	if (vkCreateDescriptorPool(base.device,
+							   &poolInfo,
+							   nullptr,
+							   &base.standart_descriptor_pool) == VK_SUCCESS) {
+		ss << "VkDescriptorPool for " 
+		   << poolInfo.maxSets
+		   << " sets was created successfully";	
+	}
+	else {
+		is_descriptors_init_successfull = false;
+		
+		ss << "VkDescriptorPool for "
+		   << poolInfo.maxSets
+		   << " sets wasn't created";
+	}
+
+// Resize holder storages ---------------------------------------------------------------
+		
+	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) { // FrameHolder
+		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT); 
+	}
+
+	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
+		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
+		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+	
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+// Allocate descriptors from desctiptor pool for each frame ------------------------------
+		
+		// Point to uniform buffer in holder
+		base.frame_pack[i].uniform_view_buffer = &pHolder->uniform_view_buffers[i];
+		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
+								
+
+
+		// Use needed uniform buffer value
+		BfAllocatedBuffer* camUniformBuffer = base.frame_pack[i].uniform_view_buffer;
+
+		// Create buffer for uniform 
+		bfCreateBuffer(camUniformBuffer,//*camUniformBuffer, 
+					   base.allocator, 
+					   sizeof(BfViewUniform), 
+					   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+					   VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+		descriptorSetAllocInfo.sType		  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		descriptorSetAllocInfo.pNext		  = nullptr;
+		descriptorSetAllocInfo.descriptorPool = base.standart_descriptor_pool;
+		// Sum of descriptors: ViewUniformBuffer -> 1
+		descriptorSetAllocInfo.descriptorSetCount = 1; 
+		descriptorSetAllocInfo.pSetLayouts = &base.global_set_layout;
+
+		if (vkAllocateDescriptorSets(base.device, 
+									 &descriptorSetAllocInfo, 
+									 base.frame_pack[i].global_descriptor_set) == VK_SUCCESS) {
+			ss << "VkDescriptorsSet for frame " << i << "was allocated;";
+		}
+		else {
+			is_descriptors_init_successfull = false;
+			ss << "VkDescriptorsSet for frame " << i << "wasn't allocated;";
+		}
+
+
+// Make descriptors point to uniform buffers (data) --------------------------------------
+
+		// View Uniform buffer
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = camUniformBuffer->buffer;
+		bufferInfo.offset = 0;						// From start
+		bufferInfo.range  = sizeof(BfViewUniform);  // Length in bites of data
+
+		// Write data of View Uniform buffer to descriptor
+		VkWriteDescriptorSet setWrite{};
+		setWrite.sType			 = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		setWrite.pNext			 = nullptr;
+		setWrite.dstBinding		 = 0; // binding = 0
+		setWrite.dstSet			 = *base.frame_pack[i].global_descriptor_set;
+		setWrite.descriptorCount = 1;
+		setWrite.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		setWrite.pBufferInfo	 = &bufferInfo;
+
+		vkUpdateDescriptorSets(base.device, 1, &setWrite, 0, nullptr);
+
+		if (vmaMapMemory(base.allocator,
+						 base.frame_pack[i].uniform_view_buffer->allocation,
+						&base.frame_pack[i].uniform_view_data) == VK_SUCCESS) {
+			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
+		}
+		else {
+			is_descriptors_init_successfull = false;
+			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
+		}
+	}
+
+	if (is_descriptors_init_successfull) {
+		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS;
+	}
+	else {
+		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE;
+	}
+	event.info = ss.str();
+
 	return BfEvent(event);
 }
 
@@ -1054,9 +1227,9 @@ BfEvent bfCreateUniformBuffers(BfBase& base)
 			throw std::runtime_error("vmaCrateBuffer didn't work"); 
 		}
 
-		vmaMapMemory(base.allocator, 
+		/*vmaMapMemory(base.allocator, 
 					 base.frame_pack[i].uniform_view_buffer->allocation, 
-					 &base.frame_pack[i].uniform_view_buffer->data);
+					 &base.frame_pack[i].uniform_view_buffer->data);*/
 
 		/*glm::mat4 local_mat = glm::mat4(1.0f);
 		BfViewUniform uniform{ local_mat,local_mat,local_mat };
@@ -1102,50 +1275,50 @@ BfEvent bfCreateGUIDescriptorPool(BfBase& base)
 	}
 	return BfEvent();
 }
-
-BfEvent bfCreateDescriptorSets(BfBase& base)
-{
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, base.descriptor_set_layout);
-	
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = base.standart_descriptor_pool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	allocInfo.pSetLayouts = layouts.data();
-
-	BfHolder* holder = bfGetpHolder();
-	if (holder->uniform_view_descriptor_set.size() != MAX_FRAMES_IN_FLIGHT) {
-		holder->uniform_view_descriptor_set.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-	
-	if (vkAllocateDescriptorSets(base.device, &allocInfo, holder->uniform_view_descriptor_set.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Descriptor sets wasn't created");
-	}
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		holder->uniform_view_buffers[i].descriptor_set = &holder->uniform_view_descriptor_set[i];
-		
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = base.frame_pack[i].uniform_view_buffer->buffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(BfViewUniform);
-
-
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = *base.frame_pack[i].uniform_view_buffer->descriptor_set;
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(base.device, 1, &descriptorWrite, 0, nullptr);
-	}
-	
-	return BfEvent();
-}
+//
+//BfEvent bfCreateDescriptorSets(BfBase& base)
+//{
+//	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, base.global_set_layout);
+//	
+//	VkDescriptorSetAllocateInfo allocInfo{};
+//	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+//	allocInfo.descriptorPool = base.standart_descriptor_pool;
+//	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+//	allocInfo.pSetLayouts = layouts.data();
+//
+//	BfHolder* holder = bfGetpHolder();
+//	if (holder->uniform_view_descriptor_set.size() != MAX_FRAMES_IN_FLIGHT) {
+//		holder->uniform_view_descriptor_set.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//	
+//	if (vkAllocateDescriptorSets(base.device, &allocInfo, holder->uniform_view_descriptor_set.data()) != VK_SUCCESS)
+//	{
+//		throw std::runtime_error("Descriptor sets wasn't created");
+//	}
+//
+//	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+//		holder->uniform_view_buffers[i].descriptor_set = &holder->uniform_view_descriptor_set[i];
+//		
+//		VkDescriptorBufferInfo bufferInfo{};
+//		bufferInfo.buffer = base.frame_pack[i].uniform_view_buffer->buffer;
+//		bufferInfo.offset = 0;
+//		bufferInfo.range = sizeof(BfViewUniform);
+//
+//
+//		VkWriteDescriptorSet descriptorWrite{};
+//		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+//		descriptorWrite.dstSet = *base.frame_pack[i].uniform_view_buffer->descriptor_set;
+//		descriptorWrite.dstBinding = 0;
+//		descriptorWrite.dstArrayElement = 0;
+//		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+//		descriptorWrite.descriptorCount = 1;
+//		descriptorWrite.pBufferInfo = &bufferInfo;
+//
+//		vkUpdateDescriptorSets(base.device, 1, &descriptorWrite, 0, nullptr);
+//	}
+//	
+//	return BfEvent();
+//}
 
 
 BfEvent bfCreateStandartCommandBuffers(BfBase& base) {
@@ -1475,7 +1648,7 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutCreateInfo.setLayoutCount = 1;
-	pipelineLayoutCreateInfo.pSetLayouts = &base.descriptor_set_layout; // Optional
+	pipelineLayoutCreateInfo.pSetLayouts = &base.global_set_layout; // Optional
 	pipelineLayoutCreateInfo.pushConstantRangeCount = 0; // Optional
 	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr; // Optional
 
@@ -1706,7 +1879,7 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 			base.triangle_pipeline_layout,
 			0,
 			1,
-			base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+			base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
 			0,
 			nullptr
 		);
@@ -1787,7 +1960,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 	BfHolder* holder = bfGetpHolder();
 
 
-	memcpy(base.frame_pack[base.current_frame].uniform_view_buffer->data, &ubo, sizeof(ubo));
+	memcpy(base.frame_pack[base.current_frame].uniform_view_data, &ubo, sizeof(ubo));
 
 }
 

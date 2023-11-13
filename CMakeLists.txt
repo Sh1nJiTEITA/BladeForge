@@ -54,8 +54,8 @@ set(SOURCES
 	"src/bfSwapChain.cpp"
 	"src/bfConsole.cpp"
 	"src/bfHolder.cpp"
-	#"src/bfBuffer.cpp"
- "src/bfUniforms.cpp")
+	"src/bfBuffer.cpp"
+	"src/bfUniforms.cpp")
 
 set(HEADERS
 	#"include/BladeForgeBin.h"	
@@ -70,8 +70,8 @@ set(HEADERS
 	"include/bfSwapChain.h"
 	"include/bfConsole.h"
 	"include/bfHolder.h"
-	#"include/bfBuffer.h"
- "include/bfUniforms.h")
+	"include/bfBuffer.h"
+	"include/bfUniforms.h")
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 

@@ -23,8 +23,8 @@ struct BfHolder {
 
 	// Frame-pack arrays
 		// Uniforms
-	std::vector<BfAllocatedUniformBuffer> uniform_view_buffers;
-	std::vector<VkDescriptorSet> uniform_view_descriptor_set;
+	std::vector<BfAllocatedBuffer> uniform_view_buffers;
+	std::vector<VkDescriptorSet> global_descriptor_sets;
 	std::vector<VkCommandBuffer> standart_command_buffers;
 	std::vector<VkCommandBuffer> gui_command_buffers;
 		// Sync
