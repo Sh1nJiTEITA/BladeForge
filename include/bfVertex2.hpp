@@ -27,7 +27,7 @@ struct bfVertex {
 
 struct BfMesh {
 	std::vector<bfVertex> vertices;
-	std::vector<uint32_t> indices;
+	std::vector<uint16_t> indices;
 
 	BfAllocatedBuffer vertex_buffer;
 	BfAllocatedBuffer index_buffer;

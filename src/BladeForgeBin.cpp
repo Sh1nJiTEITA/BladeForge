@@ -413,7 +413,7 @@ void BladeForge::createInstance()
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	
 	// Версия API, под которую написано приложение
-	appInfo.apiVersion = VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_API_VERSION_1_3;
 
 
 	/*
@@ -434,6 +434,7 @@ void BladeForge::createInstance()
 
 	// Слои (ЕСЛИ ВКЛЮЧЕНЫЕ ИЗНАЧАЛЬНО)
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{}; // Для проверки при создании Instance
+	VkValidationFeaturesEXT features{};
 	if (enableValidationLayers)
 	{
 		// Количество слоев
@@ -443,7 +444,11 @@ void BladeForge::createInstance()
 		instanceInfo.ppEnabledLayerNames = validationLayers.data();
 
 		populateMessengerCreateInfo(debugCreateInfo);
-		instanceInfo.pNext = (VkDebugUtilsMessengerEXT*)&debugCreateInfo;
+		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+		features.enabledValidationFeatureCount = ValidationFeatures.size();
+		features.pEnabledValidationFeatures = ValidationFeatures.data();
+		features.pNext = (VkDebugUtilsMessengerEXT*)&debugCreateInfo;
+		instanceInfo.pNext = (VkValidationFeaturesEXT*)&features;
 	}
 	else // Иначе слоев нет.
 	{
@@ -1693,6 +1698,7 @@ std::vector<const char*> BladeForge::getRequiredExtensions()
 	if (enableValidationLayers)
 	{
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		extensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 	}
 
 	return extensions;
@@ -1731,7 +1737,7 @@ void BladeForge::populateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = {
-		//VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |		// Just info (e.g. creation info)
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |		// Just info (e.g. creation info)
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |	// Diagnostic info
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |	// Warning (bug)
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT		// Warning (potential crush)

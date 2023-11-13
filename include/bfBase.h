@@ -11,6 +11,7 @@
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
 
+
 //static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 //static std::vector<BfWindow> bfWindowHolder{};
 
@@ -50,7 +51,9 @@ struct BfBase {
 	std::vector<BfImagePack> image_packs;
 	std::vector<BfFramePack> frame_pack;
 	uint32_t				 image_pack_count;
-							 
+	uint32_t				 current_image;
+	uint32_t				 current_frame;
+
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
 	VkDescriptorSetLayout	 descriptor_set_layout;
@@ -64,6 +67,7 @@ struct BfBase {
 	VkDescriptorPool		 gui_descriptor_pool;
 
 	VmaAllocator			 allocator;
+	
 };
 
 // Main functions
@@ -103,7 +107,17 @@ void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInf
 BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
+BfEvent bfaRecreateSwapchain(BfBase& base);
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
+void bfDrawFrame(BfBase& base, BfMesh& mesh);
+void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh);
+
+// CleanUp's
+BfEvent bfCleanUpSwapchain(BfBase& base);
+
+void bfUpdateUniformBuffer(BfBase& base);
+
+
 #endif

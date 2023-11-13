@@ -34,7 +34,12 @@
 // Store device extensions
 const std::vector<const char*> bfvDeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	
 	//GL_KHR_vulkan_glsl
+};
+
+const std::vector< VkValidationFeatureEnableEXT> bfvValidationFeatures = {
+	VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Vulkan properties //

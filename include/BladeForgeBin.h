@@ -104,6 +104,9 @@ static void check_vk_result(VkResult err)
 		abort();
 };
 
+const std::vector< VkValidationFeatureEnableEXT> ValidationFeatures = {
+	VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
+};
 
 // Store validation layers here:
 const std::vector<const char*> validationLayers = {

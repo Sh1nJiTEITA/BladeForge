@@ -4,11 +4,16 @@
 
 std::forward_list<BfSingleEvent> BfEventHandler::single_events{};
 
+BfEventHandler::FunctionPointer BfEventHandler::funcPtr = nullptr;
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Static members //
 
 // BfEventHandler ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 void BfEventHandler::add_single_event(BfSingleEvent event)
 {
+	if (funcPtr != nullptr) {
+		// Вызываем функцию
+		funcPtr(event);
+	}
 	single_events.push_front(event);
 }
 

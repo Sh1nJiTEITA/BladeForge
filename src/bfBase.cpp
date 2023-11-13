@@ -80,6 +80,7 @@ BfEvent bfCreateInstance(BfBase& base)
 	if (enableValidationLayers)
 	{
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		extensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 	}
 	
 	// Create VkInstance
@@ -88,7 +89,7 @@ BfEvent bfCreateInstance(BfBase& base)
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.pEngineName = nullptr;
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.apiVersion = VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_API_VERSION_1_3;
 
 
 	VkInstanceCreateInfo instanceInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
@@ -98,7 +99,9 @@ BfEvent bfCreateInstance(BfBase& base)
 
 
 
-	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{}; 
+	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+	VkValidationFeaturesEXT features{};
+
 	if (enableValidationLayers)
 	{
 	
@@ -108,7 +111,13 @@ BfEvent bfCreateInstance(BfBase& base)
 		instanceInfo.ppEnabledLayerNames = bfvValidationLayers.data();
 
 		bfPopulateMessengerCreateInfo(debugCreateInfo);
-		instanceInfo.pNext = (VkDebugUtilsMessengerEXT*)&debugCreateInfo;
+
+		
+		features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+		features.enabledValidationFeatureCount = bfvValidationFeatures.size();
+		features.pEnabledValidationFeatures = bfvValidationFeatures.data();
+		features.pNext = (VkDebugUtilsMessengerEXT*)&debugCreateInfo;
+		instanceInfo.pNext = (VkValidationFeaturesEXT*)&features;
 	}
 	else 
 	{
@@ -609,7 +618,7 @@ void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInf
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = {
-		//VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |	// Just info (e.g. creation info)
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |	// Just info (e.g. creation info)
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |	// Diagnostic info
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |	// Warning (bug)
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT		// Warning (potential crush)
@@ -1502,6 +1511,29 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfaRecreateSwapchain(BfBase& base)
+{
+	int width = 0; int height = 0;
+	glfwGetFramebufferSize(base.window->pWindow, &width, &height);
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(base.window->pWindow, &width, &height);
+		glfwWaitEvents();
+	}
+
+	ImGui_ImplVulkan_SetMinImageCount(base.image_pack_count);
+
+	vkDeviceWaitIdle(base.device);
+
+	bfCleanUpSwapchain(base);
+
+	bfCreateSwapchain(base);
+	bfCreateImageViews(base);
+	bfCreateStandartFrameBuffers(base);
+	bfCreateGUIFrameBuffers(base);
+
+	return BfEvent();
+}
+
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 {
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -1533,5 +1565,229 @@ void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 	vkQueueWaitIdle(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
 
 	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
+}
+
+void bfDrawFrame(BfBase& base, BfMesh& mesh)
+{
+	// VK_TRUE - wait all fences
+	vkWaitForFences(base.device, 1, base.frame_pack[base.current_frame].frame_in_flight_fence, VK_TRUE, UINT64_MAX);
+
+	VkSemaphore		local_available_image_semaphore		= *base.frame_pack[base.current_frame].available_image_semaphore;
+	VkSemaphore		local_finish_render_image_semaphore = *base.frame_pack[base.current_frame].finish_render_image_semaphore;
+	VkFence			local_fence_in_flight				= *base.frame_pack[base.current_frame].frame_in_flight_fence;
+	
+	VkCommandBuffer local_standart_command_bufffer		= *base.frame_pack[base.current_frame].standart_command_buffer;
+	VkCommandBuffer local_gui_command_buffer			= *base.frame_pack[base.current_frame].gui_command_buffer;
+
+	VkResult result = vkAcquireNextImageKHR(base.device,
+		base.swap_chain,
+		UINT64_MAX,
+		local_available_image_semaphore,
+		VK_NULL_HANDLE,
+		&base.current_image);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		bfaRecreateSwapchain(base);
+
+		return;
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw std::runtime_error("Failed to acquire swap chain image");
+	}
+
+	bfUpdateUniformBuffer(base);
+
+	vkResetFences(base.device, 1, &local_fence_in_flight);
+
+	vkResetCommandBuffer(local_standart_command_bufffer, 0);
+	bfMainRecordCommandBuffer(base, mesh);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	VkSemaphore waitSemaphores[] = { local_available_image_semaphore };
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+
+	std::array<VkCommandBuffer, 2> submitCommandBuffers = {
+		local_standart_command_bufffer, local_gui_command_buffer
+	};
+
+	submitInfo.pCommandBuffers = submitCommandBuffers.data();
+	submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
+
+	VkSemaphore signalSemaphores[] = { local_finish_render_image_semaphore };
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	if (vkQueueSubmit(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE], 1, &submitInfo, local_fence_in_flight) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to submit draw command buffer");
+	}
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = signalSemaphores;
+
+	VkSwapchainKHR swapChains[] = { base.swap_chain };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &base.current_image;
+
+	result = vkQueuePresentKHR(base.physical_device->queues[BfvEnQueueType::BF_QUEUE_PRESENT_TYPE], &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR ||
+		result == VK_SUBOPTIMAL_KHR ||
+		base.window->resized)
+	{
+		ImGui_ImplVulkan_SetMinImageCount(base.image_pack_count);
+		bfaRecreateSwapchain(base);
+	}
+	else if (result != VK_SUCCESS) {
+		throw std::runtime_error("failed to present swap chain image!");
+	}
+
+
+	base.current_frame = (base.current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
+{
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	//beginInfo.flags = 0;
+	beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	if (vkBeginCommandBuffer(*base.frame_pack[base.current_frame].standart_command_buffer, &beginInfo) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recoding command buffer");
+	}
+
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = base.standart_render_pass;
+	renderPassInfo.framebuffer = *base.image_packs[base.current_image].pStandart_Buffer;
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = base.swap_chain_extent;
+
+	VkClearValue clearColor = { {{1.0f, 0.0f, 0.0f, 1.0f}} };
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+
+	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
+	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	{
+		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+
+		VkBuffer vertexBuffers[] = { mesh.vertex_buffer.buffer };
+		VkDeviceSize offsets[] = { 0 };
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(base.swap_chain_extent.width);
+		viewport.height = static_cast<float>(base.swap_chain_extent.height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(local_buffer, 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = base.swap_chain_extent;
+		vkCmdSetScissor(local_buffer, 0, 1, &scissor);
+
+		vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(local_buffer, mesh.index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindDescriptorSets(
+			local_buffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			base.triangle_pipeline_layout,
+			0,
+			1,
+			base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+			0,
+			nullptr
+		);
+
+
+		//vkCmdDraw(local_buffer, static_cast<uint32_t>(mesh.vertices.size()), 1, 0, 0);
+		vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+	}
+	vkCmdEndRenderPass(local_buffer);
+
+	if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recoding command buffer");
+	}
+
+	local_buffer = *base.frame_pack[base.current_frame].gui_command_buffer;
+
+	// IMGUI
+	if (vkBeginCommandBuffer(local_buffer, &beginInfo) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recoding command buffer");
+	}
+
+	VkRenderPassBeginInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	info.renderPass = base.gui_render_pass;
+	info.framebuffer = *base.image_packs[base.current_image].pGUI_buffer;
+	info.renderArea.extent = base.swap_chain_extent;
+	info.clearValueCount = 1;
+	info.pClearValues = &clearColor;
+
+	vkCmdBeginRenderPass(local_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), local_buffer);
+	vkCmdEndRenderPass(local_buffer);
+
+	if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
+		throw std::runtime_error("failed to record command buffer!");
+	}
+
+}
+
+BfEvent bfCleanUpSwapchain(BfBase& base)
+{
+	BfHolder* holder = bfGetpHolder();
+	
+	for (size_t i = 0; i < holder->standart_framebuffers.size(); i++) {
+		vkDestroyFramebuffer(base.device, holder->standart_framebuffers[i], nullptr);
+	}
+	for (size_t i = 0; i < holder->gui_framebuffers.size(); i++) {
+		vkDestroyFramebuffer(base.device, holder->gui_framebuffers[i], nullptr);
+	}
+	for (size_t i = 0; i < holder->image_views.size(); i++) {
+		vkDestroyImageView(base.device, holder->image_views[i], nullptr);
+	}
+
+	vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);
+	
+	return BfEvent();
+}
+
+void bfUpdateUniformBuffer(BfBase& base)
+{
+
+	static auto startTime = std::chrono::high_resolution_clock::now();
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+	BfViewUniform ubo{};
+
+	ubo.model = glm::mat4(1.0f);
+	/*if (isRotating)
+		ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 1.0f));*/
+
+
+	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.1f, 10.0f);
+	ubo.proj[1][1] *= -1;
+	// uniformBuffersMapped[currentImage]
+	BfHolder* holder = bfGetpHolder();
+
+
+	memcpy(base.frame_pack[base.current_frame].uniform_view_buffer->data, &ubo, sizeof(ubo));
+
 }
 

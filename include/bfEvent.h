@@ -229,6 +229,10 @@ struct BfEventHandler {
 	static std::time_t get_time();
 
 	static bool is_all_ok();
+
+	typedef void (*FunctionPointer)(BfSingleEvent);
+
+	static FunctionPointer funcPtr;
 };
 
 

@@ -61,6 +61,7 @@ TEST_CASE("BF_EVENT_H", "[single-file]") {
 
 TEST_CASE("BfHandler-test") {
     
+    BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
     BfHolder mHolder{};
     BfBindHolder(&mHolder);
     
@@ -91,14 +92,13 @@ TEST_CASE("BfHandler-test") {
 
     BfMesh mesh{};
     mesh.vertices = {
-        {{ 0.5,  0.5},{1.0,1.0,1.0}},
-        {{-0.5,  0.5},{1.0,1.0,1.0}},
-        {{-0.5, -0.5},{1.0,1.0,1.0}},
-        {{ 0.5, -0.5},{1.0,1.0,1.0}},
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     };
     mesh.indices = {
-        1,2,3,
-        3,4,1
+        0,1,2,2,3,0
     };
 
     
@@ -111,6 +111,40 @@ TEST_CASE("BfHandler-test") {
     bfCreateGUICommandBuffers(mBase);
     bfCreateSyncObjects(mBase);
     bfInitImGUI(mBase);
+
+    mBase.current_frame = 0;
+    // Main Render Loop.
+    while (!glfwWindowShouldClose(mBase.window->pWindow))
+    {
+        glfwPollEvents();
+
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow();
+
+        //ImGui::Begin("Scale Window");
+        //ImGui::SliderFloat("x", &test_scale.x, 0.0f, 2.0f);
+        //ImGui::SliderFloat("y", &test_scale.y, 0.0f, 2.0f);
+        //ImGui::SliderFloat("z", &test_scale.z, 0.0f, 2.0f);
+
+        //if (ImGui::Button("Rotate"))
+        //    if (isRotating)
+        //        isRotating = false;
+        //    else
+        //        isRotating = true;
+
+        //ImGui::End();
+
+        //ImGui::Render();
+        ImGui::Render();
+        bfDrawFrame(mBase, mesh);
+    }
+
+    vkDeviceWaitIdle(mBase.device);
+
+
+
 
     REQUIRE(BfEventHandler::is_all_ok() == true);
     BfConsole::print_all_single_events(
