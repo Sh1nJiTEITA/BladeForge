@@ -4,10 +4,18 @@
 #include "bfVariative.hpp"
 
 
-struct BfViewUniform {
+struct BfUniformView {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
+};
+
+struct BfUniformBezierProperties {
+	uint32_t points_count;
+};
+
+struct BfStorageBezierPoints {
+	glm::vec2 coo;
 };
 
 

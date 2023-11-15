@@ -10,7 +10,7 @@
 #include "bfHolder.h"
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
-
+#include "bfExecutionTime.hpp"
 
 //static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 //static std::vector<BfWindow> bfWindowHolder{};
@@ -25,9 +25,11 @@ struct BfImagePack {
 };
 
 struct BfFramePack {
-	BfAllocatedBuffer*		uniform_view_buffer;
 	void*					uniform_view_data;
-	
+
+	BfAllocatedBuffer*		uniform_view_buffer;
+	BfAllocatedBuffer*		bezier_points_buffer;
+
 	VkCommandBuffer*		standart_command_buffer;
 	VkCommandBuffer*		gui_command_buffer;
 
@@ -36,6 +38,7 @@ struct BfFramePack {
 	VkFence*				frame_in_flight_fence;
 	
 	VkDescriptorSet*		global_descriptor_set;
+	VkDescriptorSet*		main_descriptor_set;
 };
 
 
@@ -60,18 +63,37 @@ struct BfBase {
 
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
-	VkDescriptorSetLayout	 global_set_layout;
 	VkPipeline				 triangle_pipeline;
 	VkPipelineLayout		 triangle_pipeline_layout;
 	VkPipeline				 line_pipeline;
 	VkPipelineLayout		 line_pipeline_layout;
 
+	VkDescriptorSetLayout	 global_set_layout;
+	VkDescriptorSetLayout    main_set_layout;
+
 	VkCommandPool			 command_pool;
 	VkDescriptorPool		 standart_descriptor_pool;
 	VkDescriptorPool		 gui_descriptor_pool;
 
+	BfAllocatedBuffer		 dynamic_vertex_buffer;
+	BfAllocatedBuffer		 dynamic_index_buffer;
+	BfAllocatedBuffer		 bezier_properties_uniform_buffer;
+	char*					 bezier_data;
+
 	VmaAllocator			 allocator;
 	
+	float					 x_scale;
+	float					 y_scale;
+
+	float					 px;
+	float				     py;
+	float					 pz;
+
+	std::vector<BfStorageBezierPoints> storage;
+
+	uint32_t				 vert_number;
+
+	bool is_resized;
 };
 
 // Main functions
@@ -100,6 +122,8 @@ BfEvent bfCreateSyncObjects(BfBase& base);
 BfEvent bfInitImGUI(BfBase& base);
 
 void bfCreateAllocator(BfBase& base);
+void bfAllocateBuffersForDynamicMesh(BfBase& base);
+void bfUploadDynamicMesh(BfBase& base, BfMesh& mesh);
 void bfUploadMesh(BfBase& base, BfMesh& mesh);
 void bfUploadVertices(BfBase& base, BfMesh& mesh);
 void bfUploadIndices(BfBase& base, BfMesh& mesh);
@@ -118,6 +142,11 @@ void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfDrawFrame(BfBase& base, BfMesh& mesh);
 void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh);
+
+// Uniform buffers
+size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size);
+VkDescriptorSetLayoutBinding bfGetDescriptorSetLayoutBinding(VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding);
+VkWriteDescriptorSet bfWriteDescriptorBuffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo* bufferInfo, uint32_t binding);
 
 // CleanUp's
 BfEvent bfCleanUpSwapchain(BfBase& base);

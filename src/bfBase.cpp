@@ -227,6 +227,10 @@ BfEvent bfCreatePhysicalDevice(BfBase& base)
 
 		if (is_suitable) {
 			base.physical_device = pPhysicalDevice;
+			
+			// Get chosen physical device properties
+			vkGetPhysicalDeviceProperties(base.physical_device->physical_device, &base.physical_device->properties);
+
 			break;
 		}
 	}
@@ -286,6 +290,13 @@ BfEvent bfCreateLogicalDevice(BfBase& base)
 	// SWAP-CHAIN extensions (and others)
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(bfvDeviceExtensions.size());
 	createInfo.ppEnabledExtensionNames = bfvDeviceExtensions.data();
+
+	VkPhysicalDeviceShaderDrawParametersFeatures shader_draw_parameters_features = {};
+	shader_draw_parameters_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+	shader_draw_parameters_features.pNext = nullptr;
+	shader_draw_parameters_features.shaderDrawParameters = VK_TRUE;
+	createInfo.pNext = &shader_draw_parameters_features;
+
 
 	if (enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<uint32_t>(bfvValidationLayers.size());
@@ -623,46 +634,140 @@ BfEvent bfInitDescriptors(BfBase& base)
 // BfHolder bindings
 	BfHolder* pHolder = bfGetpHolder();
 
-// Uniform-bindings enumeration ----------------------------------------------------------
+// Resize holder storages ---------------------------------------------------------------
+
+	
+	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) { // FrameHolder
+		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	// pack
+	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
+		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+	if (pHolder->bezier_points_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+		pHolder->bezier_points_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	// sets 
+	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
+		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+	if (pHolder->main_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) {
+		pHolder->main_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+	}
+
+
+// Dynamic uniform buffer preparations
+	const size_t bezier_properties_uniform_buffer_size = MAX_FRAMES_IN_FLIGHT * 
+		bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties));
+
+	// Test buffer (bezier-properties)
+	bfCreateBuffer(&base.bezier_properties_uniform_buffer,
+					base.allocator,
+					bezier_properties_uniform_buffer_size,
+					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+					VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+	const int MAX_BEZIER_POINTS = 1000;
+	// Bezier-points
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		// Create storage buffer for bezier_points
+		bfCreateBuffer(&pHolder->bezier_points_buffers[i],
+					   base.allocator, 
+					   sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS,
+					   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
+					   VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		// Create buffer for view uniform 
+		bfCreateBuffer(&pHolder->uniform_view_buffers[i],//*camUniformBuffer, 
+			base.allocator,
+			sizeof(BfUniformView),
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VMA_MEMORY_USAGE_CPU_TO_GPU);
+	}
+
+
+
+// Global descriptor set layout ----------------------------------------------------------
+	// Uniform-bindings enumeration 
 
 	// View-uniform 
 	VkDescriptorSetLayoutBinding camBufferBinding{};
-	camBufferBinding.binding		 = 0;
+	/*camBufferBinding.binding		 = 0;
 	camBufferBinding.descriptorCount = 1;
 	camBufferBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	camBufferBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;
+	camBufferBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;*/
 
+	
+	VkDescriptorSetLayoutBinding viewBufferBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
+	VkDescriptorSetLayoutBinding bezierPropertinesBufferbinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT, 1);
 
 	// Bindings to desctiptor set layout
-	std::vector<VkDescriptorSetLayoutBinding> bindings = {
-		camBufferBinding
+	std::vector<VkDescriptorSetLayoutBinding> global_bindings = {
+		viewBufferBinding,
+		bezierPropertinesBufferbinding
 	};
 
-// Create desctiptor-pool layout ---------------------------------------------------------
-	// Descriptor set layout
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
-	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptorSetLayoutInfo.bindingCount = 1;
-	descriptorSetLayoutInfo.pNext		 = nullptr;
-	descriptorSetLayoutInfo.flags		 = 0;
-	descriptorSetLayoutInfo.pBindings	 = bindings.data();
+	// Create desctiptor-pool layout 
+	// Descriptor global set layout
+	VkDescriptorSetLayoutCreateInfo globalDescriptorSetLayoutInfo{};
+	globalDescriptorSetLayoutInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	globalDescriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(global_bindings.size());
+	globalDescriptorSetLayoutInfo.pNext		   = nullptr;
+	globalDescriptorSetLayoutInfo.flags		   = 0;
+	globalDescriptorSetLayoutInfo.pBindings	   = global_bindings.data();
 
 	if (vkCreateDescriptorSetLayout(base.device, 
-									&descriptorSetLayoutInfo, 
+									&globalDescriptorSetLayoutInfo,
 									nullptr, 
 									&base.global_set_layout) == VK_SUCCESS) {
-		ss << "VkDescriptorSetLayout for " << bindings.size() << "bindings was"
+		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings was"
 			"created successfully;";
 	}
 	else {
 		is_descriptors_init_successfull = false;
-		ss << "VkDescriptorSetLayout for " << bindings.size() << "bindings wasn't"
+		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings wasn't"
 			"created;";
 	}
 
+// Main descriptor set layout ------------------------------------------------------------
+
+	VkDescriptorSetLayoutBinding bezierPointsBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
+	
+
+	// Bindings to main desctiptor set layout
+	std::vector<VkDescriptorSetLayoutBinding> main_bindings = {
+		bezierPointsBinding
+	};
+
+	VkDescriptorSetLayoutCreateInfo mainSetLayourCreateInfo{};
+	mainSetLayourCreateInfo.sType		 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	mainSetLayourCreateInfo.pNext		 = nullptr;
+	mainSetLayourCreateInfo.flags		 = 0;
+	mainSetLayourCreateInfo.pBindings	 = main_bindings.data();
+	mainSetLayourCreateInfo.bindingCount = static_cast<uint32_t>(main_bindings.size());
+
+	if (vkCreateDescriptorSetLayout(base.device,
+		&mainSetLayourCreateInfo,
+		nullptr,
+		&base.main_set_layout) == VK_SUCCESS) {
+		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings was"
+			"created successfully;";
+	}
+	else {
+		is_descriptors_init_successfull = false;
+		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings wasn't"
+			"created;";
+	}
+
+
 // Create descriptor pool ----------------------------------------------------------------
 	std::vector<VkDescriptorPoolSize> sizes = {
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10}
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10}
 	};
 
 	VkDescriptorPoolCreateInfo poolInfo{};
@@ -689,77 +794,105 @@ BfEvent bfInitDescriptors(BfBase& base)
 		   << " sets wasn't created";
 	}
 
-// Resize holder storages ---------------------------------------------------------------
-		
-	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) { // FrameHolder
-		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT); 
-	}
 
-	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
-		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
-		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
-	}
 	
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 // Allocate descriptors from desctiptor pool for each frame ------------------------------
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		
 		// Point to uniform buffer in holder
-		base.frame_pack[i].uniform_view_buffer = &pHolder->uniform_view_buffers[i];
+		base.frame_pack[i].uniform_view_buffer   = &pHolder->uniform_view_buffers[i];
+		base.frame_pack[i].bezier_points_buffer  = &pHolder->bezier_points_buffers[i];
 		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
-								
+		base.frame_pack[i].main_descriptor_set   = &pHolder->main_descriptor_sets[i];
 
 
 		// Use needed uniform buffer value
-		BfAllocatedBuffer* camUniformBuffer = base.frame_pack[i].uniform_view_buffer;
+		BfAllocatedBuffer* camUniformBuffer    = base.frame_pack[i].uniform_view_buffer;
+		BfAllocatedBuffer* bezierStorageBuffer = base.frame_pack[i].bezier_points_buffer;
 
-		// Create buffer for uniform 
-		bfCreateBuffer(camUniformBuffer,//*camUniformBuffer, 
-					   base.allocator, 
-					   sizeof(BfViewUniform), 
-					   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-					   VMA_MEMORY_USAGE_CPU_TO_GPU);
+		
 
-		VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
-		descriptorSetAllocInfo.sType		  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		descriptorSetAllocInfo.pNext		  = nullptr;
-		descriptorSetAllocInfo.descriptorPool = base.standart_descriptor_pool;
-		// Sum of descriptors: ViewUniformBuffer -> 1
-		descriptorSetAllocInfo.descriptorSetCount = 1; 
-		descriptorSetAllocInfo.pSetLayouts = &base.global_set_layout;
+	// Allocate global descriptor sets ---------------------------------------------------
+
+		VkDescriptorSetAllocateInfo globalDescriptorSetAllocInfo{};
+		globalDescriptorSetAllocInfo.sType			    = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		globalDescriptorSetAllocInfo.pNext			    = nullptr;
+		globalDescriptorSetAllocInfo.descriptorPool	    = base.standart_descriptor_pool;
+		globalDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+		globalDescriptorSetAllocInfo.pSetLayouts		= &base.global_set_layout;
 
 		if (vkAllocateDescriptorSets(base.device, 
-									 &descriptorSetAllocInfo, 
+									 &globalDescriptorSetAllocInfo,
 									 base.frame_pack[i].global_descriptor_set) == VK_SUCCESS) {
-			ss << "VkDescriptorsSet for frame " << i << "was allocated;";
+			ss << "Global VkDescriptorsSet for frame " << i << "was allocated;";
 		}
 		else {
 			is_descriptors_init_successfull = false;
-			ss << "VkDescriptorsSet for frame " << i << "wasn't allocated;";
+			ss << "Global VkDescriptorsSet for frame " << i << "wasn't allocated;";
 		}
 
+	// Allocate main descriptor sets -----------------------------------------------------
+
+		VkDescriptorSetAllocateInfo mainDescriptorSetAllocInfo{};
+		mainDescriptorSetAllocInfo.sType			  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		mainDescriptorSetAllocInfo.pNext			  = nullptr;
+		mainDescriptorSetAllocInfo.descriptorPool	  = base.standart_descriptor_pool;
+		mainDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+		mainDescriptorSetAllocInfo.pSetLayouts		  =	&base.main_set_layout;
+
+		if (vkAllocateDescriptorSets(base.device,
+			&mainDescriptorSetAllocInfo,
+			base.frame_pack[i].main_descriptor_set) == VK_SUCCESS) {
+			ss << "Main VkDescriptorsSet for frame " << i << "was allocated;";
+		}
+		else {
+			is_descriptors_init_successfull = false;
+			ss << "Main VkDescriptorsSet for frame " << i << "wasn't allocated;";
+		}
 
 // Make descriptors point to uniform buffers (data) --------------------------------------
 
 		// View Uniform buffer
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = camUniformBuffer->buffer;
-		bufferInfo.offset = 0;						// From start
-		bufferInfo.range  = sizeof(BfViewUniform);  // Length in bites of data
+		VkDescriptorBufferInfo viewUniformbufferInfo{};
+		viewUniformbufferInfo.buffer = camUniformBuffer->buffer;
+		viewUniformbufferInfo.offset = 0;						// From start
+		viewUniformbufferInfo.range  = sizeof(BfUniformView);  // Length in bites of data
 
-		// Write data of View Uniform buffer to descriptor
-		VkWriteDescriptorSet setWrite{};
-		setWrite.sType			 = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		setWrite.pNext			 = nullptr;
-		setWrite.dstBinding		 = 0; // binding = 0
-		setWrite.dstSet			 = *base.frame_pack[i].global_descriptor_set;
-		setWrite.descriptorCount = 1;
-		setWrite.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		setWrite.pBufferInfo	 = &bufferInfo;
+		// Bezier properties Uniform buffer
+		VkDescriptorBufferInfo bezierPropertiesUniformbufferInfo{};
+		bezierPropertiesUniformbufferInfo.buffer = base.bezier_properties_uniform_buffer.buffer;
+		bezierPropertiesUniformbufferInfo.offset = 0; 
+		bezierPropertiesUniformbufferInfo.range = sizeof(BfUniformBezierProperties);  // Length in bites of data
 
-		vkUpdateDescriptorSets(base.device, 1, &setWrite, 0, nullptr);
+		// Bezier points storage buffer
+		VkDescriptorBufferInfo bezierPointStoragebufferInfo{};
+		bezierPointStoragebufferInfo.buffer = bezierStorageBuffer->buffer;
+		bezierPointStoragebufferInfo.offset = 0;
+		bezierPointStoragebufferInfo.range = sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
+
+		
+		VkWriteDescriptorSet viewWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+																*base.frame_pack[i].global_descriptor_set, 
+																&viewUniformbufferInfo, 
+																 viewBufferBinding.binding);
+
+		VkWriteDescriptorSet bezierPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+																			*base.frame_pack[i].global_descriptor_set,
+																			&bezierPropertiesUniformbufferInfo, 
+																			 bezierPropertinesBufferbinding.binding);
+
+		VkWriteDescriptorSet bezierPointsPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 
+																				  *base.frame_pack[i].main_descriptor_set, 
+																				  &bezierPointStoragebufferInfo, 
+																				   bezierPointsBinding.binding);
+
+		std::vector<VkWriteDescriptorSet> setWrites = {
+			viewWrite,
+			bezierPropertiesWrite,
+			bezierPointsPropertiesWrite
+		};
+
+		vkUpdateDescriptorSets(base.device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
 
 		if (vmaMapMemory(base.allocator,
 						 base.frame_pack[i].uniform_view_buffer->allocation,
@@ -770,6 +903,17 @@ BfEvent bfInitDescriptors(BfBase& base)
 			is_descriptors_init_successfull = false;
 			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
 		}
+
+		/*if (vmaMapMemory(base.allocator,
+			base.bezier_properties_uniform_buffer.allocation,
+			(void**)&base.bezier_data) == VK_SUCCESS) {
+			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
+		}
+		else {
+			is_descriptors_init_successfull = false;
+			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
+		}*/
+
 	}
 
 	if (is_descriptors_init_successfull) {
@@ -1210,7 +1354,7 @@ BfEvent bfCreateUniformBuffers(BfBase& base)
 
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = sizeof(BfViewUniform);
+		bufferInfo.size = sizeof(BfUniformView);
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
 		VmaAllocationCreateInfo allocationInfo{};
@@ -1232,9 +1376,9 @@ BfEvent bfCreateUniformBuffers(BfBase& base)
 					 &base.frame_pack[i].uniform_view_buffer->data);*/
 
 		/*glm::mat4 local_mat = glm::mat4(1.0f);
-		BfViewUniform uniform{ local_mat,local_mat,local_mat };
+		BfUniformView uniform{ local_mat,local_mat,local_mat };
 
-		memcpy(base.frame_pack[i].uniform_view_buffer->data, &uniform, sizeof(BfViewUniform));*/
+		memcpy(base.frame_pack[i].uniform_view_buffer->data, &uniform, sizeof(BfUniformView));*/
 	}
 
 	return BfEvent();
@@ -1302,7 +1446,7 @@ BfEvent bfCreateGUIDescriptorPool(BfBase& base)
 //		VkDescriptorBufferInfo bufferInfo{};
 //		bufferInfo.buffer = base.frame_pack[i].uniform_view_buffer->buffer;
 //		bufferInfo.offset = 0;
-//		bufferInfo.range = sizeof(BfViewUniform);
+//		bufferInfo.range = sizeof(BfUniformView);
 //
 //
 //		VkWriteDescriptorSet descriptorWrite{};
@@ -1485,6 +1629,40 @@ void bfCreateAllocator(BfBase& base)
 	}
 }
 
+void bfAllocateBuffersForDynamicMesh(BfBase& base)
+{
+	uint32_t MAX_VERTICES = 10000;
+	
+	bfCreateBuffer(&base.dynamic_vertex_buffer,
+					base.allocator,
+					sizeof(bfVertex) * MAX_VERTICES,
+					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+	bfCreateBuffer(&base.dynamic_index_buffer,
+					base.allocator,
+					sizeof(uint32_t) * MAX_VERTICES,
+					VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+					VMA_MEMORY_USAGE_CPU_TO_GPU);
+}
+
+void bfUploadDynamicMesh(BfBase& base, BfMesh& mesh)
+{
+	if (base.is_resized) {
+		void* vertex_data;
+		vmaMapMemory(base.allocator, base.dynamic_vertex_buffer.allocation, &vertex_data);
+		memcpy(vertex_data, mesh.vertices.data(), sizeof(bfVertex) * mesh.vertices.size());
+		vmaUnmapMemory(base.allocator, base.dynamic_vertex_buffer.allocation);
+
+		void* index_data;
+		vmaMapMemory(base.allocator, base.dynamic_index_buffer.allocation, &index_data);
+		memcpy(index_data, mesh.indices.data(), sizeof(uint32_t) * mesh.indices.size());
+		vmaUnmapMemory(base.allocator, base.dynamic_index_buffer.allocation);
+
+		base.is_resized = false;
+	}
+}
+
 void bfUploadMesh(BfBase& base, BfMesh& mesh)
 {
 	bfUploadVertices(base, mesh);
@@ -1645,10 +1823,15 @@ BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std
 
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 {
+	std::vector<VkDescriptorSetLayout> layouts = {
+		base.global_set_layout,
+		base.main_set_layout
+	};
+	
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutCreateInfo.setLayoutCount = 1;
-	pipelineLayoutCreateInfo.pSetLayouts = &base.global_set_layout; // Optional
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = layouts.data(); // Optional
 	pipelineLayoutCreateInfo.pushConstantRangeCount = 0; // Optional
 	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr; // Optional
 
@@ -1768,7 +1951,13 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh)
 		throw std::runtime_error("Failed to acquire swap chain image");
 	}
 
-	bfUpdateUniformBuffer(base);
+	BfExecutionTime::BeginTimeCut("uniform");
+		bfUpdateUniformBuffer(base);
+	BfExecutionTime::EndTimeCut("uniform");
+
+	BfExecutionTime::BeginTimeCut("dynamic-mesh");
+		bfUploadDynamicMesh(base, mesh);
+	BfExecutionTime::EndTimeCut("dynamic-mesh");
 
 	vkResetFences(base.device, 1, &local_fence_in_flight);
 
@@ -1845,7 +2034,7 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = base.swap_chain_extent;
 
-	VkClearValue clearColor = { {{1.0f, 0.0f, 0.0f, 1.0f}} };
+	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
 
@@ -1853,8 +2042,12 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
 		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
 
-		VkBuffer vertexBuffers[] = { mesh.vertex_buffer.buffer };
+		VkBuffer vertexBuffers[] = { 
+			//mesh.vertex_buffer.buffer
+			base.dynamic_vertex_buffer.buffer 
+		};
 		VkDeviceSize offsets[] = { 0 };
 
 		VkViewport viewport{};
@@ -1871,8 +2064,12 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 		scissor.extent = base.swap_chain_extent;
 		vkCmdSetScissor(local_buffer, 0, 1, &scissor);
 
+		//vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(local_buffer, mesh.index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(local_buffer, base.dynamic_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		
+		uint32_t uniform_offset = bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * (base.current_frame % MAX_FRAMES_IN_FLIGHT);
+		
 		vkCmdBindDescriptorSets(
 			local_buffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -1880,12 +2077,23 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 			0,
 			1,
 			base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+			1,
+			&uniform_offset
+		);
+		vkCmdBindDescriptorSets(
+			local_buffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			base.triangle_pipeline_layout,
+			1,
+			1,
+			base.frame_pack[base.current_frame].main_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
 			0,
 			nullptr
 		);
 
 
-		//vkCmdDraw(local_buffer, static_cast<uint32_t>(mesh.vertices.size()), 1, 0, 0);
+		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
+		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
 		vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 	}
 	vkCmdEndRenderPass(local_buffer);
@@ -1919,6 +2127,45 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 
 }
 
+size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size)
+{
+	size_t min_uniform_buffer_offset_allignment = physical_device->properties.limits.minUniformBufferOffsetAlignment;
+	size_t alligned_size = original_size;
+	if (min_uniform_buffer_offset_allignment > 0) {
+		alligned_size = (alligned_size + min_uniform_buffer_offset_allignment + 1) & 
+					   ~(min_uniform_buffer_offset_allignment - 1);
+	}
+
+	return alligned_size;
+}
+
+VkDescriptorSetLayoutBinding bfGetDescriptorSetLayoutBinding(VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding)
+{
+	VkDescriptorSetLayoutBinding setbind = {};
+	setbind.binding = binding;
+	setbind.descriptorCount = 1;
+	setbind.descriptorType = type;
+	setbind.pImmutableSamplers = nullptr;
+	setbind.stageFlags = stage_flags;
+
+	return setbind;
+}
+
+VkWriteDescriptorSet bfWriteDescriptorBuffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo* bufferInfo, uint32_t binding)
+{
+	VkWriteDescriptorSet write = {};
+	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write.pNext = nullptr;
+
+	write.dstBinding = binding;
+	write.dstSet = dstSet;
+	write.descriptorCount = 1;
+	write.descriptorType = type;
+	write.pBufferInfo = bufferInfo;
+
+	return write;
+}
+
 BfEvent bfCleanUpSwapchain(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
@@ -1946,9 +2193,9 @@ void bfUpdateUniformBuffer(BfBase& base)
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-	BfViewUniform ubo{};
+	BfUniformView ubo{};
 
-	ubo.model = glm::mat4(1.0f);
+	ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 	/*if (isRotating)
 		ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 1.0f));*/
 
@@ -1958,9 +2205,61 @@ void bfUpdateUniformBuffer(BfBase& base)
 	ubo.proj[1][1] *= -1;
 	// uniformBuffersMapped[currentImage]
 	BfHolder* holder = bfGetpHolder();
-
-
 	memcpy(base.frame_pack[base.current_frame].uniform_view_data, &ubo, sizeof(ubo));
 
+	static float counter = -10.0f;
+	static int local_frame = base.current_frame;
+
+	BfUniformBezierProperties prop{};
+	prop.points_count = 3;
+	base.vert_number = prop.points_count;
+	
+	int frameIndex = local_frame % MAX_FRAMES_IN_FLIGHT;
+	
+	char* bezier_data;
+	vmaMapMemory(base.allocator, base.bezier_properties_uniform_buffer.allocation, (void**)&bezier_data);
+	{
+		bezier_data += bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * frameIndex;
+
+		memcpy(bezier_data, &prop, sizeof(BfUniformBezierProperties));
+
+	}
+	vmaUnmapMemory(base.allocator, base.bezier_properties_uniform_buffer.allocation);
+
+	void* bezier_points_data;
+
+	std::vector<BfStorageBezierPoints> localvec = base.storage;
+
+	for (auto& it : localvec) {
+		it.coo += glm::vec2(base.px, base.py);
+	}
+	base.vert_number = static_cast<uint32_t>(localvec.size());
+	/*for (int i = 0; i < prop.points_count; i++) {
+		glm::vec2 lVec = glm::vec2((float)i/10, (float)i/10);
+		localvec.push_back(BfStorageBezierPoints(lVec));
+	}*/
+
+	/*std::vector<BfStorageBezierPoints> localvec = {
+		{{base.px, base.py}},
+		{{base.px, base.py}},
+		{{base.px, base.py}},
+	};*/
+
+	
+
+	vmaMapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation, &bezier_points_data);
+	{
+		/*BfStorageBezierPoints* bezier_points_ssbo = (BfStorageBezierPoints*)bezier_points_data;
+		for (int i = 0; i < prop.points_count; i++) {
+			glm::vec2& lVec = localvec[i];
+			
+			bezier_points_ssbo[i].coo = localvec[i];
+		}*/
+		memcpy(bezier_points_data, localvec.data(), sizeof(BfStorageBezierPoints) * localvec.size());
+	}
+	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation);
+
+	counter += 1.0f;
+	local_frame++;
 }
 

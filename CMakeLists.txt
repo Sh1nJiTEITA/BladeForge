@@ -61,6 +61,7 @@ set(HEADERS
 	#"include/BladeForgeBin.h"	
 	"include/bfVariative.hpp"
 	"include/bfVertex2.hpp"
+	"include/BfExecutionTime.hpp"
 
 	"include/bfVertex.h"
 	"include/bfBase.h"
