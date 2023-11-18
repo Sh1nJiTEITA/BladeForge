@@ -20,7 +20,7 @@
 
 
 int main() {
-    BladeForge app;
+    BladeForge app{};
     
     try
     {

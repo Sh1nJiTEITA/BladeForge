@@ -96,6 +96,7 @@ struct BfBase {
 	bool is_resized;
 };
 
+
 // Main functions
 BfEvent bfCreateInstance(BfBase& base);
 BfEvent bfCreateDebugMessenger(BfBase& base);
