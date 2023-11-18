@@ -16,17 +16,18 @@ private:
 	BfBase __base;
 	BfHolder __holder;
 	
+	
 
 
+
+	void __process_keys();
 
 	void __init();
 	void __start_loop();
 	void __kill();
-
 	
 public:
 	BfMain();
-
 	void run();
 
 

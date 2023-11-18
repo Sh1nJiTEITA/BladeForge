@@ -95,7 +95,13 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_ALLOC_BUFFER_FAILURE						 = -0x29,
 
 	BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS				 =  0x30,
-	BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE				 = -0x30
+	BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE				 = -0x30,
+
+	BF_ACTION_ALLOCATE_MESH_SUCCESS							 =  0x31,
+	BF_ACTION_ALLOCATE_MESH_FAILURE							 = -0x31,
+
+	BF_ACTION_UPLOAD_MESH_SUCCESS							 =  0x32,
+	BF_ACTION_UPLOAD_MESH_FAILURE							 = -0x32
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -179,8 +185,14 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x29,  "VkBuffer was created succesfully"},
 	{-0x29,  "VkBuffer wasn't created"},
 
-	{ 0x32,  "Whole descriptors stuff was made successfully:"},
-	{-0x32,  "Not whole descriptors stuff was made successfully:"}
+	{ 0x30,  "Whole descriptors stuff was made successfully:"},
+	{-0x30,  "Not whole descriptors stuff was made successfully:"},
+
+	{ 0x31,  "Memory for mesh was allocated successfully:"},
+	{-0x31,  "Memory for mesh wasn't allocated:"},
+
+	{ 0x32,  "Mesh was uploaded successfully:"},
+	{-0x32,  "Mesh wasn't uploaded"}
 };
 
 

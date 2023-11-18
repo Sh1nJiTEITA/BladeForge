@@ -141,8 +141,8 @@ BfEvent bfaRecreateSwapchain(BfBase& base);
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
-void bfDrawFrame(BfBase& base, BfMesh& mesh);
-void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh);
+void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler);
+void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handler);
 
 // Uniform buffers
 size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size);

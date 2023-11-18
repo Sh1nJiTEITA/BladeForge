@@ -42,10 +42,15 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*	allocatedBuffer,
 						&allocatedBuffer->buffer, 
 						&allocatedBuffer->allocation, 
 						nullptr) == VK_SUCCESS) {
+		
+		allocatedBuffer->is_allocated = true;
+		allocatedBuffer->size = allocSize;
+
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BUFFER_SUCCESS;
 	}
 	else {
+		allocatedBuffer->is_allocated = false;
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BUFFER_FAILURE;
 	}

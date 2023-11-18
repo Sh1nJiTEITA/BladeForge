@@ -8,9 +8,75 @@ int BfWindow::height = 0;
 bool BfWindow::resized = false;
 */
 
+
+void bfCalculateView(BfWindow* window)
+{
+
+	static double lastX = 0;
+	static double lastY = 0;
+	
+	
+
+	if (window->firstMouse) {
+		window->firstMouse = false;
+		lastX = window->xpos;
+		lastY = window->ypos;
+	}
+
+
+	float xoffset = window->xpos - lastX;
+	float yoffset = lastY - window->ypos;  
+
+	
+
+	double sensitivity = 0.1f;
+
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+	
+	static double yaw = -925.6;
+	static double pitch = 44.3;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	// std::cout << "y: " << yaw << ", p: " << pitch << "\n";
+
+	window->front = glm::normalize(glm::vec3(
+		glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch)),
+		glm::sin(glm::radians(pitch)),
+		glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch))
+	));
+
+	window->view = glm::lookAt(window->pos, window->pos + window->front, window->up);
+
+	lastX = window->xpos;
+	lastY = window->ypos;
+	/*std::cout << "pos:(" << window->pos.x << ", " << window->pos.y << ", " << window->pos.z
+		<< "); front:(" << window->front.x << ", " << window->front.y << ", " << window->front.z
+		<< "); up:(" << window->up.x << ", " << window->up.y << ", " << window->up.z << ")\n";*/
+}
+
 BfEvent bfCreateWindow(BfWindow* window) {
 	glfwInit();
 	bfvSetGLFWProperties();
+
+	window->pos = { 2.0f, -2.0f, -1.0f};
+	
+	window->front = glm::normalize(glm::vec3(
+		glm::cos(glm::radians(-925.6)) * glm::cos(glm::radians(44.3)),
+		glm::sin(glm::radians(44.3)),
+		glm::sin(glm::radians(-925.6)) * glm::cos(glm::radians(44.3))
+	));
+	window->up = { 0.0f, 1.0f, 0.0f };
+	bfCalculateView(window);
+	
+	window->is_free_camera_active = false;
 
 	window->pWindow = glfwCreateWindow(
 		window->width,
@@ -20,8 +86,14 @@ BfEvent bfCreateWindow(BfWindow* window) {
 		nullptr
 	);
 	
-	glfwSetWindowUserPointer(window->pWindow, &window);
-
+	glfwSetWindowUserPointer(window->pWindow, window);
+	glfwSetCursorPosCallback(window->pWindow, 
+		[](GLFWwindow* window, double xpos, double ypos) {
+			BfWindow* thisWindow = static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+			thisWindow->xpos = xpos;
+			thisWindow->ypos = ypos;
+			//std::cout << "cb: " << thisWindow->xpos << ", " << thisWindow->ypos << "\n";
+		});
 	glfwSetFramebufferSizeCallback(
 		window->pWindow,
 		[](GLFWwindow* window, int width, int height){

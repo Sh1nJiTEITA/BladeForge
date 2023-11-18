@@ -2,6 +2,17 @@
 
 
 
+void BfMain::__process_keys()
+{
+    if (glfwGetKey(__base.window->pWindow, GLFW_KEY_C) == GLFW_PRESS) {
+        __base.window->is_free_camera_active = true;
+    }
+    else {
+        __base.window->is_free_camera_active = false;
+        __base.window->firstMouse = true;
+    }
+}
+
 void BfMain::__init()
 {
     BfBindHolder(&__holder);
@@ -64,9 +75,44 @@ void BfMain::__start_loop()
     double __PI = 3.141592653589793238462643383279502884;
 
 
+
+    BfMeshHandler mesh_handler(4);
+    mesh_handler.allocate_mesh(__base.allocator, 0, BF_MESH_TYPE_RECTANGLE);
+    mesh_handler.allocate_mesh(__base.allocator, 1, BF_MESH_TYPE_RECTANGLE);
+
+    BfMesh rectangle_mesh{};
+    rectangle_mesh.vertices = {
+        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+    };
+    rectangle_mesh.indices = {
+         0,1,2,2,3,0
+    };
+    mesh_handler.upload_mesh(0, rectangle_mesh);
+    mesh_handler.load_mesh_to_buffers(__base.allocator, 0);
+    
+    BfMesh rectangle_mesh2{};
+    rectangle_mesh2.vertices = {
+        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.0f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    };
+    rectangle_mesh2.indices = {
+         0,1,2,2,3,0
+    };
+
+    mesh_handler.upload_mesh(1, rectangle_mesh2);
+    mesh_handler.load_mesh_to_buffers(__base.allocator, 1);
+
+
+
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
         glfwPollEvents();
+        __process_keys();
 
         double currentTime = glfwGetTime();
 
@@ -106,77 +152,68 @@ void BfMain::__start_loop()
 
         ImGui::Begin("Performance");
 
-
-
-
         // Display the frame count here any way you want.
         counter += 1;
-
-
         if ((currentTime - previousTime) >= x) {
 
             print_counter = counter;
             counter = 0;
             previousTime = currentTime;
         }
-
-
-
-
         ImGui::Text((fps + std::to_string(print_counter)).c_str());
         ImGui::End();
 
-        ImGui::Begin("Circle");
-        {
+        //ImGui::Begin("Circle");
+        //{
 
-            // ImGui::InputInt("Dots:", &dots_size);
+        //    // ImGui::InputInt("Dots:", &dots_size);
 
-            bool cslider = ImGui::SliderInt("Dots:", &dots_size, 3, 400);
+        //    bool cslider = ImGui::SliderInt("Dots:", &dots_size, 3, 400);
 
-            if ((ImGui::Button("Calculate circle") or cslider) and (dots_size != 0)) {
+        //    if ((ImGui::Button("Calculate circle") or cslider) and (dots_size != 0)) {
 
 
-                float cRad = 0.7f;
+        //        float cRad = 0.7f;
 
-                dynamic_mesh.vertices.clear();
-                dynamic_mesh.indices.clear();
-                dynamic_mesh.vertices.push_back({ {0.0f,0.0f}, {1.0, 1.0f, 1.0f} });
+        //        dynamic_mesh.vertices.clear();
+        //        dynamic_mesh.indices.clear();
+        //        dynamic_mesh.vertices.push_back({ {0.0f,0.0f}, {1.0, 1.0f, 1.0f} });
 
-                for (int i = 0; i < dots_size; i++) {
-                    float theta1 = 2 * __PI * i / dots_size;
-                    float theta2 = 2 * __PI * (i + 1) / dots_size;
+        //        for (int i = 0; i < dots_size; i++) {
+        //            float theta1 = 2 * __PI * i / dots_size;
+        //            float theta2 = 2 * __PI * (i + 1) / dots_size;
 
-                    float x1 = cRad * std::cos(theta1);
-                    float y1 = cRad * std::sin(theta1);
+        //            float x1 = cRad * std::cos(theta1);
+        //            float y1 = cRad * std::sin(theta1);
 
-                    float x2 = cRad * std::cos(theta2);
-                    float y2 = cRad * std::sin(theta2);
+        //            float x2 = cRad * std::cos(theta2);
+        //            float y2 = cRad * std::sin(theta2);
 
-                    int ii = i + 1;
+        //            int ii = i + 1;
 
-                    dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {1.0 * ii / dots_size * 0.2, 1.0 * ii / dots_size * 0.5, 1.0 * ii / dots_size * 0.8} });
-                    dynamic_mesh.vertices.push_back({ {x1, y1},     {1.0 * ii / dots_size * 0.3, 1.0 * ii / dots_size * 0.6, 1.0 * ii / dots_size * 0.9} });
-                    dynamic_mesh.vertices.push_back({ {x2, y2},     {1.0 * ii / dots_size * 0.4, 1.0 * ii / dots_size * 0.7, 1.0 * ii / dots_size * 0.99} });
+        //            dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {1.0 * ii / dots_size * 0.2, 1.0 * ii / dots_size * 0.5, 1.0 * ii / dots_size * 0.8} });
+        //            dynamic_mesh.vertices.push_back({ {x1, y1},     {1.0 * ii / dots_size * 0.3, 1.0 * ii / dots_size * 0.6, 1.0 * ii / dots_size * 0.9} });
+        //            dynamic_mesh.vertices.push_back({ {x2, y2},     {1.0 * ii / dots_size * 0.4, 1.0 * ii / dots_size * 0.7, 1.0 * ii / dots_size * 0.99} });
 
-                    //dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {i / dots_size * 0.2,i / dots_size * 0.5,i / dots_size * 0.8} });
-                    //dynamic_mesh.vertices.push_back({ {x1, y1},     {i / dots_size * 0.3,i / dots_size * 0.6,i / dots_size * 0.9} });
-                    //dynamic_mesh.vertices.push_back({ {x2, y2},     {i / dots_size * 0.4,i / dots_size * 0.7,i / dots_size * 0.10} });
+        //            //dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {i / dots_size * 0.2,i / dots_size * 0.5,i / dots_size * 0.8} });
+        //            //dynamic_mesh.vertices.push_back({ {x1, y1},     {i / dots_size * 0.3,i / dots_size * 0.6,i / dots_size * 0.9} });
+        //            //dynamic_mesh.vertices.push_back({ {x2, y2},     {i / dots_size * 0.4,i / dots_size * 0.7,i / dots_size * 0.10} });
 
-                    dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 3); // Индексы трех вершин треугольника
-                    dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 2);
-                    dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 1);
-                }
-                __base.is_resized = true;
-            }
-        }
-        ImGui::End();
+        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 3); // Индексы трех вершин треугольника
+        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 2);
+        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 1);
+        //        }
+        //        __base.is_resized = true;
+        //    }
+        //}
+        //ImGui::End();
 
 
 
         ImGui::End();
         ImGui::Render();
 
-        bfDrawFrame(__base, dynamic_mesh);
+        bfDrawFrame(__base, dynamic_mesh, mesh_handler);
 
     }
 

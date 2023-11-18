@@ -14,6 +14,8 @@ struct BfAllocatedBuffer {
 	VkBuffer buffer;
 	VmaAllocation allocation;
 	
+	bool is_allocated;
+	size_t size;
 };
 
 struct BfAllocatedUniformBuffer : BfAllocatedBuffer {

@@ -802,6 +802,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 		// Point to uniform buffer in holder
 		base.frame_pack[i].uniform_view_buffer   = &pHolder->uniform_view_buffers[i];
 		base.frame_pack[i].bezier_points_buffer  = &pHolder->bezier_points_buffers[i];
+
 		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
 		base.frame_pack[i].main_descriptor_set   = &pHolder->main_descriptor_sets[i];
 
@@ -1651,12 +1652,12 @@ void bfUploadDynamicMesh(BfBase& base, BfMesh& mesh)
 	if (base.is_resized) {
 		void* vertex_data;
 		vmaMapMemory(base.allocator, base.dynamic_vertex_buffer.allocation, &vertex_data);
-		memcpy(vertex_data, mesh.vertices.data(), sizeof(bfVertex) * mesh.vertices.size());
+			memcpy(vertex_data, mesh.vertices.data(), sizeof(bfVertex) * mesh.vertices.size());
 		vmaUnmapMemory(base.allocator, base.dynamic_vertex_buffer.allocation);
 
 		void* index_data;
 		vmaMapMemory(base.allocator, base.dynamic_index_buffer.allocation, &index_data);
-		memcpy(index_data, mesh.indices.data(), sizeof(uint32_t) * mesh.indices.size());
+			memcpy(index_data, mesh.indices.data(), sizeof(uint32_t) * mesh.indices.size());
 		vmaUnmapMemory(base.allocator, base.dynamic_index_buffer.allocation);
 
 		base.is_resized = false;
@@ -1886,7 +1887,7 @@ BfEvent bfaRecreateSwapchain(BfBase& base)
 	bfCreateImageViews(base);
 	bfCreateStandartFrameBuffers(base);
 	bfCreateGUIFrameBuffers(base);
-
+	base.window->resized = false;
 	return BfEvent();
 }
 
@@ -1923,7 +1924,7 @@ void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
 }
 
-void bfDrawFrame(BfBase& base, BfMesh& mesh)
+void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 {
 	// VK_TRUE - wait all fences
 	vkWaitForFences(base.device, 1, base.frame_pack[base.current_frame].frame_in_flight_fence, VK_TRUE, UINT64_MAX);
@@ -1962,7 +1963,7 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh)
 	vkResetFences(base.device, 1, &local_fence_in_flight);
 
 	vkResetCommandBuffer(local_standart_command_bufffer, 0);
-	bfMainRecordCommandBuffer(base, mesh);
+	bfMainRecordCommandBuffer(base, mesh, handler);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2015,7 +2016,7 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh)
 	base.current_frame = (base.current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
+void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -2041,8 +2042,8 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
-		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
-		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
+		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
 
 		VkBuffer vertexBuffers[] = { 
 			//mesh.vertex_buffer.buffer
@@ -2065,8 +2066,7 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 		vkCmdSetScissor(local_buffer, 0, 1, &scissor);
 
 		//vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(local_buffer, base.dynamic_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		//vkCmdBindIndexBuffer(local_buffer, base.dynamic_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 		
 		uint32_t uniform_offset = bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * (base.current_frame % MAX_FRAMES_IN_FLIGHT);
 		
@@ -2094,7 +2094,15 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh)
 
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
-		vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+		//vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+		
+		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
+			handler.bind_mesh(local_buffer, i);
+			handler.draw_indexed(local_buffer, i);
+		}
+		
+		//handler.bind_mesh(local_buffer, 0);
+		//handler.draw_indexed(local_buffer, 0);
 	}
 	vkCmdEndRenderPass(local_buffer);
 
@@ -2196,15 +2204,28 @@ void bfUpdateUniformBuffer(BfBase& base)
 	BfUniformView ubo{};
 
 	ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
-	/*if (isRotating)
-		ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 1.0f));*/
+	
+	//ubo.model = glm::rotate(ubo.model, time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 1.0f));
 
 
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	//ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	
+	//bfCalculateView(base.window);
+	if (base.window->is_free_camera_active) bfCalculateView(base.window);
+	ubo.view = base.window->view;
+	
+	/*std::cout << "pos:(" << base.window->pos.x << ", " << base.window->pos.y << ", " << base.window->pos.z
+		<< "); front:(" << base.window->front.x << ", " << base.window->front.y << ", " << base.window->front.z
+		<< "); up:(" << base.window->up.x << ", " << base.window->up.y << ", " << base.window->up.z << ")\n";*/
+
 	ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.1f, 10.0f);
-	ubo.proj[1][1] *= -1;
+	//ubo.proj[1][1] *= -1;
 	// uniformBuffersMapped[currentImage]
-	BfHolder* holder = bfGetpHolder();
+	//BfHolder* holder = bfGetpHolder();
+
+	
+
+
 	memcpy(base.frame_pack[base.current_frame].uniform_view_data, &ubo, sizeof(ubo));
 
 	static float counter = -10.0f;
