@@ -62,6 +62,7 @@ set(HEADERS
 	"include/bfVariative.hpp"
 	"include/bfVertex2.hpp"
 	"include/BfExecutionTime.hpp"
+	"include/BfCurves.hpp"
 
 	#"include/bfVertex.h"
 	"include/bfBase.h"
@@ -149,7 +150,8 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"

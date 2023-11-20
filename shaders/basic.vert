@@ -24,6 +24,10 @@ layout(std140, set = 1, binding = 0) readonly buffer BezierPointsBuffer {
     vec2 point_i[];
 } bezp;
 
+layout(std140, set = 1, binding = 1) readonly buffer ObjectData {
+    mat4 model_matrix[];
+} obj_data;
+
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
@@ -65,7 +69,8 @@ void main() {
     //debugPrintfEXT("[%i] %f, %f", gl_VertexIndex,inPosition[0],inPosition[1]);
 
 
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    gl_Position = ubo.proj * ubo.view * obj_data.model_matrix[gl_InstanceIndex] * vec4(inPosition, 1.0);
     //!vec4 out_coo = ubo.proj * ubo.view * ubo.model * vec4(inPosition + bezp.point_i[gl_VertexIndex], 0.0, 1.0);
     //!debugPrintfEXT("%f, %f", out_coo[0],out_coo[1], out_coo[2], out_coo[3]);
     //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vec2(0.0,0.0) +  bezp.point_i[gl_VertexIndex], 0.0, 1.0);

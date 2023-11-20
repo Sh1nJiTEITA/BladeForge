@@ -25,6 +25,7 @@ struct BfHolder {
 		// Uniforms
 	std::vector<BfAllocatedBuffer> uniform_view_buffers;
 	std::vector<BfAllocatedBuffer> bezier_points_buffers;
+	std::vector<BfAllocatedBuffer> model_buffers;
 
 	std::vector<VkDescriptorSet> global_descriptor_sets;
 	std::vector<VkDescriptorSet> main_descriptor_sets;

@@ -648,6 +648,9 @@ BfEvent bfInitDescriptors(BfBase& base)
 	if (pHolder->bezier_points_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
 		pHolder->bezier_points_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 	}
+	if (pHolder->model_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+		pHolder->model_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	}
 
 	// sets 
 	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
@@ -671,6 +674,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 					VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	const int MAX_BEZIER_POINTS = 1000;
+	const int MAX_OBJECTS = 10000;
 	// Bezier-points
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		// Create storage buffer for bezier_points
@@ -679,6 +683,14 @@ BfEvent bfInitDescriptors(BfBase& base)
 					   sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS,
 					   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
 					   VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		// Create storage buffer for object model matrices
+		bfCreateBuffer(&pHolder->model_buffers[i],
+						base.allocator,
+						sizeof(BfObjectData) * MAX_OBJECTS,
+						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+						VMA_MEMORY_USAGE_CPU_TO_GPU);
+
 
 		// Create buffer for view uniform 
 		bfCreateBuffer(&pHolder->uniform_view_buffers[i],//*camUniformBuffer, 
@@ -694,7 +706,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 	// Uniform-bindings enumeration 
 
 	// View-uniform 
-	VkDescriptorSetLayoutBinding camBufferBinding{};
+	//VkDescriptorSetLayoutBinding camBufferBinding{};
 	/*camBufferBinding.binding		 = 0;
 	camBufferBinding.descriptorCount = 1;
 	camBufferBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -735,11 +747,12 @@ BfEvent bfInitDescriptors(BfBase& base)
 // Main descriptor set layout ------------------------------------------------------------
 
 	VkDescriptorSetLayoutBinding bezierPointsBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
-	
+	VkDescriptorSetLayoutBinding modelMatrixBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 1);
 
 	// Bindings to main desctiptor set layout
 	std::vector<VkDescriptorSetLayoutBinding> main_bindings = {
-		bezierPointsBinding
+		bezierPointsBinding,
+		modelMatrixBinding
 	};
 
 	VkDescriptorSetLayoutCreateInfo mainSetLayourCreateInfo{};
@@ -802,6 +815,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 		// Point to uniform buffer in holder
 		base.frame_pack[i].uniform_view_buffer   = &pHolder->uniform_view_buffers[i];
 		base.frame_pack[i].bezier_points_buffer  = &pHolder->bezier_points_buffers[i];
+		base.frame_pack[i].model_matrix_buffer   = &pHolder->model_buffers[i];
 
 		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
 		base.frame_pack[i].main_descriptor_set   = &pHolder->main_descriptor_sets[i];
@@ -810,7 +824,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 		// Use needed uniform buffer value
 		BfAllocatedBuffer* camUniformBuffer    = base.frame_pack[i].uniform_view_buffer;
 		BfAllocatedBuffer* bezierStorageBuffer = base.frame_pack[i].bezier_points_buffer;
-
+		BfAllocatedBuffer* modelMatrixBuffer = base.frame_pack[i].model_matrix_buffer;
 		
 
 	// Allocate global descriptor sets ---------------------------------------------------
@@ -871,7 +885,13 @@ BfEvent bfInitDescriptors(BfBase& base)
 		bezierPointStoragebufferInfo.offset = 0;
 		bezierPointStoragebufferInfo.range = sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
 
-		
+		VkDescriptorBufferInfo modelStoragebufferInfo{};
+		modelStoragebufferInfo.buffer = modelMatrixBuffer->buffer;
+		modelStoragebufferInfo.offset = 0;
+		modelStoragebufferInfo.range = sizeof(BfObjectData) * MAX_OBJECTS;
+
+
+
 		VkWriteDescriptorSet viewWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 																*base.frame_pack[i].global_descriptor_set, 
 																&viewUniformbufferInfo, 
@@ -887,10 +907,16 @@ BfEvent bfInitDescriptors(BfBase& base)
 																				  &bezierPointStoragebufferInfo, 
 																				   bezierPointsBinding.binding);
 
+		VkWriteDescriptorSet modelWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+																  *base.frame_pack[i].main_descriptor_set,
+																  &modelStoragebufferInfo,
+																  modelMatrixBinding.binding);
+
 		std::vector<VkWriteDescriptorSet> setWrites = {
 			viewWrite,
 			bezierPropertiesWrite,
-			bezierPointsPropertiesWrite
+			bezierPointsPropertiesWrite,
+			modelWrite
 		};
 
 		vkUpdateDescriptorSets(base.device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
@@ -2042,8 +2068,8 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
-		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
-		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
+		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
 
 		VkBuffer vertexBuffers[] = { 
 			//mesh.vertex_buffer.buffer
@@ -2211,14 +2237,84 @@ void bfUpdateUniformBuffer(BfBase& base)
 	//ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	
 	//bfCalculateView(base.window);
-	if (base.window->is_free_camera_active) bfCalculateView(base.window);
+	//std::cout << base.window->cam_mode << "\n";
+	switch (base.window->cam_mode) {
+	case 0:
+		bfCalculateViewPartsFree(base.window);
+		break;
+	case 1:
+		bfCalculateRotateView(base.window);
+		//bfCalculateViewPartsS(base.window);
+		//bfCalculateViewPartsFree(base.window);
+		break;
+	case 2:
+		bfCalculateViewPartsS(base.window);
+		break;
+	}
+	base.window->cam_mode = 99;
+	
+	
+	//if (base.window->is_free_camera_active) {
+	//	bfCalculateViewPartsFree(base.window);
+	//	//std::cout << "FreeCam" << "\n";
+	//}
+	//else if (base.window->is_rotate_camera_active) {
+	//	bfCalculateViewPartsFree(base.window);
+	//	bfCalculateViewPartsS(base.window);
+	//	//std::cout << "RotateCam" << "\n";
+	//}
+	//else if (base.window->is_s_camera_active || base.window->is_scroll) {
+	//	bfCalculateViewPartsS(base.window);
+	//	//std::cout << "SCam" << "\n";
+
+	//}
+	bfUpdateView(base.window);
+
 	ubo.view = base.window->view;
 	
 	/*std::cout << "pos:(" << base.window->pos.x << ", " << base.window->pos.y << ", " << base.window->pos.z
 		<< "); front:(" << base.window->front.x << ", " << base.window->front.y << ", " << base.window->front.z
 		<< "); up:(" << base.window->up.x << ", " << base.window->up.y << ", " << base.window->up.z << ")\n";*/
+	
+	
 
-	ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.1f, 10.0f);
+	if (base.window->proj_mode == 0) {
+		ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.1f, 100.0f);
+	}
+	else if (base.window->proj_mode == 1) {
+		if (base.window->is_asp) {
+			float asp = base.swap_chain_extent.width / base.swap_chain_extent.height;
+			ubo.proj = glm::ortho(base.window->ortho_left, 
+								  base.window->ortho_right, 
+								  base.window->ortho_bottom * asp, 
+								  base.window->ortho_top * asp, 
+								  base.window->ortho_near, 
+								  base.window->ortho_far);
+			std::cout << "ASP" << "\n";
+			std::cout << ubo.proj[0][0] << ", " << ubo.proj[0][1] << ", " << ubo.proj[0][2] << ", " << ubo.proj[0][3] << "\n";
+			std::cout << ubo.proj[1][0] << ", " << ubo.proj[1][1] << ", " << ubo.proj[1][2] << ", " << ubo.proj[1][3] << "\n";
+			std::cout << ubo.proj[2][0] << ", " << ubo.proj[2][1] << ", " << ubo.proj[2][2] << ", " << ubo.proj[2][3] << "\n";
+			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";
+		}
+		else {
+			ubo.proj = glm::ortho(base.window->ortho_left,
+								  base.window->ortho_right,
+								  base.window->ortho_bottom,
+								  base.window->ortho_top,
+								  base.window->ortho_near,
+								  base.window->ortho_far);
+			std::cout << "no ASP" << "\n";
+			std::cout << ubo.proj[0][0] << ", " << ubo.proj[0][1] << ", " << ubo.proj[0][2] << ", " << ubo.proj[0][3] << "\n";
+			std::cout << ubo.proj[1][0] << ", " << ubo.proj[1][1] << ", " << ubo.proj[1][2] << ", " << ubo.proj[1][3] << "\n";
+			std::cout << ubo.proj[2][0] << ", " << ubo.proj[2][1] << ", " << ubo.proj[2][2] << ", " << ubo.proj[2][3] << "\n";
+			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";
+		}
+		
+		
+	}
+	
+	
+	
 	//ubo.proj[1][1] *= -1;
 	// uniformBuffersMapped[currentImage]
 	//BfHolder* holder = bfGetpHolder();
@@ -2280,6 +2376,23 @@ void bfUpdateUniformBuffer(BfBase& base)
 	}
 	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation);
 
+	// Onject data
+	BfMeshHandler* pHandler = BfMeshHandler::get_bound_handler();
+	std::vector<BfObjectData> objects_data(pHandler->get_allocated_meshes_count());
+	
+	for (int i = 0; i < pHandler->get_allocated_meshes_count(); i++) {
+		objects_data[i].model_matrix = pHandler->get_pMesh(i)->model_matrix;
+	}
+	
+	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
+	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
+
+	void* pobjects_data;
+	vmaMapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation, &pobjects_data);
+	{
+		memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
+	}
+	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
 	counter += 1.0f;
 	local_frame++;
 }

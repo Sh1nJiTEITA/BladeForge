@@ -17,6 +17,7 @@
 #include <glm/glm.hpp>
 
 #include "bfBuffer.h"
+#include "bfUniforms.h"
 
 struct bfVertex {
 	glm::vec3 pos;
@@ -52,18 +53,20 @@ enum BfeMeshType {
 	BF_MESH_TYPE_TRIANGLE = 0,
 	BF_MESH_TYPE_RECTANGLE = 1,
 	BF_MESH_TYPE_CIRCLE = 2,
-	BF_MESH_TYPE_CURVE = 3
+	BF_MESH_TYPE_CURVE = 3,
+	BF_MESH_TYPE_CUBE = 4
 };
 
 static inline const std::map<BfeMeshType, size_t> BfsMeshTypeMaxDotsCount{
 	{BF_MESH_TYPE_TRIANGLE,	 3},
 	{BF_MESH_TYPE_RECTANGLE, 4},
 	{BF_MESH_TYPE_CIRCLE,	 80},
-	{BF_MESH_TYPE_CURVE,	 10000}
+	{BF_MESH_TYPE_CURVE,	 10000},
+	{BF_MESH_TYPE_CUBE,      36}
 };
 
 
-struct BfMesh {
+struct BfMesh : BfObjectData {
 	uint32_t				id;
 	BfeMeshType				type;
 	bool					is_fully_allocated;
@@ -84,9 +87,11 @@ class BfMeshHandler {
 private:
 
 	std::vector<BfMesh> __meshes;
+	
 
 	const uint32_t __max_mesh_count;
 
+	
 
 	uint32_t __assign_id() {
 		static uint32_t next_id = 0;
@@ -97,11 +102,22 @@ private:
 
 public:
 	
+	inline static BfMeshHandler* pBound_mesh_handler = nullptr;
+	inline static void bind_mesh_handler(BfMeshHandler* handler) {
+		BfMeshHandler::pBound_mesh_handler = handler;
+	}
+	inline static BfMeshHandler* get_bound_handler() {
+		return BfMeshHandler::pBound_mesh_handler;
+	}
+
+
 	BfMeshHandler(uint32_t max_mesh_count) : 
 		__max_mesh_count{max_mesh_count}
 	{
 		__meshes.resize(max_mesh_count);
 	}
+
+	
 
 	BfMesh& get_rMesh(const uint32_t mesh_index) {
 		return __meshes.at(mesh_index);
@@ -215,7 +231,7 @@ public:
 	void draw_indexed(VkCommandBuffer command_buffer, const uint32_t mesh_index) {
 		BfMesh* pMesh = get_pMesh(mesh_index);
 
-		vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pMesh->indices.size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pMesh->indices.size()), 1, 0, 0, mesh_index);
 	}
 
 

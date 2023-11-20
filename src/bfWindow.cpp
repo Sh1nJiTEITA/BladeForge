@@ -9,24 +9,73 @@ bool BfWindow::resized = false;
 */
 
 
-void bfCalculateView(BfWindow* window)
+void bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
+{
+	switch (cam_index) {
+		case 0: { // Free cam
+			if (decision) {
+				window->is_free_camera_active = true;
+				window->cam_mode = 0;
+			}
+			else {
+				window->is_free_camera_active = false;
+				window->first_free = true;
+			}
+			break;
+		}
+		case 1: {
+			if (decision) {
+				window->is_rotate_camera_active = false;
+				//window->first_free_rotate = true;
+				//window->first_s_rotate = true;
+				window->cam_mode = 1;
+
+				//window->is_s_camera_active = true;
+				//window->is_free_camera_active = true;
+			}
+			else {
+				window->first_free_rotate = true;
+				window->first_s_rotate = true;
+				/*
+				window->is_free_camera_active = false;
+				window->first_free = true;
+				window->is_s_camera_active = false;
+				window->first_s = true;
+				*/
+			}
+			break;
+		}
+		case 2: { // S cam
+			if (decision) {
+				window->is_s_camera_active = true;
+				//window->first_s = false;
+				window->cam_mode = 2;
+				//std::cout << "Scam on";
+			}
+			else {
+				window->is_s_camera_active = false;
+				window->first_s = true;
+				//std::cout << "Scam off";
+			}
+			break;
+		}
+	}
+
+}
+
+void bfCalculateViewPartsFree(BfWindow* window)
 {
 
-	static double lastX = 0;
-	static double lastY = 0;
-	
-	
-
-	if (window->firstMouse) {
-		window->firstMouse = false;
-		lastX = window->xpos;
-		lastY = window->ypos;
+	if (window->first_free) {
+		window->first_free = false;
+		window->lastX = window->xpos;
+		window->lastY = window->ypos;
 	}
 
 
-	float xoffset = window->xpos - lastX;
-	float yoffset = lastY - window->ypos;  
-
+	float xoffset = window->xpos - window->lastX;
+	float yoffset = window->lastY - window->ypos;
+	yoffset *= -1;
 	
 
 	double sensitivity = 0.1f;
@@ -34,32 +83,186 @@ void bfCalculateView(BfWindow* window)
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
 	
-	static double yaw = -925.6;
-	static double pitch = 44.3;
+	//static double yaw = -925.6;
+	//static double pitch = 44.3;
 
-	yaw += xoffset;
-	pitch += yoffset;
+	window->yaw += xoffset;
+	window->pitch += yoffset;
 
-	if (pitch > 89.0f)
-		pitch = 89.0f;
-	if (pitch < -89.0f)
-		pitch = -89.0f;
+	if (window->pitch > 89.0f)
+		window->pitch = 89.0f;
+	if (window->pitch < -89.0f)
+		window->pitch = -89.0f;
 
 	// std::cout << "y: " << yaw << ", p: " << pitch << "\n";
 
 	window->front = glm::normalize(glm::vec3(
-		glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch)),
-		glm::sin(glm::radians(pitch)),
-		glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch))
+		glm::cos(glm::radians(window->yaw)) * glm::cos(glm::radians(window->pitch)),
+		glm::sin(glm::radians(window->pitch)),
+		glm::sin(glm::radians(window->yaw)) * glm::cos(glm::radians(window->pitch))
 	));
 
-	window->view = glm::lookAt(window->pos, window->pos + window->front, window->up);
+	//window->view = glm::lookAt(window->pos, window->pos + window->front, window->up);
 
-	lastX = window->xpos;
-	lastY = window->ypos;
-	/*std::cout << "pos:(" << window->pos.x << ", " << window->pos.y << ", " << window->pos.z
+	window->lastX = window->xpos;
+	window->lastY = window->ypos;
+	
+	/*std::cout << "free_cam: pos:(" << window->pos.x << ", " << window->pos.y << ", " << window->pos.z
 		<< "); front:(" << window->front.x << ", " << window->front.y << ", " << window->front.z
 		<< "); up:(" << window->up.x << ", " << window->up.y << ", " << window->up.z << ")\n";*/
+}
+
+void bfCalculateViewPartsS(BfWindow* window)
+{
+	static float lastXs = 0;
+	static float lastYs = 0;
+	
+	if (window->first_s) {
+		//std::cout << " first s ";
+		window->first_s = false;
+		lastXs = window->xpos;
+		lastYs = window->ypos;
+	}
+
+	float deltaX = lastXs - window->xpos;
+	float deltaY = lastYs - window->ypos;
+	//std::cout << "deltaX = " << deltaX << "; deltaY = " << deltaY << "\n";
+	//std::cout << "; xpos = " << window->xpos << "; lastXs = " << lastXs << "; ypos = " << "; lastYs = " << "; ypos" << "\n";
+
+	// x-direction
+	glm::vec3 x_dir = -glm::normalize(glm::cross(window->up, window->front)) * (deltaX/50.0f);
+	
+	// y-direction
+	glm::vec3 y_dir = window->up * (deltaY/50.0f);
+
+	// z-direction
+	glm::vec3 z_dir;
+	if (window->is_scroll) {
+		z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+		window->is_scroll = false;
+		window->scroll_yoffset = 0;
+	}
+	else {
+		z_dir = glm::vec3(0.0f);
+	}
+
+	window->pos += y_dir + x_dir + z_dir;
+
+	//window->view = glm::lookAt(window->pos, window->pos + window->front, window->up);
+
+	lastXs = window->xpos;
+	lastYs = window->ypos;
+
+
+	/*std::cout << "s_cam: pos:(" << window->pos.x << ", " << window->pos.y << ", " << window->pos.z
+		<< "); front:(" << window->front.x << ", " << window->front.y << ", " << window->front.z
+		<< "); up:(" << window->up.x << ", " << window->up.y << ", " << window->up.z << ")\n";*/
+}
+
+void bfCalculateRotateView(BfWindow* window)
+{
+	static float lastRx = 0;
+	static float lastRy = 0;
+	
+	std::cout << "RotateView ";
+
+	if (window->first_free_rotate) {
+		window->first_free_rotate = false;
+		lastRx = window->xpos;
+		lastRy = window->ypos;
+		//window->lastRx = window->xpos;
+		//window->lastRy = window->ypos;
+	}
+
+	//std::cout << "xpos = " << window->xpos << "; lastXs = " << lastRx << "; ypos = " << window->ypos << "; lastYs = " << lastRy << "\n";
+
+	//float xoffset = window->xpos - window->lastRy;
+	//float yoffset = window->lastRy - window->ypos;
+	float xoffset = window->xpos - lastRx;
+	float yoffset = lastRy - window->ypos;
+	yoffset *= -1;
+
+
+	double sensitivity = 0.1f;
+
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+	std::cout << "xoffset = " << xoffset << "; yoffset = " << yoffset << "\n";
+
+	//static double yaw = -925.6;
+	//static double pitch = 44.3;
+
+	window->yaw += xoffset;
+	window->pitch += yoffset;
+
+	if (window->pitch > 89.0f)
+		window->pitch = 89.0f;
+	if (window->pitch < -89.0f)
+		window->pitch = -89.0f;
+
+	window->front = glm::normalize(glm::vec3(
+		glm::cos(glm::radians(window->yaw)) * 
+		glm::cos(glm::radians(window->pitch)),
+		
+		
+		glm::sin(glm::radians(window->pitch)),
+		
+
+		glm::sin(glm::radians(window->yaw)) * 
+		glm::cos(glm::radians(window->pitch))
+	));
+
+	/*window->lastRx = window->xpos;
+	window->lastRy = window->ypos;*/
+	lastRx = window->xpos;
+	lastRy = window->ypos;
+
+	// part 2 
+
+	static float lastRXs = 0;
+	static float lastRYs = 0;
+
+	if (window->first_s_rotate) {
+		window->first_s_rotate = false;
+		lastRXs = window->xpos;
+		lastRYs = window->ypos;
+	}
+
+	float deltaX = lastRXs - window->xpos;
+	float deltaY = lastRYs - window->ypos;
+
+	// x-direction
+	glm::vec3 x_dir = -glm::normalize(glm::cross(window->up, window->front)) * (deltaX / 50.0f);
+
+	// y-direction
+	glm::vec3 y_dir = glm::vec3(0.0f);
+	if (!(window->pitch < -89.0f))
+		glm::vec3 y_dir = window->up * (deltaY / 50.0f);
+
+	// z-direction
+	glm::vec3 z_dir;
+	if (window->is_scroll) {
+		z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+		window->is_scroll = false;
+		window->scroll_yoffset = 0;
+	}
+	else {
+		z_dir = glm::vec3(0.0f);
+	}
+
+	window->pos += y_dir + x_dir + z_dir;
+
+	lastRXs = window->xpos;
+	lastRYs = window->ypos;
+
+	window->lastX = window->xpos; 
+	window->lastY = window->ypos;
+
+}
+
+void bfUpdateView(BfWindow* window)
+{
+	window->view = glm::lookAt(window->pos, window->pos + window->front, window->up);
 }
 
 BfEvent bfCreateWindow(BfWindow* window) {
@@ -74,9 +277,10 @@ BfEvent bfCreateWindow(BfWindow* window) {
 		glm::sin(glm::radians(-925.6)) * glm::cos(glm::radians(44.3))
 	));
 	window->up = { 0.0f, 1.0f, 0.0f };
-	bfCalculateView(window);
+	bfCalculateViewPartsFree(window);
 	
 	window->is_free_camera_active = false;
+	window->is_s_camera_active = false;
 
 	window->pWindow = glfwCreateWindow(
 		window->width,
@@ -87,13 +291,35 @@ BfEvent bfCreateWindow(BfWindow* window) {
 	);
 	
 	glfwSetWindowUserPointer(window->pWindow, window);
+	glfwSetScrollCallback(window->pWindow,
+		[](GLFWwindow* window, double xoffset, double yoffset) {
+			BfWindow* thisWindow = static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+			
+			thisWindow->scroll_yoffset += yoffset;
+			//std::cout << "xoffset = " << xoffset << "; yoffset = << " << yoffset << "soffset = " << thisWindow->scroll_xoffset << "\n";
+			thisWindow->is_scroll = true;
+
+			bfCalculateViewPartsS(thisWindow);
+			////thisWindow->scroll_xoffset = xoffset;
+			//if (thisWindow->scroll_yoffset != 0) {
+			//	thisWindow->scroll_xoffset = yoffset;
+			//	thisWindow->is_scroll = true;
+			//}
+			//else {
+			//	thisWindow->is_scroll = false;
+			//}
+			
+		}
+	);
+
 	glfwSetCursorPosCallback(window->pWindow, 
 		[](GLFWwindow* window, double xpos, double ypos) {
 			BfWindow* thisWindow = static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
 			thisWindow->xpos = xpos;
 			thisWindow->ypos = ypos;
 			//std::cout << "cb: " << thisWindow->xpos << ", " << thisWindow->ypos << "\n";
-		});
+		}
+	);
 	glfwSetFramebufferSizeCallback(
 		window->pWindow,
 		[](GLFWwindow* window, int width, int height){

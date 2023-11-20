@@ -29,6 +29,7 @@ struct BfFramePack {
 
 	BfAllocatedBuffer*		uniform_view_buffer;
 	BfAllocatedBuffer*		bezier_points_buffer;
+	BfAllocatedBuffer*		model_matrix_buffer;
 
 	VkCommandBuffer*		standart_command_buffer;
 	VkCommandBuffer*		gui_command_buffer;

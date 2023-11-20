@@ -10,6 +10,12 @@ struct BfUniformView {
 	alignas(16) glm::mat4 proj;
 };
 
+struct BfObjectData {
+	glm::mat4 model_matrix;
+};
+
+
+
 struct BfUniformBezierProperties {
 	uint32_t points_count;
 };
