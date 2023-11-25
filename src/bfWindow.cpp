@@ -77,6 +77,7 @@ void bfCalculateViewPartsFree(BfWindow* window)
 	float yoffset = window->lastY - window->ypos;
 	yoffset *= -1;
 	
+	
 
 	double sensitivity = 0.1f;
 
@@ -133,12 +134,16 @@ void bfCalculateViewPartsS(BfWindow* window)
 	glm::vec3 x_dir = -glm::normalize(glm::cross(window->up, window->front)) * (deltaX/50.0f);
 	
 	// y-direction
-	glm::vec3 y_dir = window->up * (deltaY/50.0f);
+	glm::vec3 y_dir = -glm::normalize(glm::cross(glm::cross(window->up, window->front), window->front)) * (deltaY/50.0f);
 
 	// z-direction
 	glm::vec3 z_dir;
 	if (window->is_scroll) {
-		z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+		if (window->proj_mode == 0)
+			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+		else if (window->proj_mode == 1)
+			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 10.0f;
+
 		window->is_scroll = false;
 		window->scroll_yoffset = 0;
 	}
@@ -164,7 +169,7 @@ void bfCalculateRotateView(BfWindow* window)
 	static float lastRx = 0;
 	static float lastRy = 0;
 	
-	std::cout << "RotateView ";
+	
 
 	if (window->first_free_rotate) {
 		window->first_free_rotate = false;
@@ -187,7 +192,7 @@ void bfCalculateRotateView(BfWindow* window)
 
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
-	std::cout << "xoffset = " << xoffset << "; yoffset = " << yoffset << "\n";
+	
 
 	//static double yaw = -925.6;
 	//static double pitch = 44.3;
@@ -232,12 +237,16 @@ void bfCalculateRotateView(BfWindow* window)
 	float deltaY = lastRYs - window->ypos;
 
 	// x-direction
-	glm::vec3 x_dir = -glm::normalize(glm::cross(window->up, window->front)) * (deltaX / 50.0f);
+	glm::vec3 x_dir = glm::vec3(0.0f);
 
 	// y-direction
 	glm::vec3 y_dir = glm::vec3(0.0f);
-	if (!(window->pitch < -89.0f))
-		glm::vec3 y_dir = window->up * (deltaY / 50.0f);
+	
+	
+	if (!((window->pitch == -89.0f) || (window->pitch == 89.0f))) {
+		y_dir = -glm::normalize(glm::cross(glm::cross(window->up, window->front), window->front)) * (deltaY / 50.0f);
+		x_dir = -glm::normalize(glm::cross(window->up, window->front)) * (deltaX / 50.0f);
+	}
 
 	// z-direction
 	glm::vec3 z_dir;
@@ -271,14 +280,10 @@ BfEvent bfCreateWindow(BfWindow* window) {
 
 	window->pos = { 2.0f, -2.0f, -1.0f};
 	
-	window->front = glm::normalize(glm::vec3(
-		glm::cos(glm::radians(-925.6)) * glm::cos(glm::radians(44.3)),
-		glm::sin(glm::radians(44.3)),
-		glm::sin(glm::radians(-925.6)) * glm::cos(glm::radians(44.3))
-	));
+	
 	window->up = { 0.0f, 1.0f, 0.0f };
 	bfCalculateViewPartsFree(window);
-	
+	//window->front = { 0.0f, 0.0f, 0.0f };
 	window->is_free_camera_active = false;
 	window->is_s_camera_active = false;
 
@@ -347,6 +352,45 @@ BfEvent bfCreateWindow(BfWindow* window) {
 	}
 
 }
+
+void bfSetOrthoUp(BfWindow* window)
+{
+	window->pitch = 89.0f;
+
+	bfCalculateViewPartsFree(window);
+}
+
+void bfSetOrthoBottom(BfWindow* window)
+{
+	window->pitch = -89.0f;
+
+	bfCalculateViewPartsFree(window);
+}
+
+void bfSetOrthoRight(BfWindow* window)
+{
+	window->yaw = -90.0f;
+	bfCalculateViewPartsFree(window);
+}
+
+void bfSetOrthoLeft(BfWindow* window)
+{
+	window->yaw = 90.0f;
+	bfCalculateViewPartsFree(window);
+}
+
+void bfSetOrthoNear(BfWindow* window)
+{
+	window->yaw = 0.0f;
+	bfCalculateViewPartsFree(window);
+}
+
+void bfSetOrthoFar(BfWindow* window)
+{
+	window->yaw = 180.0f;
+	bfCalculateViewPartsFree(window);
+}
+
 
 BfEvent bfSetWindowSize(BfWindow* window, int width, int height)
 {

@@ -55,7 +55,11 @@ struct BfBase {
 	VkSwapchainKHR			 swap_chain;
 	VkFormat				 swap_chain_format;
 	VkExtent2D				 swap_chain_extent;
-							 
+
+	BfAllocatedImage		 depth_image;
+	VkImageView				 depth_image_view;
+	VkFormat				 depth_format;
+
 	std::vector<BfImagePack> image_packs;
 	std::vector<BfFramePack> frame_pack;
 	uint32_t				 image_pack_count;
@@ -85,6 +89,7 @@ struct BfBase {
 	
 	float					 x_scale;
 	float					 y_scale;
+	float					 xyz_scale = 1; 
 
 	float					 px;
 	float				     py;
@@ -122,6 +127,7 @@ BfEvent bfCreateStandartCommandBuffers(BfBase& base);
 BfEvent bfCreateGUICommandBuffers(BfBase& base);
 BfEvent bfCreateSyncObjects(BfBase& base);
 BfEvent bfInitImGUI(BfBase& base);
+BfEvent bfCreateDepthBuffer(BfBase& base);
 
 void bfCreateAllocator(BfBase& base);
 void bfAllocateBuffersForDynamicMesh(BfBase& base);
@@ -149,6 +155,11 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size);
 VkDescriptorSetLayoutBinding bfGetDescriptorSetLayoutBinding(VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding);
 VkWriteDescriptorSet bfWriteDescriptorBuffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo* bufferInfo, uint32_t binding);
+
+// Depth buffers
+VkImageCreateInfo bfPopulateDepthImageCreateInfo(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent);
+VkImageViewCreateInfo bfPopulateDepthImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags);
+VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
 
 // CleanUp's
 BfEvent bfCleanUpSwapchain(BfBase& base);

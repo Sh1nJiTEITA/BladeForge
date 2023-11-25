@@ -101,7 +101,10 @@ enum class BfEnActionType {
 	BF_ACTION_ALLOCATE_MESH_FAILURE							 = -0x31,
 
 	BF_ACTION_UPLOAD_MESH_SUCCESS							 =  0x32,
-	BF_ACTION_UPLOAD_MESH_FAILURE							 = -0x32
+	BF_ACTION_UPLOAD_MESH_FAILURE							 = -0x32,
+
+	BF_CREATE_DEPTH_IMAGE_VIEW_SUCCESS						 =  0x33,
+	BF_CREATE_DEPTH_IMAGE_VIEW_FAILURE						 = -0x33
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -192,7 +195,10 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x31,  "Memory for mesh wasn't allocated:"},
 
 	{ 0x32,  "Mesh was uploaded successfully:"},
-	{-0x32,  "Mesh wasn't uploaded"}
+	{-0x32,  "Mesh wasn't uploaded"},
+
+	{ 0x33,  "VkImageView for depth buffer was created successfully"},
+	{-0x33,  "VkImageView for depth buffer wasn't created"},
 };
 
 

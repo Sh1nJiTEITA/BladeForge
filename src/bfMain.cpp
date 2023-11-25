@@ -53,6 +53,7 @@ void BfMain::__init()
     bfCreateAllocator(__base);
     bfCreateSwapchain(__base);
     bfCreateImageViews(__base);
+    bfCreateDepthBuffer(__base);
     bfCreateStandartRenderPass(__base);
     bfCreateGUIRenderPass(__base);
 
@@ -84,48 +85,172 @@ void BfMain::__start_loop()
 
     double previousTime = glfwGetTime();
 
-    float x = 1.0; // displays the frame rate every 1 second
-    int counter = 0;
-    int print_counter = 0;
-    std::string fps = "Current FPS: ";
+   
+   
+    
 
     BfMesh dynamic_mesh;
     int dots_size = 3;
 
     double __PI = 3.141592653589793238462643383279502884;
 
-    /*std::vector<bfVertex> plain_vertices{
+    
+    /*std::vector<bfVertex> plain_vertices0{
         {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
         {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
         {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-    };
-
-    std::vector<uint16_t> plain_indices{
-        0,1,2,2,3,0
     };*/
 
+    std::vector<bfVertex> plain_vertices0{
+        {{0.0, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+        {{0.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+    };
+
+    std::vector<uint16_t> plain_indices0{
+        0,1,2,2,3,0
+    }; 
+
+
+    std::vector<bfVertex> cube_vertices{
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{ 0.5f, -0.5f, -0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{-0.5f,  0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 0.0f,  1.0f}},
+                       
+        {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{-0.5f,  0.5f,  0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+                       
+        {{-0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{-0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{-0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+                      
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{ 0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{ 0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{ 0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+                           
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{ 0.5f, -0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+                             
+        {{-0.5f,  0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
+        {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
+        {{-0.5f,  0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
+        {{-0.5f,  0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}}
+    };
+
+    std::vector<uint16_t> cube_indices{
+        0,1,2,3,4,5,6,
+        7,8,9,10,11,12,
+        13,14,15,16,17,
+        18,19,20,21,22,
+        23,24,25,26,27,
+        28,29,30,31,32,33,
+        34,35
+    };
+
     std::vector<bfVertex> plain_vertices{
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
-    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
-    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
-    {{-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // 4
-    {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
-    {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
-    {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}}    // 7
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
+        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
+        {{-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // 4
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}}    // 7
+    };
+
+    std::vector<bfVertex> plain_vertices2{
+     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+                                              
+     {{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
+     {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+     {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f} },
+     {{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    };
+
+    const std::vector<uint16_t> plain_indices2 = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4
+    };
+
+    std::vector<bfVertex> cube_vertices2{
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // 4
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+
+        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}},    // 7
+        { {-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
+
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}},    // 7
+        {{-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // 4
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}},    // 7
+
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
+        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+        {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},   // 5
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},    // 6
+
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}},    // 7
+        {{-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},  // 4
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}, // 3
+        {{-0.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}},    // 7
     };
 
     std::vector<uint16_t> plain_indices{
         0, 1, 2, 2, 3, 0,   // Передняя грань
-        4, 5, 6, 6, 7, 4,   // Задняя грань
         0, 4, 7, 7, 3, 0,   // Левая грань
+        0, 1, 5, 5, 4, 0,    // Нижняя грань
         1, 5, 6, 6, 2, 1,   // Правая грань
         3, 2, 6, 6, 7, 3,   // Верхняя грань
-        0, 1, 5, 5, 4, 0    // Нижняя грань
+        4, 5, 6, 6, 7, 4   // Задняя грань
     };
 
     std::vector<glm::vec3> plain_coo{
+        {0.5f,0.5f,0.5f},
         {-0.134311, 0.882089,   -0.467724},
         {-0.994543, -0.690751,   0.815559},
         { 0.402315, -0.562322,   0.281398},
@@ -145,52 +270,89 @@ void BfMain::__start_loop()
         {1.234, 8.901, 3.456},
         {6.789, 4.567, 7.890},
         {2.345, 9.012, 1.234},
-        {5.678, 3.456, 6.789},
+        
     };
 
-    int planes_count = 20;
-    BfMeshHandler mesh_handler(planes_count);
-    BfMeshHandler::bind_mesh_handler(&mesh_handler);
+    std::vector<bfVertex> basises_vertices{
+        {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}},
+        {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}},
+        
+        {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f}},
+        {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f}},
 
-    for (int i = 0; i < planes_count; i++) {
-        mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CUBE);
-        BfMesh* pMesh = mesh_handler.get_pMesh(i);
-        pMesh->model_matrix = glm::translate(glm::mat4(1.0f), plain_coo[i]);
-        pMesh->vertices = plain_vertices;
-        pMesh->indices = plain_indices;
+        {{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f}},
+        {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f}}
+    };
 
-        mesh_handler.load_mesh_to_buffers(__base.allocator, i);
+    std::vector<uint16_t> basises_indices{
+        0,1,
+        2,3,
+        4,5
+    };
+
+    BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 0.5f, 0.0f}, {0.5f, 0.5f,0.0f} });
+
+    std::vector<glm::vec3> bezier2_vert = bezier2.update_and_get_vertices(30);
+    
+    std::vector<bfVertex> bezier2_vertices(bezier2_vert.size());
+    std::vector<uint16_t> bezier2_indices(bezier2_vert.size());
+    for (size_t i = 0; i < bezier2_vert.size(); i++) {
+        bezier2_vertices[i].pos = bezier2_vert[i];
+        bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
+        bezier2_indices[i] = (uint16_t)i;
     }
 
 
-   /* BfMesh rectangle_mesh{};
-    rectangle_mesh.vertices = {
-        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-    };
-    rectangle_mesh.indices = {
-         0,1,2,2,3,0
-    };
-    mesh_handler.upload_mesh(0, rectangle_mesh);
-    mesh_handler.load_mesh_to_buffers(__base.allocator, 0);
+    int planes_count = 1;
+    BfMeshHandler mesh_handler(planes_count+1);
+    BfMeshHandler::bind_mesh_handler(&mesh_handler);
+
+    for (int i = 0; i <= planes_count; i++) {
+        
+        if (i == planes_count) {
+            mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
+            BfMesh* pMesh = mesh_handler.get_pMesh(i);
+            pMesh->model_matrix = glm::mat4(1.0f);
+            pMesh->vertices = basises_vertices;
+            pMesh->indices = basises_indices;
+
+            mesh_handler.load_mesh_to_buffers(__base.allocator, i);
+        }
+        else {
+            mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
+            BfMesh* pMesh = mesh_handler.get_pMesh(i);
+            
+            glm::mat4 tr{ 1.0f };
+            tr = glm::translate(tr, glm::vec3(0.0f, 0.0f, 1.0f * (i + 1)));
+            //tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            
+            pMesh->model_matrix = tr;
+            pMesh->vertices = bezier2_vertices;//cube_vertices;
+            pMesh->indices = bezier2_indices;//cube_indices;
+
+            mesh_handler.load_mesh_to_buffers(__base.allocator, i);
+
+        }
+    }
+
+
+    //__base.window->ortho_right = (float)__base.swap_chain_extent.width;
+    //__base.window->ortho_top = (float)__base.swap_chain_extent.height;
+
+
+   
+    std::string front_string;
+    std::string up_string;
+    std::string pos_string;
+    std::string center_string;
+
+    BfMesh* pMesh1 = mesh_handler.get_pMesh(0);
+    BfMesh* pMesh2 = mesh_handler.get_pMesh(1);
+    glm::vec3 pos_vec{ 0.0f,0.0f,0.0f };
     
-    BfMesh rectangle_mesh2{};
-    rectangle_mesh2.vertices = {
-        {{-0.5f, 0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.0f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.0f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-    };
-    rectangle_mesh2.indices = {
-         0,1,2,2,3,0
-    };
-
-    mesh_handler.upload_mesh(1, rectangle_mesh2);
-    mesh_handler.load_mesh_to_buffers(__base.allocator, 1);*/
-
-
+    bool is_x_rotating = false;
+    bool is_y_rotating = false;
+    bool is_z_rotating = false;
 
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
@@ -207,49 +369,92 @@ void BfMain::__start_loop()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
 
-        ImGui::Begin("Camera");
+        __present_camera();
+        __present_info(currentTime);
 
-        static bool is_per = true;
-        static bool is_ort = false;
-        if (ImGui::RadioButton("Perspective", is_per)) {
-            is_ort = false;
-            is_per = true;
 
-            __base.window->proj_mode = 0;
-
-            std::cout << "pers active" << "\n";
-        }
-        if (ImGui::RadioButton("Ortho", is_ort)) {
-            is_ort = true;
-            is_per = false;
-            
-            __base.window->proj_mode = 1;
-
-            std::cout << "Ortho active" << "\n";
-        }
-
-        ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);
-        ImGui::InputFloat("Ortho-right", &__base.window->ortho_right, 0.1f);
-        ImGui::InputFloat("Ortho-top", &__base.window->ortho_top, 0.1f);
-        ImGui::InputFloat("Ortho-bottom", &__base.window->ortho_bottom, 0.1f);
-        ImGui::InputFloat("Ortho-near", &__base.window->ortho_near, 0.1f);
-        ImGui::InputFloat("Ortho-far", &__base.window->ortho_far, 0.1f);
-        ImGui::Checkbox("is_asp", &__base.window->is_asp);
-
-        ImGui::End();
+        
 
 
 
         ImGui::Begin("Scale Window");
-        ImGui::SliderFloat("x", &__base.x_scale, 0.0f, 2.0f);
-        ImGui::SliderFloat("y", &__base.y_scale, 0.0f, 2.0f);
+            
+            
 
-        ImGui::SliderFloat("+x", &__base.px, -1.0, 1.0f);
-        ImGui::SliderFloat("+y", &__base.py, -1.0f, 1.0f);
-        ImGui::SliderFloat("+z", &__base.pz, -1.0f, 1.0f);
+            ImGui::SliderFloat("x", &__base.x_scale, 0.0f, 2.0f);
+            ImGui::SliderFloat("y", &__base.y_scale, 0.0f, 2.0f);
+            ImGui::InputFloat("XYZ", &__base.xyz_scale, 0.1f);
 
+            ImGui::SliderFloat("+x", &__base.px, -1.0, 1.0f);
+            ImGui::SliderFloat("+y", &__base.py, -1.0f, 1.0f);
+            ImGui::SliderFloat("+z", &__base.pz, -1.0f, 1.0f);
+
+            ImGui::BeginTable("Move Objets", 2);
+                
+                ImGui::TableNextRow();
+
+                ImGui::TableSetColumnIndex(0);
+                if (ImGui::Button("+x_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(1.0f, 0.0f, 0.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(1.0f, 0.0f, 0.0f));
+                }
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Button("-x_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(-1.0f, 0.0f, 0.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(-1.0f, 0.0f, 0.0f));
+                }
+                
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+
+                if (ImGui::Button("+y_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
+                }
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Button("-y_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, -1.0f, 0.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, -1.0f, 0.0f));
+                }
+
+                ImGui::TableNextRow();
+                
+                ImGui::TableSetColumnIndex(0);
+                if (ImGui::Button("+z_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 0.0f, 1.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 0.0f, 1.0f));
+                }
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::Button("-z_pos")) {
+                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
+                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
+                }
+
+            ImGui::EndTable();
+
+            ImGui::Checkbox("x_rot", &is_x_rotating);
+            ImGui::Checkbox("y_rot", &is_y_rotating);
+            ImGui::Checkbox("z_rot", &is_z_rotating);
+
+            float xr = 0.0f;
+            float yr = 0.0f;
+            float zr = 0.0f;
+
+            if (is_x_rotating == true) xr = 0.1;
+            if (is_y_rotating == true) yr = 0.1;
+            if (is_z_rotating == true) zr = 0.1;
+            
+            if (is_x_rotating || is_y_rotating || is_z_rotating)
+            {
+                pMesh1->model_matrix = glm::rotate(pMesh1->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
+                pMesh2->model_matrix = glm::rotate(pMesh2->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
+            }
+
+            if (ImGui::Button("Toggle Front-vec")) {
+                __base.window->front *= -1;
+            }
 
         ImGui::End();
 
@@ -266,63 +471,13 @@ void BfMain::__start_loop()
 
         }
 
-        ImGui::Begin("Performance");
+        
 
-        // Display the frame count here any way you want.
-        counter += 1;
-        if ((currentTime - previousTime) >= x) {
-
-            print_counter = counter;
-            counter = 0;
-            previousTime = currentTime;
-        }
-        ImGui::Text((fps + std::to_string(print_counter)).c_str());
-        ImGui::End();
-
-        //ImGui::Begin("Circle");
-        //{
-
-        //    // ImGui::InputInt("Dots:", &dots_size);
-
-        //    bool cslider = ImGui::SliderInt("Dots:", &dots_size, 3, 400);
-
-        //    if ((ImGui::Button("Calculate circle") or cslider) and (dots_size != 0)) {
-
-
-        //        float cRad = 0.7f;
-
-        //        dynamic_mesh.vertices.clear();
-        //        dynamic_mesh.indices.clear();
-        //        dynamic_mesh.vertices.push_back({ {0.0f,0.0f}, {1.0, 1.0f, 1.0f} });
-
-        //        for (int i = 0; i < dots_size; i++) {
-        //            float theta1 = 2 * __PI * i / dots_size;
-        //            float theta2 = 2 * __PI * (i + 1) / dots_size;
-
-        //            float x1 = cRad * std::cos(theta1);
-        //            float y1 = cRad * std::sin(theta1);
-
-        //            float x2 = cRad * std::cos(theta2);
-        //            float y2 = cRad * std::sin(theta2);
-
-        //            int ii = i + 1;
-
-        //            dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {1.0 * ii / dots_size * 0.2, 1.0 * ii / dots_size * 0.5, 1.0 * ii / dots_size * 0.8} });
-        //            dynamic_mesh.vertices.push_back({ {x1, y1},     {1.0 * ii / dots_size * 0.3, 1.0 * ii / dots_size * 0.6, 1.0 * ii / dots_size * 0.9} });
-        //            dynamic_mesh.vertices.push_back({ {x2, y2},     {1.0 * ii / dots_size * 0.4, 1.0 * ii / dots_size * 0.7, 1.0 * ii / dots_size * 0.99} });
-
-        //            //dynamic_mesh.vertices.push_back({ {0.0f, 0.0f}, {i / dots_size * 0.2,i / dots_size * 0.5,i / dots_size * 0.8} });
-        //            //dynamic_mesh.vertices.push_back({ {x1, y1},     {i / dots_size * 0.3,i / dots_size * 0.6,i / dots_size * 0.9} });
-        //            //dynamic_mesh.vertices.push_back({ {x2, y2},     {i / dots_size * 0.4,i / dots_size * 0.7,i / dots_size * 0.10} });
-
-        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 3); // Индексы трех вершин треугольника
-        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 2);
-        //            dynamic_mesh.indices.push_back(dynamic_mesh.vertices.size() - 1);
-        //        }
-        //        __base.is_resized = true;
-        //    }
-        //}
-        //ImGui::End();
+       
+        
+        BfExecutionTime::BeginTimeCut("Vertices-present");
+            __present_vertices(&mesh_handler);
+        BfExecutionTime::EndTimeCut("Vertices-present");
 
 
 
@@ -335,6 +490,7 @@ void BfMain::__start_loop()
 
     std::cout << "uniform-ave:" << BfExecutionTime::GetAverageTimeCut("uniform") << " median: " << BfExecutionTime::GetMedianTimeCut("uniform") << "\n";
     std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("dynamic-mesh") << " median: " << BfExecutionTime::GetMedianTimeCut("dynamic-mesh") << "\n";
+    std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("Vertices-present") << " median: " << BfExecutionTime::GetMedianTimeCut("Vertices-present") << "\n";
     vkDeviceWaitIdle(__base.device);
 
 
@@ -342,6 +498,207 @@ void BfMain::__start_loop()
 
 void BfMain::__kill()
 {
+}
+
+void BfMain::__present_info(double currentTime) {
+    static int counter = 0;
+    static int print_counter = 0;
+    
+    static double previousTime = currentTime;
+
+    std::string fps = "Current FPS: ";
+    
+    ImGui::Begin("Info");
+
+    // Display the frame count here any way you want.
+    counter += 1;
+
+    float x = 1.0; // displays the frame rate every 1 second
+    if ((currentTime - previousTime) >= x) {
+
+        print_counter = counter;
+        counter = 0;
+        previousTime = currentTime;
+    }
+    ImGui::Text((fps + std::to_string(print_counter)).c_str());
+
+    std::string pos_string = "Position = (" + std::to_string(__base.window->pos.x) + ", "
+        + std::to_string(__base.window->pos.y) + ", "
+        + std::to_string(__base.window->pos.z) + ")";
+
+    std::string up_string = "Up-vector = (" + std::to_string(__base.window->up.x) + ", "
+        + std::to_string(__base.window->up.y) + ", "
+        + std::to_string(__base.window->up.z) + ")";
+
+    std::string front_string = "Front-vector = (" + std::to_string(__base.window->front.x) + ", "
+        + std::to_string(__base.window->front.y) + ", "
+        + std::to_string(__base.window->front.z) + ")";
+
+    std::string center_string = "Center-vector = (" + std::to_string(__base.window->front.x + __base.window->pos.x) + ", "
+        + std::to_string(__base.window->front.y + __base.window->pos.y) + ", "
+        + std::to_string(__base.window->front.z + __base.window->pos.z) + ")";
+
+    std::string yaw_string = "Current-yaw = " + std::to_string(__base.window->yaw);
+    std::string pitch_string = "Current-pitch = " + std::to_string(__base.window->pitch);
+  
+
+    ImGui::Text(pos_string.c_str());
+    ImGui::Text(up_string.c_str());
+    ImGui::Text(front_string.c_str());
+    ImGui::Text(center_string.c_str());
+    ImGui::Text(yaw_string.c_str());
+    ImGui::Text(pitch_string.c_str());
+
+    ImGui::End();
+}
+
+void BfMain::__present_camera()
+{
+    ImGui::Begin("Camera");
+    static bool is_per = true;
+    static bool is_ort = false;
+
+    ImGui::BeginTable("VIEWS", 3);
+
+        ImGui::TableNextRow(); // 0
+    
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Up", ImVec2(50,50))) bfSetOrthoUp(__base.window);
+            ImGui::TableSetColumnIndex(2);
+
+        ImGui::TableNextRow(); // 1
+
+            ImGui::TableSetColumnIndex(0); if (ImGui::Button("Left", ImVec2(50, 50))) bfSetOrthoLeft(__base.window);
+            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Near", ImVec2(50, 50))) bfSetOrthoNear(__base.window);
+            ImGui::TableSetColumnIndex(2); if (ImGui::Button("Right", ImVec2(50, 50))) bfSetOrthoRight(__base.window);
+
+        ImGui::TableNextRow(); //2
+
+            ImGui::TableSetColumnIndex(0); 
+            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Bottom", ImVec2(50, 50))) bfSetOrthoBottom(__base.window);
+            ImGui::TableSetColumnIndex(2); if (ImGui::Button("Far", ImVec2(50, 50))) bfSetOrthoFar(__base.window);
+
+    ImGui::EndTable();
+
+    if (ImGui::RadioButton("Perspective", is_per)) {
+        is_ort = false;
+        is_per = true;
+
+        __base.window->proj_mode = 0;
+
+        std::cout << "pers active" << "\n";
+    }
+    if (ImGui::RadioButton("Ortho", is_ort)) {
+        is_ort = true;
+        is_per = false;
+
+        __base.window->proj_mode = 1;
+
+        std::cout << "Ortho active" << "\n";
+    }
+
+    ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);
+    ImGui::InputFloat("Ortho-right", &__base.window->ortho_right, 0.1f);
+    ImGui::InputFloat("Ortho-top", &__base.window->ortho_top, 0.1f);
+    ImGui::InputFloat("Ortho-bottom", &__base.window->ortho_bottom, 0.1f);
+    ImGui::InputFloat("Ortho-near", &__base.window->ortho_near, 0.1f);
+    ImGui::InputFloat("Ortho-far", &__base.window->ortho_far, 0.1f);
+    ImGui::Checkbox("is_asp", &__base.window->is_asp);
+
+    ImGui::End();
+}
+
+
+void BfMain::__present_vertices(BfMeshHandler* handler)
+{
+    ImGui::Begin("Vertices");
+        
+        static bool is_xyz = false;
+        ImGui::Checkbox("Enable [x],[y],[z]", &is_xyz);
+        
+        
+
+
+        // id/i | x | y | z | m |proj*view*model*x | proj*view*model*y | proj*view*model*z
+        if (is_xyz) {
+            static bool is_mat = false;
+            ImGui::Checkbox("Enable p*v*m*[]", &is_mat);
+            
+            if (is_mat)
+                ImGui::BeginTable("Vertices", 7);
+            else
+                ImGui::BeginTable("Vertices", 4);
+
+            ImGui::TableSetupColumn("id/i");
+            ImGui::TableSetupColumn("[x]");
+            ImGui::TableSetupColumn("[y]");
+            ImGui::TableSetupColumn("[z]");
+
+            if (is_mat) {
+                ImGui::TableSetupColumn("p*v*m*[x]");
+                ImGui::TableSetupColumn("p*v*m*[y]");
+                ImGui::TableSetupColumn("p*v*m*[z]");
+            }
+
+
+            ImGui::TableHeadersRow();
+
+            for (int i = 0; i < handler->get_allocated_meshes_count(); i++) {
+                BfMesh* pMesh = handler->get_pMesh(i);
+
+                ImGui::TableNextRow();
+
+
+                ImGui::TableSetColumnIndex(0);
+
+                std::string id_index_str = std::to_string(pMesh->id) + "/" + std::to_string(i);
+
+                ImGui::Text(id_index_str.c_str());
+
+                for (const auto& vertex : pMesh->vertices) {
+
+                    glm::vec4 vec = glm::vec4(vertex.pos.x, vertex.pos.y, vertex.pos.z, 1.0f);
+
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::Text(std::to_string(vec.x).c_str());
+
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::Text(std::to_string(vec.y).c_str());
+
+                    ImGui::TableSetColumnIndex(3);
+                    ImGui::Text(std::to_string(vec.z).c_str());
+
+                    //std::string model_str = std::to_string(pMesh->model_matrix[0][0]) + ", " + std::to_string(pMesh->model_matrix[0][1]) + ", " + std::to_string(pMesh->model_matrix[0][2]) + ", " + std::to_string(pMesh->model_matrix[0][3]) + "\n" +
+                    //    std::to_string(pMesh->model_matrix[1][0]) + ", " + std::to_string(pMesh->model_matrix[1][1]) + ", " + std::to_string(pMesh->model_matrix[1][2]) + ", " + std::to_string(pMesh->model_matrix[1][3]) + "\n" +
+                    //    std::to_string(pMesh->model_matrix[2][0]) + ", " + std::to_string(pMesh->model_matrix[2][1]) + ", " + std::to_string(pMesh->model_matrix[2][2]) + ", " + std::to_string(pMesh->model_matrix[2][3]) + "\n" +
+                    //    std::to_string(pMesh->model_matrix[3][0]) + ", " + std::to_string(pMesh->model_matrix[3][1]) + ", " + std::to_string(pMesh->model_matrix[3][2]) + ", " + std::to_string(pMesh->model_matrix[3][3]);
+
+
+                    //ImGui::TableSetColumnIndex(4);
+                    //ImGui::Text(model_str.c_str());
+
+                    if (is_mat) {
+                        glm::vec4 cvec = __base.window->proj * pMesh->model_matrix * __base.window->view * vec;
+
+                        ImGui::TableSetColumnIndex(4);
+                        ImGui::Text(std::to_string(cvec.x).c_str());
+
+                        ImGui::TableSetColumnIndex(5);
+                        ImGui::Text(std::to_string(cvec.y).c_str());
+
+                        ImGui::TableSetColumnIndex(6);
+                        ImGui::Text(std::to_string(cvec.z).c_str());
+                    }
+
+                    ImGui::TableNextRow();
+                }
+            }
+
+
+            ImGui::EndTable();
+        }
+        
+    ImGui::End();
 }
 
 BfMain::BfMain() :

@@ -25,8 +25,8 @@ struct BfWindow {
 	double scroll_xoffset = 0;
 	double scroll_yoffset = 0;
 
-	double yaw = -925.6f;
-	double pitch = 44.3f;
+	double yaw;// = -925.6f;
+	double pitch;// = 44.3f;
 
 	float cam_radius;
 
@@ -34,7 +34,10 @@ struct BfWindow {
 	glm::vec3 pos;
 	glm::vec3 up;
 
+	glm::mat4 proj;
 	glm::mat4 view;
+
+
 
 	bool is_scroll = false;
 
@@ -52,12 +55,12 @@ struct BfWindow {
 
 	uint32_t proj_mode;
 
-	float ortho_left = -1.0f;
+	float ortho_left = 0.0f;
 	float ortho_right = 1.0f;
-	float ortho_bottom = -1.0f;
+	float ortho_bottom = 0.0f;
 	float ortho_top = 1.0f;
 	float ortho_near = 0.1f;
-	float ortho_far = 1000.0f;
+	float ortho_far = 100.0f;
 	bool is_asp = true;
 	
 
@@ -75,6 +78,13 @@ void bfCalculateViewPartsFree(BfWindow* window);
 void bfCalculateViewPartsS(BfWindow* window);
 void bfCalculateRotateView(BfWindow* window);
 void bfUpdateView(BfWindow* window);
+
+void bfSetOrthoUp(BfWindow* window);
+void bfSetOrthoBottom(BfWindow* window);
+void bfSetOrthoRight(BfWindow* window);
+void bfSetOrthoLeft(BfWindow* window);
+void bfSetOrthoNear(BfWindow* window);
+void bfSetOrthoFar(BfWindow* window);
 
 BfEvent bfCreateWindow(BfWindow* window);
 BfEvent bfSetWindowSize(BfWindow* window, int width, int height);

@@ -23,6 +23,12 @@ struct BfAllocatedUniformBuffer : BfAllocatedBuffer {
 	VkDescriptorSet* descriptor_set;
 };
 
+struct BfAllocatedImage {
+	VkImage image;
+	VmaAllocation allocation;
+};
+
+
 
 BfEvent bfCreateBuffer(BfAllocatedBuffer* allocatedBuffer, 
 					   VmaAllocator allocator, 

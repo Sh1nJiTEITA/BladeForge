@@ -14,7 +14,8 @@
 #include <map>
 #include <set>
 // External
-#include <glm/glm.hpp>
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+//#include <glm/glm.hpp>
 
 #include "bfBuffer.h"
 #include "bfUniforms.h"
@@ -57,12 +58,14 @@ enum BfeMeshType {
 	BF_MESH_TYPE_CUBE = 4
 };
 
+
+
 static inline const std::map<BfeMeshType, size_t> BfsMeshTypeMaxDotsCount{
 	{BF_MESH_TYPE_TRIANGLE,	 3},
-	{BF_MESH_TYPE_RECTANGLE, 4},
+	{BF_MESH_TYPE_RECTANGLE, 6},
 	{BF_MESH_TYPE_CIRCLE,	 80},
 	{BF_MESH_TYPE_CURVE,	 10000},
-	{BF_MESH_TYPE_CUBE,      36}
+	{BF_MESH_TYPE_CUBE,      48}
 };
 
 
@@ -117,8 +120,6 @@ public:
 		__meshes.resize(max_mesh_count);
 	}
 
-	
-
 	BfMesh& get_rMesh(const uint32_t mesh_index) {
 		return __meshes.at(mesh_index);
 	}
@@ -144,7 +145,8 @@ public:
 
 	BfEvent allocate_mesh(VmaAllocator allocator, const uint32_t mesh_index, BfeMeshType mesh_type) {
 		BfMesh* pMesh = this->get_pMesh(mesh_index);
-		
+		pMesh->type = mesh_type;
+
 		pMesh->id = __assign_id();
 
 		// Create vertex buffer
@@ -153,7 +155,7 @@ public:
 		bfCreateBuffer(&pMesh->vertex_buffer, allocator, vertex_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 		// Create index buffer
-		size_t index_size = bfGetMeshMaxSize(mesh_type, sizeof(uint32_t)); // ? 
+		size_t index_size = bfGetMeshMaxSize(mesh_type, sizeof(uint16_t)); // ? 
 
 		bfCreateBuffer(&pMesh->index_buffer, allocator, index_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
@@ -215,7 +217,7 @@ public:
 		void* index_data;
 		vmaMapMemory(allocator, pMesh->index_buffer.allocation, &index_data); 
 		{
-			memcpy(index_data, pMesh->indices.data(), sizeof(uint32_t) * pMesh->indices.size());
+			memcpy(index_data, pMesh->indices.data(), sizeof(uint16_t) * pMesh->indices.size());
 		}
 		vmaUnmapMemory(allocator, pMesh->index_buffer.allocation);
 	}
@@ -223,6 +225,7 @@ public:
 	void bind_mesh(VkCommandBuffer command_buffer, const uint32_t mesh_index) {
 		BfMesh* pMesh = get_pMesh(mesh_index);
 		VkDeviceSize offsets[] = { 0 };
+		//VkBuffer vertexBuffers[] = { pMesh->vertex_buffer.buffer };
 
 		vkCmdBindVertexBuffers(command_buffer, 0, 1, &pMesh->vertex_buffer.buffer, offsets);
 		vkCmdBindIndexBuffer(command_buffer, pMesh->index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
@@ -231,6 +234,7 @@ public:
 	void draw_indexed(VkCommandBuffer command_buffer, const uint32_t mesh_index) {
 		BfMesh* pMesh = get_pMesh(mesh_index);
 
+		//vkCmdDraw(command_buffer, 3, 0, 0, 0);
 		vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pMesh->indices.size()), 1, 0, 0, mesh_index);
 	}
 

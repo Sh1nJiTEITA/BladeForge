@@ -47,6 +47,30 @@ void print_mat4(mat4 matrix) {
 //    
 //};
 
+
+//vec2 positions[3] = vec2[](
+////    vec2(0.0, -0.5),
+////    vec2(0.5, 0.5),
+////    vec2(-0.5, 0.5)
+//
+//    vec2(0.0,-0.5),
+//    vec2(0.5,0.5),
+//    vec2(-0.5,0.5)
+//
+////    vec2(-0.5, -0.5),
+////    vec2(0.5, -0.5),
+////    vec2(0.5, 0.5)
+//    //vec2(-0.5, 0.5)
+//);
+/*
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+
+*/
+
+
 bool is_print = true;
 void main() {
     
@@ -65,11 +89,12 @@ void main() {
     //!vec2 position_from_storage = bezp.point_i[gl_VertexIndex];
     //!vec2 position_from_storage1 = bezp.point_i[gl_VertexIndex] + inPosition;
     
-    //debugPrintfEXT("%f, %f", position_from_storage1[0],position_from_storage1[1]);
+    //debugPrintfEXT("%f, %f, %f", inPosition[0],inPosition[1],inPosition[2]);
+    //debugPrintfEXT("%f, %f, %f", inColor[0],inColor[1],inColor[2]);
     //debugPrintfEXT("[%i] %f, %f", gl_VertexIndex,inPosition[0],inPosition[1]);
 
-
-    //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    //gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    //gl_Position = vec4(inPosition, 1.0);
     gl_Position = ubo.proj * ubo.view * obj_data.model_matrix[gl_InstanceIndex] * vec4(inPosition, 1.0);
     //!vec4 out_coo = ubo.proj * ubo.view * ubo.model * vec4(inPosition + bezp.point_i[gl_VertexIndex], 0.0, 1.0);
     //!debugPrintfEXT("%f, %f", out_coo[0],out_coo[1], out_coo[2], out_coo[3]);

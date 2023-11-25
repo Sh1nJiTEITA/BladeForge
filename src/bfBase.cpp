@@ -496,6 +496,9 @@ BfEvent bfCreateImageViews(BfBase& base)
 
 BfEvent bfCreateStandartRenderPass(BfBase& base)
 {
+	
+
+
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = base.swap_chain_format;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -507,23 +510,76 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	//VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-// What image/buffer to use?
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	
+	
+
+// Depth buffer
+	VkAttachmentDescription depth_attachment{};
+	depth_attachment.flags = 0;
+	depth_attachment.format = base.depth_format;
+	depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depth_attachment_ref = {};
+	depth_attachment_ref.attachment = 1;
+	depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 
 	// How to use subPass
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
+	subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
+
+// Dependencies
+	VkSubpassDependency dependency{};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkSubpassDependency depth_dependency{};
+	depth_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	depth_dependency.dstSubpass = 0;
+	depth_dependency.srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	depth_dependency.srcAccessMask = 0;
+	depth_dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	depth_dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+// Create render pass
+
+	std::vector<VkAttachmentDescription> attachments {
+		colorAttachment,
+		depth_attachment
+	};
+
+	std::vector<VkSubpassDependency> dependencies{
+		dependency,
+		depth_dependency
+	};
 
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.attachmentCount = 1;
-	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.attachmentCount = 2;
+	renderPassInfo.pAttachments = attachments.data();
+	renderPassInfo.dependencyCount = 2;
+	renderPassInfo.pDependencies = dependencies.data();
+
 
 	BfSingleEvent event{};
 	if (vkCreateRenderPass(base.device, &renderPassInfo, nullptr, &base.standart_render_pass) == VK_SUCCESS) {
@@ -1115,7 +1171,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 	//rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -1159,6 +1215,15 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	colorBlending.blendConstants[2] = 0.0f; // Optional
 	colorBlending.blendConstants[3] = 0.0f; // Optional
 
+	// Depth-stencil part
+	auto depth_stencil_state = bfPopulateDepthStencilStateCreateInfo(
+		true,
+		true,
+		VK_COMPARE_OP_LESS_OR_EQUAL
+	);
+
+
+
 	// Uniforms
 	bfaCreateGraphicsPipelineLayouts(base);
 
@@ -1170,7 +1235,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
 	pipelineInfo.pMultisampleState = &multisampling;
-	pipelineInfo.pDepthStencilState = nullptr;
+	pipelineInfo.pDepthStencilState = &depth_stencil_state;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.renderPass = base.standart_render_pass;
@@ -1185,6 +1250,9 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 
 	bool is_pipelines_created = true;
 	std::stringstream ss;
+
+
+
 
 	if (vkCreateGraphicsPipelines(
 		base.device,
@@ -1248,15 +1316,16 @@ BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 	for (size_t i = 0; i < base.image_pack_count; i++) {
 		base.image_packs[i].pStandart_Buffer = &holder->standart_framebuffers[i];
 		
-		VkImageView attachments[] = {
-			*base.image_packs[i].pImage_view
+		std::vector<VkImageView> attachments = {
+			*base.image_packs[i].pImage_view,
+			base.depth_image_view
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = base.standart_render_pass;
-		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.attachmentCount = 2;
+		framebufferInfo.pAttachments = attachments.data();
 		framebufferInfo.width = base.swap_chain_extent.width;
 		framebufferInfo.height = base.swap_chain_extent.height;
 		framebufferInfo.layers = 1;
@@ -1590,7 +1659,7 @@ BfEvent bfInitImGUI(BfBase& base)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
+	ImGui::StyleColorsClassic();
 
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForVulkan(base.window->pWindow, true);
@@ -1642,6 +1711,47 @@ BfEvent bfInitImGUI(BfBase& base)
 		ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
 	bfEndSingleTimeCommands(base, command_buffer);
 	return BfEvent();
+}
+
+BfEvent bfCreateDepthBuffer(BfBase& base)
+{
+	VkExtent3D depthImageExtent = {
+		base.swap_chain_extent.width,
+		base.swap_chain_extent.height,
+		1
+	};
+	
+	base.depth_format = VK_FORMAT_D32_SFLOAT;
+
+	VkImageCreateInfo dimg_info = bfPopulateDepthImageCreateInfo(base.depth_format, 
+																 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+																 depthImageExtent);
+
+	VmaAllocationCreateInfo dimg_allocinfo{};
+	dimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	dimg_allocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	vmaCreateImage(base.allocator, 
+				   &dimg_info, 
+				   &dimg_allocinfo, 
+				   &base.depth_image.image, 
+				   &base.depth_image.allocation, nullptr);
+
+	VkImageViewCreateInfo dview_info = bfPopulateDepthImageViewCreateInfo(base.depth_format, 
+																		  base.depth_image.image, 
+																		  VK_IMAGE_ASPECT_DEPTH_BIT);
+
+	BfSingleEvent event{};
+	if (vkCreateImageView(base.device, &dview_info, nullptr, &base.depth_image_view) == VK_SUCCESS) {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_CREATE_DEPTH_IMAGE_VIEW_SUCCESS;
+	}
+	else {
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		event.action = BfEnActionType::BF_CREATE_DEPTH_IMAGE_VIEW_FAILURE;
+	}
+
+	return BfEvent(event);
 }
 
 void bfCreateAllocator(BfBase& base)
@@ -1902,6 +2012,7 @@ BfEvent bfaRecreateSwapchain(BfBase& base)
 		glfwGetFramebufferSize(base.window->pWindow, &width, &height);
 		glfwWaitEvents();
 	}
+	
 
 	ImGui_ImplVulkan_SetMinImageCount(base.image_pack_count);
 
@@ -1910,10 +2021,15 @@ BfEvent bfaRecreateSwapchain(BfBase& base)
 	bfCleanUpSwapchain(base);
 
 	bfCreateSwapchain(base);
+	bfCreateDepthBuffer(base);
 	bfCreateImageViews(base);
 	bfCreateStandartFrameBuffers(base);
 	bfCreateGUIFrameBuffers(base);
+	
 	base.window->resized = false;
+	//base.window->ortho_right = (float)base.swap_chain_extent.width;
+	//base.window->ortho_top = (float)base.swap_chain_extent.height;
+
 	return BfEvent();
 }
 
@@ -1991,6 +2107,7 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 	vkResetCommandBuffer(local_standart_command_bufffer, 0);
 	bfMainRecordCommandBuffer(base, mesh, handler);
 
+
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -2044,11 +2161,16 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 
 void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 {
+	// Depth buffer
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	//beginInfo.flags = 0;
 	beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	beginInfo.pInheritanceInfo = nullptr;
+
+
+	VkClearValue depth_clear;
+	depth_clear.depthStencil.depth = 1.f;
 
 	if (vkBeginCommandBuffer(*base.frame_pack[base.current_frame].standart_command_buffer, &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to begin recoding command buffer");
@@ -2062,13 +2184,19 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 	renderPassInfo.renderArea.extent = base.swap_chain_extent;
 
 	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	renderPassInfo.clearValueCount = 2;
+	
+	std::vector<VkClearValue> clear_values{
+		clearColor,
+		depth_clear
+	};
+
+	renderPassInfo.pClearValues = clear_values.data();//&clearColor;
 
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
-		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
 		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
 
 		VkBuffer vertexBuffers[] = { 
@@ -2121,12 +2249,26 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
 		//vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
 		
 		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
-			handler.bind_mesh(local_buffer, i);
-			handler.draw_indexed(local_buffer, i);
+			BfMesh* mesh = handler.get_pMesh(i);
+			if (mesh->type == BF_MESH_TYPE_CURVE) {
+				handler.bind_mesh(local_buffer, i);
+				handler.draw_indexed(local_buffer, i);
+			}
 		}
 		
+		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
+		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
+			BfMesh* mesh = handler.get_pMesh(i);
+			if (mesh->type != BF_MESH_TYPE_CURVE) {
+				handler.bind_mesh(local_buffer, i);
+				handler.draw_indexed(local_buffer, i);
+			}
+		}
+		
+
 		//handler.bind_mesh(local_buffer, 0);
 		//handler.draw_indexed(local_buffer, 0);
 	}
@@ -2200,6 +2342,61 @@ VkWriteDescriptorSet bfWriteDescriptorBuffer(VkDescriptorType type, VkDescriptor
 	return write;
 }
 
+VkImageCreateInfo bfPopulateDepthImageCreateInfo(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent)
+{
+	VkImageCreateInfo info {};
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.imageType = VK_IMAGE_TYPE_2D;
+
+	info.format = format;
+	info.extent = extent;
+
+	info.mipLevels = 1;
+	info.arrayLayers = 1;
+	info.samples = VK_SAMPLE_COUNT_1_BIT;
+	info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	info.usage = usage_flags;
+
+	return info;
+}
+
+VkImageViewCreateInfo bfPopulateDepthImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspect_flags)
+{
+	VkImageViewCreateInfo info{};
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	info.image = image;
+	info.format = format;
+	info.subresourceRange.baseMipLevel = 0;
+	info.subresourceRange.levelCount = 1;
+	info.subresourceRange.baseArrayLayer = 0;
+	info.subresourceRange.layerCount = 1;
+	info.subresourceRange.aspectMask = aspect_flags;
+
+	return info;
+}
+
+VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp)
+{
+	VkPipelineDepthStencilStateCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.depthTestEnable = bDepthTest ? VK_TRUE : VK_FALSE;
+	info.depthWriteEnable = bDepthWrite ? VK_TRUE : VK_FALSE;
+	info.depthCompareOp = VK_COMPARE_OP_LESS;//bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
+	info.depthBoundsTestEnable = VK_FALSE;
+	//info.minDepthBounds = -10.0f; // Optional
+	//info.maxDepthBounds = 10.0f; // Optional
+	info.stencilTestEnable = VK_FALSE;
+
+	return info;
+}
+
 BfEvent bfCleanUpSwapchain(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
@@ -2213,6 +2410,9 @@ BfEvent bfCleanUpSwapchain(BfBase& base)
 	for (size_t i = 0; i < holder->image_views.size(); i++) {
 		vkDestroyImageView(base.device, holder->image_views[i], nullptr);
 	}
+
+	vkDestroyImageView(base.device, base.depth_image_view, nullptr);
+	vmaDestroyImage(base.allocator, base.depth_image.image, base.depth_image.allocation);
 
 	vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);
 	
@@ -2270,8 +2470,17 @@ void bfUpdateUniformBuffer(BfBase& base)
 	//}
 	bfUpdateView(base.window);
 
+	
+	static float counter = -10.0f;
+
 	ubo.view = base.window->view;
 	
+
+	//float R = 2.0f;
+
+	//ubo.view = glm::lookAt(glm::vec3{ R * cos(glm::radians(counter/100)), R * sin(glm::radians(counter / 100)), -2.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f});
+
+
 	/*std::cout << "pos:(" << base.window->pos.x << ", " << base.window->pos.y << ", " << base.window->pos.z
 		<< "); front:(" << base.window->front.x << ", " << base.window->front.y << ", " << base.window->front.z
 		<< "); up:(" << base.window->up.x << ", " << base.window->up.y << ", " << base.window->up.z << ")\n";*/
@@ -2279,22 +2488,31 @@ void bfUpdateUniformBuffer(BfBase& base)
 	
 
 	if (base.window->proj_mode == 0) {
-		ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.1f, 100.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.01f, 100.0f);
 	}
 	else if (base.window->proj_mode == 1) {
 		if (base.window->is_asp) {
-			float asp = base.swap_chain_extent.width / base.swap_chain_extent.height;
-			ubo.proj = glm::ortho(base.window->ortho_left, 
-								  base.window->ortho_right, 
-								  base.window->ortho_bottom * asp, 
-								  base.window->ortho_top * asp, 
-								  base.window->ortho_near, 
-								  base.window->ortho_far);
-			std::cout << "ASP" << "\n";
+			float asp = (float)base.swap_chain_extent.height / (float)base.swap_chain_extent.width;
+			ubo.proj = glm::ortho(
+								  base.window->ortho_left,
+								  base.window->ortho_right,
+								  base.window->ortho_bottom * asp,
+								  base.window->ortho_top * asp,
+								  base.window->ortho_near,
+								  base.window->ortho_far
+				/*0.0f,
+				(float)(base.swap_chain_extent.width),
+				(float)(base.swap_chain_extent.height),
+				0.0f,
+				0.1f,
+				1000.0f*/
+
+			);
+			/*std::cout << "ASP" << "\n";
 			std::cout << ubo.proj[0][0] << ", " << ubo.proj[0][1] << ", " << ubo.proj[0][2] << ", " << ubo.proj[0][3] << "\n";
 			std::cout << ubo.proj[1][0] << ", " << ubo.proj[1][1] << ", " << ubo.proj[1][2] << ", " << ubo.proj[1][3] << "\n";
 			std::cout << ubo.proj[2][0] << ", " << ubo.proj[2][1] << ", " << ubo.proj[2][2] << ", " << ubo.proj[2][3] << "\n";
-			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";
+			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";*/
 		}
 		else {
 			ubo.proj = glm::ortho(base.window->ortho_left,
@@ -2303,11 +2521,11 @@ void bfUpdateUniformBuffer(BfBase& base)
 								  base.window->ortho_top,
 								  base.window->ortho_near,
 								  base.window->ortho_far);
-			std::cout << "no ASP" << "\n";
+			/*std::cout << "no ASP" << "\n";
 			std::cout << ubo.proj[0][0] << ", " << ubo.proj[0][1] << ", " << ubo.proj[0][2] << ", " << ubo.proj[0][3] << "\n";
 			std::cout << ubo.proj[1][0] << ", " << ubo.proj[1][1] << ", " << ubo.proj[1][2] << ", " << ubo.proj[1][3] << "\n";
 			std::cout << ubo.proj[2][0] << ", " << ubo.proj[2][1] << ", " << ubo.proj[2][2] << ", " << ubo.proj[2][3] << "\n";
-			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";
+			std::cout << ubo.proj[3][0] << ", " << ubo.proj[3][1] << ", " << ubo.proj[3][2] << ", " << ubo.proj[3][3] << "\n";*/
 		}
 		
 		
@@ -2324,7 +2542,6 @@ void bfUpdateUniformBuffer(BfBase& base)
 
 	memcpy(base.frame_pack[base.current_frame].uniform_view_data, &ubo, sizeof(ubo));
 
-	static float counter = -10.0f;
 	static int local_frame = base.current_frame;
 
 	BfUniformBezierProperties prop{};
@@ -2381,7 +2598,8 @@ void bfUpdateUniformBuffer(BfBase& base)
 	std::vector<BfObjectData> objects_data(pHandler->get_allocated_meshes_count());
 	
 	for (int i = 0; i < pHandler->get_allocated_meshes_count(); i++) {
-		objects_data[i].model_matrix = pHandler->get_pMesh(i)->model_matrix;
+		objects_data[i].model_matrix = glm::scale(pHandler->get_pMesh(i)->model_matrix, glm::vec3(base.xyz_scale, base.xyz_scale, base.xyz_scale));
+		//objects_data[i].model_matrix = glm::rotate(objects_data[i].model_matrix, glm::radians(counter)/100, glm::vec3(0.1, 0.0f, 0.1));
 	}
 	
 	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
@@ -2395,5 +2613,9 @@ void bfUpdateUniformBuffer(BfBase& base)
 	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
 	counter += 1.0f;
 	local_frame++;
+
+
+	base.window->proj = ubo.proj;
+	base.window->view = ubo.view;
 }
 

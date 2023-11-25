@@ -2,6 +2,7 @@
 #define BF_MAIN_H
 
 #include "bfBase.h"
+#include "bfCurves.hpp"
 
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"
@@ -25,7 +26,12 @@ private:
 	void __init();
 	void __start_loop();
 	void __kill();
-	
+
+	// Presents // 
+	void __present_vertices(BfMeshHandler* handler);
+	void __present_info(double currentTime);
+	void __present_camera();
+
 public:
 	BfMain();
 	void run();
