@@ -8,6 +8,7 @@
 #include "bfWindow.h"
 #include "bfPhysicalDevice.h"
 #include "bfBuffer.h"
+#include "bfVertex2.hpp"
 
 struct BfHolder {
 	//std::vector<std::shared_ptr<BfWindow>> windows;
@@ -37,20 +38,43 @@ struct BfHolder {
 	std::vector<VkSemaphore> finish_render_image_semaphores;
 	std::vector<VkFence> frame_in_flight_fences;
 	
+	
 
 	static BfHolder* __bfpHolder;
 
 	BfHolder();
 };
 
-BfEvent BfBindHolder(BfHolder* holder);
+BfEvent bfBindHolder(BfHolder* holder);
 BfEvent bfHoldWindow(BfWindow*& window);
 BfEvent bfHoldPhysicalDevice(BfPhysicalDevice*& window);
-
-//void bfAddToHolder(BfWindow window, int& index);
-//void bfAddToHolder(BfPhysicalDevice physical_device, int& index);
-
 BfHolder* bfGetpHolder();
+
+struct BfCurveHolder {
+	size_t allocated_curves;
+	VmaAllocator outside_allocator;
+
+	std::vector<BfCurveSet> curve_sets;
+
+
+
+	BfCurveHolder();
+	BfCurveHolder(VmaAllocator _outside_allocator);
+	
+
+	BfCurveSet* get_curve_set(BfeCurveType type);
+	BfCurveSet* get_curve_set_by_index(size_t i);
+	void update_obj_data(VmaAllocation allocation);
+	void draw_indexed(VkCommandBuffer command_buffer);
+
+	static BfCurveHolder* __bfpCurveHolder;
+};
+
+
+BfEvent bfBindCurveHolderOutsideAllocator(VmaAllocator _outside_allocator);
+BfEvent bfBindCurveHolder(BfCurveHolder* curve_holder);
+BfEvent bfAllocateCurveSet(BfeCurveType type, size_t elements_count);
+BfCurveHolder* bfGetpCurveHolder();
 
 
 #endif 

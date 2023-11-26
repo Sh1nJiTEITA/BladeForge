@@ -35,8 +35,8 @@ void BfMain::__process_keys()
 
 void BfMain::__init()
 {
-    BfBindHolder(&__holder);
-
+    bfBindHolder(&__holder);
+    bfBindCurveHolder(&__curve_holder);
 
     bfHoldWindow(__base.window);
     bfHoldPhysicalDevice(__base.physical_device);
@@ -70,6 +70,8 @@ void BfMain::__init()
     bfCreateGUICommandBuffers(__base);
     bfCreateSyncObjects(__base);
     bfInitImGUI(__base);
+    
+    bfBindCurveHolderOutsideAllocator(__base.allocator);
 }
 
 void BfMain::__start_loop()
@@ -273,15 +275,15 @@ void BfMain::__start_loop()
         
     };
 
-    std::vector<bfVertex> basises_vertices{
-        {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}},
-        {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}},
+    std::vector<BfVertex3> basises_vertices{
+        {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}},
+        {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}},
         
-        {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f}},
-        {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f}},
+        {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f}, {0.0f,0.0f,0.0f}},
+        {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f}, {0.0f,0.0f,0.0f}},
 
-        {{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f}},
-        {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f}}
+        {{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f}, {0.0f,0.0f,0.0f}},
+        {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f}, {0.0f,0.0f,0.0f}}
     };
 
     std::vector<uint16_t> basises_indices{
@@ -290,9 +292,9 @@ void BfMain::__start_loop()
         4,5
     };
 
-    BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 0.5f, 0.0f}, {0.5f, 0.5f,0.0f} });
+    BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
 
-    std::vector<glm::vec3> bezier2_vert = bezier2.update_and_get_vertices(30);
+    std::vector<glm::vec3> bezier2_vert = bezier2.update_and_get_vertices(5);
     
     std::vector<bfVertex> bezier2_vertices(bezier2_vert.size());
     std::vector<uint16_t> bezier2_indices(bezier2_vert.size());
@@ -313,7 +315,7 @@ void BfMain::__start_loop()
             mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
             BfMesh* pMesh = mesh_handler.get_pMesh(i);
             pMesh->model_matrix = glm::mat4(1.0f);
-            pMesh->vertices = basises_vertices;
+            //pMesh->vertices = basises_vertices;
             pMesh->indices = basises_indices;
 
             mesh_handler.load_mesh_to_buffers(__base.allocator, i);
@@ -335,11 +337,78 @@ void BfMain::__start_loop()
         }
     }
 
+// CURVE-SET
+    // Bezier
+    //BfCurveSet bezier_set(BF_CURVE_TYPE_BEZIER, 10, __base.allocator);
+    bfAllocateCurveSet(BF_CURVE_TYPE_BEZIER, 10);
 
-    //__base.window->ortho_right = (float)__base.swap_chain_extent.width;
-    //__base.window->ortho_top = (float)__base.swap_chain_extent.height;
+    std::vector<BfVertex3> set_bezier2_vertices(bezier2_vert.size());
+    std::vector<uint16_t> set_bezier2_indices(bezier2_vert.size());
+    for (int i = 0; i < bezier2_vert.size(); i++) {
+        set_bezier2_vertices[i].pos = bezier2_vert[i];
+        set_bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
+        set_bezier2_vertices[i].normals = glm::vec3(0.0f, 0.0f, 0.0f);
+        set_bezier2_indices[i] = i;
 
+    }
+    int bezier_count = 10;
 
+    std::vector<BfObjectData> set_bezier2_obj_data(bezier_count);
+    for (int i = 0; i < bezier_count; i++) {
+        set_bezier2_obj_data[i].id = 0;
+        set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
+
+        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data[i]);
+    }
+
+    //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data1);
+    //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data2);
+
+    //BfCurveSet::bind_curve_set(&bezier_set);
+
+    __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->write_to_buffers();
+
+    // Linear
+
+    //BfCurveSet linear_set(BF_CURVE_TYPE_LINEAR, 3, __base.allocator);
+
+    bfAllocateCurveSet(BF_CURVE_TYPE_LINEAR, 3);
+    std::vector<BfVertex3> set_linear_basises1_vertices{
+        {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
+        {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
+    };
+    BfObjectData set_linear_besises1_obj_data{};
+    set_linear_besises1_obj_data.id = 0;
+    set_linear_besises1_obj_data.model_matrix = glm::mat4(1.0f);
+
+    std::vector<BfVertex3> set_linear_basises2_vertices{
+        {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,0.0f,0.0f}},
+        {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,0.0f,0.0f}},
+    };
+    BfObjectData set_linear_besises2_obj_data{};
+    set_linear_besises2_obj_data.id = 1;
+    set_linear_besises2_obj_data.model_matrix = glm::mat4(1.0f);
+
+    std::vector<BfVertex3> set_linear_basises3_vertices{
+        {{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,0.0f}},
+        {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,0.0f}},
+    };
+    BfObjectData set_linear_besises3_obj_data{};
+    set_linear_besises3_obj_data.id = 2;
+    set_linear_besises3_obj_data.model_matrix = glm::mat4(1.0f);
+
+    std::vector<uint16_t> set_linear_basises_indices{
+        0,1
+    };
+    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises1_vertices, set_linear_basises_indices, set_linear_besises1_obj_data);
+    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises2_vertices, set_linear_basises_indices, set_linear_besises2_obj_data);
+    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises3_vertices, set_linear_basises_indices, set_linear_besises3_obj_data);
+
+    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->write_to_buffers();
+
+    
+
+// CURVE-SET
    
     std::string front_string;
     std::string up_string;
@@ -651,7 +720,8 @@ void BfMain::__present_vertices(BfMeshHandler* handler)
 
                 ImGui::TableSetColumnIndex(0);
 
-                std::string id_index_str = std::to_string(pMesh->id) + "/" + std::to_string(i);
+                std::string id_index_str = std::to_string(pMesh->id) + 
+                    "/" + std::to_string(i);
 
                 ImGui::Text(id_index_str.c_str());
 

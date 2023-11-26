@@ -11,7 +11,14 @@ struct BfUniformView {
 };
 
 struct BfObjectData {
-	glm::mat4 model_matrix;
+	alignas(16) glm::mat4 model_matrix;
+	uint16_t id;
+	
+	uint32_t __assign_id() {
+		static uint32_t next_id = 0;
+		next_id++;
+		return next_id;
+	}
 };
 
 

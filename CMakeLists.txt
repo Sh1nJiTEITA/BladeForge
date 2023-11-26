@@ -78,8 +78,8 @@ set(HEADERS
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
 	"main.cpp"
-	"include/BladeForgeBin.h"
-	"src/BladeForgeBin.cpp"
+	#"include/BladeForgeBin.h"
+	#"src/BladeForgeBin.cpp"
 	${SOURCES}
 	${HEADERS}
 )

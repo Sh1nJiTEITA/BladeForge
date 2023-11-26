@@ -1111,13 +1111,11 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	auto bindingDescription = bfVertex::getBindingDescription();
-	auto attributeDescriptions = bfVertex::getAttributeDescriptions();
+	auto bindingDescription = BfVertex3::getBindingDescription();
+	auto attributeDescriptions = BfVertex3::getAttributeDescriptions();
 
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(
-		attributeDescriptions.size());
-
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
@@ -2250,7 +2248,7 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
 		//vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
-		
+		/*
 		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
 			BfMesh* mesh = handler.get_pMesh(i);
 			if (mesh->type == BF_MESH_TYPE_CURVE) {
@@ -2266,8 +2264,11 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 				handler.bind_mesh(local_buffer, i);
 				handler.draw_indexed(local_buffer, i);
 			}
-		}
+		}*/
 		
+		BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
+
+		pCurveHolder->draw_indexed(local_buffer);
 
 		//handler.bind_mesh(local_buffer, 0);
 		//handler.draw_indexed(local_buffer, 0);
@@ -2594,23 +2595,23 @@ void bfUpdateUniformBuffer(BfBase& base)
 	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation);
 
 	// Onject data
-	BfMeshHandler* pHandler = BfMeshHandler::get_bound_handler();
-	std::vector<BfObjectData> objects_data(pHandler->get_allocated_meshes_count());
+	//BfMeshHandler* pHandler = BfMeshHandler::get_bound_handler();
+	//std::vector<BfObjectData> objects_data(10);
+		//pHandler->get_allocated_meshes_count());
 	
-	for (int i = 0; i < pHandler->get_allocated_meshes_count(); i++) {
-		objects_data[i].model_matrix = glm::scale(pHandler->get_pMesh(i)->model_matrix, glm::vec3(base.xyz_scale, base.xyz_scale, base.xyz_scale));
-		//objects_data[i].model_matrix = glm::rotate(objects_data[i].model_matrix, glm::radians(counter)/100, glm::vec3(0.1, 0.0f, 0.1));
-	}
+	BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
+
+	pCurveHolder->update_obj_data(base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
 	
 	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 
-	void* pobjects_data;
+	/*void* pobjects_data;
 	vmaMapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation, &pobjects_data);
 	{
 		memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
 	}
-	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
+	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation);*/
 	counter += 1.0f;
 	local_frame++;
 

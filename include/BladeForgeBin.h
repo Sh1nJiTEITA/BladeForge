@@ -48,6 +48,7 @@
 
 // cocal
 #include "bfVertex.h"
+//#include "bfVertex2.hpp"
 
 //const std::vector<bfVertex> vertices = {
 //	{{0.0f, -0.5f}, {1.0f, 1.0f, 0.0f}},

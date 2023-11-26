@@ -14,14 +14,14 @@
 /*
 * Contains vk-part of applicaion.
 */
-#include "BladeForgeBin.h"
+//#include "BladeForgeBin.h"
 
 
 
 
 int main() {
-    BladeForge app{};
-    
+    //BladeForge app{};
+    /*
     try
     {
         app.run();
@@ -29,11 +29,11 @@ int main() {
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
+        return EXIT_FAILURE;*/
+    //}
 
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 //
 //// Dear ImGui: standalone example application for Glfw + Vulkan

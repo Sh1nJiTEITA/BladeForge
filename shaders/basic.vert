@@ -7,6 +7,11 @@ struct BezierPoints {
 	vec2 coo;
 };
 
+struct ObjectData {
+    mat4 model_matrix;
+    int id;
+};
+
 
 // Layouts 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -24,13 +29,16 @@ layout(std140, set = 1, binding = 0) readonly buffer BezierPointsBuffer {
     vec2 point_i[];
 } bezp;
 
-layout(std140, set = 1, binding = 1) readonly buffer ObjectData {
-    mat4 model_matrix[];
-} obj_data;
+layout(std140, set = 1, binding = 1) readonly buffer ObjectDataBuffer {
+    ObjectData obj_data[];
+    //mat4 model_matrix[];
+    //int id[];
+} obj_data_buffer;
 
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
+layout(location = 2) in vec3 inNormals;
 
 layout(location = 0) out vec3 fragColor;
 
@@ -43,32 +51,7 @@ void print_mat4(mat4 matrix) {
     debugPrintfEXT("matrix[3] = %f, %f, %f, %f", matrix[3][0],matrix[3][1],matrix[3][2],matrix[3][3]);
 };
 
-//void print_bezier_points(BezierPoints bp) {
-//    
-//};
 
-
-//vec2 positions[3] = vec2[](
-////    vec2(0.0, -0.5),
-////    vec2(0.5, 0.5),
-////    vec2(-0.5, 0.5)
-//
-//    vec2(0.0,-0.5),
-//    vec2(0.5,0.5),
-//    vec2(-0.5,0.5)
-//
-////    vec2(-0.5, -0.5),
-////    vec2(0.5, -0.5),
-////    vec2(0.5, 0.5)
-//    //vec2(-0.5, 0.5)
-//);
-/*
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-
-*/
 
 
 bool is_print = true;
@@ -95,7 +78,23 @@ void main() {
 
     //gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
     //gl_Position = vec4(inPosition, 1.0);
-    gl_Position = ubo.proj * ubo.view * obj_data.model_matrix[gl_InstanceIndex] * vec4(inPosition, 1.0);
+//    if ((gl_InstanceIndex == 1)) {
+//        //debugPrintfEXT("%i", obj_data_buffer.obj_data[gl_InstanceIndex].id);
+//        
+//        debugPrintfEXT("%f,%f,%f,%f|%f,%f,%f,%f|%f,%f,%f,%f|%f,%f,%f,%f", 
+//        obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[0][0], obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[0][1],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[0][2],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[0][3]),
+//        obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[1][0], obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[1][1],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[1][2],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[1][3],
+//        obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[2][0], obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[2][1],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[2][2],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[2][3],
+//        obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[3][0], obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[3][1],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[3][2],obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix[3][3];
+//        
+//        
+//    }
+    
+
+    gl_Position = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_InstanceIndex].model_matrix * vec4(inPosition, 1.0);
+
+    //gl_Position = ubo.proj * ubo.view  * vec4(inPosition, 1.0);
+
     //!vec4 out_coo = ubo.proj * ubo.view * ubo.model * vec4(inPosition + bezp.point_i[gl_VertexIndex], 0.0, 1.0);
     //!debugPrintfEXT("%f, %f", out_coo[0],out_coo[1], out_coo[2], out_coo[3]);
     //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vec2(0.0,0.0) +  bezp.point_i[gl_VertexIndex], 0.0, 1.0);

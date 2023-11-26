@@ -104,7 +104,19 @@ enum class BfEnActionType {
 	BF_ACTION_UPLOAD_MESH_FAILURE							 = -0x32,
 
 	BF_CREATE_DEPTH_IMAGE_VIEW_SUCCESS						 =  0x33,
-	BF_CREATE_DEPTH_IMAGE_VIEW_FAILURE						 = -0x33
+	BF_CREATE_DEPTH_IMAGE_VIEW_FAILURE						 = -0x33,
+
+	BF_ACTION_TYPE_ALLOC_CURVE_SET_SUCCESS					 =  0x34,
+	BF_ACTION_TYPE_ALLOC_CURVE_SET_FAILURE					 = -0x34,
+
+	BF_ACTION_TYPE_BIND_HOLDER								 =  0x35,
+	BF_ACTION_TYPE_BIND_CURVE_HOLDER						 =  0x36,
+
+	BF_ACTION_TYPE_DEALLOC_CURVE_SET						 =  0x37,
+
+	BF_ACTION_TYPE_ADD_CURVE_SET_TO_CURVE_HOLDER			 =  0x38,
+
+	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_CURVE_HOLDER   =  0x39,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -199,6 +211,17 @@ const std::map<int, std::string> bfSetActionsStr{
 
 	{ 0x33,  "VkImageView for depth buffer was created successfully"},
 	{-0x33,  "VkImageView for depth buffer wasn't created"},
+
+	{ 0x34,  "BfCurveSet was allocated successfully:"},
+	{-0x34,  "BfCurveSet wasn't allocated:"},
+	
+	{ 0x35,  "BfHolder was bound"},
+	{ 0x36,  "BfCurveHolder was bound"},
+
+	{ 0x37,  "BfCurveSet was deallocated:"},
+	
+	{ 0x38,  "BfCurveSet was added to BfCurveHolder:"},
+	{ 0x39,  "VmaAllocator was bound to bound BfCurveHolder"}
 };
 
 
@@ -207,7 +230,8 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_HOLDER_EVENT = 0x2,
 	BF_SINGLE_EVENT_TYPE_USER_EVENT = 0x4,
 	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 0x8,
-	BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT = 0x10
+	BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT = 0x10,
+	BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT = 0x20
 };
 
 enum class BfEnMultipleEventType {
