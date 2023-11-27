@@ -63,6 +63,7 @@ set(HEADERS
 	"include/bfVertex2.hpp"
 	"include/BfExecutionTime.hpp"
 	"include/BfCurves.hpp"
+	"include/bfMatrix.hpp"
 
 	#"include/bfVertex.h"
 	"include/bfBase.h"
@@ -140,6 +141,21 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 
 # CATCH 2
 add_subdirectory(external/catch2)
+
+#add_subdirectory(external/simple_matrix)
+#target_link_libraries(${PROJECT_NAME} PUBLIC SimpleMatrix)
+#target_link_libraries(${PROJECT_NAME} PUBLIC armadillo)
+
+#add_subdirectory(external/eigen-3.4.0)
+#find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+ 
+#target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+
+#target_link_libraries(${PROJECT_NAME} PUBLIC Eigen)
+
+#add_subdirectory(external/armadillo)
+#target_link_libraries(${PROJECT_NAME} PUBLIC Eigen)
+
 #find_package(catch2)
 #add_executable(tests ${CMAKE_SOURCE_DIR}/tests/bez_test.cpp)
 
@@ -150,8 +166,8 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
-	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
@@ -171,7 +187,10 @@ target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
 #target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES})
 target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
 target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
+#target_link_libraries(tests PUBLIC SimpleMatrix)
 
+#target_link_libraries(tests PUBLIC Eigen3::Eigen)
+#target_link_libraries(tests PUBLIC armadillo)
 
 target_link_libraries(tests PRIVATE glm)
 #target_link_libraries(tests PRIVATE glfw)

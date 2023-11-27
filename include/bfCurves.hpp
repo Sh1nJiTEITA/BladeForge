@@ -5,6 +5,7 @@
 #include "bfVertex2.hpp"
 
 #include <vector>
+#include <algorithm>
 
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
@@ -15,6 +16,15 @@ public:
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> c_vertices;
 
+
+	/*
+	* Default initialization:
+	* 
+	* Needed: nothing.
+	* 
+	* Initializes inner input vertices and output vertices arrays with length 0.
+	* 
+	*/
 	BfBezier() : n{ 0 }, vertices{}, c_vertices{} {}
 
 	BfBezier(uint32_t in_n, std::vector<bfVertex> in_vertices) : n{ in_n } {
@@ -29,22 +39,45 @@ public:
 		}
 	}
 
+	/*
+	* Certain initialization:
+	* 
+	* Needed: 1. in_n - Bezier curve degree
+	*		  2. in_vertices - Input Bezier curve vertices
+	* 
+	* Number of input vertices must equal (in_n - 1).
+	*
+	*/
+
 	BfBezier(uint32_t in_n, std::vector<glm::vec3> in_vertices) : n{in_n}, vertices{in_vertices} {
 		if (in_n+1 != static_cast<uint32_t>(in_vertices.size())) {
 			throw std::runtime_error("Input bezier data is incorrect: vec.size() != in_n");
 		}
 	}
 
-
+	/*
+	* (CLASSIC_CALCULATION)
+	* Returns calculated vertex based on input vertices and parameter (t).
+	* 
+	* Needed: 1. t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*		  
+	*/
 	glm::vec3 get_single_vertex(float t) {
 		glm::vec3 _v{ 0.0f,0.0f,0.0f };
 		for (int i = 0; i <= n; i++) {
 			_v += static_cast<float>(bfGetBinomialCoefficient(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)) * vertices[i];
-			
 		}
 		return _v;
 	}
 
+	/*
+	* Updates output arrays for vertices (glm::vec3).
+	* 
+	* Needed: v_count - number of calculating vertices.
+	* 
+	* Uses get_singel_vertex with (t), which is split by v_count.
+	* 
+	*/
 	void update_vertices(uint32_t v_count) {
 		c_vertices.clear();
 		c_vertices.resize(v_count + 1);
@@ -53,20 +86,47 @@ public:
 			c_vertices[i] = get_single_vertex(1 / static_cast<float>(v_count) * static_cast<float>(i));
 		}
 	}
-
+	
+	/*
+	* Returns output array of vertices.
+	* 
+	* Needed: nothing.
+	* 
+	* If vertices weren't calculated before, output array will be empty.
+	* 
+	*/
 	std::vector<glm::vec3>& get_vertices() {
 		return c_vertices;
 	}
 
+	/*
+	* Calculates and outputs output arrays of vertices.
+	* 
+	* Needed: v_count - number of calculating vertices.
+	* 
+	*/
 	std::vector<glm::vec3>& update_and_get_vertices(uint32_t v_count) {
 		update_vertices(v_count);
 		return get_vertices();
 	}
 
+	/*
+	* Returns tangent of current Bezier curve point defined by (t).
+	* 
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1].
+	* 
+	*/
 	glm::vec3 get_tangent(float t) {
 		return this->get_single_derivative_1(t);
 	}
 
+	/*
+	* Returns directional tangent (vector with length of 1) of current Bezier
+	* curve point defined by (t).
+	* 
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	* 
+	*/
 	glm::vec3 get_direction_tangent(float t) {
 		glm::vec3 tangent = this->get_single_derivative_1(t);
 		float d = glm::sqrt(tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z);
@@ -74,6 +134,13 @@ public:
 		return tangent / d;
 	}
 
+	/*
+	* Returns directional normal (vector with length of 1) of current Bezier
+	* curve point defined by (t).
+	*
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*
+	*/
 	glm::vec3 get_direction_normal(float t) {
 		glm::vec3 a = this->get_direction_tangent(t);
 		glm::vec3 b = glm::normalize(a + this->get_single_derivative_2_e(t));
@@ -83,6 +150,14 @@ public:
 		return glm::normalize(glm::cross(r, a));
 	}
 
+	/*
+	* (CLASSIC_CALCULATION)
+	* Returns first derivative value of current Bezier
+	* curve point defined by (t).
+	*
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*
+	*/
 	glm::vec3 get_single_derivative_1(float t) {
 		
 		int k = n - 1;
@@ -93,6 +168,14 @@ public:
 		return out;
 	}
 
+	/*
+	* (ALTERNATIVE_CALCULATION)
+	* Returns first derivative value of current Bezier
+	* curve point defined by (t).
+	*
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*
+	*/
 	glm::vec3 get_single_derivative_1_e(float t) {
 		glm::vec3 out(0.0f);
 		for (int i = 0; i <= n; i++) {
@@ -101,6 +184,14 @@ public:
 		return out;
 	}
 
+	/*
+	* !(CLASSIC_CALCULATION)
+	* Returns second derivative value of current Bezier
+	* curve point defined by (t).
+	*
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*
+	*/
 	glm::vec3 get_single_derivative_2(float t) {
 		int k = n - 2;
 		glm::vec3 out(0.0f);
@@ -119,6 +210,14 @@ public:
 		return out;
 	}
 
+	/*
+	* !(ALTERNATIVE_CALCULATION)
+	* Returns second derivative value of current Bezier
+	* curve point defined by (t).
+	*
+	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
+	*
+	*/
 	glm::vec3 get_single_derivative_2_e(float t) {
 		glm::vec3 out(0.0f);
 		for (int i = 0; i <= n; i++) {
@@ -145,6 +244,17 @@ public:
 		return out;
 	}
 
+	/*
+	* (CLASSIC_CALCULATION)
+	* Returns Bezier curve witch is obtained by first derivative of current Bezier
+	* curve
+	*
+	* Needed: nothing.
+	*
+	* New Bezier curve contains recalculated input vertices; 
+	* its count = (n - 1); n - number of input vertices in Base Bezier curve.
+	* 
+	*/
 	BfBezier get_derivative() {
 		/*if (n == 1) 
 			throw std::runtime_error("Bezier derivative is undefined -> n will be < 1");*/
@@ -162,19 +272,183 @@ public:
 		return BfBezier(k, new_define_vertices);
 	}
 
-	BfBezier get_derivative_n(uint32_t __n) {
-		/*if ((this->n - __n) <= 1) 
-			throw std::runtime_error("Bezier derivative is underfines -> n - __n <= n");*/
-		
+	/*
+	* (CLASSIC_CALCULATION)
+	* Returns Bezier curve witch is obtained by m derivative of current Bezier
+	* curve
+	*
+	* Needed: m - derivative degree;
+	*
+	* New Bezier curve contains recalculated input vertices;
+	* its count = (n - m); n - number of input vertices in Base Bezier curve.
+	*
+	*/
+	BfBezier get_derivative_n(uint32_t m) {
 		BfBezier loc{*this};
-		for (int i = 0; i < __n; i++) {
+		for (int i = 0; i < m; i++) {
 			loc = loc.get_derivative();
 		}
 		return loc;
 	}
+
+	/*
+	* Returns bezier curve with +1 order.
+	* 
+	* Needed: nothing.
+	* 
+	*/
+	BfBezier get_elevated_order() {
+		uint32_t k = this->n + 1;
+		std::vector<glm::vec3> new_input_vertices(k + 1);
+
+		for (int i = 0; i <= k; i++) {
+			if (i == 0) {
+				new_input_vertices[i] = this->vertices[i];
+			}
+			else if (i == k) {
+				new_input_vertices[i] = this->vertices[i-1];
+			}
+			else {
+				new_input_vertices[i] = ((float)(k - i) * this->vertices[i] + (float)i * this->vertices[i-1]) / (float)(k);
+			}
+		}
+		return BfBezier(k, new_input_vertices);
+	}
+	// TODO 
+	BfBezier get_lower_order() {
+		const size_t _k = this->n;
+		const size_t _n = _k - 1;
+		
+		if (_k <= 3)
+			return *this;
+
+		std::vector<std::vector<float>> mat(_k, std::vector<float>(_k - 1, 0));
+
+		for (size_t i = 0; i < _k; ++i) {
+			if (i == 0) {
+				mat[i][0] = 1;
+			}
+			else if (i == n) {
+				mat[i][i - 1] = 1; 
+			}
+			else {
+				mat[i][i - 1] = i / static_cast<double>(_k);
+				mat[i][i] = 1 - mat[i][i - 1];
+			}
+		}
+
+		std::vector<std::vector<float>> mat_t(_k - 1, std::vector<float>(_k, 0));
+
+		for (size_t i = 0; i < _k; i++) {
+			for (size_t j = 0; j < _k - 1; j++) {
+				mat_t[j][i] = mat[i][j];
+			}
+		}
+	}
+
+	std::vector<glm::vec3> get_extremites_t() {
+
+		if (this->n == 1) {
+			/*std::vector<float> out(1);
+
+			glm::vec3 m = *std::max_element(this->vertices.begin(), this->vertices.end());
+
+			if (m == this->vertices[0]) {
+				out[0] = 0.0f;
+			}
+			else {
+				out[0] = 1.0f;
+			}
+			return out;*/
+		}
+
+		if (this->n == 2) {
+			std::vector<glm::vec3> out(1);
+			
+			BfBezier dBezier = this->get_derivative();
+			glm::vec3 a = dBezier.vertices[0];
+			glm::vec3 b = dBezier.vertices[1];
+
+			glm::vec3 t = -a / (b - a);
+			
+			for (int i = 0; i < 3; i++) {
+
+			}
+			out[0] = t;
+
+			return out;
+		}
+
+		if (this->n == 3) {
+			std::vector<glm::vec3> out(2);
+
+			BfBezier dBezier = this->get_derivative();
+
+			glm::vec3 a = dBezier.vertices[0] - 2.0f * dBezier.vertices[1] + dBezier.vertices[2];
+			glm::vec3 b = 2.0f * (dBezier.vertices[1] - dBezier.vertices[0]);
+			glm::vec3 c = dBezier.vertices[0];
+
+			glm::vec3 t_p = (-b + glm::sqrt(b * b - 4.0f * a * c)) / (2.0f * a);
+			glm::vec3 t_m = (-b - glm::sqrt(b * b - 4.0f * a * c)) / (2.0f * a);;
+			
+			out[0] = t_p;
+			out[1] = t_m;
+
+			return out;
+		}
+
+		if (this->n > 3) {
+			BfBezier dBezier = this->get_derivative();
+
+			float tx = 0;
+			float ty = 0;
+			float tz = 0;
+
+			bool is_x = false;
+			bool is_y = false;
+			bool is_z = false;
+			//is_x && is_y && is_z
+			while (true) {
+				glm::vec3 v;
+				
+				v.x = this->get_single_vertex(tx).x;
+				v.y = this->get_single_vertex(tx).y;
+				v.z = this->get_single_vertex(tx).z;
+
+				if ((v.x < 0.005f) && (v.x > -0.005f))
+					is_x = true;
+				else 
+					tx = tx - v.x / dBezier.get_single_vertex(tx).x;
+
+				if ((v.y < 0.005f) && (v.x > -0.005f))
+					is_y = true;
+				else
+					ty = ty - v.y / dBezier.get_single_vertex(ty).y;
+
+				if ((v.z < 0.005f) && (v.x > -0.005f))
+					is_z = true;
+				else
+					ty = ty - v.y / dBezier.get_single_vertex(ty).y;
+			}
+		}
+
+		return std::vector<glm::vec3>();
+
+	}
+
 };
 
 
+/*
+ * (CLASSIC_CALCULATION)
+ * Returns value of factor defined by n
+ *
+ * Needed: n - factor argument.
+ *
+ * Calculations were premade for best perfomance.
+ * 
+ * Max n = 10.
+ */ 
 inline int32_t bfGetFactorial(int32_t n) {
 
 	const static std::map<uint32_t, uint32_t> __factorial{
