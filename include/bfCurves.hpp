@@ -400,36 +400,52 @@ public:
 		if (this->n > 3) {
 			BfBezier dBezier = this->get_derivative();
 
-			float tx = 0;
-			float ty = 0;
-			float tz = 0;
-
-			bool is_x = false;
-			bool is_y = false;
-			bool is_z = false;
-			//is_x && is_y && is_z
+			std::vector<glm::vec3> out;
+			std::vector<float> out2;
+			
+			float x;
+			float dx;
+			
+			float t = 0.5;
 			while (true) {
-				glm::vec3 v;
-				
-				v.x = this->get_single_vertex(tx).x;
-				v.y = this->get_single_vertex(tx).y;
-				v.z = this->get_single_vertex(tx).z;
+				x = this->get_single_vertex(t).x;
+				dx = dBezier.get_single_vertex(t).x;
 
-				if ((v.x < 0.005f) && (v.x > -0.005f))
-					is_x = true;
-				else 
-					tx = tx - v.x / dBezier.get_single_vertex(tx).x;
-
-				if ((v.y < 0.005f) && (v.x > -0.005f))
-					is_y = true;
-				else
-					ty = ty - v.y / dBezier.get_single_vertex(ty).y;
-
-				if ((v.z < 0.005f) && (v.x > -0.005f))
-					is_z = true;
-				else
-					ty = ty - v.y / dBezier.get_single_vertex(ty).y;
+				std::cout << dx << "\n";
+				if ((dx < 3) && (dx > -3)) {
+					
+					out2.push_back(t);
+					break;
+				}
+				t = t - x / dx;
 			}
+
+			//const size_t count = 500;
+			//is_x && is_y && is_z
+			/*for (int i = 0; i < count + 1; i++) {
+				
+				float t = 1 / (float)count * (float)i;
+
+				glm::vec3 v = dBezier.get_single_vertex(t);
+
+				if ((v.x < 0.5f) && (v.x > -0.5f)) {
+				
+					out.push_back(glm::vec3(t, 0.0f, 0.0f));
+					
+				}
+				if ((v.y < 0.5f) && (v.y > -0.5f)) {
+					
+					out.push_back(glm::vec3(0.0f, t, 0.0f));
+					
+				}*/
+				/*if ((v.z < 20.0f) && (v.z > -20.0f)) {
+					for (float t0 = t; t0 < t0 + 5; t0 += 0.05) {
+						out.push_back(glm::vec3(0.0f, 0.0f, t));
+					}
+				}*/
+			return std::vector<glm::vec3>();
+			
+			//return out;
 		}
 
 		return std::vector<glm::vec3>();

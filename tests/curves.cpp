@@ -214,12 +214,20 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		{ 20,110,0.0 },
 		{ 220,60,0.0 },
 		{ 350,70, 0.0},
-		{ 400, 800, 0.0}
+		{ 400, 80, 0.0}
 	};
 
 	BfBezier com_bez2(4, com_bez_def2);
-	com_bez2.get_extremites_t();
+	std::vector<glm::vec3> fff = com_bez2.get_extremites_t();
+	std::vector<glm::vec3> com_bez_v2 = com_bez2.update_and_get_vertices(30);
 
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "Single com2" << std::endl;
+
+	for (int i = 0; i < com_bez_v2.size(); i++) {
+		std::cout << "(" << com_bez_v2[i].x << ", " << com_bez_v2[i].y << "), ";
+	}
 
 	/*std::vector<float> extr = com_bez.get_extremites_t();
 
