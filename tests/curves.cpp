@@ -210,7 +210,7 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::cout << "Single com" << std::endl;
 
 	std::vector<glm::vec3> com_bez_def2{
-		{ 70,250,0.0 },
+		{ 10,250,0.0 },
 		{ 20,110,0.0 },
 		{ 220,60,0.0 },
 		{ 350,70, 0.0},
@@ -218,7 +218,6 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	};
 
 	BfBezier com_bez2(4, com_bez_def2);
-	std::vector<glm::vec3> fff = com_bez2.get_extremites_t();
 	std::vector<glm::vec3> com_bez_v2 = com_bez2.update_and_get_vertices(30);
 
 	std::cout << std::endl;
@@ -229,6 +228,22 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		std::cout << "(" << com_bez_v2[i].x << ", " << com_bez_v2[i].y << "), ";
 	}
 
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "Single com_der 2" << std::endl;
+	
+	BfBezier com_bez_der = com_bez2.get_derivative();
+	std::vector<glm::vec3> com_bez_der_v = com_bez_der.update_and_get_vertices(30);
+
+
+
+	for (int i = 0; i < com_bez_der_v.size(); i++) {
+		std::cout << "(" << com_bez_der_v[i].x << ", " << com_bez_der_v[i].y << "), ";
+	}
+
+
+	std::vector<glm::vec3> fff = com_bez2.get_extremites_t();
 	/*std::vector<float> extr = com_bez.get_extremites_t();
 
 	print_vec2(com_bez.get_single_vertex(extr[0]));

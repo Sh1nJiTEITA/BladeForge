@@ -402,24 +402,106 @@ public:
 
 			std::vector<glm::vec3> out;
 			std::vector<float> out2;
-			
-			float x;
-			float dx;
-			
-			float t = 0.5;
-			while (true) {
-				x = this->get_single_vertex(t).x;
-				dx = dBezier.get_single_vertex(t).x;
 
-				std::cout << dx << "\n";
-				if ((dx < 3) && (dx > -3)) {
-					
-					out2.push_back(t);
+			float eps = 3.0f;
+			 
+			float tx = 0;
+			float _x;
+			float x_;
+
+			float lam = -0.05f;
+
+			float out_t;
+
+			while (true) {
+				_x = this->get_single_vertex(tx).x;
+				tx = tx - lam * dBezier.get_single_vertex(tx).x;
+				x_ = this->get_single_vertex(tx).x;
+				
+				if (std::abs(x_ - _x) < eps) {
+					out_t = tx;
 					break;
 				}
-				t = t - x / dx;
 			}
+			
 
+
+
+			/*-----------------------------------------------------------------------------*/
+			/*
+			float x;
+			float y;
+			float z;
+
+			float dx;
+			float dy;
+			float dz;
+
+			bool is_dx = false;
+			bool is_dy = false;
+			bool is_dz = false;
+
+			glm::vec3 v;
+			glm::vec3 dv;
+
+			glm::vec3 t = glm::vec3(0.5f);
+			while ((!is_dx) || (!is_dy) || (!is_dz)) {
+				
+				v.x = this->get_single_vertex(t.x).x;
+				v.y = this->get_single_vertex(t.y).y;
+				v.z = this->get_single_vertex(t.z).z;
+				
+				dv.x = dBezier.get_single_vertex(t.x).x;
+				dv.y = dBezier.get_single_vertex(t.y).y;
+				dv.z = dBezier.get_single_vertex(t.z).z;
+
+				x = v.x;
+				y = v.y;
+				z = v.z;
+
+				dx = dv.x;
+				dy = dv.y;
+				dz = dv.z;
+
+				if (glm::isnan(dx)) {
+					is_dx = true;
+				}
+				if (glm::isnan(dy)) {
+					is_dy = true;
+				}
+				if (glm::isnan(dz)) {
+					is_dz = true;
+				}
+
+				if (!is_dx) {
+					if ((dx < 3) && (dx > -3)) {
+
+						out2.push_back(t.x);
+						is_dx = true;
+					}
+				}
+				
+				if (!is_dy) {
+					if ((dy < 3) && (dy > -3)) {
+
+						out2.push_back(t.y);
+						is_dy = true;
+					}
+				}
+
+				if (!is_dz) {
+					if ((dx < 3) && (dx > -3)) {
+
+						out2.push_back(t.z);
+						is_dz = true;
+					}
+				}
+
+				
+
+				t = t - v / dv;
+			}*/
+			/*-----------------------------------------------------------------------------*/
 			//const size_t count = 500;
 			//is_x && is_y && is_z
 			/*for (int i = 0; i < count + 1; i++) {
