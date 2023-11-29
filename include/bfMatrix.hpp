@@ -5,6 +5,13 @@
 #include <stdexcept>
 #include <string>
 
+#ifdef GLM_SETUP_INCLUDED
+
+#include <glm/glm.hpp>
+
+#endif
+
+
 #define fori(beg, end) for (int i = beg; i < end; i++)
 #define forj(beg, end) for (int j = beg; j < end; j++)
 
@@ -21,7 +28,7 @@ public:
 		data{n, std::vector<float>(m, 0.0f)}
 	{}
 
-	BfMatrix(size_t n, size_t m, std::vector<float> in_data) :
+	BfMatrix(size_t n, size_t m, const std::vector<float>& in_data) :
 		__n{n},
 		__m{m},
 		data{ n, std::vector<float>(m, 0.0f) }
@@ -35,7 +42,7 @@ public:
 		}
 	}
 	
-	BfMatrix(size_t n, size_t m, std::vector<std::vector<float>> in_data) :
+	BfMatrix(size_t n, size_t m, const std::vector<std::vector<float>>& in_data) :
 		__n{ n },
 		__m{ m },
 		data{ n, std::vector<float>(m, 0.0f) }
@@ -65,7 +72,7 @@ public:
 		return o;
 	}
 
-	static inline BfMatrix multiply(BfMatrix m1, BfMatrix m2) {
+	static inline BfMatrix multiply(const BfMatrix& m1, const BfMatrix& m2) {
 		if (m1.__m != m2.__n) {
 			throw std::runtime_error("m of m1 != n of m2");
 		}
@@ -81,8 +88,43 @@ public:
 		}
 		return o;
 	}
+#ifdef GLM_SETUP_INCLUDED
+	static inline BfMatrix multiply(const BfMatrix& m1, const glm::vec3 vec3) {
+		if (m1.__m != 3) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+		
+		BfMatrix o(m1.__m, 3);
 
-	static inline float det(BfMatrix m0) {
+		for (int i = 0; i < m1.__m; i++) {
+			for (int j = 0; j < 3; j++) {
+				for (int k = 0; k < 3; k++) {
+					o.data[i][j] += m1.data[i][k] * vec3[k];
+				}
+			}
+		}
+		return o;
+	}
+#endif
+#ifdef GLM_SETUP_INCLUDED
+	static inline BfMatrix multiply(const BfMatrix& m1, const glm::vec4 vec4) {
+		if (m1.__m != 4) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+
+		BfMatrix o(m1.__m, 4);
+
+		for (int i = 0; i < m1.__m; i++) {
+			for (int j = 0; j < 4; j++) {
+				for (int k = 0; k < 4; k++) {
+					o.data[i][j] += m1.data[i][k] * vec4[k];
+				}
+			}
+		}
+		return o;
+	}
+#endif
+	static inline float det(BfMatrix& m0) {
 		if (m0.__m != m0.__n) {
 			throw std::runtime_error("det could not be calculated: n != m");
 		}
@@ -150,7 +192,7 @@ public:
 		else  return (det / total); // Det(kA)/k=Det(A);
 	}
 
-	static inline BfMatrix cofactor(BfMatrix m0, int p, int q, int n) {
+	static inline BfMatrix cofactor(BfMatrix& m0, int p, int q, int n) {
 		if (m0.__m != m0.__n) {
 			throw std::runtime_error("cofactor could not be calculated: n != m");
 		}
@@ -174,7 +216,7 @@ public:
 		return o;
 	}
 
-	static inline BfMatrix adjoint(BfMatrix m0) {
+	static inline BfMatrix adjoint(BfMatrix& m0) {
 		if (m0.__m != m0.__n) {
 			throw std::runtime_error("adj could not be calculated: n != m");
 		}
@@ -201,7 +243,7 @@ public:
 		return adj;
 	}
 
-	static inline float det2(BfMatrix m0, int n) {
+	static inline float det2(BfMatrix& m0, int n) {
 		if (m0.__m != m0.__n) {
 			throw std::runtime_error("adj could not be calculated: n != m");
 		}
@@ -230,7 +272,7 @@ public:
 
 	}
 
-	static inline BfMatrix inverse(BfMatrix m0) {
+	static inline BfMatrix inverse(BfMatrix& m0) {
 		float det = BfMatrix::det2(m0, m0.__n);
 		if (det == 0) {
 			throw std::runtime_error("matrix is singular");
@@ -245,6 +287,51 @@ public:
 				o.data[i][j] = adj.data[i][j] / float(det);
 
 		return o;
+	}
+
+#ifdef GLM_SETUP_INCLUDED
+	static inline BfMatrix get_rotate_mat3(glm::vec3 angles) {
+		BfMatrix o(3, 3);
+
+		float a = glm::radians(angles.x); // z
+		float b = glm::radians(angles.y); // y
+		float g = glm::radians(angles.z); // x
+
+		o[0][0] = cos(a) * cos(b);
+		o[0][1] = cos(a) * sin(b) * sin(g) - sin(a) * cos(g);
+		o[0][2] = cos(a) * sin(b) * cos(g) - sin(a) * sin(g);
+
+		o[1][0] = sin(a) * cos(b);
+		o[1][1] = sin(a) * sin(b) * sin(g) + cos(a) * cos(g);
+		o[1][2] = sin(a) * sin(b) * cos(g) - cos(a) * sin(g);
+
+		o[2][0] = -sin(b);
+		o[2][1] = cos(b) * sin(g);
+		o[2][2] = cos(b) * cos(g);
+
+		return o;
+	}
+#endif
+#ifdef GLM_SETUP_INCLUDED
+	glm::vec3 get_vec3() {
+		if (this->__n != 3) {
+			std::runtime_error("can't get glm::vec3, n != 3");
+		}
+
+		glm::vec3 o;
+		o.x = (*this)[0][0];
+		o.y = (*this)[1][0];
+		o.z = (*this)[2][0];
+		return o;
+	}
+#endif
+
+	std::vector<float>& operator[](int index)
+	{
+		if (index >= this->__n) {
+			throw std::runtime_error("index of [] in BfMatrix > n of matrix");
+		}
+		return this->data[index];
 	}
 };
 

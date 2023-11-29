@@ -35,9 +35,9 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	
 	BfBezier bezier2(2, def_points);
 
-	std::vector<glm::vec3> plot_points2 = bezier2.update_and_get_vertices(50);
+	std::vector<BfVertex3> plot_points2 = bezier2.update_and_get_vertices(50);
 	for (int i = 0; i < plot_points2.size(); i++) {
-		std::cout << "(" << plot_points2[i].x << ", " << plot_points2[i].y << "), ";
+		std::cout << "(" << plot_points2[i].pos.x << ", " << plot_points2[i].pos.y << "), ";
 	}
 
 	std::cout << std::endl;
@@ -47,9 +47,9 @@ TEST_CASE("CURVES_H", "[single-file]") {
 
 	BfBezier bezier1 = bezier2.get_derivative();
 
-	std::vector<glm::vec3> plot_points1 = bezier1.update_and_get_vertices(50);
+	std::vector<BfVertex3> plot_points1 = bezier1.update_and_get_vertices(50);
 	for (int i = 0; i < plot_points1.size(); i++) {
-		std::cout << "(" << plot_points1[i].x << ", " << plot_points1[i].y << "), ";
+		std::cout << "(" << plot_points1[i].pos.x << ", " << plot_points1[i].pos.y << "), ";
 	}
 
 	std::vector<glm::vec3> def_points10{
@@ -137,10 +137,10 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	BfBezier bezier2_(2, def_points2);
 
 	BfBezier elev_bezier2_ = bezier2_.get_elevated_order().get_elevated_order().get_elevated_order().get_elevated_order();
-	std::vector<glm::vec3> elev_bezier2_out = elev_bezier2_.update_and_get_vertices(30);
+	std::vector<BfVertex3> elev_bezier2_out = elev_bezier2_.update_and_get_vertices(30);
 
 	for (int i = 0; i < elev_bezier2_out.size(); i++) {
-		std::cout << "(" << elev_bezier2_out[i].x << ", " << elev_bezier2_out[i].y << "), ";
+		std::cout << "(" << elev_bezier2_out[i].pos.x << ", " << elev_bezier2_out[i].pos.y << "), ";
 	}
 
 
@@ -182,20 +182,23 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::cout << "Components" << std::endl;
 
 	std::vector<glm::vec3> com_bez_def{
-		{ 70,250,0.0 },
+		/*{ 70,250,0.0 },
 		{ 20,110,0.0 },
-		{ 220,60,0.0 },
+		{ 220,60,0.0 },*/
+		{0.0f,150.0f,0.0f},
+		{100.0f,250.0f,0.0f},
+		{250.0f,200.0f, 0.0f}
 	};
 
 	BfBezier com_bez(2, com_bez_def);
-	std::vector<glm::vec3> com_bez_v = com_bez.update_and_get_vertices(30);
+	std::vector<BfVertex3> com_bez_v = com_bez.update_and_get_vertices(30);
 
 	std::cout << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
 
 	for (int i = 0; i < com_bez_v.size(); i++) {
-		std::cout << "(" << com_bez_v[i].x << ", " << com_bez_v[i].y << "), ";
+		std::cout << "(" << com_bez_v[i].pos.x << ", " << com_bez_v[i].pos.y << "), ";
 	}
 	
 	auto print_vec3 = [](glm::vec3 v) {
@@ -214,18 +217,18 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		{ 20,110,0.0 },
 		{ 220,60,0.0 },
 		{ 350,70, 0.0},
-		{ 400, 80, 0.0}
+		//{ 400, 80, 0.0}
 	};
 
-	BfBezier com_bez2(4, com_bez_def2);
-	std::vector<glm::vec3> com_bez_v2 = com_bez2.update_and_get_vertices(30);
+	BfBezier com_bez2(3, com_bez_def2);
+	std::vector<BfVertex3> com_bez_v2 = com_bez2.update_and_get_vertices(30);
 
 	std::cout << std::endl;
 	std::cout << std::endl;
 	std::cout << "Single com2" << std::endl;
 
 	for (int i = 0; i < com_bez_v2.size(); i++) {
-		std::cout << "(" << com_bez_v2[i].x << ", " << com_bez_v2[i].y << "), ";
+		std::cout << "(" << com_bez_v2[i].pos.x << ", " << com_bez_v2[i].pos.y << "), ";
 	}
 
 
@@ -234,76 +237,45 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::cout << "Single com_der 2" << std::endl;
 	
 	BfBezier com_bez_der = com_bez2.get_derivative();
-	std::vector<glm::vec3> com_bez_der_v = com_bez_der.update_and_get_vertices(30);
+	std::vector<BfVertex3> com_bez_der_v = com_bez_der.update_and_get_vertices(30);
 
 
 
 	for (int i = 0; i < com_bez_der_v.size(); i++) {
-		std::cout << "(" << com_bez_der_v[i].x << ", " << com_bez_der_v[i].y << "), ";
+		std::cout << "(" << com_bez_der_v[i].pos.x << ", " << com_bez_der_v[i].pos.y << "), ";
 	}
 
 
-	std::vector<glm::vec3> fff = com_bez2.get_extremites_t();
-	/*std::vector<float> extr = com_bez.get_extremites_t();
+	std::pair<glm::vec3, glm::vec3> fff = com_bez2.get_bbox_t();
+	std::pair<glm::vec3, glm::vec3> fff_po;
 
-	print_vec2(com_bez.get_single_vertex(extr[0]));
-	print_vec2(com_bez.get_single_vertex(extr[1]));
-	print_vec2(com_bez.get_single_vertex(extr[2]));*/
-
-
-	//BfBezier bezier10(1, def_points10);
-	//
-	//std::vector<glm::vec3> plot_points10 = bezier10.update_and_get_vertices(50);
-	//for (int i = 0; i < plot_points10.size(); i++) {
-	//	std::cout << "(" << plot_points10[i].x << ", " << plot_points10[i].y << "), ";
-	//}
-
-
-	/*std::vector<glm::vec3> plot_points3 = bezier3.update_and_get_vertices(50);
-
-	for (int i = 0; i < plot_points3.size(); i++ ) {
-		std::cout << "(" << plot_points3[i].x << ", " << plot_points3[i].y << "), ";
-	}
-
-	std::cout << std::endl;
-	std::cout << std::endl;
-	std::cout << std::endl;
-
-	BfBezier bezier2 = bezier3.get_derivative();
-
-	std::vector<glm::vec3> plot_points2 = bezier2.update_and_get_vertices(50);
-
-	for (int i = 0; i < plot_points2.size(); i++) {
-		std::cout << "(" << plot_points2[i].x << ", " << plot_points2[i].y << "), ";
-	}
+	fff_po.first.x = com_bez2.get_single_vertex(fff.first.x).x;
+	fff_po.first.y = com_bez2.get_single_vertex(fff.first.y).y;
+	fff_po.first.z = com_bez2.get_single_vertex(fff.first.z).z;
 	
+	fff_po.second.x = com_bez2.get_single_vertex(fff.second.x).x;
+	fff_po.second.y = com_bez2.get_single_vertex(fff.second.y).y;
+	fff_po.second.z = com_bez2.get_single_vertex(fff.second.z).z;
+
+
 	std::cout << std::endl;
 	std::cout << std::endl;
-	std::cout << std::endl;
+	std::cout << "allign2" << std::endl;
 
-	std::vector<glm::vec3> def_points4{
-		{0.0, 0.0, 0.0},
-		{0.0f, 1.0f, 0.0f},
-		{1.0f, 1.0f, 0.0f},
-		{3.0f, 0.0f, 0.0f}
-	};
 
-	BfBezier bezier4(3, def_points4);
+	BfBezier all_b = com_bez.get_alligned();
+	std::vector<BfVertex3> com_bez_vert333 = com_bez.update_and_get_vertices(30);
+	std::vector<BfVertex3> all_b_vert = all_b.update_and_get_vertices(30);
 
-	std::vector<glm::vec3> plot_points4 = bezier4.update_and_get_vertices(50);
-
-	for (int i = 0; i < plot_points4.size(); i++) {
-		std::cout << "(" << plot_points4[i].x << ", " << plot_points4[i].y << "), ";
+	for (int i = 0; i < all_b_vert.size(); i++) {
+		std::cout << "(" << all_b_vert[i].pos.x << ", " << all_b_vert[i].pos.y << ", " << all_b_vert[i].pos.z << "), ";
 	}
 
-	std::cout << "\n";
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "allign2" << std::endl;
 
-	BfBezier bezier43 = bezier4.get_derivative();
-
-	std::vector<glm::vec3> plot_points43 = bezier43.update_and_get_vertices(50);
-
-	for (int i = 0; i < plot_points43.size(); i++) {
-		std::cout << "(" << plot_points43[i].x << ", " << plot_points43[i].y << "), ";
-	}*/
-
+	for (int i = 0; i < com_bez_vert333.size(); i++) {
+		std::cout << "(" << com_bez_vert333[i].pos.x << ", " << com_bez_vert333[i].pos.y << ", " << com_bez_vert333[i].pos.z  <<"), ";
+	}
 }

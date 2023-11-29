@@ -3,19 +3,35 @@
 
 #include "bfVariative.hpp"
 #include "bfVertex2.hpp"
+#include "bfMatrix.hpp"
 
 #include <vector>
 #include <algorithm>
 
+
+#define BF_ALLIGN_BEZIER_X 0
+#define BF_ALLIGN_BEZIER_Y 1
+#define BF_ALLIGN_BEZIER_Z 2
+
+#define BF_PLANE_XY 0x1
+#define BF_PLANE_XZ 0x2
+#define BF_PLANE_YZ 0x4
+
+#define BF_AXIS_X 0x10
+#define BF_AXIS_Y 0x20
+#define BF_AXIS_Z 0x40
+
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
+
 class BfBezier {
-public:
+	
 	uint32_t n;
 	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> c_vertices;
+	std::vector<BfVertex3> c_vertices;
 
+public:
 
 	/*
 	* Default initialization:
@@ -27,7 +43,8 @@ public:
 	*/
 	BfBezier() : n{ 0 }, vertices{}, c_vertices{} {}
 
-	BfBezier(uint32_t in_n, std::vector<bfVertex> in_vertices) : n{ in_n } {
+	BfBezier(uint32_t in_n, std::vector<BfVertex3>& in_vertices) : n{ in_n } 
+	{
 		if (in_n+1 != static_cast<uint32_t>(in_vertices.size())) {
 			throw std::runtime_error("Input bezier data is incorrect: vec.size() != in_n");
 		}
@@ -38,6 +55,8 @@ public:
 			vertices[i] = in_vertices[i].pos;
 		}
 	}
+
+	
 
 	/*
 	* Certain initialization:
@@ -82,8 +101,12 @@ public:
 		c_vertices.clear();
 		c_vertices.resize(v_count + 1);
 
+		float t;
 		for (int i = 0; i < v_count + 1; i++) {
-			c_vertices[i] = get_single_vertex(1 / static_cast<float>(v_count) * static_cast<float>(i));
+			
+			t = static_cast<float>(i) / static_cast<float>(v_count);
+			c_vertices[i].pos = get_single_vertex(t);
+			c_vertices[i].normals = get_direction_normal(t);
 		}
 	}
 	
@@ -95,7 +118,7 @@ public:
 	* If vertices weren't calculated before, output array will be empty.
 	* 
 	*/
-	std::vector<glm::vec3>& get_vertices() {
+	std::vector<BfVertex3>& get_vertices() {
 		return c_vertices;
 	}
 
@@ -105,7 +128,7 @@ public:
 	* Needed: v_count - number of calculating vertices.
 	* 
 	*/
-	std::vector<glm::vec3>& update_and_get_vertices(uint32_t v_count) {
+	std::vector<BfVertex3>& update_and_get_vertices(uint32_t v_count) {
 		update_vertices(v_count);
 		return get_vertices();
 	}
@@ -142,6 +165,9 @@ public:
 	*
 	*/
 	glm::vec3 get_direction_normal(float t) {
+		
+		
+
 		glm::vec3 a = this->get_direction_tangent(t);
 		glm::vec3 b = glm::normalize(a + this->get_single_derivative_2_e(t));
 		glm::vec3 r = glm::normalize(glm::cross(b, a));
@@ -220,6 +246,9 @@ public:
 	*/
 	glm::vec3 get_single_derivative_2_e(float t) {
 		glm::vec3 out(0.0f);
+		
+		if (this->n == 1) return out;
+
 		for (int i = 0; i <= n; i++) {
 			if (t == 0)
 			{
@@ -346,195 +375,247 @@ public:
 		}
 	}
 
-	std::vector<glm::vec3> get_extremites_t() {
+	/*
+	* Returns 2 vec3 of t, each of which points to min and max t for each axes.
+	* 
+	* Needed: count = number of points for search.
+	* 
+	*/
+	std::pair<glm::vec3, glm::vec3> get_bbox_t(size_t count = 100) {
 
-		if (this->n == 1) {
-			/*std::vector<float> out(1);
+		float max_x_less;
+		float max_y_less;
+		float max_z_less;
 
-			glm::vec3 m = *std::max_element(this->vertices.begin(), this->vertices.end());
+		float max_x_more;
+		float max_y_more;
+		float max_z_more;
 
-			if (m == this->vertices[0]) {
-				out[0] = 0.0f;
-			}
-			else {
-				out[0] = 1.0f;
-			}
-			return out;*/
+		float t_x_less;
+		float t_y_less;
+		float t_z_less;
+
+		float t_x_more;
+		float t_y_more;
+		float t_z_more;
+
+		if ((*vertices.begin()).x < (*(vertices.end() - 1)).x) {
+			max_x_less = (*vertices.begin()).x;
+			max_x_more = (*(vertices.end() - 1)).x;
+
+			t_x_less = 0.0f;
+			t_x_more = 1.0f;
+		}
+		else {
+			max_x_less = (*(vertices.end() - 1)).x;
+			max_x_more = (*vertices.begin()).x;
+
+			t_x_less = 1.0f;
+			t_x_more = 0.0f;
 		}
 
-		if (this->n == 2) {
-			std::vector<glm::vec3> out(1);
-			
-			BfBezier dBezier = this->get_derivative();
-			glm::vec3 a = dBezier.vertices[0];
-			glm::vec3 b = dBezier.vertices[1];
+		if ((*vertices.begin()).y < (*(vertices.end() - 1)).y) {
+			max_y_less = (*vertices.begin()).y;
+			max_y_more = (*(vertices.end() - 1)).y;
 
-			glm::vec3 t = -a / (b - a);
-			
-			for (int i = 0; i < 3; i++) {
+			t_y_less = 0.0f;
+			t_y_more = 1.0f;
+		}
+		else {
+			max_y_less = (*(vertices.end() - 1)).y;
+			max_y_more = (*vertices.begin()).y;
 
+			t_y_less = 1.0f;
+			t_y_more = 0.0f;
+		}
+
+		if ((*vertices.begin()).z < (*(vertices.end() - 1)).z) {
+			max_z_less = (*vertices.begin()).z;
+			max_z_more = (*(vertices.end() - 1)).z;
+
+			t_z_less = 0.0f;
+			t_z_more = 1.0f;
+		}
+		else {
+			max_z_less = (*(vertices.end() - 1)).z;
+			max_z_more = (*vertices.begin()).z;
+
+			t_z_less = 1.0f;
+			t_z_more = 0.0f;
+		}
+		
+		float t;
+
+		for (int i = 0; i < count; i++) {
+			t = (float)i / ((float)count + 1);
+
+			glm::vec3 v = this->get_single_vertex(t);
+
+			if (v.x < max_x_less) {
+				max_x_less = v.x;
+				t_x_less = t;
 			}
-			out[0] = t;
-
-			return out;
-		}
-
-		if (this->n == 3) {
-			std::vector<glm::vec3> out(2);
-
-			BfBezier dBezier = this->get_derivative();
-
-			glm::vec3 a = dBezier.vertices[0] - 2.0f * dBezier.vertices[1] + dBezier.vertices[2];
-			glm::vec3 b = 2.0f * (dBezier.vertices[1] - dBezier.vertices[0]);
-			glm::vec3 c = dBezier.vertices[0];
-
-			glm::vec3 t_p = (-b + glm::sqrt(b * b - 4.0f * a * c)) / (2.0f * a);
-			glm::vec3 t_m = (-b - glm::sqrt(b * b - 4.0f * a * c)) / (2.0f * a);;
-			
-			out[0] = t_p;
-			out[1] = t_m;
-
-			return out;
-		}
-
-		if (this->n > 3) {
-			BfBezier dBezier = this->get_derivative();
-
-			std::vector<glm::vec3> out;
-			std::vector<float> out2;
-
-			float eps = 3.0f;
-			 
-			float tx = 0;
-			float _x;
-			float x_;
-
-			float lam = -0.05f;
-
-			float out_t;
-
-			while (true) {
-				_x = this->get_single_vertex(tx).x;
-				tx = tx - lam * dBezier.get_single_vertex(tx).x;
-				x_ = this->get_single_vertex(tx).x;
-				
-				if (std::abs(x_ - _x) < eps) {
-					out_t = tx;
-					break;
-				}
+			if (v.x > max_x_more) {
+				max_x_more = v.x;
+				t_x_more = t;
 			}
-			
 
+			if (v.y < max_y_less) {
+				max_y_less = v.y;
+				t_y_less = t;
+			}
+			if (v.y > max_y_more) {
+				max_y_more = v.y;
+				t_y_more = t;
+			}
 
-
-			/*-----------------------------------------------------------------------------*/
-			/*
-			float x;
-			float y;
-			float z;
-
-			float dx;
-			float dy;
-			float dz;
-
-			bool is_dx = false;
-			bool is_dy = false;
-			bool is_dz = false;
-
-			glm::vec3 v;
-			glm::vec3 dv;
-
-			glm::vec3 t = glm::vec3(0.5f);
-			while ((!is_dx) || (!is_dy) || (!is_dz)) {
-				
-				v.x = this->get_single_vertex(t.x).x;
-				v.y = this->get_single_vertex(t.y).y;
-				v.z = this->get_single_vertex(t.z).z;
-				
-				dv.x = dBezier.get_single_vertex(t.x).x;
-				dv.y = dBezier.get_single_vertex(t.y).y;
-				dv.z = dBezier.get_single_vertex(t.z).z;
-
-				x = v.x;
-				y = v.y;
-				z = v.z;
-
-				dx = dv.x;
-				dy = dv.y;
-				dz = dv.z;
-
-				if (glm::isnan(dx)) {
-					is_dx = true;
-				}
-				if (glm::isnan(dy)) {
-					is_dy = true;
-				}
-				if (glm::isnan(dz)) {
-					is_dz = true;
-				}
-
-				if (!is_dx) {
-					if ((dx < 3) && (dx > -3)) {
-
-						out2.push_back(t.x);
-						is_dx = true;
-					}
-				}
-				
-				if (!is_dy) {
-					if ((dy < 3) && (dy > -3)) {
-
-						out2.push_back(t.y);
-						is_dy = true;
-					}
-				}
-
-				if (!is_dz) {
-					if ((dx < 3) && (dx > -3)) {
-
-						out2.push_back(t.z);
-						is_dz = true;
-					}
-				}
-
-				
-
-				t = t - v / dv;
-			}*/
-			/*-----------------------------------------------------------------------------*/
-			//const size_t count = 500;
-			//is_x && is_y && is_z
-			/*for (int i = 0; i < count + 1; i++) {
-				
-				float t = 1 / (float)count * (float)i;
-
-				glm::vec3 v = dBezier.get_single_vertex(t);
-
-				if ((v.x < 0.5f) && (v.x > -0.5f)) {
-				
-					out.push_back(glm::vec3(t, 0.0f, 0.0f));
-					
-				}
-				if ((v.y < 0.5f) && (v.y > -0.5f)) {
-					
-					out.push_back(glm::vec3(0.0f, t, 0.0f));
-					
-				}*/
-				/*if ((v.z < 20.0f) && (v.z > -20.0f)) {
-					for (float t0 = t; t0 < t0 + 5; t0 += 0.05) {
-						out.push_back(glm::vec3(0.0f, 0.0f, t));
-					}
-				}*/
-			return std::vector<glm::vec3>();
-			
-			//return out;
+			if (v.z < max_z_less) {
+				max_z_less = v.z;
+				t_z_less = t;
+			}
+			if (v.z > max_z_more) {
+				max_z_more = v.z;
+				t_z_more = t;
+			}
 		}
 
-		return std::vector<glm::vec3>();
+		return std::pair<glm::vec3, glm::vec3>({ 
+			{ t_x_less, t_y_less, t_z_less }, 
+			{ t_x_more, t_y_more, t_z_more } }
+		);
+	}
 
+	/*
+	* Returns 2 points (positions), each of which points to min and max point of bounding
+	* box.
+	*
+	* Needed: count = number of points for search.
+	*
+	*/
+	std::pair<glm::vec3, glm::vec3> get_bbox() {
+		std::pair<glm::vec3, glm::vec3> t_s = this->get_bbox_t();
+
+	
+		glm::vec3 min_point;
+		
+		glm::vec3 min_x = this->get_single_vertex(t_s.first.x);
+		glm::vec3 min_y = this->get_single_vertex(t_s.first.y);
+		glm::vec3 min_z = this->get_single_vertex(t_s.first.z);
+		
+		min_point.x = std::min({ min_x.x, min_y.x, min_z.x });
+		min_point.y = std::min({ min_x.y, min_y.y, min_z.y });
+		min_point.z = std::min({ min_x.z, min_y.z, min_z.z });
+		
+
+		glm::vec3 max_point;
+
+		glm::vec3 max_x = this->get_single_vertex(t_s.second.x);
+		glm::vec3 max_y = this->get_single_vertex(t_s.second.y);
+		glm::vec3 max_z = this->get_single_vertex(t_s.second.z);
+
+		max_point.x = std::max({ max_x.x, max_y.x, max_z.x });
+		max_point.y = std::max({ max_x.y, max_y.y, max_z.y });
+		max_point.z = std::max({ max_x.z, max_y.z, max_z.z });
+
+		return std::pair<glm::vec3, glm::vec3>({ min_point, max_point });
+	}
+
+	/*
+	* Returns same Bezier curve alligned in way of setting start defining point in 
+	* (x=0, y=0, z=0), end defining point to input axe.
+	* 
+	* Needed: allign_mode - one of defines: BF_ALLIGN_BEZIER_X, BF_ALLIGN_BEZIER_Y,
+	* BF_ALLIGN_BEZIER_Z
+	* 
+	*/
+	BfBezier get_alligned(unsigned int plane, unsigned int axis) {
+		
+		BfBezier o = *this;
+
+		glm::vec3 to_start = *vertices.begin();
+
+		glm::vec3 last = (*(o.vertices.end() - 1)) - to_start;
+
+		float r = sqrt(last.x * last.x + last.y * last.y + last.z * last.z);
+
+		float angle_x = glm::degrees(glm::asin(-last.y / r));
+		float angle_y = glm::degrees(glm::asin(-last.x / r));
+		float angle_z = glm::degrees(last.z / r);
+
+		BfMatrix rotate_matrix = BfMatrix::get_rotate_mat3(
+			glm::vec3(
+				0.0,		// YAW
+				angle_y,	// PITCH
+				0.0f		// ROLL
+			)
+		);
+
+		for (size_t i = 0; i < this->vertices.size(); i++) {
+			o.vertices[i] -= to_start;
+			o.vertices[i] = BfMatrix::multiply(rotate_matrix, o.vertices[i]).get_vec3();
+		}
+		
+		switch (plane) {
+			case BF_PLANE_XY: // YAW
+			{
+				float angle_x = glm::degrees(glm::asin(-last.y / r));
+
+				if (axis == BF_AXIS_X) // OVER Y + Z
+				{
+
+				}
+				else if (axis == BF_AXIS_Y) // OVER X + Z
+				{
+
+				}
+				else { // 
+					// ERROR
+				}
+				break;
+			}
+			case BF_PLANE_XZ: // PITCH
+			{
+				float angle_y = glm::degrees(glm::asin(-last.y / r));
+
+				if (axis == BF_AXIS_X) { // Z + Y
+
+				}
+				else if (axis == BF_AXIS_Z) { // X + Y
+
+				}
+				else {
+					// ERROR
+				}
+				break;
+			}
+			case BF_PLANE_YZ: // ROLL
+			{
+				float angle_z = glm::degrees(glm::asin(-last.y / r));
+				
+				if (axis == BF_AXIS_Y) { // Z + X
+
+				}
+				else if (axis == BF_AXIS_Z) { // Y + X
+
+				}
+				else {
+					// ERROR
+				}
+				break;
+			}
+		}
+
+	
+		return o;
 	}
 
 };
+
+
+class BfLine {
+
+};
+
 
 
 /*
