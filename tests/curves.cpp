@@ -185,9 +185,9 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		/*{ 70,250,0.0 },
 		{ 20,110,0.0 },
 		{ 220,60,0.0 },*/
-		{0.0f,150.0f,0.0f},
-		{100.0f,250.0f,0.0f},
-		{250.0f,200.0f, 0.0f}
+		{0.0f,150.0f,30.0f},
+		{100.0f,250.0f,50.0f},
+		{250.0f,200.0f, 70.0f}
 	};
 
 	BfBezier com_bez(2, com_bez_def);
@@ -263,19 +263,19 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::cout << "allign2" << std::endl;
 
 
-	BfBezier all_b = com_bez.get_alligned();
+	BfBezier all_b = com_bez.get_alligned(BF_PLANE_XZ, BF_AXIS_X);
 	std::vector<BfVertex3> com_bez_vert333 = com_bez.update_and_get_vertices(30);
 	std::vector<BfVertex3> all_b_vert = all_b.update_and_get_vertices(30);
 
-	for (int i = 0; i < all_b_vert.size(); i++) {
-		std::cout << "(" << all_b_vert[i].pos.x << ", " << all_b_vert[i].pos.y << ", " << all_b_vert[i].pos.z << "), ";
+	for (int i = 0; i < com_bez_vert333.size(); i++) {
+		std::cout << "(" << com_bez_vert333[i].pos.x << ", " << com_bez_vert333[i].pos.y << ", " << com_bez_vert333[i].pos.z  <<"), ";
 	}
 
 	std::cout << std::endl;
 	std::cout << std::endl;
 	std::cout << "allign2" << std::endl;
 
-	for (int i = 0; i < com_bez_vert333.size(); i++) {
-		std::cout << "(" << com_bez_vert333[i].pos.x << ", " << com_bez_vert333[i].pos.y << ", " << com_bez_vert333[i].pos.z  <<"), ";
+	for (int i = 0; i < all_b_vert.size(); i++) {
+		std::cout << "(" << all_b_vert[i].pos.x << ", " << all_b_vert[i].pos.y << ", " << all_b_vert[i].pos.z << "), ";
 	}
 }

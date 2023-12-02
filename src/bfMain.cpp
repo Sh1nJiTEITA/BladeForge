@@ -293,49 +293,61 @@ void BfMain::__start_loop()
     };
 
     BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
+    //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, 0.0f}, {2.5f, 1.5f,0.0f} });
+    BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
 
-    std::vector<glm::vec3> bezier2_vert = bezier2.update_and_get_vertices(5);
+    std::vector<BfVertex3> bezier2_vert = bezier2.update_and_get_vertices(30);
+    std::vector<BfVertex3> bezier2a_vert = bezier2a.update_and_get_vertices(30);
     
-    std::vector<bfVertex> bezier2_vertices(bezier2_vert.size());
+    std::vector<BfVertex3> bezier2_vertices(bezier2_vert.size());
+    std::vector<BfVertex3> bezier2a_vertices(bezier2a_vert.size());
     std::vector<uint16_t> bezier2_indices(bezier2_vert.size());
+    std::vector<uint16_t> bezier2a_indices(bezier2a_vert.size());
+    
     for (size_t i = 0; i < bezier2_vert.size(); i++) {
-        bezier2_vertices[i].pos = bezier2_vert[i];
+        bezier2_vertices[i].pos = bezier2_vert[i].pos;
         bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
         bezier2_indices[i] = (uint16_t)i;
     }
+    for (size_t i = 0; i < bezier2a_vert.size(); i++) {
+        bezier2a_vertices[i].pos = bezier2a_vert[i].pos;
+        bezier2a_vertices[i].color = glm::vec3(1.0f, 0.0f, 0.0f);
+        bezier2a_indices[i] = (uint16_t)i;
+    }
+
 
 
     int planes_count = 1;
     BfMeshHandler mesh_handler(planes_count+1);
     BfMeshHandler::bind_mesh_handler(&mesh_handler);
 
-    for (int i = 0; i <= planes_count; i++) {
-        
-        if (i == planes_count) {
-            mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
-            BfMesh* pMesh = mesh_handler.get_pMesh(i);
-            pMesh->model_matrix = glm::mat4(1.0f);
-            //pMesh->vertices = basises_vertices;
-            pMesh->indices = basises_indices;
+    //for (int i = 0; i <= planes_count; i++) {
+    //    
+    //    if (i == planes_count) {
+    //        mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
+    //        BfMesh* pMesh = mesh_handler.get_pMesh(i);
+    //        pMesh->model_matrix = glm::mat4(1.0f);
+    //        //pMesh->vertices = basises_vertices;
+    //        pMesh->indices = basises_indices;
 
-            mesh_handler.load_mesh_to_buffers(__base.allocator, i);
-        }
-        else {
-            mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
-            BfMesh* pMesh = mesh_handler.get_pMesh(i);
-            
-            glm::mat4 tr{ 1.0f };
-            tr = glm::translate(tr, glm::vec3(0.0f, 0.0f, 1.0f * (i + 1)));
-            //tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            
-            pMesh->model_matrix = tr;
-            pMesh->vertices = bezier2_vertices;//cube_vertices;
-            pMesh->indices = bezier2_indices;//cube_indices;
+    //        mesh_handler.load_mesh_to_buffers(__base.allocator, i);
+    //    }
+    //    else {
+    //        mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
+    //        BfMesh* pMesh = mesh_handler.get_pMesh(i);
+    //        
+    //        glm::mat4 tr{ 1.0f };
+    //        tr = glm::translate(tr, glm::vec3(0.0f, 0.0f, 1.0f * (i + 1)));
+    //        //tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //        
+    //        pMesh->model_matrix = tr;
+    //        pMesh->vertices = bezier2_vertices;//cube_vertices;
+    //        pMesh->indices = bezier2_indices;//cube_indices;
 
-            mesh_handler.load_mesh_to_buffers(__base.allocator, i);
+    //        mesh_handler.load_mesh_to_buffers(__base.allocator, i);
 
-        }
-    }
+    //    }
+    //}
 
 // CURVE-SET
     // Bezier
@@ -345,20 +357,21 @@ void BfMain::__start_loop()
     std::vector<BfVertex3> set_bezier2_vertices(bezier2_vert.size());
     std::vector<uint16_t> set_bezier2_indices(bezier2_vert.size());
     for (int i = 0; i < bezier2_vert.size(); i++) {
-        set_bezier2_vertices[i].pos = bezier2_vert[i];
+        set_bezier2_vertices[i].pos = bezier2_vert[i].pos;
         set_bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
         set_bezier2_vertices[i].normals = glm::vec3(0.0f, 0.0f, 0.0f);
         set_bezier2_indices[i] = i;
 
     }
-    int bezier_count = 10;
+    int bezier_count = 1;
 
     std::vector<BfObjectData> set_bezier2_obj_data(bezier_count);
     for (int i = 0; i < bezier_count; i++) {
         set_bezier2_obj_data[i].id = 0;
         set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
 
-        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data[i]);
+        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
+        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
     }
 
     //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data1);

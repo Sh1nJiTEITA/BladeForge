@@ -7,9 +7,9 @@
 
 #ifdef GLM_SETUP_INCLUDED
 
-#include <glm/glm.hpp>
 
 #endif
+#include <glm/glm.hpp>
 
 
 #define fori(beg, end) for (int i = beg; i < end; i++)
@@ -17,8 +17,8 @@
 
 class BfMatrix {
 	
-	const size_t __n;
-	const size_t __m;
+	size_t __n;
+	size_t __m;
 
 	std::vector<std::vector<float>> data;
 public:
@@ -112,10 +112,10 @@ public:
 			throw std::runtime_error("m of m1 != n of m2");
 		}
 
-		BfMatrix o(m1.__m, 4);
+		BfMatrix o(m1.__m, 1);
 
 		for (int i = 0; i < m1.__m; i++) {
-			for (int j = 0; j < 4; j++) {
+			for (int j = 0; j < 1; j++) {
 				for (int k = 0; k < 4; k++) {
 					o.data[i][j] += m1.data[i][k] * vec4[k];
 				}
@@ -325,6 +325,20 @@ public:
 		return o;
 	}
 #endif
+#ifdef GLM_SETUP_INCLUDED
+	glm::vec4 get_vec4() {
+		if (this->__n != 4) {
+			std::runtime_error("can't get glm::vec3, n != 3");
+		}
+
+		glm::vec4 o;
+		o.x = (*this)[0][0];
+		o.y = (*this)[1][0];
+		o.z = (*this)[2][0];
+		o.w = (*this)[3][0];
+		return o;
+	}
+#endif
 
 	std::vector<float>& operator[](int index)
 	{
@@ -333,8 +347,144 @@ public:
 		}
 		return this->data[index];
 	}
+
+	BfMatrix operator*(const BfMatrix& in) {
+		if (this->__m != in.__n) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+		int m1 = this->__m;
+		int n1 = this->__n;
+		int m2 = in.__m;
+		int n2 = in.__n;
+
+		BfMatrix o(m1, m2);
+
+		for (int i = 0; i < this->__m; i++) {
+			for (int j = 0; j < m2; j++) {
+				for (int k = 0; k < n2; k++) {
+					o.data[i][j] += this->data[i][k] * in.data[k][j];
+				}
+			}
+		}
+		
+		return o;
+	}
+
+	BfMatrix operator*(const glm::vec3& in) {
+		if (this->__m != 3) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+
+		BfMatrix o(this->__m, 1);
+
+		for (int i = 0; i < this->__m; i++) {
+			for (int j = 0; j < 1; j++) {
+				for (int k = 0; k < 3; k++) {
+					o.data[i][j] += this->data[i][k] * in[k];
+				}
+			}
+		}
+
+		return o;
+	}
+
+	BfMatrix operator*(const glm::vec4& in) {
+		if (this->__m != 4) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+
+		BfMatrix o(this->__m, 1);
+
+		for (int i = 0; i < this->__m; i++) {
+			for (int j = 0; j < 1; j++) {
+				for (int k = 0; k < 4; k++) {
+					o.data[i][j] += this->data[i][k] * in[k];
+				}
+			}
+		}
+
+		return o;
+	}
+	/*
+		if (m1.__m != 4) {
+			throw std::runtime_error("m of m1 != n of m2");
+		}
+
+		BfMatrix o(m1.__m, 4);
+
+		for (int i = 0; i < m1.__m; i++) {
+			for (int j = 0; j < 4; j++) {
+				for (int k = 0; k < 4; k++) {
+					o.data[i][j] += m1.data[i][k] * vec4[k];
+				}
+			}
+		}
+		return o;
+	*/
 };
 
+struct BfQuaternion {
+	float w;
+	float x;
+	float y;
+	float z;
 
+	BfQuaternion& operator*(const BfQuaternion& in) {
+		BfQuaternion o;
+		
+		float _w = this->w;
+		float _x = this->x;
+		float _y = this->y;
+		float _z = this->z;
+
+		this->w = _w * in.w - _x * in.x - _y * in.y - _z * in.z;
+		this->x = _w * in.x + _x * in.w + _y * in.z - _z * in.y;
+		this->y = _w * in.y - _x * in.z + _y * in.w + _z * in.x;
+		this->z = _w * in.z + _x * in.y - _y * in.x + _z * in.w;
+
+		return *this;
+	}
+
+	BfMatrix get_rotation_matrix4() {
+		BfMatrix m(4, 4);
+
+		m[0][0] = w * w + x * x - y * y - z * z;
+		m[0][1] = 2.f * x * y - 2.f * w * z;
+		m[0][2] = 2.f * x * z + 2.f * w * y;
+		m[0][3] = 0.f;
+
+		m[1][0] = 2.f * x * y + 2.f * w * z;
+		m[1][1] = w * w - x * x + y * y - z * z;
+		m[1][2] = 2.f * y * z + 2.f * w * x;
+		m[1][3] = 0.f;
+
+		m[2][0] = 2.f * x * z - 2.f * w * y;
+		m[2][1] = 2.f * y * z - 2.f * w * x;
+		m[2][2] = w * w - x * x - y * y + z * z;
+		m[2][3] = 0.f;
+
+		m[3][0] = 0.f;
+		m[3][1] = 0.f;
+		m[3][2] = 0.f;
+		m[3][3] = 1.f;
+		
+		return m;
+	}
+
+	static inline BfQuaternion get_rotation_quaternion(const float x, const float y, const float z, const float angle) {
+		BfQuaternion o{};
+		o.w = 1 * cosf(angle / 2);
+		o.x = x * sinf(angle / 2);
+		o.y = y * sinf(angle / 2);
+		o.z = z * sinf(angle / 2);
+		return o;
+	}
+
+	static inline BfQuaternion get_rotation_quaternion(const glm::vec3& axis, const float angle) {
+		return BfQuaternion::get_rotation_quaternion(axis.x, axis.y, axis.z, angle);
+	}
+
+	
+};
 
 #endif
