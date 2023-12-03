@@ -278,4 +278,62 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	for (int i = 0; i < all_b_vert.size(); i++) {
 		std::cout << "(" << all_b_vert[i].pos.x << ", " << all_b_vert[i].pos.y << ", " << all_b_vert[i].pos.z << "), ";
 	}
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "INTERSECTIONS" << std::endl;
+
+	BfBezier _bezier2(3, { {0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95,0.0f},{1.4, 2.4, 0.0f} });
+	//BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
+	BfBezier _bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
+
+	std::vector<BfVertex3> bezier2_vert = _bezier2.update_and_get_vertices(30);
+	std::vector<BfVertex3> bezier2a_vert = _bezier2a.update_and_get_vertices(30);
+
+	std::vector<std::pair<glm::vec3, glm::vec3>> inters;
+		BfBezier::get_itersections(inters, _bezier2, _bezier2a);
+
+	/*
+		(0,1.58780003,   1.98734987 ),
+		(1.53653324,	 2.11973333	),
+		(1.50303149,	 2.00529623	),
+		(1.58720005,	 2.00600004	),
+		(0.595733404,	 1.08613336 ),
+		(0.691666663,	 1.01458323 ),
+		(0.567585230,	 1.04570377 ),
+		(0.608564794,	 1.18796289 ),
+		(0.498199970,	 1.17014992 ),
+		(0.595733404,	 1.08613336 ),
+		(0.567585230,	 1.04570377 ),
+		(0.608564794,	 1.18796289 ),
+		(1.58720005,	 2.00600004	),
+		(1.66916847,	 1.99737036	 ),
+		(1.58780003,	 1.98734987  ),
+		(1.53653324,	 2.11973333  ),
+		(1.58780003,	 1.98734987  ),
+		(1.53653324,	 2.11973333  ),
+		(1.50303149,	 2.00529623  ),
+		(1.58720005,	 2.00600004  ),
+		(0.595733404,    1.08613336),
+		(0.691666663,    1.01458323),
+		(0.567585230,    1.04570377),
+		(0.608564794,    1.18796289),
+		(0.567585230,    1.04570377),
+		(0.608564794,    1.18796289)
+	
+	*/
+	std::cout << std::endl;
+	/*for (auto& it : inters) {
+		std::cout << "intes: (" << it.x << ", " << it.y << ", " << it.z << ")\n";
+	}*/
+	std::cout << std::endl;
+	std::cout << std::endl;
+
+	for (int i = 0; i < bezier2_vert.size(); i++) {
+		std::cout << "(" << bezier2_vert[i].pos.x << ", " << bezier2_vert[i].pos.y << ", " << bezier2_vert[i].pos.z << "), ";
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < bezier2a_vert.size(); i++) {
+		std::cout << "(" << bezier2a_vert[i].pos.x << ", " << bezier2a_vert[i].pos.y << ", " << bezier2a_vert[i].pos.z << "), ";
+	}
 }

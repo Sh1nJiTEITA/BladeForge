@@ -292,13 +292,20 @@ void BfMain::__start_loop()
         4,5
     };
 
-    BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
+    //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
     //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, 0.0f}, {2.5f, 1.5f,0.0f} });
-    BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
+
+    BfBezier bezier2(3, { {0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95,0.0f},{1.4, 2.4, 0.0f} });
+    //BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
+    BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
 
     std::vector<BfVertex3> bezier2_vert = bezier2.update_and_get_vertices(30);
     std::vector<BfVertex3> bezier2a_vert = bezier2a.update_and_get_vertices(30);
     
+    std::vector<std::pair<glm::vec3, glm::vec3>> inters;
+    BfBezier::get_itersections(inters, bezier2, bezier2a);
+
+
     std::vector<BfVertex3> bezier2_vertices(bezier2_vert.size());
     std::vector<BfVertex3> bezier2a_vertices(bezier2a_vert.size());
     std::vector<uint16_t> bezier2_indices(bezier2_vert.size());

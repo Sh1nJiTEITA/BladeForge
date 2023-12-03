@@ -99,12 +99,12 @@ public:
 	*/
 	void update_vertices(uint32_t v_count) {
 		c_vertices.clear();
-		c_vertices.resize(v_count + 1);
+		c_vertices.resize(v_count);
 
 		float t;
-		for (int i = 0; i < v_count + 1; i++) {
+		for (int i = 0; i < v_count; i++) {
 			
-			t = static_cast<float>(i) / static_cast<float>(v_count);
+			t = static_cast<float>(i) / static_cast<float>(v_count-1);
 			c_vertices[i].pos = get_single_vertex(t);
 			c_vertices[i].normals = get_direction_normal(t);
 		}
@@ -132,6 +132,28 @@ public:
 		update_vertices(v_count);
 		return get_vertices();
 	}
+
+	std::vector<glm::vec3> update_and_copy_vec3_vertices(uint32_t v_count) {
+		update_vertices(v_count);
+
+		std::vector<glm::vec3> o(v_count + 1);
+		for (int i = 0; i < this->c_vertices.size(); i++) {
+			o[i] = this->c_vertices[i].pos;
+		}
+		return o;
+	}
+	
+	std::vector<glm::vec3> copy_vec3_vertices(uint32_t v_count) {
+		std::vector<glm::vec3> o(v_count);
+		float t;
+		for (int i = 0; i < v_count; i++) {
+
+			t = static_cast<float>(i) / static_cast<float>(v_count - 1);
+			o[i] = get_single_vertex(t);
+		}
+		return o;
+	}
+
 
 	/*
 	* Returns tangent of current Bezier curve point defined by (t).
@@ -542,13 +564,6 @@ public:
 		float angle_y = glm::degrees(glm::asin(-last.x / r));
 		float angle_z = glm::degrees(last.z / r);
 
-		//BfMatrix rotate_matrix = BfMatrix::get_rotate_mat3(
-		//	glm::vec3(
-		//		0.0,		// YAW
-		//		angle_y,	// PITCH
-		//		0.0f		// ROLL
-		//	)
-		//);
 
 		for (size_t i = 0; i < this->vertices.size(); i++) {
 			o.vertices[i] -= to_start;
@@ -576,12 +591,22 @@ public:
 				);
 				BfQuaternion totaly = qy * BfQuaternion{ 1,0,0,0 };
 				BfMatrix my = totaly.get_rotation_matrix4();
-				
-
+			
 				for (size_t i = 0; i < this->vertices.size(); i++) {
 					glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
 					o.vertices[i] = (my * mx * l).get_vec4();
 				}
+
+				if (plane == BF_PLANE_XY) {
+
+				}
+				else if (plane == BF_PLANE_XZ) {
+
+				}
+				else {
+					throw std::runtime_error("Input BF_AXIS_X can't be processed with BF_PLANE_YZ");
+				}
+
 
 				break;
 			}
@@ -644,7 +669,329 @@ public:
 		return o;
 	}
 
+	/*
+	* Returns average increment by axis along curve.
+	* 
+	* Needed: axis - one of defines: BF_AXIS_X, BF_AXIS_Y, BF_AXIS_Y
+	* 
+	*/
+	float get_average_increament_by_axis(uint32_t axis) {
+		size_t axis_index;
+		if (axis == BF_AXIS_X) {
+			axis_index = 0;
+		}
+		else if (axis == BF_AXIS_Y) {
+			axis_index = 1;
+		}
+		else if (axis == BF_AXIS_Z) {
+			axis_index = 2;
+		}
+		else {
+			throw std::runtime_error("Unknown input axis in BfBezier.get_average_increament_by_axis(uint32_t axis)");
+		}
+
+		float ave = 0;
+		for (auto it = c_vertices.begin() + 1; it != c_vertices.end(); it++) {
+			ave += fabs(it->pos[axis_index] - (it-1)->pos[axis_index]);
+		}
+		return ave / (float)c_vertices.size();
+	}
+
+	static inline std::pair<glm::vec3, glm::vec3> get_bbox_by_cvertices(const std::vector<glm::vec3>& vert) {
+		glm::vec3 max{0.f, 0.f, 0.f};
+		glm::vec3 min{0.f, 0.f, 0.f};
+
+		for (auto& it : vert) {
+			if (it.x > max.x) {
+				max.x = it.x;
+			}
+			if (it.y > max.y) {
+				max.y = it.y;
+			}
+			if (it.z > max.z) {
+				max.z = it.z;
+			}
+			if (it.x < min.x) {
+				min.x = it.x;
+			}
+			if (it.y < min.y) {
+				min.y = it.y;
+			}
+			if (it.z < min.z) {
+				min.z = it.z;
+			}
+		}
+
+		return std::pair<glm::vec3, glm::vec3>(min, max);
+	}
+
+	static inline std::pair<glm::vec3, glm::vec3> get_bbox_by_iterator(
+		std::vector<glm::vec3>::const_iterator it_begin,
+		std::vector<glm::vec3>::const_iterator it_end
+	) {
+		
+		glm::vec3 max{ *(it_end-1) };
+		glm::vec3 min{ *it_begin };
+
+		for (auto it = it_begin; it != it_end; it++) {
+			if (it->x > max.x) {
+				max.x = it->x;
+			}
+			if (it->y > max.y) {
+				max.y = it->y;
+			}
+			if (it->z > max.z) {
+				max.z = it->z;
+			}
+			if (it->x < min.x) {
+				min.x = it->x;
+			}
+			if (it->y < min.y) {
+				min.y = it->y;
+			}
+			if (it->z < min.z) {
+				min.z = it->z;
+			}
+		}
+
+		return std::pair<glm::vec3, glm::vec3>(min, max);
+	}
+
+
+	static inline bool get_itersections(std::vector<std::pair<glm::vec3, glm::vec3>>& inter, BfBezier& b1, BfBezier& b2) {
+		using it_pair  = std::pair<std::vector<glm::vec3>::const_iterator, std::vector<glm::vec3>::const_iterator>;
+		
+		struct box_pack {
+			std::pair<glm::vec3, glm::vec3> box1;
+			std::pair<glm::vec3, glm::vec3> box2;
+			bool is;
+		};
+
+		std::vector<glm::vec3> vert1 = b1.copy_vec3_vertices(30);
+		std::vector<glm::vec3> vert2 = b2.copy_vec3_vertices(30);
+
+		float x_increment = 0;
+		float y_increment = 0;
+		float z_increment = 0;
 	
+		for (int i = 1; i < vert1.size(); i++) {
+			x_increment += (vert1[i].x - vert1[i - 1].x) + (vert2[i].x - vert2[i - 1].x);
+			y_increment += (vert1[i].y - vert1[i - 1].y) + (vert2[i].y - vert2[i - 1].y);
+			z_increment += (vert1[i].z - vert1[i - 1].z) + (vert2[i].z - vert2[i - 1].z);
+		}
+		
+		x_increment /= vert1.size();
+		y_increment /= vert1.size();
+		z_increment /= vert1.size();
+
+
+		std::vector<box_pack> packs;
+
+		auto get_line_intesection = [](it_pair line1, it_pair line2) {
+			glm::vec3 a1 = *line1.first;
+			glm::vec3 b1 = *(line1.second-1) - *line1.first;
+			// vec3(x,y,z)1 = a1 + t * b1;
+			//		x1 = a1.x + t1 * b1.x
+			//		y1 = a1.y + t1 * b1.y
+			//		z1 = a1.z + t1 * b1.z
+			
+			glm::vec3 a2 = *line2.first;
+			glm::vec3 b2 = *(line2.second-1) - *line2.first;
+			// vec3(x,y,z)2 = a2 + t * b2;
+			//		x2 = a2.x + t2 * b2.x
+			//		y2 = a2.y + t2 * b2.y
+			//		z2 = a2.z + t2 * b2.z
+
+			float t1 = (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * a2.y * b2.x) / (b1.x * b2.x - b1.y * b2.x) * -1;
+			float t2 = (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) / (b1.x * b2.y - b1.y * b2.x) * -1;
+
+			return glm::vec3(t1, t2, 0);
+		};
+
+		auto is_overlap = [&x_increment, &y_increment, &z_increment, &inter, &packs, &get_line_intesection](it_pair it1, it_pair it2) {
+			std::pair<glm::vec3, glm::vec3> box1 = get_bbox_by_iterator(it1.first, it1.second);
+			std::pair<glm::vec3, glm::vec3> box2 = get_bbox_by_iterator(it2.first, it2.second);
+
+			box_pack pack{};
+			pack.box1 = box1;
+			pack.box2 = box2;
+
+			bool xOverlap = box1.second.x > box2.first.x && box2.second.x > box1.first.x;
+			
+			bool yOverlap = box1.second.y > box2.first.y && box2.second.y > box1.first.y;
+
+			bool zOverlap = box1.second.z > box2.first.z && box2.second.z > box1.first.z;
+
+
+
+			if (!xOverlap || !yOverlap) {
+				pack.is = false;
+				packs.push_back(pack);
+				return false;
+			}
+			pack.is = true;
+			packs.push_back(pack);
+
+			
+			/*if (
+				((fabs(box1.first.x - box2.first.x) <= x_increment * 2) && (fabs(box1.second.x - box2.second.x) <= x_increment * 2)) &&
+				((fabs(box1.first.y - box2.first.y) <= y_increment * 2) && (fabs(box1.second.y - box2.second.y) <= y_increment * 2)) &&
+				((fabs(box1.first.z - box2.first.z) <= z_increment * 2) && (fabs(box1.second.z - box2.second.z) <= z_increment * 2))
+			) {
+				inter.push_back({ (box1.first.x + box2.first.x + box1.second.x + box2.second.x) / 4, 
+								  (box1.first.y + box2.first.y + box1.second.y + box2.second.y) / 4,
+								  (box1.first.z + box2.first.z + box1.second.z + box2.second.z) / 4 });
+			}*/
+			glm::vec3 f;
+			auto itd1 = (it1.second) - (it1.first);
+			/*if (itd1 == 2) {
+				glm::vec3 line1_1 = *it1.first;
+				glm::vec3 line1_2 = *(it1.second - 1);
+				inter.push_back(std::make_pair(line1_1,line1_2));
+			}*/
+			auto itd2 = (it2.second) - (it2.first);
+			/*if (itd2 == 2) {
+				glm::vec3 line2_1 = *it2.first;
+				glm::vec3 line2_2 = *(it2.second-1);
+				inter.push_back(std::make_pair(line2_1, line2_2));
+			}*/
+			if ((itd1 == 2) && (itd2 == 2)) {
+				f = get_line_intesection(it1, it2);
+				glm::vec3 line1_1 = *it1.first;
+				glm::vec3 line1_2 = *(it1.second - 1);
+				inter.push_back(std::make_pair(line1_1, line1_2));
+				glm::vec3 line2_1 = *it2.first;
+				glm::vec3 line2_2 = *(it2.second - 1);
+				inter.push_back(std::make_pair(line2_1, line2_2));
+				if (((f.x >= 0) && (f.x <= 1)) && ((f.y >= 0) && (f.y <= 1))) {
+					glm::vec3 line1_1 = *it1.first;
+					glm::vec3 line1_2 = *(it1.second - 1);
+					inter.push_back(std::make_pair(line1_1, line1_2));
+					glm::vec3 line2_1 = *it2.first;
+					glm::vec3 line2_2 = *(it2.second - 1);
+					inter.push_back(std::make_pair(line2_1, line2_2));
+				}
+			}
+
+
+ 			return true;
+		};
+		
+
+		std::vector<std::pair<it_pair, it_pair>> curve_parts;
+		curve_parts.push_back(
+			std::make_pair(
+				it_pair(vert1.begin(), vert1.end()), 
+				it_pair(vert2.begin(), vert2.end()))
+		);
+
+		
+		int count = 0;
+		while (true) {
+			size_t size_for_current_iteration = curve_parts.size();
+			/*if (count - size_for_current_iteration == 0) {
+				
+				
+
+				return true;
+			}*/
+			if (size_for_current_iteration == count) {
+				std::cout << "boxes-begin:" << std::endl;
+
+				for (int i = 0; i < packs.size(); i++) {
+					std::cout << "(";
+					std::cout << "(";
+					std::cout << "(" << packs[i].box1.first.x << ", " << packs[i].box1.first.y << ", " << packs[i].box1.first.z << "), ";
+					std::cout << "(" << packs[i].box1.second.x << ", " << packs[i].box1.second.y << ", " << packs[i].box1.second.z << ")";
+					std::cout << "),";
+
+					std::cout << "(";
+					std::cout << "(" << packs[i].box2.first.x << ", " << packs[i].box2.first.y << ", " << packs[i].box2.first.z << "), ";
+					std::cout << "(" << packs[i].box2.second.x << ", " << packs[i].box2.second.y << ", " << packs[i].box2.second.z << ")";
+					std::cout << "), ";
+					std::cout << (int)packs[i].is;
+					std::cout << "),";
+					std::cout << std::endl;
+				}
+
+
+				std::cout << "boxes-end:" << std::endl;
+				
+				break;
+			}
+
+
+			for (int i = count; i < size_for_current_iteration; i++) {
+				if (is_overlap(curve_parts[i].first, curve_parts[i].second)) {
+					
+					it_pair p1b;
+					it_pair p2b;
+					it_pair p1e;
+					it_pair p2e;
+
+					//// FIRST-BEGIN ~ FIRST-MIDDLE
+					//p1b = it_pair(curve_parts[i].first.first, curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2);
+					//// FIRST-MIDDLE ~ FIRST-END
+					//p1e = it_pair(curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2, curve_parts[i].first.second);
+					//// SECOND-BEGIN ~ SECOND_MIDDLE
+					//p2b = it_pair(curve_parts[i].second.first, curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2);
+					//// SECOND_MIDDLE ~ SECOND_END
+					//p2e = it_pair(curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2, curve_parts[i].second.second);
+
+					
+						
+					if (((curve_parts[i].first.second - curve_parts[i].first.first) % 2) != 0) {
+						auto p1bf = curve_parts[i].first.first - curve_parts[i].first.first;
+						auto p1bs = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 + 1 - curve_parts[i].first.first;
+						auto p1ef = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 + 1 - curve_parts[i].first.first;
+						auto p1es = curve_parts[i].first.second - curve_parts[i].first.first;
+						
+						p1b = it_pair(curve_parts[i].first.first + p1bf, curve_parts[i].first.first + p1bs);
+						p1e = it_pair(curve_parts[i].first.first + p1ef, curve_parts[i].first.first + p1es);
+					}
+					else {
+						auto p1bf = curve_parts[i].first.first - curve_parts[i].first.first;
+						auto p1bs = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 - curve_parts[i].first.first;
+						auto p1ef = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 - curve_parts[i].first.first;
+						auto p1es = curve_parts[i].first.second - curve_parts[i].first.first;
+
+						p1b = it_pair(curve_parts[i].first.first + p1bf, curve_parts[i].first.first + p1bs);
+						p1e = it_pair(curve_parts[i].first.first + p1ef, curve_parts[i].first.first + p1es);
+					} 
+
+					if (((curve_parts[i].second.second - curve_parts[i].second.first) % 2) != 0) {
+						auto p2bf = curve_parts[i].second.first - curve_parts[i].second.first;
+						auto p2bs = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 + 1 - curve_parts[i].second.first;
+						auto p2ef = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 + 1 - curve_parts[i].second.first;
+						auto p2es = curve_parts[i].second.second - curve_parts[i].second.first;
+						
+						p2b = it_pair(curve_parts[i].second.first + p2bf, curve_parts[i].second.first + p2bs);
+						p2e = it_pair(curve_parts[i].second.first + p2ef, curve_parts[i].second.first + p2es);
+					}
+					else {
+						auto p2bf = curve_parts[i].second.first - curve_parts[i].second.first;
+						auto p2bs = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 - curve_parts[i].second.first;
+						auto p2ef = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 - curve_parts[i].second.first;
+						auto p2es = curve_parts[i].second.second - curve_parts[i].second.first;
+
+						p2b = it_pair(curve_parts[i].second.first + p2bf, curve_parts[i].second.first + p2bs);
+						p2e = it_pair(curve_parts[i].second.first + p2ef, curve_parts[i].second.first + p2es);
+					}
+					
+					curve_parts.push_back(std::make_pair(p1b, p2e));
+					curve_parts.push_back(std::make_pair(p1b, p2b));
+					curve_parts.push_back(std::make_pair(p1e, p2e));
+					curve_parts.push_back(std::make_pair(p1e, p2b));
+				}
+				else {
+
+				}
+				count += 1;
+			}
+			
+		}
+		return true;
+	}
 };
 
 
