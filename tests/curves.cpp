@@ -290,8 +290,8 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::vector<BfVertex3> bezier2_vert = _bezier2.update_and_get_vertices(30);
 	std::vector<BfVertex3> bezier2a_vert = _bezier2a.update_and_get_vertices(30);
 
-	std::vector<std::pair<glm::vec3, glm::vec3>> inters;
-		BfBezier::get_itersections(inters, _bezier2, _bezier2a);
+	std::vector<glm::vec3> inters;
+	BfBezier::get_intersections_simple(&inters, _bezier2, _bezier2a);
 
 	/*
 		(0,1.58780003,   1.98734987 ),
@@ -322,7 +322,7 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		(0.608564794,    1.18796289)
 	
 	*/
-	std::cout << std::endl;
+		std::cout << std::endl;
 	/*for (auto& it : inters) {
 		std::cout << "intes: (" << it.x << ", " << it.y << ", " << it.z << ")\n";
 	}*/

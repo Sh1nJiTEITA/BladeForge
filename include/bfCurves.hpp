@@ -24,6 +24,70 @@
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
+class BfLine {
+	glm::vec3 start_point;
+	glm::vec3 finish_point;
+
+public:
+
+	BfLine(const glm::vec3& sp, const glm::vec3& fp) : start_point{ sp }, finish_point{ fp } {};
+
+	glm::vec3 get_direction_from_start() const {
+		return finish_point - start_point;
+	}
+
+	glm::vec3 get_direction_from_finish() const {
+		return start_point - finish_point;
+	}
+
+
+	static inline bool find_lines_intersection(glm::vec3& intersection, const BfLine& line1, const BfLine& line2) {
+		glm::mat3 plane;
+		plane[0][0] = line2.finish_point.x - line1.start_point.x;
+		plane[0][1] = line2.finish_point.y - line1.start_point.y;
+		plane[0][2] = line2.finish_point.z - line1.start_point.z;
+
+		plane[1][0] = line1.finish_point.x - line1.start_point.x;
+		plane[1][1] = line1.finish_point.y - line1.start_point.y;
+		plane[1][2] = line1.finish_point.z - line1.start_point.z;
+
+		plane[2][0] = line2.start_point.x - line1.start_point.x;
+		plane[2][1] = line2.start_point.y - line1.start_point.y;
+		plane[2][2] = line2.start_point.z - line1.start_point.z;
+
+		if (glm::determinant(plane) == 0) {
+			// a1.x + b1.x * t1 = a2.x + b2.x * t2
+			// a1.y + b1.y * t1 = a2.y + b2.y * t2
+			glm::vec3 a1 = line1.start_point;
+			glm::vec3 b1 = line1.get_direction_from_start();
+
+			glm::vec3 a2 = line2.start_point;
+			glm::vec3 b2 = line2.get_direction_from_start();
+
+			float frac = b1.x * b2.y - b1.y * b2.x;
+
+			float t1 = (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
+			float t2 = (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) / (-frac);
+
+			// if lines are parallel
+			if (glm::isnan(t1) || glm::isnan(t2)) {
+				return false;
+			}
+
+			if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f)) {
+				intersection = a1 + b1 * t1;
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+};
+
 
 class BfBezier {
 	
@@ -81,7 +145,7 @@ public:
 	* Needed: 1. t - relative Bezier curve parameter, standart value of t = [0, 1]
 	*		  
 	*/
-	glm::vec3 get_single_vertex(float t) {
+	glm::vec3 get_single_vertex(float t) const {
 		glm::vec3 _v{ 0.0f,0.0f,0.0f };
 		for (int i = 0; i <= n; i++) {
 			_v += static_cast<float>(bfGetBinomialCoefficient(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)) * vertices[i];
@@ -757,7 +821,43 @@ public:
 		return std::pair<glm::vec3, glm::vec3>(min, max);
 	}
 
+	static inline bool get_intersections_simple(std::vector<glm::vec3>* intersections, const BfBezier& B1, const BfBezier& B2) {
+		
+		if (B1.c_vertices.empty() || B2.c_vertices.empty()) {
+			throw std::runtime_error("intesections can't be found: no calculated points in one of curves");
+		}
 
+		bool has_intersections = false;
+
+		for (size_t i = 0; i < B1.c_vertices.size() - 1; i++) {
+			BfLine line1(B1.c_vertices[i].pos, B1.c_vertices[i + 1].pos);
+			for (size_t j = 0; j < B2.c_vertices.size() - 1; j++) {
+				BfLine line2(B2.c_vertices[j].pos, B2.c_vertices[j + 1].pos);
+				
+				glm::vec3 inter{};
+				if (BfLine::find_lines_intersection(inter, line1, line2)) {
+					intersections->push_back(inter);
+					has_intersections = true;
+				}
+			}
+		}
+		return has_intersections;
+	}
+
+	static inline bool get_intersections_simple(std::vector<glm::vec3>* intersections, const BfBezier& B, const BfLine& L) {
+		bool is_intersection = false;
+		for (int i = 0; i < B.c_vertices.size() - 1; i++) {
+			BfLine local_line(B.c_vertices[i].pos, B.c_vertices[i + 1].pos);
+			glm::vec3 intersection{};
+			if (BfLine::find_lines_intersection(intersection, L, local_line)) {
+				intersections->push_back(intersection);
+				is_intersection = true;
+			}
+		}
+		return is_intersection;
+	}
+
+	// TODO
 	static inline bool get_itersections(std::vector<std::pair<glm::vec3, glm::vec3>>& inter, BfBezier& b1, BfBezier& b2) {
 		using it_pair  = std::pair<std::vector<glm::vec3>::const_iterator, std::vector<glm::vec3>::const_iterator>;
 		
@@ -857,12 +957,12 @@ public:
 			}*/
 			if ((itd1 == 2) && (itd2 == 2)) {
 				f = get_line_intesection(it1, it2);
-				glm::vec3 line1_1 = *it1.first;
+				/*glm::vec3 line1_1 = *it1.first;
 				glm::vec3 line1_2 = *(it1.second - 1);
 				inter.push_back(std::make_pair(line1_1, line1_2));
 				glm::vec3 line2_1 = *it2.first;
 				glm::vec3 line2_2 = *(it2.second - 1);
-				inter.push_back(std::make_pair(line2_1, line2_2));
+				inter.push_back(std::make_pair(line2_1, line2_2));*/
 				if (((f.x >= 0) && (f.x <= 1)) && ((f.y >= 0) && (f.y <= 1))) {
 					glm::vec3 line1_1 = *it1.first;
 					glm::vec3 line1_2 = *(it1.second - 1);
@@ -878,7 +978,8 @@ public:
 		};
 		
 
-		std::vector<std::pair<it_pair, it_pair>> curve_parts;
+		//std::vector<std::pair<it_pair, it_pair>> curve_parts;
+		std::list<std::pair<it_pair, it_pair>> curve_parts;
 		curve_parts.push_back(
 			std::make_pair(
 				it_pair(vert1.begin(), vert1.end()), 
@@ -921,72 +1022,46 @@ public:
 			}
 
 
-			for (int i = count; i < size_for_current_iteration; i++) {
-				if (is_overlap(curve_parts[i].first, curve_parts[i].second)) {
+			std::list<std::list<std::pair<it_pair, it_pair>>::iterator> del_it_list;
+			for (auto it = curve_parts.begin(); it != curve_parts.end(); it++) {
+				
+				if (is_overlap(it->first, it->second)) {
 					
 					it_pair p1b;
 					it_pair p2b;
 					it_pair p1e;
 					it_pair p2e;
 
-					//// FIRST-BEGIN ~ FIRST-MIDDLE
-					//p1b = it_pair(curve_parts[i].first.first, curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2);
-					//// FIRST-MIDDLE ~ FIRST-END
-					//p1e = it_pair(curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2, curve_parts[i].first.second);
-					//// SECOND-BEGIN ~ SECOND_MIDDLE
-					//p2b = it_pair(curve_parts[i].second.first, curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2);
-					//// SECOND_MIDDLE ~ SECOND_END
-					//p2e = it_pair(curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2, curve_parts[i].second.second);
+					size_t p1b_l = (it->first.second - it->first.first) / 2;
+					size_t p1e_l = it->first.second - it->first.first + (it->first.second - it->first.first) / 2;
+					size_t p2b_l = (it->second.second - it->second.first) / 2;
+					size_t p2e_l = it->second.second - it->second.first + (it->second.second - it->second.first) / 2;
 
-					
-						
-					if (((curve_parts[i].first.second - curve_parts[i].first.first) % 2) != 0) {
-						auto p1bf = curve_parts[i].first.first - curve_parts[i].first.first;
-						auto p1bs = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 + 1 - curve_parts[i].first.first;
-						auto p1ef = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 + 1 - curve_parts[i].first.first;
-						auto p1es = curve_parts[i].first.second - curve_parts[i].first.first;
-						
-						p1b = it_pair(curve_parts[i].first.first + p1bf, curve_parts[i].first.first + p1bs);
-						p1e = it_pair(curve_parts[i].first.first + p1ef, curve_parts[i].first.first + p1es);
+					if (p1b_l >= 2) {
+						p1b = it_pair(it->first.first, it->first.first + (it->first.second - it->first.first) / 2);
 					}
-					else {
-						auto p1bf = curve_parts[i].first.first - curve_parts[i].first.first;
-						auto p1bs = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 - curve_parts[i].first.first;
-						auto p1ef = curve_parts[i].first.first + (curve_parts[i].first.second - curve_parts[i].first.first) / 2 - curve_parts[i].first.first;
-						auto p1es = curve_parts[i].first.second - curve_parts[i].first.first;
-
-						p1b = it_pair(curve_parts[i].first.first + p1bf, curve_parts[i].first.first + p1bs);
-						p1e = it_pair(curve_parts[i].first.first + p1ef, curve_parts[i].first.first + p1es);
-					} 
-
-					if (((curve_parts[i].second.second - curve_parts[i].second.first) % 2) != 0) {
-						auto p2bf = curve_parts[i].second.first - curve_parts[i].second.first;
-						auto p2bs = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 + 1 - curve_parts[i].second.first;
-						auto p2ef = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 + 1 - curve_parts[i].second.first;
-						auto p2es = curve_parts[i].second.second - curve_parts[i].second.first;
-						
-						p2b = it_pair(curve_parts[i].second.first + p2bf, curve_parts[i].second.first + p2bs);
-						p2e = it_pair(curve_parts[i].second.first + p2ef, curve_parts[i].second.first + p2es);
+					if (p1e_l >= 2) {
+						p1e = it_pair(it->first.first + (it->first.second - it->first.first) / 2, it->first.second);
 					}
-					else {
-						auto p2bf = curve_parts[i].second.first - curve_parts[i].second.first;
-						auto p2bs = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 - curve_parts[i].second.first;
-						auto p2ef = curve_parts[i].second.first + (curve_parts[i].second.second - curve_parts[i].second.first) / 2 - curve_parts[i].second.first;
-						auto p2es = curve_parts[i].second.second - curve_parts[i].second.first;
-
-						p2b = it_pair(curve_parts[i].second.first + p2bf, curve_parts[i].second.first + p2bs);
-						p2e = it_pair(curve_parts[i].second.first + p2ef, curve_parts[i].second.first + p2es);
+					if (p2b_l >= 2) {
+						p2b = it_pair(it->second.first, it->second.first + (it->second.second - it->second.first) / 2);
 					}
-					
+					if (p2e_l >= 2) {
+						p2e = it_pair(it->second.first + (it->second.second - it->second.first) / 2, it->second.second);
+					}
+
 					curve_parts.push_back(std::make_pair(p1b, p2e));
 					curve_parts.push_back(std::make_pair(p1b, p2b));
 					curve_parts.push_back(std::make_pair(p1e, p2e));
 					curve_parts.push_back(std::make_pair(p1e, p2b));
 				}
 				else {
-
+					del_it_list.push_back(it);
 				}
-				count += 1;
+				//count += 1;
+			}
+			for (auto it = del_it_list.begin(); it != del_it_list.end(); it++) {
+				curve_parts.erase(*it);
 			}
 			
 		}
@@ -995,9 +1070,6 @@ public:
 };
 
 
-class BfLine {
-
-};
 
 
 
