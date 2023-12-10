@@ -375,6 +375,18 @@ struct BfGeometrySet {
 		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
 	}
 
+	void draw_indexed(VkCommandBuffer command_buffer, uint32_t obj_data_index_offset = 0) {
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertices_buffer.buffer, offsets);
+		vkCmdBindIndexBuffer(command_buffer, indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+
+		for (size_t i = 0; i < this->ready_elements_count; i++) {
+			BfGeometryData* pData = &datas[i];
+			vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
+		}
+
+	
+	}
 	void update_object_data(VmaAllocation allocation) {
 		void* pobjects_data;
 

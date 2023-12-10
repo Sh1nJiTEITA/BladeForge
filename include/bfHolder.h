@@ -50,31 +50,31 @@ BfEvent bfHoldWindow(BfWindow*& window);
 BfEvent bfHoldPhysicalDevice(BfPhysicalDevice*& window);
 BfHolder* bfGetpHolder();
 
-struct BfCurveHolder {
-	size_t allocated_curves;
+struct BfGeometryHolder {
+	size_t allocated_geometries;
 	VmaAllocator outside_allocator;
 
-	std::vector<BfCurveSet> curve_sets;
+	std::vector<BfGeometrySet> geometry_sets;
 
 
 
-	BfCurveHolder();
-	BfCurveHolder(VmaAllocator _outside_allocator);
+	BfGeometryHolder();
+	BfGeometryHolder(VmaAllocator _outside_allocator);
 	
 
-	BfCurveSet* get_curve_set(BfeCurveType type);
-	BfCurveSet* get_curve_set_by_index(size_t i);
+	BfGeometrySet* get_geometry_set(BfeGeometrySetType type);
+	BfGeometrySet* get_geometry_set_by_index(size_t i);
 	void update_obj_data(VmaAllocation allocation);
 	void draw_indexed(VkCommandBuffer command_buffer);
 
-	static BfCurveHolder* __bfpCurveHolder;
+	static BfGeometryHolder* __bfpGeometryHolder;
 };
 
 
-BfEvent bfBindCurveHolderOutsideAllocator(VmaAllocator _outside_allocator);
-BfEvent bfBindCurveHolder(BfCurveHolder* curve_holder);
-BfEvent bfAllocateCurveSet(BfeCurveType type, size_t elements_count);
-BfCurveHolder* bfGetpCurveHolder();
+BfEvent bfBindGeometryHolderOutsideAllocator(VmaAllocator _outside_allocator);
+BfEvent bfBindGeometryHolder(BfGeometryHolder* curve_holder);
+BfEvent bfAllocateGeometrySet(BfeGeometrySetType type, size_t elements_count);
+BfGeometryHolder* bfGetpGeometryHolder();
 
 
 #endif 

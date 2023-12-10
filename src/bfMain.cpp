@@ -36,7 +36,7 @@ void BfMain::__process_keys()
 void BfMain::__init()
 {
     bfBindHolder(&__holder);
-    bfBindCurveHolder(&__curve_holder);
+    bfBindGeometryHolder(&__geometry_holder);
 
     bfHoldWindow(__base.window);
     bfHoldPhysicalDevice(__base.physical_device);
@@ -71,7 +71,7 @@ void BfMain::__init()
     bfCreateSyncObjects(__base);
     bfInitImGUI(__base);
     
-    bfBindCurveHolderOutsideAllocator(__base.allocator);
+    bfBindGeometryHolderOutsideAllocator(__base.allocator);
 }
 
 void BfMain::__start_loop()
@@ -359,7 +359,7 @@ void BfMain::__start_loop()
 // CURVE-SET
     // Bezier
     //BfCurveSet bezier_set(BF_CURVE_TYPE_BEZIER, 10, __base.allocator);
-    bfAllocateCurveSet(BF_CURVE_TYPE_BEZIER, 10);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 10);
 
     std::vector<BfVertex3> set_bezier2_vertices(bezier2_vert.size());
     std::vector<uint16_t> set_bezier2_indices(bezier2_vert.size());
@@ -377,8 +377,8 @@ void BfMain::__start_loop()
         set_bezier2_obj_data[i].id = 0;
         set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
 
-        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
-        __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
+        __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
+        __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
     }
 
     //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data1);
@@ -386,13 +386,13 @@ void BfMain::__start_loop()
 
     //BfCurveSet::bind_curve_set(&bezier_set);
 
-    __curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->write_to_buffers();
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->write_to_buffers();
 
     // Linear
 
     //BfCurveSet linear_set(BF_CURVE_TYPE_LINEAR, 3, __base.allocator);
 
-    bfAllocateCurveSet(BF_CURVE_TYPE_LINEAR, 3);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_LINEAR, 3);
     std::vector<BfVertex3> set_linear_basises1_vertices{
         {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
         {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
@@ -420,11 +420,10 @@ void BfMain::__start_loop()
     std::vector<uint16_t> set_linear_basises_indices{
         0,1
     };
-    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises1_vertices, set_linear_basises_indices, set_linear_besises1_obj_data);
-    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises2_vertices, set_linear_basises_indices, set_linear_besises2_obj_data);
-    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->add_curve(set_linear_basises3_vertices, set_linear_basises_indices, set_linear_besises3_obj_data);
-
-    __curve_holder.get_curve_set(BF_CURVE_TYPE_LINEAR)->write_to_buffers();
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises1_vertices, set_linear_basises_indices, set_linear_besises1_obj_data);
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises2_vertices, set_linear_basises_indices, set_linear_besises2_obj_data);
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises3_vertices, set_linear_basises_indices, set_linear_besises3_obj_data);
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->write_to_buffers();
 
     
 

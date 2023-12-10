@@ -2266,9 +2266,9 @@ void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handle
 			}
 		}*/
 		
-		BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
+		BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
 
-		pCurveHolder->draw_indexed(local_buffer);
+		pGeometryHolder->draw_indexed(local_buffer);
 
 		//handler.bind_mesh(local_buffer, 0);
 		//handler.draw_indexed(local_buffer, 0);
@@ -2599,9 +2599,9 @@ void bfUpdateUniformBuffer(BfBase& base)
 	//std::vector<BfObjectData> objects_data(10);
 		//pHandler->get_allocated_meshes_count());
 	
-	BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
+	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
 
-	pCurveHolder->update_obj_data(base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
+	pGeometryHolder->update_obj_data(base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
 	
 	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));

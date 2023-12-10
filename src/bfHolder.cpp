@@ -1,7 +1,7 @@
 #include "bfHolder.h"
 
 BfHolder* BfHolder::__bfpHolder = nullptr;
-BfCurveHolder* BfCurveHolder::__bfpCurveHolder = nullptr;
+BfGeometryHolder* BfGeometryHolder::__bfpGeometryHolder = nullptr;
 
 BfEvent bfBindHolder(BfHolder* holder)
 {
@@ -37,9 +37,9 @@ BfHolder* bfGetpHolder()
 	return BfHolder::__bfpHolder;
 }
 
-BfEvent bfBindCurveHolder(BfCurveHolder* curve_holder)
+BfEvent bfBindGeometryHolder(BfGeometryHolder* geometry_holder)
 {
-	BfCurveHolder::__bfpCurveHolder = curve_holder;
+	BfGeometryHolder::__bfpGeometryHolder = geometry_holder;
 
 	BfSingleEvent event{};
 	{
@@ -49,31 +49,31 @@ BfEvent bfBindCurveHolder(BfCurveHolder* curve_holder)
 	return BfEvent(event);
 }
 
-BfEvent bfAllocateCurveSet(BfeCurveType type, size_t elements_count)
+BfEvent bfAllocateGeometrySet(BfeGeometrySetType type, size_t elements_count)
 {
-	BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
+	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
 
-	pCurveHolder->allocated_curves++;
-	pCurveHolder->curve_sets.resize(pCurveHolder->allocated_curves);
+	pGeometryHolder->allocated_geometries++;
+	pGeometryHolder->geometry_sets.resize(pGeometryHolder->allocated_geometries);
 
-	BfCurveSet* pCurveSet = &pCurveHolder->curve_sets[pCurveHolder->allocated_curves-1];
+	BfGeometrySet* pGeometrySet = &pGeometryHolder->geometry_sets[pGeometryHolder->allocated_geometries-1];
 	
-	pCurveSet->set_up(type, elements_count, pCurveHolder->outside_allocator);
+	pGeometrySet->set_up(type, elements_count, pGeometryHolder->outside_allocator);
 
 	BfSingleEvent event{};
 	{
-		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT;
-		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_CURVE_SET_SUCCESS;
-		event.info = " BfCurveSet of type = " + std::to_string(type) + " was added to holder";
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_HOLDER_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_SUCCESS;
+		event.info = " BfGeometrySet of type = " + std::to_string(type) + " was added to holder";
 	}
 	return BfEvent(event);
 }
 
 
 
-BfCurveHolder* bfGetpCurveHolder()
+BfGeometryHolder* bfGetpGeometryHolder()
 {
-	return BfCurveHolder::__bfpCurveHolder;
+	return BfGeometryHolder::__bfpGeometryHolder;
 }
 
 BfEvent bfHoldWindow(BfWindow*& window) {
@@ -116,20 +116,20 @@ BfEvent bfHoldPhysicalDevice(BfPhysicalDevice*& physical_device) {
 	return BfEvent(event);
 }
 
-BfCurveHolder::BfCurveHolder() :
-	BfCurveHolder(nullptr) {}
+BfGeometryHolder::BfGeometryHolder() :
+	BfGeometryHolder(nullptr) {}
 
-BfCurveHolder::BfCurveHolder(VmaAllocator _outside_allocator)
+BfGeometryHolder::BfGeometryHolder(VmaAllocator _outside_allocator)
 {
 	this->outside_allocator = _outside_allocator;
-	this->allocated_curves = 0;
-	this->curve_sets = std::vector<BfCurveSet>();
+	this->allocated_geometries = 0;
+	this->geometry_sets = std::vector<BfGeometrySet>();
 }
 
-BfEvent bfBindCurveHolderOutsideAllocator(VmaAllocator _outside_allocator)
+BfEvent bfBindGeometryHolderOutsideAllocator(VmaAllocator _outside_allocator)
 {
-	BfCurveHolder* pCurveHolder = bfGetpCurveHolder();
-	pCurveHolder->outside_allocator = _outside_allocator;
+	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
+	pGeometryHolder->outside_allocator = _outside_allocator;
 
 	BfSingleEvent event{};
 	{
@@ -139,51 +139,51 @@ BfEvent bfBindCurveHolderOutsideAllocator(VmaAllocator _outside_allocator)
 	return BfEvent(event);
 }
 
-BfCurveSet* BfCurveHolder::get_curve_set(BfeCurveType type)
+BfGeometrySet* BfGeometryHolder::get_geometry_set(BfeGeometrySetType type)
 {
-	if (allocated_curves == 0) {
-		throw std::runtime_error("BfCurveHolder holds 0 BfCurveSet's, can't be");
+	if (this->allocated_geometries == 0) {
+		throw std::runtime_error("Can't get BfGeometrySet -> BfGeometryHolder holds 0 BfGeometrySet's");
 	}
-	BfCurveSet* pCurveSet = nullptr;
+	BfGeometrySet* pGeometrySet = nullptr;
 	
-	for (size_t i = 0; i < this->curve_sets.size(); i++) {
-		if (curve_sets[i].type == type) {
-			pCurveSet = &curve_sets[i];
+	for (size_t i = 0; i < this->geometry_sets.size(); i++) {
+		if (this->geometry_sets[i].type == type) {
+			pGeometrySet = &this->geometry_sets[i];
 			break;
 		}
 	}
 	
-	if (pCurveSet == nullptr) {
-		throw std::runtime_error("BfCurveHolder doesn't hold needed type of BfCurveSet");
+	if (pGeometrySet == nullptr) {
+		throw std::runtime_error("BfGeometryHolder doesn't hold needed type of BfGeometrySet");
 	}
 	
-	return pCurveSet;
+	return pGeometrySet;
 }
 
-BfCurveSet* BfCurveHolder::get_curve_set_by_index(size_t i)
+BfGeometrySet* BfGeometryHolder::get_geometry_set_by_index(size_t i)
 {
-	return &this->curve_sets[i];
+	return &this->geometry_sets[i];
 }
 
-void BfCurveHolder::update_obj_data(VmaAllocation allocation)
+void BfGeometryHolder::update_obj_data(VmaAllocation allocation)
 {
 	size_t obj_data_count = 0;
 
-	for (size_t i = 0; i < this->allocated_curves; i++) {
-		BfCurveSet* pCurveSet = this->get_curve_set_by_index(i);
-		obj_data_count += pCurveSet->ready_elements_count;
+	for (size_t i = 0; i < this->allocated_geometries; i++) {
+		BfGeometrySet* pGeometrySet = this->get_geometry_set_by_index(i);
+		obj_data_count += pGeometrySet->ready_elements_count;
 	}
 	
 	std::vector<BfObjectData> obj_data(obj_data_count);
 	
 	size_t last_obj_data_index = 0;
-	for (size_t i = 0; i < this->allocated_curves; i++) {
-		BfCurveSet* pCurveSet = this->get_curve_set_by_index(i);
+	for (size_t i = 0; i < this->allocated_geometries; i++) {
+		BfGeometrySet* pGeometrySet = this->get_geometry_set_by_index(i);
 
-		for (size_t j = 0; j < pCurveSet->ready_elements_count; j++) {
-			obj_data[last_obj_data_index + j] = pCurveSet->curve_datas[j].obj_data;
+		for (size_t j = 0; j < pGeometrySet->ready_elements_count; j++) {
+			obj_data[last_obj_data_index + j] = pGeometrySet->datas[j].obj_data;
 		}
-		last_obj_data_index += pCurveSet->ready_elements_count;
+		last_obj_data_index += pGeometrySet->ready_elements_count;
 	}
 	
 	void* pobjects_data;
@@ -194,18 +194,17 @@ void BfCurveHolder::update_obj_data(VmaAllocation allocation)
 	vmaUnmapMemory(this->outside_allocator, allocation);
 }
 
-void BfCurveHolder::draw_indexed(VkCommandBuffer command_buffer)
+void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 {
-	size_t curve_sets_count = this->allocated_curves;
+	size_t geometry_sets_count = this->allocated_geometries;
 
 	uint32_t index_offset = 0;
 
-	for (size_t i = 0; i < curve_sets_count; i++) {
-		BfCurveSet* pCurveSet = get_curve_set_by_index(i);
+	for (size_t i = 0; i < geometry_sets_count; i++) {
+		BfGeometrySet* pGeometrySet = get_geometry_set_by_index(i);
 
+		pGeometrySet->draw_indexed(command_buffer, index_offset);
 
-		pCurveSet->draw_indexed(command_buffer, index_offset);
-
-		index_offset += pCurveSet->ready_elements_count;
+		index_offset += pGeometrySet->ready_elements_count;
 	}
 }

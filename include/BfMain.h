@@ -16,7 +16,7 @@ private:
 	
 	BfBase __base;
 	BfHolder __holder;
-	BfCurveHolder __curve_holder;
+	BfGeometryHolder __geometry_holder;
 	
 
 
