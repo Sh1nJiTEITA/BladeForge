@@ -24,25 +24,37 @@
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
+
 /*
 * BfLine class provides opportunity to work with lines defined by 2 glm::vec3 points.
 */
 class BfLine {
-	glm::vec3 start_point;
-	glm::vec3 finish_point;
+	BfVertex3 start_point;
+	BfVertex3 finish_point;
 
 public:
 
-	BfLine(const glm::vec3& sp, const glm::vec3& fp) : start_point{ sp }, finish_point{ fp } {};
+	BfLine(const glm::vec3& sp, const glm::vec3& fp) {
+		start_point.pos = sp;
+		finish_point.pos = fp;
+	}
+
+	BfLine(const BfVertex3& sp, const BfVertex3& fp) : start_point{ sp }, finish_point{ fp } {}
 
 	glm::vec3 get_direction_from_start() const {
-		return finish_point - start_point;
+		return finish_point.pos - start_point.pos;
 	}
 
 	glm::vec3 get_direction_from_finish() const {
-		return start_point - finish_point;
+		return start_point.pos - finish_point.pos;
 	}
 
+	const BfVertex3& get_start_point() const {
+		return start_point;
+	}
+	const BfVertex3& get_finish_point() const {
+		return finish_point;
+	}
 	/*
 	* Returns true if there are intersection between 2 lines else false;
 	* 
@@ -52,25 +64,25 @@ public:
 	*/
 	static inline bool find_lines_intersection(glm::vec3& intersection, const BfLine& line1, const BfLine& line2) {
 		glm::mat3 plane;
-		plane[0][0] = line2.finish_point.x - line1.start_point.x;
-		plane[0][1] = line2.finish_point.y - line1.start_point.y;
-		plane[0][2] = line2.finish_point.z - line1.start_point.z;
-
-		plane[1][0] = line1.finish_point.x - line1.start_point.x;
-		plane[1][1] = line1.finish_point.y - line1.start_point.y;
-		plane[1][2] = line1.finish_point.z - line1.start_point.z;
-
-		plane[2][0] = line2.start_point.x - line1.start_point.x;
-		plane[2][1] = line2.start_point.y - line1.start_point.y;
-		plane[2][2] = line2.start_point.z - line1.start_point.z;
+		plane[0][0] = line2.finish_point.pos.x - line1.start_point.pos.x;
+		plane[0][1] = line2.finish_point.pos.y - line1.start_point.pos.y;
+		plane[0][2] = line2.finish_point.pos.z - line1.start_point.pos.z;
+																  
+		plane[1][0] = line1.finish_point.pos.x - line1.start_point.pos.x;
+		plane[1][1] = line1.finish_point.pos.y - line1.start_point.pos.y;
+		plane[1][2] = line1.finish_point.pos.z - line1.start_point.pos.z;
+																  
+		plane[2][0] =  line2.start_point.pos.x - line1.start_point.pos.x;
+		plane[2][1] =  line2.start_point.pos.y - line1.start_point.pos.y;
+		plane[2][2] =  line2.start_point.pos.z - line1.start_point.pos.z;
 
 		if (glm::determinant(plane) == 0) {
 			// a1.x + b1.x * t1 = a2.x + b2.x * t2
 			// a1.y + b1.y * t1 = a2.y + b2.y * t2
-			glm::vec3 a1 = line1.start_point;
+			glm::vec3 a1 = line1.start_point.pos;
 			glm::vec3 b1 = line1.get_direction_from_start();
 
-			glm::vec3 a2 = line2.start_point;
+			glm::vec3 a2 = line2.start_point.pos;
 			glm::vec3 b2 = line2.get_direction_from_start();
 
 			float frac = b1.x * b2.y - b1.y * b2.x;
@@ -98,7 +110,7 @@ public:
 	
 	static inline float get_line_length(const BfLine& l) {
 		
-		glm::vec3 delta = l.finish_point - l.start_point;
+		glm::vec3 delta = l.finish_point.pos - l.start_point.pos;
 		return std::sqrtf(
 			delta.x * delta.x
 			+ 
@@ -110,6 +122,10 @@ public:
 };
 
 
+
+/*
+* BfLine class provides opportunity to work with Bezier curves.
+*/
 class BfBezier {
 	
 	uint32_t n;
@@ -203,8 +219,12 @@ public:
 	* If vertices weren't calculated before, output array will be empty.
 	* 
 	*/
-	std::vector<BfVertex3>& get_vertices() {
+	const std::vector<BfVertex3>& get_cvertices() const {
 		return c_vertices;
+	}
+	
+	const std::vector<glm::vec3>& get_vertices() const {
+		return vertices;
 	}
 
 	/*
@@ -215,7 +235,7 @@ public:
 	*/
 	std::vector<BfVertex3>& update_and_get_vertices(uint32_t v_count) {
 		update_vertices(v_count);
-		return get_vertices();
+		return c_vertices;
 	}
 
 	std::vector<glm::vec3> update_and_copy_vec3_vertices(uint32_t v_count) {
@@ -1185,7 +1205,6 @@ public:
 
 
 
-
 /*
  * (CLASSIC_CALCULATION)
  * Returns value of factor defined by n
@@ -1223,6 +1242,7 @@ inline int32_t bfGetFactorial(int32_t n) {
 inline uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k) {
 	return bfGetFactorial(n) / bfGetFactorial(k) / bfGetFactorial(n - k);
 }
+
 
 
 

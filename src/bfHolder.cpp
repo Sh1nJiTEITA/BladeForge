@@ -76,6 +76,8 @@ BfGeometryHolder* bfGetpGeometryHolder()
 	return BfGeometryHolder::__bfpGeometryHolder;
 }
 
+
+
 BfEvent bfHoldWindow(BfWindow*& window) {
 	if (window == nullptr) {
 		BfHolder::__bfpHolder->windows.push_back(BfWindow());
@@ -207,4 +209,40 @@ void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 
 		index_offset += pGeometrySet->ready_elements_count;
 	}
+}
+
+
+BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data)
+{
+	BfGeometryHolder* pHolder = bfGetpGeometryHolder();
+	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR);
+
+	std::vector<BfVertex3> line_vertices{
+		o.get_start_point(),
+		o.get_finish_point()
+	};
+
+	std::vector<uint16_t> line_indices{
+		0,
+		1
+	};
+
+	pSet->add_data(line_vertices, line_indices, obj_data);
+	return BfEvent();
+}
+
+BfEvent bfAddBezierCurveToHolder(const BfBezier& o, const BfObjectData& obj_data)
+{
+	BfGeometryHolder* pHolder = bfGetpGeometryHolder();
+	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR);
+
+	const size_t cvert_count = o.get_cvertices().size();
+	std::vector<uint16_t> line_indices(cvert_count);
+
+	for (size_t i = 0; i < cvert_count; i++) {
+		line_indices[i] = i;
+	}
+
+	pSet->add_data(o.get_cvertices(), line_indices, obj_data);
+	return BfEvent();
 }

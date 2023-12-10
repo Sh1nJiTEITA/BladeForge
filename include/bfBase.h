@@ -99,8 +99,8 @@ struct BfBase {
 
 	uint32_t				 vert_number;
 
-	BfCurveSet* pBezier_set;
-	BfCurveSet* pLinear_set;
+	//BfCurveSet* pBezier_set;
+	//BfCurveSet* pLinear_set;
 
 	bool is_resized;
 };

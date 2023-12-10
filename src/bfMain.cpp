@@ -377,8 +377,11 @@ void BfMain::__start_loop()
         set_bezier2_obj_data[i].id = 0;
         set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
 
-        __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
-        __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
+        bfAddBezierCurveToHolder(bezier2, set_bezier2_obj_data[i]);
+        bfAddBezierCurveToHolder(bezier2a, set_bezier2_obj_data[i]);
+
+        //__geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
+        //__geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
     }
 
     //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data1);

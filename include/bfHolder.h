@@ -9,6 +9,10 @@
 #include "bfPhysicalDevice.h"
 #include "bfBuffer.h"
 #include "bfVertex2.hpp"
+#include "bfCurves.hpp"
+
+
+
 
 struct BfHolder {
 	//std::vector<std::shared_ptr<BfWindow>> windows;
@@ -75,6 +79,9 @@ BfEvent bfBindGeometryHolderOutsideAllocator(VmaAllocator _outside_allocator);
 BfEvent bfBindGeometryHolder(BfGeometryHolder* curve_holder);
 BfEvent bfAllocateGeometrySet(BfeGeometrySetType type, size_t elements_count);
 BfGeometryHolder* bfGetpGeometryHolder();
+
+BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data);
+BfEvent bfAddBezierCurveToHolder(const BfBezier& o, const BfObjectData& obj_data);
 
 
 #endif 

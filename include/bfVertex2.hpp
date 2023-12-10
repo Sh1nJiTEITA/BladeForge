@@ -403,9 +403,10 @@ struct BfGeometrySet {
 		vmaUnmapMemory(outside_allocator, allocation);
 	}
 
-	BfEvent add_data(std::vector<BfVertex3>& _vertices, std::vector<uint16_t>& _indices, BfObjectData obj_data) {
-		
-		BfSingleEvent event{};
+	BfEvent add_data(const std::vector<BfVertex3>& _vertices, const std::vector<uint16_t>& _indices, const BfObjectData& obj_data) {
+		return add_data(_vertices.data(), _vertices.size(), _indices.data(), _indices.size(), &obj_data);
+
+		/*BfSingleEvent event{};
 		if (++ready_elements_count > allocated_elements_count) {
 			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
 			event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_FAILURE;
@@ -458,6 +459,69 @@ struct BfGeometrySet {
 
 			for (size_t i = 0; i < _indices.size(); i++) {
 				indices[i + index_offset] = _indices[i] + index_offset;
+			}
+		}
+
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_SUCCESS;
+		event.info = "New geometry vertices/indices/BfObjectData was added to BfGeometrySet = " + std::to_string(type);
+		return event;*/
+	}
+
+	BfEvent add_data(const BfVertex3* pVertices, size_t countVertices, const uint16_t* pIndices, size_t countIndices, const BfObjectData* obj_data) {
+		BfSingleEvent event{};
+		if (++ready_elements_count > allocated_elements_count) {
+			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
+			event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_FAILURE;
+			event.info = ("All objects in geometry set with type = " + std::to_string(type) + "are ready, memory for additional object wasn't allocated");
+			return event;
+		}
+
+		BfGeometryData* pCurve_data = &datas[ready_elements_count - 1];
+
+		pCurve_data->vertices_count = countVertices;
+		pCurve_data->indices_count = countIndices;
+		pCurve_data->obj_data = *obj_data;
+
+		size_t index_offset;
+		size_t vertex_offset;
+
+		if (ready_elements_count == 1) {
+			pCurve_data->index_offset = 0;
+
+			index_offset = 0;
+			vertex_offset = 0;
+		}
+		else {
+			BfGeometryData* pCurve_data_previous = &datas[ready_elements_count - 2];
+			pCurve_data->index_offset = pCurve_data->indices_count * sizeof(BfVertex3) + pCurve_data_previous->index_offset;
+
+			index_offset = 0;
+			vertex_offset = 0;
+
+			for (int i = 0; i < ready_elements_count - 1; i++) {
+				vertex_offset += datas[i].vertices_count;
+				index_offset += datas[i].indices_count;
+			}
+		}
+		pCurve_data->index_offset = index_offset;
+
+
+		if (countVertices == countIndices) {
+			for (size_t i = 0; i < countVertices; i++) {
+				vertices[i + vertex_offset] = pVertices[i];
+				indices[i + index_offset] = pIndices[i] + index_offset;
+			}
+		}
+		else {
+
+
+			for (size_t i = 0; i < countVertices; i++) {
+				vertices[i + vertex_offset] = pVertices[i];
+			}
+
+			for (size_t i = 0; i < countIndices; i++) {
+				indices[i + index_offset] = pIndices[i] + index_offset;
 			}
 		}
 
@@ -533,258 +597,258 @@ struct BfGeometrySet {
 };
 
 
+////
+//enum BfeCurveType {
+//	BF_CURVE_TYPE_UNDERFINED = -1,
+//	BF_CURVE_TYPE_BEZIER = 0,
+//	BF_CURVE_TYPE_LINEAR = 1
+//};
 //
-enum BfeCurveType {
-	BF_CURVE_TYPE_UNDERFINED = -1,
-	BF_CURVE_TYPE_BEZIER = 0,
-	BF_CURVE_TYPE_LINEAR = 1
-};
-
-
-static inline const std::map<BfeCurveType, size_t> BfmCurveTypeMaxElementsCount {
-	{BF_CURVE_TYPE_BEZIER, 1000},
-	{BF_CURVE_TYPE_LINEAR, 10000}
-};
-
-static inline const std::map<BfeCurveType, size_t> BfmCurveTypeMaxNumberOfVertices{
-	{BF_CURVE_TYPE_BEZIER, 50},
-	{BF_CURVE_TYPE_LINEAR, 2}
-};
-
-
-
-struct BfCurveData {
-	VkDeviceSize index_offset;
-	BfObjectData obj_data;
-
-	size_t vertices_count;
-	size_t indices_count;
-};
-
-
-
-struct BfCurveSet {
-	
-	VmaAllocator outside_allocator;
-	BfeCurveType type;
-	bool is_fully_allocated;
-	uint32_t allocated_elements_count;
-	uint32_t ready_elements_count;
-	
-	std::vector<BfCurveData> curve_datas;
-
-	std::vector<BfVertex3>	  vertices;
-	std::vector<uint16_t>	  indices;
-
-	BfAllocatedBuffer vertices_buffer;
-	BfAllocatedBuffer indices_buffer;
-
-
-	inline static BfCurveSet* pBound_curve_set = nullptr;
-	inline static void bind_curve_set(BfCurveSet* curve_set) {
-		BfCurveSet::pBound_curve_set = curve_set;
-	}
-	inline static BfCurveSet* get_pBound_curve_set() {
-		return BfCurveSet::pBound_curve_set;
-	}
-
-	BfCurveSet() : BfCurveSet(nullptr){};
-	BfCurveSet(VmaAllocator _outside_allocator) {
-		this->is_fully_allocated = false;
-		this->outside_allocator = _outside_allocator;
-		this->allocated_elements_count = 0;
-		this->ready_elements_count = 0;
-		this->type = BF_CURVE_TYPE_UNDERFINED;
-	}
-		
-
-	void set_up(BfeCurveType _type, size_t elements_count, VmaAllocator allocator) {
-		outside_allocator = allocator;
-		type = _type;
-		is_fully_allocated = false;
-
-		curve_datas.resize(elements_count);
-
-		this->allocate(type, elements_count);
-
-		ready_elements_count = 0;
-
-		vertices.resize(BfmCurveTypeMaxNumberOfVertices.at(type) *
-			//BfmCurveTypeMaxElementsCount.at(type)
-			elements_count
-		);
-
-		indices.resize(BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
-			//BfmCurveTypeMaxElementsCount.at(type)
-			elements_count
-		);
-	}
-	
-
-	void add_curve(std::vector<BfVertex3>& _vertices, std::vector<uint16_t>& _indices, BfObjectData obj_data) {
-		if (++ready_elements_count > allocated_elements_count) {
-			throw std::runtime_error("All curves in curve set with type = " + std::to_string(type) + "are ready, memory for additional curve wasn't allocated");
-		}
-
-		BfCurveData* pCurve_data = &curve_datas[ready_elements_count - 1];
-
-		pCurve_data->vertices_count = _vertices.size();
-		pCurve_data->indices_count = _indices.size();
-		pCurve_data->obj_data = obj_data;
-
-		size_t index_offset;
-		size_t vertex_offset;
-
-		if (ready_elements_count == 1) {
-			pCurve_data->index_offset = 0;
-
-			index_offset = 0;
-			vertex_offset = 0;
-		}
-		else {
-			BfCurveData* pCurve_data_previous = &curve_datas[ready_elements_count - 2];
-			pCurve_data->index_offset = pCurve_data->indices_count * sizeof(BfVertex3) + pCurve_data_previous->index_offset;
-
-			index_offset = 0;
-			vertex_offset = 0;
-
-			for (int i = 0; i < ready_elements_count-1; i++) {
-				vertex_offset += curve_datas[i].vertices_count;
-				index_offset += curve_datas[i].indices_count;
-			}
-		}
-		pCurve_data->index_offset = index_offset;
-
-
-		if (_vertices.size() == _indices.size()) {
-			for (size_t i = 0; i < _vertices.size(); i++) {
-				vertices[i + vertex_offset] = _vertices[i];
-				indices[i + index_offset] = _indices[i] + index_offset;
-			}
-		}
-		else {
-		
-
-			for (size_t i = 0; i < _vertices.size(); i++) {
-				vertices[i + vertex_offset] = _vertices[i];
-			}
-
-			for (size_t i = 0; i < _indices.size(); i++) {
-				indices[i + index_offset] = _indices[i] + index_offset;
-			}
-		}
-	}
-	void write_to_buffers() {
-	
-		void* vertex_data;
-		vmaMapMemory(outside_allocator, vertices_buffer.allocation, &vertex_data);
-		{
-			memcpy(vertex_data, vertices.data(), sizeof(BfVertex3) * vertices.size());
-		}
-		vmaUnmapMemory(outside_allocator, vertices_buffer.allocation);
-
-		void* index_data;
-		vmaMapMemory(outside_allocator, indices_buffer.allocation, &index_data);
-		{
-			memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
-		}
-		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
-	}
-
-	void draw_indexed(VkCommandBuffer command_buffer, uint32_t obj_data_index_offset = 0) {
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertices_buffer.buffer, offsets);
-		vkCmdBindIndexBuffer(command_buffer, indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-
-		for (size_t i = 0; i < this->ready_elements_count; i++) {
-			BfCurveData* pData = &curve_datas[i];
-			vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
-		}
-
-	}
-
-	void update_object_data(VmaAllocation allocation) {
-		void* pobjects_data;
-
-		std::vector<BfObjectData> objects_data(this->ready_elements_count);
-
-		for (size_t i = 0; i < objects_data.size(); i++) {
-			objects_data[i] = this->curve_datas[i].obj_data;
-		}
-
-		vmaMapMemory(outside_allocator, allocation, &pobjects_data);
-		{
-			memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
-		}
-		vmaUnmapMemory(outside_allocator, allocation);
-	}
-
-	BfEvent allocate(BfeCurveType type, size_t elements_count) {
-		
-		// Size for vertex buffer
-		size_t max_vertices_size =						// Sizes:
-			sizeof(BfVertex3) *							// Of 1 vertex 
-			BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
-			elements_count;
-			//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
-
-		// Create vertex buffer for loading to GPU
-		bfCreateBuffer(&vertices_buffer,
-						outside_allocator,
-						max_vertices_size,
-						VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-						VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-		// Size for vertex buffer
-		size_t max_indices_size =						// Sizes:
-			sizeof(uint16_t) *							// Of 1 index
-			BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
-			elements_count;
-			//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
-
-		// Create index buffer for loading to GPU
-		bfCreateBuffer(&indices_buffer,
-						outside_allocator,
-						max_indices_size,
-						VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-						VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-		BfSingleEvent event{};
-		{
-			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-
-			std::stringstream ss; ss << "BfCurveSet for type = " << this->type
-				<< ",Index buffer status:" << this->vertices_buffer.is_allocated
-				<< "; Vertex buffer status:" << this->indices_buffer.is_allocated;
-
-			event.info = ss.str();
-
-			if (this->indices_buffer.is_allocated && this->vertices_buffer.is_allocated) {
-				is_fully_allocated = true;
-				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_CURVE_SET_SUCCESS;
-				allocated_elements_count = elements_count;
-			}
-			else {
-				is_fully_allocated = false;
-				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_CURVE_SET_FAILURE;
-			}
-		}
-		return BfEvent(event);
-	}
-
-	BfEvent deallocate() {
-		vmaDestroyBuffer(outside_allocator, vertices_buffer.buffer, vertices_buffer.allocation);
-		vmaDestroyBuffer(outside_allocator, indices_buffer.buffer, indices_buffer.allocation);
-
-		BfSingleEvent event{};
-		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT;
-		event.action = BfEnActionType::BF_ACTION_TYPE_DEALLOC_CURVE_SET;
-		event.info = " BfCurveSet for type = " + std::to_string(this->type);
-		return BfEvent(event);
-	}
-};
-
-
+//
+//static inline const std::map<BfeCurveType, size_t> BfmCurveTypeMaxElementsCount {
+//	{BF_CURVE_TYPE_BEZIER, 1000},
+//	{BF_CURVE_TYPE_LINEAR, 10000}
+//};
+//
+//static inline const std::map<BfeCurveType, size_t> BfmCurveTypeMaxNumberOfVertices{
+//	{BF_CURVE_TYPE_BEZIER, 50},
+//	{BF_CURVE_TYPE_LINEAR, 2}
+//};
+//
+//
+//
+//struct BfCurveData {
+//	VkDeviceSize index_offset;
+//	BfObjectData obj_data;
+//
+//	size_t vertices_count;
+//	size_t indices_count;
+//};
+//
+//
+//
+//struct BfCurveSet {
+//	
+//	VmaAllocator outside_allocator;
+//	BfeCurveType type;
+//	bool is_fully_allocated;
+//	uint32_t allocated_elements_count;
+//	uint32_t ready_elements_count;
+//	
+//	std::vector<BfCurveData> curve_datas;
+//
+//	std::vector<BfVertex3>	  vertices;
+//	std::vector<uint16_t>	  indices;
+//
+//	BfAllocatedBuffer vertices_buffer;
+//	BfAllocatedBuffer indices_buffer;
+//
+//
+//	inline static BfCurveSet* pBound_curve_set = nullptr;
+//	inline static void bind_curve_set(BfCurveSet* curve_set) {
+//		BfCurveSet::pBound_curve_set = curve_set;
+//	}
+//	inline static BfCurveSet* get_pBound_curve_set() {
+//		return BfCurveSet::pBound_curve_set;
+//	}
+//
+//	BfCurveSet() : BfCurveSet(nullptr){};
+//	BfCurveSet(VmaAllocator _outside_allocator) {
+//		this->is_fully_allocated = false;
+//		this->outside_allocator = _outside_allocator;
+//		this->allocated_elements_count = 0;
+//		this->ready_elements_count = 0;
+//		this->type = BF_CURVE_TYPE_UNDERFINED;
+//	}
+//		
+//
+//	void set_up(BfeCurveType _type, size_t elements_count, VmaAllocator allocator) {
+//		outside_allocator = allocator;
+//		type = _type;
+//		is_fully_allocated = false;
+//
+//		curve_datas.resize(elements_count);
+//
+//		this->allocate(type, elements_count);
+//
+//		ready_elements_count = 0;
+//
+//		vertices.resize(BfmCurveTypeMaxNumberOfVertices.at(type) *
+//			//BfmCurveTypeMaxElementsCount.at(type)
+//			elements_count
+//		);
+//
+//		indices.resize(BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+//			//BfmCurveTypeMaxElementsCount.at(type)
+//			elements_count
+//		);
+//	}
+//	
+//
+//	void add_curve(std::vector<BfVertex3>& _vertices, std::vector<uint16_t>& _indices, BfObjectData obj_data) {
+//		if (++ready_elements_count > allocated_elements_count) {
+//			throw std::runtime_error("All curves in curve set with type = " + std::to_string(type) + "are ready, memory for additional curve wasn't allocated");
+//		}
+//
+//		BfCurveData* pCurve_data = &curve_datas[ready_elements_count - 1];
+//
+//		pCurve_data->vertices_count = _vertices.size();
+//		pCurve_data->indices_count = _indices.size();
+//		pCurve_data->obj_data = obj_data;
+//
+//		size_t index_offset;
+//		size_t vertex_offset;
+//
+//		if (ready_elements_count == 1) {
+//			pCurve_data->index_offset = 0;
+//
+//			index_offset = 0;
+//			vertex_offset = 0;
+//		}
+//		else {
+//			BfCurveData* pCurve_data_previous = &curve_datas[ready_elements_count - 2];
+//			pCurve_data->index_offset = pCurve_data->indices_count * sizeof(BfVertex3) + pCurve_data_previous->index_offset;
+//
+//			index_offset = 0;
+//			vertex_offset = 0;
+//
+//			for (int i = 0; i < ready_elements_count-1; i++) {
+//				vertex_offset += curve_datas[i].vertices_count;
+//				index_offset += curve_datas[i].indices_count;
+//			}
+//		}
+//		pCurve_data->index_offset = index_offset;
+//
+//
+//		if (_vertices.size() == _indices.size()) {
+//			for (size_t i = 0; i < _vertices.size(); i++) {
+//				vertices[i + vertex_offset] = _vertices[i];
+//				indices[i + index_offset] = _indices[i] + index_offset;
+//			}
+//		}
+//		else {
+//		
+//
+//			for (size_t i = 0; i < _vertices.size(); i++) {
+//				vertices[i + vertex_offset] = _vertices[i];
+//			}
+//
+//			for (size_t i = 0; i < _indices.size(); i++) {
+//				indices[i + index_offset] = _indices[i] + index_offset;
+//			}
+//		}
+//	}
+//	void write_to_buffers() {
+//	
+//		void* vertex_data;
+//		vmaMapMemory(outside_allocator, vertices_buffer.allocation, &vertex_data);
+//		{
+//			memcpy(vertex_data, vertices.data(), sizeof(BfVertex3) * vertices.size());
+//		}
+//		vmaUnmapMemory(outside_allocator, vertices_buffer.allocation);
+//
+//		void* index_data;
+//		vmaMapMemory(outside_allocator, indices_buffer.allocation, &index_data);
+//		{
+//			memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+//		}
+//		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
+//	}
+//
+//	void draw_indexed(VkCommandBuffer command_buffer, uint32_t obj_data_index_offset = 0) {
+//		VkDeviceSize offsets[] = { 0 };
+//		vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertices_buffer.buffer, offsets);
+//		vkCmdBindIndexBuffer(command_buffer, indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+//
+//		for (size_t i = 0; i < this->ready_elements_count; i++) {
+//			BfCurveData* pData = &curve_datas[i];
+//			vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
+//		}
+//
+//	}
+//
+//	void update_object_data(VmaAllocation allocation) {
+//		void* pobjects_data;
+//
+//		std::vector<BfObjectData> objects_data(this->ready_elements_count);
+//
+//		for (size_t i = 0; i < objects_data.size(); i++) {
+//			objects_data[i] = this->curve_datas[i].obj_data;
+//		}
+//
+//		vmaMapMemory(outside_allocator, allocation, &pobjects_data);
+//		{
+//			memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
+//		}
+//		vmaUnmapMemory(outside_allocator, allocation);
+//	}
+//
+//	BfEvent allocate(BfeCurveType type, size_t elements_count) {
+//		
+//		// Size for vertex buffer
+//		size_t max_vertices_size =						// Sizes:
+//			sizeof(BfVertex3) *							// Of 1 vertex 
+//			BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+//			elements_count;
+//			//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
+//
+//		// Create vertex buffer for loading to GPU
+//		bfCreateBuffer(&vertices_buffer,
+//						outside_allocator,
+//						max_vertices_size,
+//						VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+//						VMA_MEMORY_USAGE_CPU_TO_GPU);
+//
+//		// Size for vertex buffer
+//		size_t max_indices_size =						// Sizes:
+//			sizeof(uint16_t) *							// Of 1 index
+//			BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+//			elements_count;
+//			//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
+//
+//		// Create index buffer for loading to GPU
+//		bfCreateBuffer(&indices_buffer,
+//						outside_allocator,
+//						max_indices_size,
+//						VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+//						VMA_MEMORY_USAGE_CPU_TO_GPU);
+//
+//		BfSingleEvent event{};
+//		{
+//			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+//
+//			std::stringstream ss; ss << "BfCurveSet for type = " << this->type
+//				<< ",Index buffer status:" << this->vertices_buffer.is_allocated
+//				<< "; Vertex buffer status:" << this->indices_buffer.is_allocated;
+//
+//			event.info = ss.str();
+//
+//			if (this->indices_buffer.is_allocated && this->vertices_buffer.is_allocated) {
+//				is_fully_allocated = true;
+//				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_CURVE_SET_SUCCESS;
+//				allocated_elements_count = elements_count;
+//			}
+//			else {
+//				is_fully_allocated = false;
+//				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_CURVE_SET_FAILURE;
+//			}
+//		}
+//		return BfEvent(event);
+//	}
+//
+//	BfEvent deallocate() {
+//		vmaDestroyBuffer(outside_allocator, vertices_buffer.buffer, vertices_buffer.allocation);
+//		vmaDestroyBuffer(outside_allocator, indices_buffer.buffer, indices_buffer.allocation);
+//
+//		BfSingleEvent event{};
+//		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT;
+//		event.action = BfEnActionType::BF_ACTION_TYPE_DEALLOC_CURVE_SET;
+//		event.info = " BfCurveSet for type = " + std::to_string(this->type);
+//		return BfEvent(event);
+//	}
+//};
+//
+//
 
 
 
