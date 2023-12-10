@@ -24,6 +24,9 @@
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
+/*
+* BfLine class provides opportunity to work with lines defined by 2 glm::vec3 points.
+*/
 class BfLine {
 	glm::vec3 start_point;
 	glm::vec3 finish_point;
@@ -40,7 +43,13 @@ public:
 		return start_point - finish_point;
 	}
 
-
+	/*
+	* Returns true if there are intersection between 2 lines else false;
+	* 
+	* Needed:	glm::vec3 intersection - vec3 to store position of intersection
+	*			const BfLine& line1 - const reference to 1st line to work with
+	*			const BfLine& line2 - const reference to 2st line to work with
+	*/
 	static inline bool find_lines_intersection(glm::vec3& intersection, const BfLine& line1, const BfLine& line2) {
 		glm::mat3 plane;
 		plane[0][0] = line2.finish_point.x - line1.start_point.x;
@@ -85,6 +94,18 @@ public:
 		else {
 			return false;
 		}
+	}
+	
+	static inline float get_line_length(const BfLine& l) {
+		
+		glm::vec3 delta = l.finish_point - l.start_point;
+		return std::sqrtf(
+			delta.x * delta.x
+			+ 
+			delta.y * delta.y
+			+ 
+			delta.z * delta.z
+		);
 	}
 };
 
@@ -761,6 +782,62 @@ public:
 		return ave / (float)c_vertices.size();
 	}
 
+	std::vector<glm::vec3> get_length_grad(std::vector<bool> is_working) {
+		if (is_working.size() != (this->n + 1)) {
+			throw std::runtime_error("!_P");
+		}
+		
+		std::vector<glm::vec3> grad(this->n + 1, {0.0f, 0.0f, 0.0f});
+
+		// go for each defining point
+		for (size_t p_index = 0; p_index < grad.size(); p_index++) {
+			glm::vec3 grad_part{0.0f,0.0f,0.0f};
+
+			// go along curve and get derivatices of lines
+			// derivative of CURVE by point of p_index is sum 
+			// of derivatives of all lines
+
+			for (size_t j = 0; j < this->c_vertices.size(); j++) {
+
+				// Calculate derivative of length of single line
+				// dL_j / d(P[p_index]) = sum(dL_j / d(P[p_index))
+
+				float t_j = (float)j / (this->c_vertices.size() - 1);
+				float t_jpp = (float)(j + 1) / (this->c_vertices.size() - 1);
+
+				glm::vec3 d_j{ 0.0f,0.0f,0.0f };
+				glm::vec3 dd_j{ 0.0f,0.0f,0.0f };
+
+				for (size_t i = 0; i < this->vertices.size(); i++) {
+					float basis_i = bfGetBinomialCoefficient(this->n, i) * (
+						std::powf(t_jpp, i) * std::powf(1 - t_jpp, this->n - i)
+						-
+						std::powf(t_j, i) * std::powf(1 - t_j, this->n - i)
+					);
+
+					d_j += basis_i * this->vertices[i];
+
+					if ((i == p_index) && (is_working[p_index])) {
+						dd_j = { basis_i, basis_i, basis_i };
+					}
+				}
+				
+				glm::vec3 dl = {
+					(d_j.x * dd_j.x) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+					(d_j.y * dd_j.y) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+					(d_j.z * dd_j.z) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+				};
+
+				grad_part += dl;
+			}
+		
+
+			grad[p_index] = (grad_part);
+		}
+
+		return grad;
+	}
+
 	static inline std::pair<glm::vec3, glm::vec3> get_bbox_by_cvertices(const std::vector<glm::vec3>& vert) {
 		glm::vec3 max{0.f, 0.f, 0.f};
 		glm::vec3 min{0.f, 0.f, 0.f};
@@ -821,7 +898,16 @@ public:
 		return std::pair<glm::vec3, glm::vec3>(min, max);
 	}
 
-	static inline bool get_intersections_simple(std::vector<glm::vec3>* intersections, const BfBezier& B1, const BfBezier& B2) {
+	/*
+	* Returns true if there are intesections between B1 and B2 else no intersections;
+	* 
+	* Needed:	intersections - reference to std::vector<glm::vec3> container to store
+	*							pos of intersections if there are more than 1;
+	*			B1 - BfBezier curve 1;
+	*			B2 - BfBezier curve 2;
+	* 
+	*/
+	static inline bool get_intersections_simple(std::vector<glm::vec3>& intersections, const BfBezier& B1, const BfBezier& B2) {
 		
 		if (B1.c_vertices.empty() || B2.c_vertices.empty()) {
 			throw std::runtime_error("intesections can't be found: no calculated points in one of curves");
@@ -836,7 +922,7 @@ public:
 				
 				glm::vec3 inter{};
 				if (BfLine::find_lines_intersection(inter, line1, line2)) {
-					intersections->push_back(inter);
+					intersections.push_back(inter);
 					has_intersections = true;
 				}
 			}
@@ -844,20 +930,30 @@ public:
 		return has_intersections;
 	}
 
-	static inline bool get_intersections_simple(std::vector<glm::vec3>* intersections, const BfBezier& B, const BfLine& L) {
+	/*
+	* Returns true if there are intesections between Beizer curve and line else no 
+	* intersections;
+	*
+	* Needed:	intersections - reference to std::vector<glm::vec3> container to store
+	*							pos of intersections if there are more than 1;
+	*			B - BfBezier curve;
+	*			L - BfLine;
+	*
+	*/
+	static inline bool get_intersections_simple(std::vector<glm::vec3>& intersections, const BfBezier& B, const BfLine& L) {
 		bool is_intersection = false;
 		for (int i = 0; i < B.c_vertices.size() - 1; i++) {
 			BfLine local_line(B.c_vertices[i].pos, B.c_vertices[i + 1].pos);
 			glm::vec3 intersection{};
 			if (BfLine::find_lines_intersection(intersection, L, local_line)) {
-				intersections->push_back(intersection);
+				intersections.push_back(intersection);
 				is_intersection = true;
 			}
 		}
 		return is_intersection;
 	}
 
-	// TODO
+	// TODO: finding intesections in way of checing curve box intersections;
 	static inline bool get_itersections(std::vector<std::pair<glm::vec3, glm::vec3>>& inter, BfBezier& b1, BfBezier& b2) {
 		using it_pair  = std::pair<std::vector<glm::vec3>::const_iterator, std::vector<glm::vec3>::const_iterator>;
 		
@@ -1067,6 +1163,23 @@ public:
 		}
 		return true;
 	}
+	
+	/*
+	* Returns approximated float-length of input BfBezier by count of c_vertices
+	* 
+	* Needed:	B - BfBezier curve to work with;
+	* 
+	*/
+	static inline float get_approx_length(const BfBezier& B) {
+		float len = 0;
+		for (size_t i = 0; i < B.c_vertices.size() - 1; i++) {
+			len += BfLine::get_line_length(
+				{ B.c_vertices[i + 1].pos, B.c_vertices[i].pos }
+			);
+		}
+		return len;
+	}
+	
 };
 
 

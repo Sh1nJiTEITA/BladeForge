@@ -291,41 +291,40 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::vector<BfVertex3> bezier2a_vert = _bezier2a.update_and_get_vertices(30);
 
 	std::vector<glm::vec3> inters;
-	BfBezier::get_intersections_simple(&inters, _bezier2, _bezier2a);
+	BfBezier::get_intersections_simple(inters, _bezier2, _bezier2a);
 
-	/*
-		(0,1.58780003,   1.98734987 ),
-		(1.53653324,	 2.11973333	),
-		(1.50303149,	 2.00529623	),
-		(1.58720005,	 2.00600004	),
-		(0.595733404,	 1.08613336 ),
-		(0.691666663,	 1.01458323 ),
-		(0.567585230,	 1.04570377 ),
-		(0.608564794,	 1.18796289 ),
-		(0.498199970,	 1.17014992 ),
-		(0.595733404,	 1.08613336 ),
-		(0.567585230,	 1.04570377 ),
-		(0.608564794,	 1.18796289 ),
-		(1.58720005,	 2.00600004	),
-		(1.66916847,	 1.99737036	 ),
-		(1.58780003,	 1.98734987  ),
-		(1.53653324,	 2.11973333  ),
-		(1.58780003,	 1.98734987  ),
-		(1.53653324,	 2.11973333  ),
-		(1.50303149,	 2.00529623  ),
-		(1.58720005,	 2.00600004  ),
-		(0.595733404,    1.08613336),
-		(0.691666663,    1.01458323),
-		(0.567585230,    1.04570377),
-		(0.608564794,    1.18796289),
-		(0.567585230,    1.04570377),
-		(0.608564794,    1.18796289)
-	
-	*/
-		std::cout << std::endl;
-	/*for (auto& it : inters) {
-		std::cout << "intes: (" << it.x << ", " << it.y << ", " << it.z << ")\n";
-	}*/
+	//{110.0f, 150.0f, 0.0f}, {25.0f, 190.0f, 0.0}, {210.0f, 250.0f, 0.0}, {210.0f, 30.0f, 0.0}
+	std::vector<glm::vec3> bez3_dp = {
+		
+		/*
+		(0, 0+150, 0), 
+    
+		(500, 1500, 0.0),
+    
+		(1200, 400+300,0.0), 
+    
+		(2000, 1500, 0.0),
+    
+		(2400, 0+150,0.0)
+		*/
+
+		{0.0f,150.0f, 0.0f},
+		
+		{500, 1500, 0.0f},
+
+		{1200.0f, 400.0f+300.0f, 0.0f},
+		
+		{2000, 1500, 0.0f},
+
+		{2400.0f, 0+150.0f,0.0f}
+	};
+
+	BfBezier _bezier3(4, bez3_dp);
+	std::vector<BfVertex3> bezier3_vert = _bezier3.update_and_get_vertices(30);
+	float len3 = BfBezier::get_approx_length(_bezier3);
+
+
+	std::cout << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
 
@@ -335,5 +334,26 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	std::cout << std::endl;
 	for (int i = 0; i < bezier2a_vert.size(); i++) {
 		std::cout << "(" << bezier2a_vert[i].pos.x << ", " << bezier2a_vert[i].pos.y << ", " << bezier2a_vert[i].pos.z << "), ";
+	}
+	
+	std::vector<glm::vec3> grad = _bezier3.get_length_grad({ 0,1,0,1,0 });
+
+	for (int i = 0; i < bez3_dp.size(); i++) {
+		bez3_dp[i] = bez3_dp[i] - 1000.0f * grad[i];
+	}
+
+	BfBezier bezier3_lessl(4, bez3_dp);
+	std::vector<BfVertex3> bezier3_lessl_vert = bezier3_lessl.update_and_get_vertices(30);
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+
+	for (int i = 0; i < bezier3_vert.size(); i++) {
+		std::cout << "(" << bezier3_vert[i].pos.x << ", " << bezier3_vert[i].pos.y << ", " << bezier3_vert[i].pos.z << "), ";
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < bezier3_lessl_vert.size(); i++) {
+		std::cout << "(" << bezier3_lessl_vert[i].pos.x << ", " << bezier3_lessl_vert[i].pos.y << ", " << bezier3_lessl_vert[i].pos.z << "), ";
 	}
 }

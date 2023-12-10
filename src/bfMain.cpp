@@ -303,7 +303,7 @@ void BfMain::__start_loop()
     std::vector<BfVertex3> bezier2a_vert = bezier2a.update_and_get_vertices(30);
     
     std::vector<std::pair<glm::vec3, glm::vec3>> inters;
-    BfBezier::get_itersections(inters, bezier2, bezier2a);
+    
 
 
     std::vector<BfVertex3> bezier2_vertices(bezier2_vert.size());

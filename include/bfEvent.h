@@ -117,6 +117,21 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_ADD_CURVE_SET_TO_CURVE_HOLDER			 =  0x38,
 
 	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_CURVE_HOLDER   =  0x39,
+
+	BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_SUCCESS				 =  0x40,
+	BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_FAILURE				 = -0x40,
+
+	BF_ACTION_TYPE_BIND_GEOMETRY_HOLDER						 =  0x41,
+
+	BF_ACTION_TYPE_DEALLOC_GEOMETRY_SET						 =  0x42,
+
+	BF_ACTION_TYPE_ADD_GEOMETRY_SET_TO_GEOMETRY_HOLDER		 =  0x43,
+
+	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_GEOMETRY_HOLDER = 0x44,
+
+	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_SUCCESS				 =  0x45,
+	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_FAILURE				 = -0x45,
+
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -221,7 +236,21 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x37,  "BfCurveSet was deallocated:"},
 	
 	{ 0x38,  "BfCurveSet was added to BfCurveHolder:"},
-	{ 0x39,  "VmaAllocator was bound to bound BfCurveHolder"}
+	{ 0x39,  "VmaAllocator was bound to bound BfCurveHolder"},
+
+	{ 0x40,  "BfGeometrySet was allocated successfully:" },
+	{-0x40,  "BfGeometrySet wasn't allocated:" },
+			 
+	{ 0x41,  "BfGeometryHolder was bound"},
+			 
+	{ 0x42,  "BfGeometrySet was deallocated:"},
+			 
+	{ 0x43,  "BfGeometrySet was added to BfGeometryHolder:"},
+			 
+	{ 0x44,  "VmaAllocator was bound to bound BfGeometryHolder"},
+
+	{ 0x45, "Vertices/Indices/BfGeometryData was added to set:"},
+	{-0x45, "Vertices/Indices/BfGeometryData wasn't added to set:"}
 };
 
 
@@ -231,7 +260,9 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_USER_EVENT = 0x4,
 	BF_SINGLE_EVENT_TYPE_CHECK_EVENT = 0x8,
 	BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT = 0x10,
-	BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT = 0x20
+	BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT = 0x20,
+	BF_SINGLE_EVENT_TYPE_GEOMETRY_HOLDER_EVENT = 0x40,
+	BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT = 0x80
 };
 
 enum class BfEnMultipleEventType {

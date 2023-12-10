@@ -273,9 +273,255 @@ public:
 
 
 };
+//
+
+enum BfeGeometrySetType {
+	BF_GEOMETRY_TYPE_UNDERFINED = -1,
+
+	BF_GEOMETRY_TYPE_CURVE_BEZIER = 0,
+	BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER = 0x0A,
+	
+	BF_GEOMETRY_TYPE_CURVE_LINEAR = 1
+
+};
 
 
+static inline const std::map<BfeGeometrySetType, size_t> BfmGeometrySetTypeMaxElementsCount{
+	{BF_GEOMETRY_TYPE_CURVE_BEZIER, 1000},
+	{BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 1000},
 
+	{BF_GEOMETRY_TYPE_CURVE_LINEAR, 10000}
+};
+
+static inline const std::map<BfeGeometrySetType, size_t> BfmGeometrySetTypeMaxNumberOfVertices{
+	{BF_GEOMETRY_TYPE_CURVE_BEZIER, 100},
+	{BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 50},
+
+	{BF_GEOMETRY_TYPE_CURVE_LINEAR, 2}
+};
+
+struct BfGeometryData {
+	VkDeviceSize index_offset;
+	BfObjectData obj_data;
+
+	size_t vertices_count;
+	size_t indices_count;
+};
+
+struct BfGeometrySet {
+// Variables
+	VmaAllocator outside_allocator;
+
+	bool	 is_fully_allocated;
+	uint32_t allocated_elements_count;
+	uint32_t ready_elements_count;
+
+	BfeGeometrySetType type;
+
+	std::vector<BfGeometryData>  datas;
+	std::vector<BfVertex3>	  vertices;
+	std::vector<uint16_t>	  indices;
+
+	BfAllocatedBuffer vertices_buffer;
+	BfAllocatedBuffer indices_buffer;
+
+
+// Methods
+	BfGeometrySet() : BfGeometrySet(nullptr) {};
+	BfGeometrySet(VmaAllocator _outside_allocator) {
+		this->is_fully_allocated = false;
+		this->outside_allocator = _outside_allocator;
+		this->allocated_elements_count = 0;
+		this->ready_elements_count = 0;
+		this->type = BF_GEOMETRY_TYPE_UNDERFINED;
+	}
+
+	void set_up(BfeGeometrySetType _type, size_t elements_count, VmaAllocator allocator) {
+		outside_allocator = allocator;
+		type = _type;
+		is_fully_allocated = false;
+
+		datas.resize(elements_count);
+
+		this->allocate(type, elements_count);
+
+		ready_elements_count = 0;
+
+		vertices.resize(BfmGeometrySetTypeMaxNumberOfVertices.at(type) *
+			//BfmCurveTypeMaxElementsCount.at(type)
+			elements_count
+		);
+
+		indices.resize(BfmGeometrySetTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+			//BfmCurveTypeMaxElementsCount.at(type)
+			elements_count
+		);
+	}
+
+	void write_to_buffers() {
+
+		void* vertex_data;
+		vmaMapMemory(outside_allocator, vertices_buffer.allocation, &vertex_data);
+		{
+			memcpy(vertex_data, vertices.data(), sizeof(BfVertex3) * vertices.size());
+		}
+		vmaUnmapMemory(outside_allocator, vertices_buffer.allocation);
+
+		void* index_data;
+		vmaMapMemory(outside_allocator, indices_buffer.allocation, &index_data);
+		{
+			memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+		}
+		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
+	}
+
+	void update_object_data(VmaAllocation allocation) {
+		void* pobjects_data;
+
+		std::vector<BfObjectData> objects_data(this->ready_elements_count);
+
+		for (size_t i = 0; i < objects_data.size(); i++) {
+			objects_data[i] = this->datas[i].obj_data;
+		}
+
+		vmaMapMemory(outside_allocator, allocation, &pobjects_data);
+		{
+			memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
+		}
+		vmaUnmapMemory(outside_allocator, allocation);
+	}
+
+	BfEvent add_data(std::vector<BfVertex3>& _vertices, std::vector<uint16_t>& _indices, BfObjectData obj_data) {
+		
+		BfSingleEvent event{};
+		if (++ready_elements_count > allocated_elements_count) {
+			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
+			event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_FAILURE;
+			event.info = ("All objects in geometry set with type = " + std::to_string(type) + "are ready, memory for additional object wasn't allocated");
+			return event;
+		}
+
+		BfGeometryData* pCurve_data = &datas[ready_elements_count - 1];
+
+		pCurve_data->vertices_count = _vertices.size();
+		pCurve_data->indices_count = _indices.size();
+		pCurve_data->obj_data = obj_data;
+
+		size_t index_offset;
+		size_t vertex_offset;
+
+		if (ready_elements_count == 1) {
+			pCurve_data->index_offset = 0;
+
+			index_offset = 0;
+			vertex_offset = 0;
+		}
+		else {
+			BfGeometryData* pCurve_data_previous = &datas[ready_elements_count - 2];
+			pCurve_data->index_offset = pCurve_data->indices_count * sizeof(BfVertex3) + pCurve_data_previous->index_offset;
+
+			index_offset = 0;
+			vertex_offset = 0;
+
+			for (int i = 0; i < ready_elements_count - 1; i++) {
+				vertex_offset += datas[i].vertices_count;
+				index_offset += datas[i].indices_count;
+			}
+		}
+		pCurve_data->index_offset = index_offset;
+
+
+		if (_vertices.size() == _indices.size()) {
+			for (size_t i = 0; i < _vertices.size(); i++) {
+				vertices[i + vertex_offset] = _vertices[i];
+				indices[i + index_offset] = _indices[i] + index_offset;
+			}
+		}
+		else {
+
+
+			for (size_t i = 0; i < _vertices.size(); i++) {
+				vertices[i + vertex_offset] = _vertices[i];
+			}
+
+			for (size_t i = 0; i < _indices.size(); i++) {
+				indices[i + index_offset] = _indices[i] + index_offset;
+			}
+		}
+
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_SUCCESS;
+		event.info = "New geometry vertices/indices/BfObjectData was added to BfGeometrySet = " + std::to_string(type);
+		return event;
+	}
+
+	BfEvent allocate(BfeGeometrySetType type, size_t elements_count) {
+
+		// Size for vertex buffer
+		size_t max_vertices_size =						// Sizes:
+			sizeof(BfVertex3) *							// Of 1 vertex 
+			BfmGeometrySetTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+			elements_count;
+		//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
+
+	// Create vertex buffer for loading to GPU
+		bfCreateBuffer(&vertices_buffer,
+			outside_allocator,
+			max_vertices_size,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		// Size for vertex buffer
+		size_t max_indices_size =						// Sizes:
+			sizeof(uint16_t) *							// Of 1 index
+			BfmGeometrySetTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
+			elements_count;
+		//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
+
+	// Create index buffer for loading to GPU
+		bfCreateBuffer(&indices_buffer,
+			outside_allocator,
+			max_indices_size,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		BfSingleEvent event{};
+		{
+			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+			std::stringstream ss; ss << "BfGeometrySet for type = " << this->type
+				<< ", Index buffer status: " << this->vertices_buffer.is_allocated
+				<< "; Vertex buffer status: " << this->indices_buffer.is_allocated;
+
+			event.info = ss.str();
+
+			if (this->indices_buffer.is_allocated && this->vertices_buffer.is_allocated) {
+				is_fully_allocated = true;
+				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_SUCCESS;
+				allocated_elements_count = elements_count;
+			}
+			else {
+				is_fully_allocated = false;
+				event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_GEOMETRY_SET_FAILURE;
+			}
+		}
+		return BfEvent(event);
+	}
+
+	BfEvent deallocate() {
+		vmaDestroyBuffer(outside_allocator, vertices_buffer.buffer, vertices_buffer.allocation);
+		vmaDestroyBuffer(outside_allocator, indices_buffer.buffer, indices_buffer.allocation);
+
+		BfSingleEvent event{};
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_HOLDER_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_DEALLOC_GEOMETRY_SET;
+		event.info = " BfGeometrySet for type = " + std::to_string(this->type);
+		return BfEvent(event);
+	}
+};
+
+
+//
 enum BfeCurveType {
 	BF_CURVE_TYPE_UNDERFINED = -1,
 	BF_CURVE_TYPE_BEZIER = 0,
@@ -302,6 +548,7 @@ struct BfCurveData {
 	size_t vertices_count;
 	size_t indices_count;
 };
+
 
 
 struct BfCurveSet {
@@ -524,6 +771,9 @@ struct BfCurveSet {
 		return BfEvent(event);
 	}
 };
+
+
+
 
 
 
