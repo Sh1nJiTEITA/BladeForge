@@ -129,9 +129,12 @@ public:
 class BfBezier {
 	
 	uint32_t n;
+	glm::vec3 basic_color;
+
 	std::vector<glm::vec3> vertices;
 	std::vector<BfVertex3> c_vertices;
 
+	
 public:
 
 	/*
@@ -142,9 +145,11 @@ public:
 	* Initializes inner input vertices and output vertices arrays with length 0.
 	* 
 	*/
-	BfBezier() : n{ 0 }, vertices{}, c_vertices{} {}
+	BfBezier() : n{ 0 }, vertices{}, c_vertices{}, basic_color{1.0f,1.0f,1.0f} {}
 
-	BfBezier(uint32_t in_n, std::vector<BfVertex3>& in_vertices) : n{ in_n } 
+	BfBezier(uint32_t in_n, std::vector<BfVertex3>& in_vertices, glm::vec3 in_color = {1.0f,1.0f,1.0f})
+		: n{ in_n }
+		, basic_color{ in_color }
 	{
 		if (in_n+1 != static_cast<uint32_t>(in_vertices.size())) {
 			throw std::runtime_error("Input bezier data is incorrect: vec.size() != in_n");
@@ -157,7 +162,12 @@ public:
 		}
 	}
 
-	
+	void set_color(glm::vec3 color) {
+		this->basic_color = color;
+		if (!c_vertices.empty()) {
+			this->update_vertices(c_vertices.size());
+		}
+	}
 
 	/*
 	* Certain initialization:
@@ -169,7 +179,10 @@ public:
 	*
 	*/
 
-	BfBezier(uint32_t in_n, std::vector<glm::vec3> in_vertices) : n{in_n}, vertices{in_vertices} {
+	BfBezier(uint32_t in_n, std::vector<glm::vec3> in_vertices, glm::vec3 in_color = {1.0f,1.0f,1.0f})
+		: n{in_n}
+		, vertices{in_vertices} 
+		, basic_color{ in_color } {
 		if (in_n+1 != static_cast<uint32_t>(in_vertices.size())) {
 			throw std::runtime_error("Input bezier data is incorrect: vec.size() != in_n");
 		}
@@ -208,6 +221,7 @@ public:
 			t = static_cast<float>(i) / static_cast<float>(v_count-1);
 			c_vertices[i].pos = get_single_vertex(t);
 			c_vertices[i].normals = get_direction_normal(t);
+			c_vertices[i].color = basic_color;
 		}
 	}
 	
@@ -425,7 +439,7 @@ public:
 		}
 		
 
-		return BfBezier(k, new_define_vertices);
+		return BfBezier(k, new_define_vertices, basic_color);
 	}
 
 	/*
@@ -468,7 +482,7 @@ public:
 				new_input_vertices[i] = ((float)(k - i) * this->vertices[i] + (float)i * this->vertices[i-1]) / (float)(k);
 			}
 		}
-		return BfBezier(k, new_input_vertices);
+		return BfBezier(k, new_input_vertices, basic_color);
 	}
 	// TODO 
 	BfBezier get_lower_order() {

@@ -234,7 +234,7 @@ BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data)
 BfEvent bfAddBezierCurveToHolder(const BfBezier& o, const BfObjectData& obj_data)
 {
 	BfGeometryHolder* pHolder = bfGetpGeometryHolder();
-	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR);
+	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER);
 
 	const size_t cvert_count = o.get_cvertices().size();
 	std::vector<uint16_t> line_indices(cvert_count);

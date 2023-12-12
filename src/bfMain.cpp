@@ -87,16 +87,16 @@ void BfMain::__start_loop()
 
     double previousTime = glfwGetTime();
 
-   
-   
-    
+
+
+
 
     BfMesh dynamic_mesh;
     int dots_size = 3;
 
     double __PI = 3.141592653589793238462643383279502884;
 
-    
+
     /*std::vector<bfVertex> plain_vertices0{
         {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
@@ -113,7 +113,7 @@ void BfMain::__start_loop()
 
     std::vector<uint16_t> plain_indices0{
         0,1,2,2,3,0
-    }; 
+    };
 
 
     std::vector<bfVertex> cube_vertices{
@@ -123,35 +123,35 @@ void BfMain::__start_loop()
         {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{-0.5f,  0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 0.0f,  1.0f}},
-                       
+
         {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
         {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
         {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{-0.5f,  0.5f,  0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
-                       
+
         {{-0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
         {{-0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
         {{-0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
-                      
+
         {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
         {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{ 0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{ 0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{ 0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
         {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
-                           
+
         {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{ 0.5f, -0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
         {{ 0.5f, -0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
         {{-0.5f, -0.5f,  0.5f,}, {  0.0f, 0.0f,  1.0f}},
         {{-0.5f, -0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
-                             
+
         {{-0.5f,  0.5f, -0.5f,}, {  0.0f, 1.0f,  1.0f}},
         {{ 0.5f,  0.5f, -0.5f,}, {  1.0f, 1.0f,  1.0f}},
         {{ 0.5f,  0.5f,  0.5f,}, {  1.0f, 0.0f,  1.0f}},
@@ -186,7 +186,7 @@ void BfMain::__start_loop()
      {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
      {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
      {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-                                              
+
      {{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}},
      {{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
      {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f} },
@@ -272,13 +272,13 @@ void BfMain::__start_loop()
         {1.234, 8.901, 3.456},
         {6.789, 4.567, 7.890},
         {2.345, 9.012, 1.234},
-        
+
     };
 
     std::vector<BfVertex3> basises_vertices{
         {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}},
         {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}},
-        
+
         {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f}, {0.0f,0.0f,0.0f}},
         {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f}, {0.0f,0.0f,0.0f}},
 
@@ -286,90 +286,22 @@ void BfMain::__start_loop()
         {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f}, {0.0f,0.0f,0.0f}}
     };
 
-    std::vector<uint16_t> basises_indices{
-        0,1,
-        2,3,
-        4,5
-    };
+    
 
     //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
     //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, 0.0f}, {2.5f, 1.5f,0.0f} });
 
     BfBezier bezier2(3, { {0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95,0.0f},{1.4, 2.4, 0.0f} });
-    //BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
     BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
 
-    std::vector<BfVertex3> bezier2_vert = bezier2.update_and_get_vertices(30);
-    std::vector<BfVertex3> bezier2a_vert = bezier2a.update_and_get_vertices(30);
-    
-    std::vector<std::pair<glm::vec3, glm::vec3>> inters;
     
 
-
-    std::vector<BfVertex3> bezier2_vertices(bezier2_vert.size());
-    std::vector<BfVertex3> bezier2a_vertices(bezier2a_vert.size());
-    std::vector<uint16_t> bezier2_indices(bezier2_vert.size());
-    std::vector<uint16_t> bezier2a_indices(bezier2a_vert.size());
-    
-    for (size_t i = 0; i < bezier2_vert.size(); i++) {
-        bezier2_vertices[i].pos = bezier2_vert[i].pos;
-        bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
-        bezier2_indices[i] = (uint16_t)i;
-    }
-    for (size_t i = 0; i < bezier2a_vert.size(); i++) {
-        bezier2a_vertices[i].pos = bezier2a_vert[i].pos;
-        bezier2a_vertices[i].color = glm::vec3(1.0f, 0.0f, 0.0f);
-        bezier2a_indices[i] = (uint16_t)i;
-    }
-
-
-
-    int planes_count = 1;
-    BfMeshHandler mesh_handler(planes_count+1);
-    BfMeshHandler::bind_mesh_handler(&mesh_handler);
-
-    //for (int i = 0; i <= planes_count; i++) {
-    //    
-    //    if (i == planes_count) {
-    //        mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
-    //        BfMesh* pMesh = mesh_handler.get_pMesh(i);
-    //        pMesh->model_matrix = glm::mat4(1.0f);
-    //        //pMesh->vertices = basises_vertices;
-    //        pMesh->indices = basises_indices;
-
-    //        mesh_handler.load_mesh_to_buffers(__base.allocator, i);
-    //    }
-    //    else {
-    //        mesh_handler.allocate_mesh(__base.allocator, i, BF_MESH_TYPE_CURVE);
-    //        BfMesh* pMesh = mesh_handler.get_pMesh(i);
-    //        
-    //        glm::mat4 tr{ 1.0f };
-    //        tr = glm::translate(tr, glm::vec3(0.0f, 0.0f, 1.0f * (i + 1)));
-    //        //tr = glm::rotate(tr, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //        
-    //        pMesh->model_matrix = tr;
-    //        pMesh->vertices = bezier2_vertices;//cube_vertices;
-    //        pMesh->indices = bezier2_indices;//cube_indices;
-
-    //        mesh_handler.load_mesh_to_buffers(__base.allocator, i);
-
-    //    }
-    //}
 
 // CURVE-SET
     // Bezier
-    //BfCurveSet bezier_set(BF_CURVE_TYPE_BEZIER, 10, __base.allocator);
+    
     bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 10);
 
-    std::vector<BfVertex3> set_bezier2_vertices(bezier2_vert.size());
-    std::vector<uint16_t> set_bezier2_indices(bezier2_vert.size());
-    for (int i = 0; i < bezier2_vert.size(); i++) {
-        set_bezier2_vertices[i].pos = bezier2_vert[i].pos;
-        set_bezier2_vertices[i].color = glm::vec3(1.0f, 1.0f, 1.0f);
-        set_bezier2_vertices[i].normals = glm::vec3(0.0f, 0.0f, 0.0f);
-        set_bezier2_indices[i] = i;
-
-    }
     int bezier_count = 1;
 
     std::vector<BfObjectData> set_bezier2_obj_data(bezier_count);
@@ -380,14 +312,8 @@ void BfMain::__start_loop()
         bfAddBezierCurveToHolder(bezier2, set_bezier2_obj_data[i]);
         bfAddBezierCurveToHolder(bezier2a, set_bezier2_obj_data[i]);
 
-        //__geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2_vertices, bezier2_indices, set_bezier2_obj_data[i]);
-        //__geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->add_data(bezier2a_vertices, bezier2a_indices, set_bezier2_obj_data[i]);
     }
 
-    //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data1);
-    //__curve_holder.get_curve_set(BF_CURVE_TYPE_BEZIER)->add_curve(set_bezier2_vertices, set_bezier2_indices, set_bezier2_obj_data2);
-
-    //BfCurveSet::bind_curve_set(&bezier_set);
 
     __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->write_to_buffers();
 
@@ -396,36 +322,28 @@ void BfMain::__start_loop()
     //BfCurveSet linear_set(BF_CURVE_TYPE_LINEAR, 3, __base.allocator);
 
     bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_LINEAR, 3);
-    std::vector<BfVertex3> set_linear_basises1_vertices{
-        {{0.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
-        {{10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}},
-    };
+   
     BfObjectData set_linear_besises1_obj_data{};
     set_linear_besises1_obj_data.id = 0;
     set_linear_besises1_obj_data.model_matrix = glm::mat4(1.0f);
 
-    std::vector<BfVertex3> set_linear_basises2_vertices{
-        {{0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,0.0f,0.0f}},
-        {{0.0f,10.0f,0.0f},{0.0f,1.0f,0.0f},{0.0f,0.0f,0.0f}},
-    };
     BfObjectData set_linear_besises2_obj_data{};
     set_linear_besises2_obj_data.id = 1;
     set_linear_besises2_obj_data.model_matrix = glm::mat4(1.0f);
 
-    std::vector<BfVertex3> set_linear_basises3_vertices{
-        {{0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,0.0f}},
-        {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,0.0f}},
-    };
     BfObjectData set_linear_besises3_obj_data{};
     set_linear_besises3_obj_data.id = 2;
     set_linear_besises3_obj_data.model_matrix = glm::mat4(1.0f);
 
-    std::vector<uint16_t> set_linear_basises_indices{
-        0,1
-    };
-    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises1_vertices, set_linear_basises_indices, set_linear_besises1_obj_data);
-    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises2_vertices, set_linear_basises_indices, set_linear_besises2_obj_data);
-    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->add_data(set_linear_basises3_vertices, set_linear_basises_indices, set_linear_besises3_obj_data);
+    BfLine ort_x({ {0.0f,0.0f,0.0f}, {1.0f,0.0f,0.0f} }, { {10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f} });
+    BfLine ort_y({ {0.0f,0.0f,0.0f},{0.0f,1.0f,0.0f} }, { { 0.0f,10.0f,0.0f }, { 0.0f,1.0f,0.0f } });
+    BfLine ort_z({ {0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f} }, { {0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f} });
+
+
+    bfAddLineToHolder(ort_x, set_linear_besises1_obj_data);
+    bfAddLineToHolder(ort_y, set_linear_besises2_obj_data);
+    bfAddLineToHolder(ort_z, set_linear_besises3_obj_data);
+
     __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->write_to_buffers();
 
     
@@ -437,8 +355,8 @@ void BfMain::__start_loop()
     std::string pos_string;
     std::string center_string;
 
-    BfMesh* pMesh1 = mesh_handler.get_pMesh(0);
-    BfMesh* pMesh2 = mesh_handler.get_pMesh(1);
+    //BfMesh* pMesh1 = mesh_handler.get_pMesh(0);
+    //BfMesh* pMesh2 = mesh_handler.get_pMesh(1);
     glm::vec3 pos_vec{ 0.0f,0.0f,0.0f };
     
     bool is_x_rotating = false;
@@ -482,7 +400,7 @@ void BfMain::__start_loop()
             ImGui::SliderFloat("+y", &__base.py, -1.0f, 1.0f);
             ImGui::SliderFloat("+z", &__base.pz, -1.0f, 1.0f);
 
-            ImGui::BeginTable("Move Objets", 2);
+            /*ImGui::BeginTable("Move Objets", 2);
                 
                 ImGui::TableNextRow();
 
@@ -523,9 +441,9 @@ void BfMain::__start_loop()
                     pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
                 }
 
-            ImGui::EndTable();
+            ImGui::EndTable();*/
 
-            ImGui::Checkbox("x_rot", &is_x_rotating);
+           /* ImGui::Checkbox("x_rot", &is_x_rotating);
             ImGui::Checkbox("y_rot", &is_y_rotating);
             ImGui::Checkbox("z_rot", &is_z_rotating);
 
@@ -541,7 +459,7 @@ void BfMain::__start_loop()
             {
                 pMesh1->model_matrix = glm::rotate(pMesh1->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
                 pMesh2->model_matrix = glm::rotate(pMesh2->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
-            }
+            }*/
 
             if (ImGui::Button("Toggle Front-vec")) {
                 __base.window->front *= -1;
@@ -566,22 +484,22 @@ void BfMain::__start_loop()
 
        
         
-        BfExecutionTime::BeginTimeCut("Vertices-present");
+        /*BfExecutionTime::BeginTimeCut("Vertices-present");
             __present_vertices(&mesh_handler);
-        BfExecutionTime::EndTimeCut("Vertices-present");
+        BfExecutionTime::EndTimeCut("Vertices-present");*/
 
 
 
         ImGui::End();
         ImGui::Render();
 
-        bfDrawFrame(__base, dynamic_mesh, mesh_handler);
+        bfDrawFrame(__base);
 
     }
 
     std::cout << "uniform-ave:" << BfExecutionTime::GetAverageTimeCut("uniform") << " median: " << BfExecutionTime::GetMedianTimeCut("uniform") << "\n";
-    std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("dynamic-mesh") << " median: " << BfExecutionTime::GetMedianTimeCut("dynamic-mesh") << "\n";
-    std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("Vertices-present") << " median: " << BfExecutionTime::GetMedianTimeCut("Vertices-present") << "\n";
+    //std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("dynamic-mesh") << " median: " << BfExecutionTime::GetMedianTimeCut("dynamic-mesh") << "\n";
+    //std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("Vertices-present") << " median: " << BfExecutionTime::GetMedianTimeCut("Vertices-present") << "\n";
     vkDeviceWaitIdle(__base.device);
 
 

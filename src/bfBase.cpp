@@ -2064,7 +2064,7 @@ void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 	vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
 }
 
-void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
+void bfDrawFrame(BfBase& base)
 {
 	// VK_TRUE - wait all fences
 	vkWaitForFences(base.device, 1, base.frame_pack[base.current_frame].frame_in_flight_fence, VK_TRUE, UINT64_MAX);
@@ -2096,14 +2096,14 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 		bfUpdateUniformBuffer(base);
 	BfExecutionTime::EndTimeCut("uniform");
 
-	BfExecutionTime::BeginTimeCut("dynamic-mesh");
+	/*BfExecutionTime::BeginTimeCut("dynamic-mesh");
 		bfUploadDynamicMesh(base, mesh);
-	BfExecutionTime::EndTimeCut("dynamic-mesh");
+	BfExecutionTime::EndTimeCut("dynamic-mesh");*/
 
 	vkResetFences(base.device, 1, &local_fence_in_flight);
 
 	vkResetCommandBuffer(local_standart_command_bufffer, 0);
-	bfMainRecordCommandBuffer(base, mesh, handler);
+	bfMainRecordCommandBuffer(base);
 
 
 	VkSubmitInfo submitInfo{};
@@ -2157,7 +2157,7 @@ void bfDrawFrame(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
 	base.current_frame = (base.current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void bfMainRecordCommandBuffer(BfBase& base, BfMesh& mesh, BfMeshHandler& handler)
+void bfMainRecordCommandBuffer(BfBase& base)
 {
 	// Depth buffer
 	VkCommandBufferBeginInfo beginInfo{};
