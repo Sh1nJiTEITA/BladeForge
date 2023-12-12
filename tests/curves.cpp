@@ -356,4 +356,20 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	for (int i = 0; i < bezier3_lessl_vert.size(); i++) {
 		std::cout << "(" << bezier3_lessl_vert[i].pos.x << ", " << bezier3_lessl_vert[i].pos.y << ", " << bezier3_lessl_vert[i].pos.z << "), ";
 	}
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "Handles" << std::endl;
+
+	std::vector<BfVertex3> handles_vertices = _bezier3.get_handles_vertices(100);
+	std::vector<uint16_t> handles_indices = _bezier3.get_handles_indices();
+	std::vector<glm::vec3> handles_centers = _bezier3.get_vertices();
+
+	for (int i = 0; i < handles_vertices.size(); i++) {
+		std::cout << "(" << handles_vertices[i].pos.x << ", " << handles_vertices[i].pos.y << ", " << handles_vertices[i].pos.z << "), ";
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < handles_centers.size(); i++) {
+		std::cout << "(" << handles_centers[i].x << ", " << handles_centers[i].y << ", " << handles_centers[i].z << "), ";
+	}
 }

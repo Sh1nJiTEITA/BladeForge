@@ -71,6 +71,7 @@ struct BfGeometryHolder {
 	void update_obj_data(VmaAllocation allocation);
 	void draw_indexed(VkCommandBuffer command_buffer);
 
+
 	static BfGeometryHolder* __bfpGeometryHolder;
 };
 
@@ -78,10 +79,11 @@ struct BfGeometryHolder {
 BfEvent bfBindGeometryHolderOutsideAllocator(VmaAllocator _outside_allocator);
 BfEvent bfBindGeometryHolder(BfGeometryHolder* curve_holder);
 BfEvent bfAllocateGeometrySet(BfeGeometrySetType type, size_t elements_count);
+BfEvent bfBindGraphicsPipeline(BfeGeometrySetType type, VkPipeline* pipeline, BfePipelineType ptype);
 BfGeometryHolder* bfGetpGeometryHolder();
 
-BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data);
-BfEvent bfAddBezierCurveToHolder(const BfBezier& o, const BfObjectData& obj_data);
+void bfAddToHolder(const BfLine& o, const BfObjectData& obj_data);
+void bfAddToHolder(const BfBezier& o, const BfObjectData& obj_data);
 
 
 #endif 

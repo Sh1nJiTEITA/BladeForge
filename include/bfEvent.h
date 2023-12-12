@@ -132,6 +132,8 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_SUCCESS				 =  0x45,
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_FAILURE				 = -0x45,
 
+	BF_ACTION_TYPE_BIND_GRAPHICS_PIPELINE_TO_GEOMETRY_SET	 =  0x46,
+
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -250,7 +252,9 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x44,  "VmaAllocator was bound to bound BfGeometryHolder"},
 
 	{ 0x45, "Vertices/Indices/BfGeometryData was added to set:"},
-	{-0x45, "Vertices/Indices/BfGeometryData wasn't added to set:"}
+	{-0x45, "Vertices/Indices/BfGeometryData wasn't added to set:"},
+
+	{ 0x46, "Graphics pipeline was bound to BfGeometrySet: "}
 };
 
 

@@ -24,6 +24,51 @@
 int32_t bfGetFactorial(int32_t n);
 uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
+class BfHandle {
+	std::array<BfVertex3, 4> __vertices;
+	BfVertex3 __center;
+
+	glm::vec3 __color;
+	float __len;
+
+public:
+
+	BfHandle(const BfVertex3& center, const float& len, const glm::vec3& color)
+		: __center{ center }
+		, __color{ color }
+		, __len{ len } {}
+
+	BfHandle() : BfHandle(BfVertex3(), 1.0f, { 1.0f,0.0f,1.0f }) {}
+
+	void update_vertices() {
+		glm::vec3 v1 = glm::normalize(glm::cross(__center.normals, glm::vec3(1.0f, 0.0f, 0.0f)));
+		glm::vec3 v2 = glm::normalize(glm::cross(__center.normals, v1));
+
+		__vertices[0].pos = __center.pos + v1 * __len * 0.5f + v2 * __len * 0.5f;
+		__vertices[1].pos = __center.pos - v1 * __len * 0.5f + v2 * __len * 0.5f;
+		__vertices[2].pos = __center.pos - v1 * __len * 0.5f - v2 * __len * 0.5f;
+		__vertices[3].pos = __center.pos + v1 * __len * 0.5f - v2 * __len * 0.5f;
+
+		for (auto& it : __vertices) {
+			it.color = __color;
+			it.normals = __center.normals;
+		}
+	}
+
+	const std::array<BfVertex3, 4>& get_vertices() {
+		return __vertices;
+	}
+
+	const std::array<BfVertex3, 4>& update_and_get_vertices() {
+		this->update_vertices();
+		return this->get_vertices();
+	}
+
+	std::array<uint16_t, 4> get_indices() {
+		return { 0, 1, 2, 3 };
+	}
+};
+
 
 /*
 * BfLine class provides opportunity to work with lines defined by 2 glm::vec3 points.
@@ -162,12 +207,6 @@ public:
 		}
 	}
 
-	void set_color(glm::vec3 color) {
-		this->basic_color = color;
-		if (!c_vertices.empty()) {
-			this->update_vertices(c_vertices.size());
-		}
-	}
 
 	/*
 	* Certain initialization:
@@ -185,6 +224,20 @@ public:
 		, basic_color{ in_color } {
 		if (in_n+1 != static_cast<uint32_t>(in_vertices.size())) {
 			throw std::runtime_error("Input bezier data is incorrect: vec.size() != in_n");
+		}
+	}
+
+	/*
+	* Sets general color for whole Bezier curve.
+	* 
+	* Needed: glm::vec3 color - color
+	* 
+	*/
+
+	void set_color(glm::vec3 color) {
+		this->basic_color = color;
+		if (!c_vertices.empty()) {
+			this->update_vertices(c_vertices.size());
 		}
 	}
 
@@ -291,7 +344,7 @@ public:
 	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
 	* 
 	*/
-	glm::vec3 get_direction_tangent(float t) {
+	glm::vec3 get_direction_tangent(float t) const {
 		glm::vec3 tangent = this->get_single_derivative_1(t);
 		float d = glm::sqrt(tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z);
 
@@ -305,10 +358,7 @@ public:
 	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
 	*
 	*/
-	glm::vec3 get_direction_normal(float t) {
-		
-		
-
+	glm::vec3 get_direction_normal(float t) const {
 		glm::vec3 a = this->get_direction_tangent(t);
 		glm::vec3 b = glm::normalize(a + this->get_single_derivative_2_e(t));
 		glm::vec3 r = glm::normalize(glm::cross(b, a));
@@ -325,7 +375,7 @@ public:
 	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
 	*
 	*/
-	glm::vec3 get_single_derivative_1(float t) {
+	glm::vec3 get_single_derivative_1(float t) const {
 		
 		int k = n - 1;
 		glm::vec3 out(0.0f);
@@ -385,7 +435,7 @@ public:
 	* Needed: t - relative Bezier curve parameter, standart value of t = [0, 1]
 	*
 	*/
-	glm::vec3 get_single_derivative_2_e(float t) {
+	glm::vec3 get_single_derivative_2_e(float t) const {
 		glm::vec3 out(0.0f);
 		
 		if (this->n == 1) return out;
@@ -816,6 +866,76 @@ public:
 		return ave / (float)c_vertices.size();
 	}
 
+	/*
+	* Returns array of BfVertex3 vertices of calculated handles.
+	* 
+	* Needed: float length -> length of rectangle side
+	*		  glm::vec3 color -> general color of whole handle
+	* 
+	*/
+	std::vector<BfVertex3> get_handles_vertices(float length = 1.0f, glm::vec3 color = {1.0f, 0.0f, 1.0f}) const {
+		std::vector<BfVertex3> vertices(4 * this->vertices.size());
+
+		size_t offset = 0;
+		for (size_t i = 0; i < this->vertices.size(); i++) {
+			BfVertex3 center{};
+			center.pos = this->vertices[i];
+			center.normals = this->get_vertex_normal_by_curve(i);
+			
+			BfHandle handle(center, length, color);
+			handle.update_vertices();
+
+			std::copy(handle.get_vertices().begin(), handle.get_vertices().end(), vertices.begin() + offset);
+
+			offset += 4;
+		}
+		return vertices;
+	}
+
+	/*
+	* Returns array of uint16_t indices of calculated handles for index-drawing.
+	*
+	* Needed:	1. float length -> length of rectangle side
+	*			2. glm::vec3 color -> general color of whole handle
+	*
+	*/
+	std::vector<uint16_t> get_handles_indices() const {
+		std::vector<uint16_t> indices(vertices.size() * 6);
+
+		size_t offset = 0;
+		for (size_t i = 0; i < indices.size(); i+=6) {
+			indices[i + 0] = static_cast<uint16_t>(offset+0);
+			indices[i + 1] = static_cast<uint16_t>(offset+1);
+			indices[i + 2] = static_cast<uint16_t>(offset+2);
+			indices[i + 3] = static_cast<uint16_t>(offset+2);
+			indices[i + 4] = static_cast<uint16_t>(offset+3);
+			indices[i + 5] = static_cast<uint16_t>(offset+0);
+			offset += 4;
+		}
+		return indices;
+	}
+
+	std::vector<BfVertex3> get_carcass_vertices(glm::vec3 color = {1.0f, 0.0f, 1.0f}) const {
+		std::vector<BfVertex3> vertices(this->vertices.size());
+
+		for (size_t i = 0; i < vertices.size(); i++) {
+			vertices[i].pos = this->vertices[i];
+			vertices[i].color = color;
+			vertices[i].normals = this->get_vertex_normal_by_curve(i);
+		}
+
+		return vertices;
+	}
+
+	std::vector<uint16_t> get_carcass_indices() const {
+		std::vector<uint16_t> indices(this->vertices.size());
+
+		for (size_t i = 0; i < indices.size(); i++) {
+			indices[i] = static_cast<uint16_t>(i);
+		}
+		return indices;
+	}
+
 	std::vector<glm::vec3> get_length_grad(std::vector<bool> is_working) {
 		if (is_working.size() != (this->n + 1)) {
 			throw std::runtime_error("!_P");
@@ -1214,7 +1334,21 @@ public:
 		return len;
 	}
 	
+private:
+	/*
+	* Returns normal of defining vertex (defined by index in vertices array)
+	* 
+	* Needed: index - index of defining vertex in this->vertices
+	* 
+	* TODO make 3D workable
+	*/
+	glm::vec3 get_vertex_normal_by_curve(size_t index) const {
+		return glm::cross(this->get_direction_normal(0.5f), this->get_direction_tangent(0.5f));
+	}
 };
+
+
+
 
 
 

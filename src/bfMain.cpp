@@ -286,43 +286,92 @@ void BfMain::__start_loop()
         {{0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f}, {0.0f,0.0f,0.0f}}
     };
 
-    
+
 
     //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, -1.0f}, {2.5f, 1.5f,4.0f} });
     //BfBezier bezier2(2, { {0.0f, 0.0f, 0.0f}, {0.0f, 3.5f, 0.0f}, {2.5f, 1.5f,0.0f} });
 
-    BfBezier bezier2(3, { {0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95,0.0f},{1.4, 2.4, 0.0f} });
-    BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
+    //BfBezier bezier2(3, { {0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95,0.0f},{1.4, 2.4, 0.0f} });
+    BfBezier bezier2(3, { {-0.5, 0.1, 0.0f}, {-0.1, 0.7, 0.0f}, {0.1, 0.7,0.0f},{0.5, 0.1, 0.0f} });
+    bezier2.set_color({ 0.7,0.6,0.4 });
+    bezier2.update_vertices(50);
 
+    std::vector<glm::vec3> grad = bezier2.get_length_grad({ 0, 1, 1, 0 });
+    
+    //BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
+    float lam = 0.1;
+    size_t nuu = 20;
+
+    std::vector<BfBezier> bez_less(1+ nuu);
+    bez_less[0] = bezier2;
+
+
+    for (int i = 1; i < nuu; i++) {
+      
+        
+        std::vector<glm::vec3> dp = bez_less[i - 1].get_vertices();
+        std::vector<glm::vec3> dp_less = bez_less[i - 1].get_length_grad({ 0,1,1,0 });
+
+        for (int j = 0; j < dp.size(); j++) {
+            dp[j] -= lam * dp_less[j];
+        }
+
+        bez_less[i] = BfBezier(3, dp);
+        bez_less[i].update_vertices(50);
+    }
+
+    BfBezier bezier2a(3, 
+        { {0.2 - lam*grad[0].x, 1.5 - lam * grad[0].y, 0.0f - lam * grad[0].z},
+        {1.2 - lam * grad[1].x, 0.2 - lam * grad[1].y, 0.0f - lam * grad[1].z},
+        {2.2 - lam * grad[2].x, 0.95 - lam * grad[2].y,0.0f - lam * grad[2].z},
+        {1.4 - lam * grad[3].x, 2.4 - lam * grad[3].y, 0.0f - lam * grad[3].z}});
+    
+
+    bezier2a.set_color({ 0.3,0.7,0.9 });
+
+    bezier2a.update_vertices(50);
     
 
 
 // CURVE-SET
     // Bezier
     
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 10);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 60);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 60);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, 60);
 
-    int bezier_count = 1;
+    bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_CURVE_BEZIER, &__base.line_pipeline, BF_GRAPHICS_PIPELINE_LINES);
+    bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, &__base.triangle_pipeline, BF_GRAPHICS_PIPELINE_TRIANGLE);
+    bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, &__base.line_pipeline, BF_GRAPHICS_PIPELINE_LINES);
+
+    int bezier_count = 1+ nuu;
 
     std::vector<BfObjectData> set_bezier2_obj_data(bezier_count);
     for (int i = 0; i < bezier_count; i++) {
         set_bezier2_obj_data[i].id = 0;
-        set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
+        set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), //glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
+            glm::vec3(1.0f, 1.0f, 1.0f));
 
-        bfAddBezierCurveToHolder(bezier2, set_bezier2_obj_data[i]);
-        bfAddBezierCurveToHolder(bezier2a, set_bezier2_obj_data[i]);
+        bfAddToHolder(bez_less[i], set_bezier2_obj_data[i]);
+       //bfAddToHolder(bezier2, set_bezier2_obj_data[i]);
+       //bfAddToHolder(bezier2a, set_bezier2_obj_data[i]);
 
+ 
     }
 
 
     __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER)->write_to_buffers();
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER)->write_to_buffers();
+    __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER)->write_to_buffers();
 
     // Linear
 
     //BfCurveSet linear_set(BF_CURVE_TYPE_LINEAR, 3, __base.allocator);
 
     bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_LINEAR, 3);
-   
+    bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_CURVE_LINEAR, &__base.line_pipeline, BF_GRAPHICS_PIPELINE_LINES);
+
+
     BfObjectData set_linear_besises1_obj_data{};
     set_linear_besises1_obj_data.id = 0;
     set_linear_besises1_obj_data.model_matrix = glm::mat4(1.0f);
@@ -340,9 +389,9 @@ void BfMain::__start_loop()
     BfLine ort_z({ {0.0f,0.0f,0.0f},{0.0f,0.0f,1.0f} }, { {0.0f,0.0f,10.0f},{0.0f,0.0f,1.0f} });
 
 
-    bfAddLineToHolder(ort_x, set_linear_besises1_obj_data);
-    bfAddLineToHolder(ort_y, set_linear_besises2_obj_data);
-    bfAddLineToHolder(ort_z, set_linear_besises3_obj_data);
+    bfAddToHolder(ort_x, set_linear_besises1_obj_data);
+    bfAddToHolder(ort_y, set_linear_besises2_obj_data);
+    bfAddToHolder(ort_z, set_linear_besises3_obj_data);
 
     __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->write_to_buffers();
 

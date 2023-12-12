@@ -69,6 +69,24 @@ BfEvent bfAllocateGeometrySet(BfeGeometrySetType type, size_t elements_count)
 	return BfEvent(event);
 }
 
+BfEvent bfBindGraphicsPipeline(BfeGeometrySetType type, VkPipeline* pipeline, BfePipelineType ptype)
+{
+	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
+	BfGeometrySet* pGeometrySet = pGeometryHolder->get_geometry_set(type);
+
+	pGeometrySet->pPipeline = pipeline;
+	pGeometrySet->pipeline_type = ptype;
+
+	BfSingleEvent event{};
+	{
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_HOLDER_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_BIND_GRAPHICS_PIPELINE_TO_GEOMETRY_SET;
+		event.info = "Geometry set of type = " + std::to_string(type);
+	}
+
+	return event;
+}
+
 
 
 BfGeometryHolder* bfGetpGeometryHolder()
@@ -199,8 +217,47 @@ void BfGeometryHolder::update_obj_data(VmaAllocation allocation)
 void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 {
 	size_t geometry_sets_count = this->allocated_geometries;
+	
+	std::vector<BfGeometrySet*> line_pipeline_sets;
+	std::vector<uint32_t> line_offsets;
+	std::vector<BfGeometrySet*> triangle_pipeline_sets;
+	std::vector<uint32_t> triangle_offsets;
 
-	uint32_t index_offset = 0;
+	uint32_t c_offset = 0;
+	for (size_t i = 0; i < geometry_sets_count; i++) {
+		BfGeometrySet* pGeometrySet = get_geometry_set_by_index(i);
+		
+		if (pGeometrySet->pPipeline == nullptr) {
+			throw std::runtime_error("Graphics pipeline wasn't bound to BfGeometry set, which was going to draw");
+		}
+
+		if (pGeometrySet->pipeline_type == BF_GRAPHICS_PIPELINE_LINES) {
+			line_pipeline_sets.push_back(pGeometrySet);
+			line_offsets.push_back(c_offset);
+			c_offset += pGeometrySet->ready_elements_count;
+		}
+		else if (pGeometrySet->pipeline_type == BF_GRAPHICS_PIPELINE_TRIANGLE) {
+			triangle_pipeline_sets.push_back(pGeometrySet);
+			triangle_offsets.push_back(c_offset);
+			c_offset += pGeometrySet->ready_elements_count;
+		}
+		else {
+			throw std::runtime_error("Graphics pipeline type is not supported or wasn't specified");
+		}
+	}
+
+	vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *line_pipeline_sets[0]->pPipeline);
+	for (size_t i = 0; i < line_pipeline_sets.size(); i++) {
+		line_pipeline_sets[i]->draw_indexed(command_buffer, line_offsets[i]);
+	}
+
+	vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *triangle_pipeline_sets[0]->pPipeline);
+	for (size_t i = 0; i < triangle_pipeline_sets.size(); i++) {
+		triangle_pipeline_sets[i]->draw_indexed(command_buffer, triangle_offsets[i]);
+	}
+	
+
+	/*uint32_t index_offset = 0;
 
 	for (size_t i = 0; i < geometry_sets_count; i++) {
 		BfGeometrySet* pGeometrySet = get_geometry_set_by_index(i);
@@ -208,11 +265,12 @@ void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 		pGeometrySet->draw_indexed(command_buffer, index_offset);
 
 		index_offset += pGeometrySet->ready_elements_count;
-	}
+	}*/
 }
 
 
-BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data)
+
+void bfAddToHolder(const BfLine& o, const BfObjectData& obj_data)
 {
 	BfGeometryHolder* pHolder = bfGetpGeometryHolder();
 	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR);
@@ -228,21 +286,34 @@ BfEvent bfAddLineToHolder(const BfLine& o, const BfObjectData& obj_data)
 	};
 
 	pSet->add_data(line_vertices, line_indices, obj_data);
-	return BfEvent();
 }
 
-BfEvent bfAddBezierCurveToHolder(const BfBezier& o, const BfObjectData& obj_data)
+void bfAddToHolder(const BfBezier& o, const BfObjectData& obj_data)
 {
 	BfGeometryHolder* pHolder = bfGetpGeometryHolder();
-	BfGeometrySet* pSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER);
+	
+	BfGeometrySet* pCurveSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CURVE_BEZIER);
+	BfGeometrySet* pHandleSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER);
+	BfGeometrySet* pCarcassSet = pHolder->get_geometry_set(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER);
 
+	// --- Curve -----------------------------------------------------------------------//
 	const size_t cvert_count = o.get_cvertices().size();
 	std::vector<uint16_t> line_indices(cvert_count);
 
 	for (size_t i = 0; i < cvert_count; i++) {
 		line_indices[i] = i;
 	}
+	pCurveSet->add_data(o.get_cvertices(), line_indices, obj_data);
 
-	pSet->add_data(o.get_cvertices(), line_indices, obj_data);
-	return BfEvent();
+	// --- Handle ----------------------------------------------------------------------//
+	std::vector<BfVertex3> handle_vertices = o.get_handles_vertices(0.05f, {0.0f, 1.0f, 0.0f});
+	std::vector<uint16_t> handle_indices = o.get_handles_indices();
+	pHandleSet->add_data(handle_vertices, handle_indices, obj_data);
+
+
+	// --- Carcass ---------------------------------------------------------------------//
+	std::vector<BfVertex3> carcass_vertices = o.get_carcass_vertices();
+	std::vector<uint16_t> carcass_indices = o.get_carcass_indices();
+	pCarcassSet->add_data(carcass_vertices, carcass_indices, obj_data);
 }
+

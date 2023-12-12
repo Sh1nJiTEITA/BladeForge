@@ -303,6 +303,11 @@ static inline const std::map<BfeGeometrySetType, size_t> BfmGeometrySetTypeMaxNu
 	{BF_GEOMETRY_TYPE_CURVE_LINEAR, 2}
 };
 
+enum BfePipelineType {
+	BF_GRAPHICS_PIPELINE_LINES = 0,
+	BF_GRAPHICS_PIPELINE_TRIANGLE = 1
+};
+
 struct BfGeometryData {
 	VkDeviceSize index_offset;
 	BfObjectData obj_data;
@@ -328,6 +333,8 @@ struct BfGeometrySet {
 	BfAllocatedBuffer vertices_buffer;
 	BfAllocatedBuffer indices_buffer;
 
+	VkPipeline* pPipeline;
+	BfePipelineType pipeline_type;
 
 // Methods
 	BfGeometrySet() : BfGeometrySet(nullptr) {};
@@ -337,6 +344,7 @@ struct BfGeometrySet {
 		this->allocated_elements_count = 0;
 		this->ready_elements_count = 0;
 		this->type = BF_GEOMETRY_TYPE_UNDERFINED;
+		this->pPipeline = nullptr;
 	}
 
 	void set_up(BfeGeometrySetType _type, size_t elements_count, VmaAllocator allocator) {
@@ -501,11 +509,11 @@ struct BfGeometrySet {
 
 			index_offset = 0;
 			vertex_offset = 0;
-
 			for (int i = 0; i < ready_elements_count - 1; i++) {
 				vertex_offset += datas[i].vertices_count;
 				index_offset += datas[i].indices_count;
 			}
+			
 		}
 		pCurve_data->index_offset = index_offset;
 
@@ -523,9 +531,18 @@ struct BfGeometrySet {
 				vertices[i + vertex_offset] = pVertices[i];
 			}
 
-			for (size_t i = 0; i < countIndices; i++) {
-				indices[i + index_offset] = pIndices[i] + index_offset;
+			if (this->pipeline_type == BF_GRAPHICS_PIPELINE_LINES) {
+				for (size_t i = 0; i < countIndices; i++) {
+					indices[i + index_offset] = pIndices[i] + index_offset;
+				}
 			}
+			else if (this->pipeline_type == BF_GRAPHICS_PIPELINE_TRIANGLE) {
+				for (size_t i = 0; i < countIndices; i++) {
+					indices[i + index_offset] = pIndices[i] + (index_offset / 6 * 4);
+				}
+			}
+
+			
 		}
 
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
