@@ -202,6 +202,7 @@ void BfGeometryHolder::update_obj_data(VmaAllocation allocation)
 
 		for (size_t j = 0; j < pGeometrySet->ready_elements_count; j++) {
 			obj_data[last_obj_data_index + j] = pGeometrySet->datas[j].obj_data;
+			obj_data[last_obj_data_index + j].index = j;
 		}
 		last_obj_data_index += pGeometrySet->ready_elements_count;
 	}
@@ -224,6 +225,9 @@ void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 	std::vector<uint32_t> triangle_offsets;
 
 	uint32_t c_offset = 0;
+
+	//BfExecutionTime::BeginTimeCut("filter_mesh");
+	
 	for (size_t i = 0; i < geometry_sets_count; i++) {
 		BfGeometrySet* pGeometrySet = get_geometry_set_by_index(i);
 		
@@ -246,6 +250,10 @@ void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 		}
 	}
 
+	//BfExecutionTime::EndTimeCut("filter_mesh");
+
+	//BfExecutionTime::BeginTimeCut("draw_mesh");
+
 	vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *line_pipeline_sets[0]->pPipeline);
 	for (size_t i = 0; i < line_pipeline_sets.size(); i++) {
 		line_pipeline_sets[i]->draw_indexed(command_buffer, line_offsets[i]);
@@ -256,6 +264,7 @@ void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 		triangle_pipeline_sets[i]->draw_indexed(command_buffer, triangle_offsets[i]);
 	}
 	
+	//BfExecutionTime::EndTimeCut("draw_mesh");
 
 	/*uint32_t index_offset = 0;
 

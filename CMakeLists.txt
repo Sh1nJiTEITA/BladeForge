@@ -22,7 +22,7 @@ set(VULKAN_DIR
 set(PROJECT_NAME "BladeForge")
 project(${PROJECT_NAME})
 
-# Shaders (PRE-BUILD) 
+# Shaders (PRE-BUIL D) 
 # Shader files must be compiled from GLSL to SPIR-V before build is done.
 if (WIN32)
 	execute_process(
@@ -57,6 +57,7 @@ set(SOURCES
 	"src/bfBuffer.cpp"
 	"src/bfUniforms.cpp" 
 	"src/bfMain.cpp"
+	"src/bfCurves2.cpp"
 )
 
 set(HEADERS
@@ -78,6 +79,7 @@ set(HEADERS
 	"include/bfBuffer.h"
 	"include/bfUniforms.h"
 	"include/BfMain.h"
+	"include/bfCurves2.h"
 )
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -169,8 +171,9 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"

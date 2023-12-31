@@ -30,6 +30,7 @@ struct BfFramePack {
 	BfAllocatedBuffer*		uniform_view_buffer;
 	BfAllocatedBuffer*		bezier_points_buffer;
 	BfAllocatedBuffer*		model_matrix_buffer;
+	BfAllocatedBuffer*		pos_pick_buffer;
 
 	VkCommandBuffer*		standart_command_buffer;
 	VkCommandBuffer*		gui_command_buffer;
@@ -80,10 +81,10 @@ struct BfBase {
 	VkDescriptorPool		 standart_descriptor_pool;
 	VkDescriptorPool		 gui_descriptor_pool;
 
-	BfAllocatedBuffer		 dynamic_vertex_buffer;
+	/*BfAllocatedBuffer		 dynamic_vertex_buffer;
 	BfAllocatedBuffer		 dynamic_index_buffer;
 	BfAllocatedBuffer		 bezier_properties_uniform_buffer;
-	char*					 bezier_data;
+	char*					 bezier_data;*/
 
 	VmaAllocator			 allocator;
 	
@@ -133,8 +134,6 @@ BfEvent bfInitImGUI(BfBase& base);
 BfEvent bfCreateDepthBuffer(BfBase& base);
 
 void bfCreateAllocator(BfBase& base);
-void bfAllocateBuffersForDynamicMesh(BfBase& base);
-void bfUploadDynamicMesh(BfBase& base, BfMesh& mesh);
 void bfUploadMesh(BfBase& base, BfMesh& mesh);
 void bfUploadVertices(BfBase& base, BfMesh& mesh);
 void bfUploadIndices(BfBase& base, BfMesh& mesh);

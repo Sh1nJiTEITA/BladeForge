@@ -13,7 +13,8 @@
 struct BfAllocatedBuffer {
 	VkBuffer buffer;
 	VmaAllocation allocation;
-	
+	VmaAllocationInfo allocation_info;
+
 	bool is_allocated;
 	size_t size;
 };
@@ -34,7 +35,8 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer* allocatedBuffer,
 					   VmaAllocator allocator, 
 					   size_t allocSize, 
 					   VkBufferUsageFlags usage, 
-					   VmaMemoryUsage memoryUsage);
+					   VmaMemoryUsage memoryUsage,
+					   VmaAllocationCreateFlags flags = 0);
 
 
 

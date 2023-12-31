@@ -19,6 +19,7 @@
 
 #include "bfBuffer.h"
 #include "bfUniforms.h"
+#include "bfExecutionTime.hpp"
 
 struct bfVertex {
 	glm::vec3 pos;
@@ -388,16 +389,33 @@ struct BfGeometrySet {
 
 	void draw_indexed(VkCommandBuffer command_buffer, uint32_t obj_data_index_offset = 0) {
 		VkDeviceSize offsets[] = { 0 };
+
+		//BfExecutionTime::BeginTimeCut("VkBind");
+
 		vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertices_buffer.buffer, offsets);
 		vkCmdBindIndexBuffer(command_buffer, indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		
+		//BfExecutionTime::EndTimeCut("VkBind");
 
+		//BfExecutionTime::BeginTimeCut("FullDraw");
 		for (size_t i = 0; i < this->ready_elements_count; i++) {
-			BfGeometryData* pData = &datas[i];
-			vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
-		}
+			
+			//BfExecutionTime::BeginTimeCut("GeometryPtr");
 
+			BfGeometryData* pData = &datas[i];
+			
+			//BfExecutionTime::EndTimeCut("GeometryPtr");
+
+
+			//BfExecutionTime::BeginTimeCut("VkDraw");
+			vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
+			//BfExecutionTime::EndTimeCut("VkDraw");
+
+		}
+		//BfExecutionTime::EndTimeCut("FullDraw");
 	
 	}
+
 	void update_object_data(VmaAllocation allocation) {
 		void* pobjects_data;
 

@@ -20,11 +20,12 @@
 //	return BfEvent();
 //}
 
-BfEvent bfCreateBuffer(BfAllocatedBuffer*	allocatedBuffer, 
-					   VmaAllocator			allocator, 
-					   size_t				allocSize, 
-					   VkBufferUsageFlags	usage, 
-					   VmaMemoryUsage		memoryUsage)
+BfEvent bfCreateBuffer(BfAllocatedBuffer*		allocatedBuffer,
+					   VmaAllocator				allocator,
+					   size_t					allocSize,
+					   VkBufferUsageFlags		usage,
+					   VmaMemoryUsage			memoryUsage,
+					   VmaAllocationCreateFlags flags)
 {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -34,6 +35,7 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*	allocatedBuffer,
 
 	VmaAllocationCreateInfo vmaAllocInfo{};
 	vmaAllocInfo.usage = memoryUsage;
+	vmaAllocInfo.flags = flags;
 
 	BfSingleEvent event{};
 	if (vmaCreateBuffer(allocator, 
@@ -41,7 +43,7 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*	allocatedBuffer,
 						&vmaAllocInfo, 
 						&allocatedBuffer->buffer, 
 						&allocatedBuffer->allocation, 
-						nullptr) == VK_SUCCESS) {
+						&allocatedBuffer->allocation_info) == VK_SUCCESS) {
 		
 		allocatedBuffer->is_allocated = true;
 		allocatedBuffer->size = allocSize;

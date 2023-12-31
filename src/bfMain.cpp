@@ -64,7 +64,6 @@ void BfMain::__init()
     bfCreateGUIFrameBuffers(__base);
     bfCreateCommandPool(__base);
 
-    bfAllocateBuffersForDynamicMesh(__base);
     bfCreateGUIDescriptorPool(__base);
     bfCreateStandartCommandBuffers(__base);
     bfCreateGUICommandBuffers(__base);
@@ -300,7 +299,7 @@ void BfMain::__start_loop()
     
     //BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
     float lam = 0.1;
-    size_t nuu = 20;
+    size_t nuu = 7;
 
     std::vector<BfBezier> bez_less(1+ nuu);
     bez_less[0] = bezier2;
@@ -336,9 +335,9 @@ void BfMain::__start_loop()
 // CURVE-SET
     // Bezier
     
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 60);
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 60);
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, 60);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 2000);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 2000);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, 2000);
 
     bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_CURVE_BEZIER, &__base.line_pipeline, BF_GRAPHICS_PIPELINE_LINES);
     bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, &__base.triangle_pipeline, BF_GRAPHICS_PIPELINE_TRIANGLE);
@@ -348,7 +347,7 @@ void BfMain::__start_loop()
 
     std::vector<BfObjectData> set_bezier2_obj_data(bezier_count);
     for (int i = 0; i < bezier_count; i++) {
-        set_bezier2_obj_data[i].id = 0;
+        set_bezier2_obj_data[i].id = i+1;
         set_bezier2_obj_data[i].model_matrix = glm::translate(glm::mat4(1.0f), //glm::vec3(1.0f * i, 1.0f * i, 1.0f * i));
             glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -373,15 +372,15 @@ void BfMain::__start_loop()
 
 
     BfObjectData set_linear_besises1_obj_data{};
-    set_linear_besises1_obj_data.id = 0;
+    set_linear_besises1_obj_data.id = 10001;
     set_linear_besises1_obj_data.model_matrix = glm::mat4(1.0f);
 
     BfObjectData set_linear_besises2_obj_data{};
-    set_linear_besises2_obj_data.id = 1;
+    set_linear_besises2_obj_data.id = 10002;
     set_linear_besises2_obj_data.model_matrix = glm::mat4(1.0f);
 
     BfObjectData set_linear_besises3_obj_data{};
-    set_linear_besises3_obj_data.id = 2;
+    set_linear_besises3_obj_data.id = 10003;
     set_linear_besises3_obj_data.model_matrix = glm::mat4(1.0f);
 
     BfLine ort_x({ {0.0f,0.0f,0.0f}, {1.0f,0.0f,0.0f} }, { {10.0f,0.0f,0.0f},{1.0f,0.0f,0.0f} });
@@ -421,8 +420,19 @@ void BfMain::__start_loop()
 
         // If a second has passed.
 
+        std::array<uint32_t, 32> ddata;
+
+        void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
+
+        memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
+        //void* pDownloadedData = __base.frame_pack[__base.current_frame].pos_pick_alloc_info.pMappedData;
+        //uint32_t* downloadedData = static_cast<uint32_t*>(pDownloadedData);
 
 
+        for (auto& it : ddata) {
+            std::cout << it << " ";
+        }
+        std::cout << "\n";
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -521,13 +531,13 @@ void BfMain::__start_loop()
         ImGui::InputFloat("x", &local_x, 0.1f);
         ImGui::InputFloat("y", &local_y, 0.1f);
 
-        if (ImGui::Button("Add")) {
+       /* if (ImGui::Button("Add")) {
             if ((local_x != 0) and (local_y != 0)) {
                 __base.storage.push_back({ glm::vec2(local_x, local_y) });
                 __base.storage.push_back({ glm::vec2(local_x, local_y) });
             }
 
-        }
+        }*/
 
         
 
@@ -546,9 +556,15 @@ void BfMain::__start_loop()
 
     }
 
-    std::cout << "uniform-ave:" << BfExecutionTime::GetAverageTimeCut("uniform") << " median: " << BfExecutionTime::GetMedianTimeCut("uniform") << "\n";
-    //std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("dynamic-mesh") << " median: " << BfExecutionTime::GetMedianTimeCut("dynamic-mesh") << "\n";
-    //std::cout << "dynamic-ave:" << BfExecutionTime::GetAverageTimeCut("Vertices-present") << " median: " << BfExecutionTime::GetMedianTimeCut("Vertices-present") << "\n";
+    std::cout << BfExecutionTime::GetStr("uniform") << "\n";
+    std::cout << BfExecutionTime::GetStr("draw_indexed") << "\n";
+    std::cout << BfExecutionTime::GetStr("filter_mesh") << "\n";
+    std::cout << BfExecutionTime::GetStr("draw_mesh") << "\n";
+    std::cout << BfExecutionTime::GetStr("VkBind") << "\n";
+    std::cout << BfExecutionTime::GetStr("VkDraw") << "\n";
+    std::cout << BfExecutionTime::GetStr("GeometryPtr") << "\n";
+    std::cout << BfExecutionTime::GetStr("FullDraw") << "\n";
+    
     vkDeviceWaitIdle(__base.device);
 
 

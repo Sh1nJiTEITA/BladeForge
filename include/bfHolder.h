@@ -10,7 +10,7 @@
 #include "bfBuffer.h"
 #include "bfVertex2.hpp"
 #include "bfCurves.hpp"
-
+#include "bfExecutionTime.hpp"
 
 
 
@@ -31,6 +31,7 @@ struct BfHolder {
 	std::vector<BfAllocatedBuffer> uniform_view_buffers;
 	std::vector<BfAllocatedBuffer> bezier_points_buffers;
 	std::vector<BfAllocatedBuffer> model_buffers;
+	std::vector<BfAllocatedBuffer> pos_pick_buffers;
 
 	std::vector<VkDescriptorSet> global_descriptor_sets;
 	std::vector<VkDescriptorSet> main_descriptor_sets;

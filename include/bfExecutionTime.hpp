@@ -18,6 +18,7 @@ typedef struct BfExecutionTime {
 	static void EndTimeCut(std::string name);
 	static float GetAverageTimeCut(std::string name);
 	static float GetMedianTimeCut(std::string name);
+	static std::string GetStr(std::string name);
 
 } BfET;
 
@@ -89,6 +90,15 @@ inline float BfExecutionTime::GetMedianTimeCut(std::string name)
 	auto delta = std::chrono::duration_cast<std::chrono::microseconds>(needed_pair.second - needed_pair.first);
 
 	return delta.count();
+}
+
+inline std::string BfExecutionTime::GetStr(std::string name)
+{
+	std::stringstream message; 
+	message << name << "; Median: " << BfExecutionTime::GetMedianTimeCut(name);
+	message << "; Average: " << BfExecutionTime::GetAverageTimeCut(name);
+	
+	return message.str();
 }
 
 
