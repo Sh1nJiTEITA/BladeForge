@@ -51,6 +51,16 @@ uint16_t BfDrawObject::get_id()
 	return __id.get();
 }
 
+void BfDrawObject::bind_pipeline(std::shared_ptr<VkPipeline> pPipeline)
+{
+	this->__pPipeline = std::move(pPipeline);
+}
+
+void BfDrawObject::bind_pipeline(std::unique_ptr<VkPipeline> pPipeline)
+{
+	this->__pPipeline = std::move(pPipeline);
+}
+
 BfRectangle::BfRectangle(const BfVertex3& left_bot, const BfVertex3& right_top) {
 	
 	glm::vec3 color = this->__get_average_color({ left_bot, right_top });
@@ -97,6 +107,49 @@ BfRectangle::BfRectangle(const BfVertex3& left_bot, const BfVertex3& right_top) 
 		color,
 		normal
 	);
+}
+
+void BfRectangle::calculate_vertices(uint16_t flags)
+{
+	if (flags & BF_DRAW_OBJECT_LINE_MODE_BIT) {
+		__vertices->resize(BF_RECTANGLE_DEF_VERTICES_COUNT);
+		std::copy(__def_vertices->begin(), __def_vertices->end(), __vertices->data());
+	}
+	else if (flags & BF_DRAW_OBJECT_TRIANGLE_MODE_BIT) {
+		__vertices->resize(BF_RECTANGLE_TRIANGLE_MODE_VERTICES_COUNT);
+		__vertices->at(0) = __def_vertices->at(0);
+		__vertices->at(1) = __def_vertices->at(1);
+		__vertices->at(2) = __def_vertices->at(2);
+		__vertices->at(3) = __def_vertices->at(2);
+		__vertices->at(4) = __def_vertices->at(3);
+		__vertices->at(5) = __def_vertices->at(0);
+	}
+	else {
+		throw std::runtime_error("Incorrect input flags");
+	}
+}
+
+void BfRectangle::calculate_indices(uint16_t flags)
+{
+	if (flags & BF_DRAW_OBJECT_LINE_MODE_BIT) {
+		__indices->resize(BF_RECTANGLE_DEF_VERTICES_COUNT);
+		__indices->at(0) = 0;
+		__indices->at(1) = 1;
+		__indices->at(2) = 2;
+		__indices->at(3) = 3;
+	}
+	else if (flags & BF_DRAW_OBJECT_TRIANGLE_MODE_BIT) {
+		__indices->resize(BF_RECTANGLE_TRIANGLE_MODE_VERTICES_COUNT);
+		__indices->at(0) = 0;
+		__indices->at(1) = 1;
+		__indices->at(2) = 2;
+		__indices->at(3) = 3;
+		__indices->at(4) = 4;
+		__indices->at(5) = 5;
+	}
+	else {
+		throw std::runtime_error("Incorrect input flags");
+	}
 }
 
 bool BfRectangle::__check_collineare(const pVecVert3 vert) const {
@@ -180,6 +233,12 @@ bool Bf2DObject::__check_if_all_vertices_in_same_plane(std::initializer_list<BfV
 	return true;
 }
 
+void Bf2DObject::calculate_geometry(uint16_t flags)
+{
+	this->calculate_vertices(flags);
+	this->calculate_indices(flags);
+}
+
 const pVecVert3 Bf2DObject::get_pVertices()
 {
 	return this->__vertices;
@@ -194,6 +253,10 @@ const pVecUint Bf2DObject::get_pIndices()
 BfLayer::BfLayer(const glm::vec3& d, float offset, size_t max_obj)
 	: __direction{d}
 	, __center_offset{offset}
+	, __reserved_objects_count{max_obj}
+	, __vertex_buffer{}
+	, __index_buffer{}
+	, __id{}
 {
 	__objects.reserve(max_obj);
 }
@@ -203,6 +266,10 @@ BfLayer::BfLayer(const BfVertex3& f, const BfVertex3& s, const BfVertex3& t, siz
 {}
 
 BfLayer::BfLayer(const glm::vec3& f, const glm::vec3& s, const glm::vec3& t, size_t max_obj)
+	: __reserved_objects_count{max_obj}
+	, __vertex_buffer{}
+	, __index_buffer{}
+	, __id{}
 {
 	__objects.reserve(max_obj);
 	/*__direction = (glm::cross(s - f, t - f));
@@ -241,6 +308,95 @@ BfLayer::BfLayer(const glm::vec3& f, const glm::vec3& s, const glm::vec3& t, siz
 	__center_offset = -glm::determinant(D);
 }
 
+BfEvent BfLayer::bind_allocator(std::shared_ptr<VmaAllocator> allocator) {
+	__pAllocator = std::move(allocator);
+	
+	BfSingleEvent event{};
+	{
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_LAYER_EVENT;
+		event.action = BfEnActionType::BF_ACTION_TYPE_BIND_ALLOCATOR_TO_BFLAYER;
+		std::stringstream ss;
+		ss << " Allocator = " << allocator.get() << " was bound to "
+			<< "BfLayer with id = " << __id.get();
+		event.info = ss.str();
+	}
+
+	return BfEvent(event);
+}
+BfEvent BfLayer::bind_allocator(std::unique_ptr<VmaAllocator> allocator) {
+	return this->bind_allocator(std::move(allocator));
+}
+BfEvent BfLayer::bind_allocator(VmaAllocator* allocator) {
+	return this->bind_allocator(std::move(allocator));
+}
+
+BfEvent BfLayer::allocate_buffers(size_t max_vertices)
+{
+	size_t max_vertices_size {
+		sizeof(BfVertex3) * // size of 1 vertex
+		max_vertices * // max number of vertices in 1 object
+		__reserved_objects_count // max number of objects
+	};
+		
+	bfCreateBuffer(&__vertex_buffer,
+				   *__pAllocator.get(),
+				   max_vertices_size,
+				   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+				   VMA_MEMORY_USAGE_CPU_TO_GPU);
+	
+	size_t max_indices_size {
+		sizeof(uint16_t) *
+		max_vertices *  
+		__reserved_objects_count
+	};
+	
+
+	bfCreateBuffer(&__index_buffer,
+				   *__pAllocator.get(),
+				   max_indices_size,
+				   VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+				   VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+	BfSingleEvent event{};
+	{
+		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_LAYER_EVENT;
+
+		std::stringstream ss; ss << "BfLayer with id = " << __id.get()
+			<< ", Index buffer status: " << __index_buffer.is_allocated
+			<< "; Vertex buffer status: " << __vertex_buffer.is_allocated;
+
+		event.info = ss.str();
+
+		if (__index_buffer.is_allocated && __vertex_buffer.is_allocated) {
+			__is_allocated = true;
+			event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BFLAYER_SUCCESS;
+			__allocated_objects_count = __reserved_objects_count;
+		}
+		else {
+			__is_allocated = false;
+			event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BFLAYER_FAILURE;
+		}
+	}
+	return BfEvent(event);
+}
+
+void BfLayer::write_to_buffers()
+{
+	void* vertex_data;
+	vmaMapMemory(*__pAllocator.get(), __vertex_buffer.allocation, &vertex_data);
+	{
+		//memcpy(vertex_data, vertices.data(), sizeof(BfVertex3) * vertices.size());
+	}
+	vmaUnmapMemory(*__pAllocator.get(), __vertex_buffer.allocation);
+
+	void* index_data;
+	vmaMapMemory(*__pAllocator.get(), __index_buffer.allocation, &index_data);
+	{
+		//memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+	}
+	vmaUnmapMemory(*__pAllocator.get(), __index_buffer.allocation);
+}
+
 uint16_t BfLayer::add_obj(std::unique_ptr<Bf2DObject> obj)
 {
 	uint16_t id = obj->get_id();
@@ -250,6 +406,10 @@ uint16_t BfLayer::add_obj(std::unique_ptr<Bf2DObject> obj)
 
 uint16_t BfLayer::add_obj(std::shared_ptr<Bf2DObject> obj)
 {
+	if (obj == nullptr) {
+		throw std::runtime_error("Input object ptr is nullptr");
+	}
+	
 	uint16_t id = obj->get_id();
 	__objects.push_back(std::move(obj));
 	return id;
@@ -263,6 +423,11 @@ void BfLayer::delete_obj(uint16_t id)
 			break;
 		}
 	}
+}
+
+const uint16_t BfLayer::get_id() const
+{
+	return __id.get();
 }
 
 std::shared_ptr<Bf2DObject> BfLayer::get_obj(uint16_t id)

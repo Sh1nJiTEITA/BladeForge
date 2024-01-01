@@ -56,6 +56,16 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	layer1.delete_obj(rec_id);
 	REQUIRE(layer1.get_obj(rec_id) == nullptr);
 
+	rec1 = std::make_shared<BfRectangle>(
+		BfRectangle(
+			BfVertex3({ 0,0,0 }, {1.0f,1.0f,1.0f}),
+			BfVertex3({ 1,1,0 }, {1.0f,1.0f,1.0f})
+		)
+	);
+	uint16_t rec_id2 = layer1.add_obj(rec1);
+
+	layer1.get_obj(rec_id2)->calculate_geometry(BF_DRAW_OBJECT_TRIANGLE_MODE_BIT);
+	auto pvec = layer1.get_obj(rec_id2)->get_pVertices();
 
 	//using p_arr = std::shared_ptr<std::vector<int>>;
 

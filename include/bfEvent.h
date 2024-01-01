@@ -134,6 +134,11 @@ enum class BfEnActionType {
 
 	BF_ACTION_TYPE_BIND_GRAPHICS_PIPELINE_TO_GEOMETRY_SET	 =  0x46,
 
+	BF_ACTION_TYPE_BIND_GRAPHICS_PIPELINE_TO_BFLAYER		 =  0x47,
+	BF_ACTION_TYPE_BIND_ALLOCATOR_TO_BFLAYER				 =  0x48,
+
+	BF_ACTION_TYPE_ALLOC_BFLAYER_SUCCESS					 =  0x49,
+	BF_ACTION_TYPE_ALLOC_BFLAYER_FAILURE					 = -0x49
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -254,7 +259,15 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x45, "Vertices/Indices/BfGeometryData was added to set:"},
 	{-0x45, "Vertices/Indices/BfGeometryData wasn't added to set:"},
 
-	{ 0x46, "Graphics pipeline was bound to BfGeometrySet: "}
+	{ 0x46, "Graphics pipeline was bound to BfGeometrySet:"},
+
+	{ 0x47, "Graphics pipeline was bound to BfLayer:"},
+	
+	{ 0x48, "VmaAllocator was bound to BfLayer:"},
+
+	{ 0x49, "Buffers for BfLayer was allocated succefully:"},
+	{-0x49, "Buffers for BfLater wasn't allocated:"}
+
 };
 
 
@@ -266,7 +279,8 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT = 0x10,
 	BF_SINGLE_EVENT_TYPE_CURVE_HOLDER_EVENT = 0x20,
 	BF_SINGLE_EVENT_TYPE_GEOMETRY_HOLDER_EVENT = 0x40,
-	BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT = 0x80
+	BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT = 0x80,
+	BF_SINGLE_EVENT_TYPE_LAYER_EVENT = 0x100,
 };
 
 enum class BfEnMultipleEventType {
