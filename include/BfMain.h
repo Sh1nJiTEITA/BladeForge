@@ -3,6 +3,7 @@
 
 #include "bfBase.h"
 #include "bfCurves.hpp"
+#include "bfCurves2.h"
 
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"

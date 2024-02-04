@@ -58,6 +58,7 @@ set(SOURCES
 	"src/bfUniforms.cpp" 
 	"src/bfMain.cpp"
 	"src/bfCurves2.cpp"
+	"src/bfDrawObject.cpp"
 )
 
 set(HEADERS
@@ -80,6 +81,7 @@ set(HEADERS
 	"include/bfUniforms.h"
 	"include/BfMain.h"
 	"include/bfCurves2.h"
+	"include/bfDrawObject.h"
 )
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -172,8 +174,9 @@ add_subdirectory(external/catch2)
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
@@ -186,7 +189,7 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
 	${SOURCES}
 	${INCLUDES}
-)
+ "src/bfDrawObject.cpp")
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
 #find_package(Vulkan REQUIRED)

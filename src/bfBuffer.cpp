@@ -27,6 +27,8 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*		allocatedBuffer,
 					   VmaMemoryUsage			memoryUsage,
 					   VmaAllocationCreateFlags flags)
 {
+	allocatedBuffer->allocator = allocator;
+
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size  = allocSize;
@@ -58,4 +60,69 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*		allocatedBuffer,
 	}
 
 	return BfEvent(event);
+}
+
+BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator, 
+							 size_t single_vertex_size,
+							 size_t max_vertex_count, 
+							 size_t max_obj_count)
+	: __max_obj_size{ single_vertex_size * max_vertex_count }
+	, __max_obj_count{ max_obj_count }
+{
+	size_t vertex_size = __max_obj_size * __max_obj_count;
+	bfCreateBuffer(&__vertex_buffer,
+				   allocator,
+				   vertex_size,
+				   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+				   VMA_MEMORY_USAGE_CPU_TO_GPU);
+	
+	size_t index_size = sizeof(uint16_t) * max_vertex_count * max_obj_count;
+	bfCreateBuffer(&__index_buffer,
+				   allocator,
+				   index_size,
+				   VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+				   VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+}
+
+const size_t BfLayerBuffer::get_vertex_capacity() const
+{
+	return __vertex_buffer.size;
+}
+
+const size_t BfLayerBuffer::get_index_capacity() const
+{
+	return __index_buffer.size;
+}
+
+void* BfLayerBuffer::map_vertex_memory()
+{
+	vmaMapMemory(__vertex_buffer.allocator, __vertex_buffer.allocation, &__p_vertex_data);
+	return __p_vertex_data;
+}
+
+void* BfLayerBuffer::map_index_memory()
+{
+	vmaMapMemory(__index_buffer.allocator, __index_buffer.allocation, &__p_index_data);
+	return __p_index_data;
+}
+
+void BfLayerBuffer::unmap_vertex_memory()
+{
+	vmaUnmapMemory(__vertex_buffer.allocator, __vertex_buffer.allocation);
+}
+
+void BfLayerBuffer::unmap_index_memory()
+{
+	vmaUnmapMemory(__index_buffer.allocator, __index_buffer.allocation);
+}
+
+VkBuffer* BfLayerBuffer::get_p_vertex_buffer()
+{
+	return &__vertex_buffer.buffer;
+}
+
+VkBuffer* BfLayerBuffer::get_p_index_buffer()
+{
+	return &__index_buffer.buffer;
 }

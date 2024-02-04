@@ -95,14 +95,6 @@ void BfMain::__start_loop()
 
     double __PI = 3.141592653589793238462643383279502884;
 
-
-    /*std::vector<bfVertex> plain_vertices0{
-        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-    };*/
-
     std::vector<bfVertex> plain_vertices0{
         {{0.0, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
@@ -299,7 +291,7 @@ void BfMain::__start_loop()
     
     //BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
     float lam = 0.1;
-    size_t nuu = 7;
+    size_t nuu = 2000;
 
     std::vector<BfBezier> bez_less(1+ nuu);
     bez_less[0] = bezier2;
@@ -335,9 +327,9 @@ void BfMain::__start_loop()
 // CURVE-SET
     // Bezier
     
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 2000);
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 2000);
-    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, 2000);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CURVE_BEZIER, 10000);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, 10000);
+    bfAllocateGeometrySet(BF_GEOMETRY_TYPE_CARCASS_CURVE_BEZIER, 10000);
 
     bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_CURVE_BEZIER, &__base.line_pipeline, BF_GRAPHICS_PIPELINE_LINES);
     bfBindGraphicsPipeline(BF_GEOMETRY_TYPE_HANDLE_CURVE_BEZIER, &__base.triangle_pipeline, BF_GRAPHICS_PIPELINE_TRIANGLE);
@@ -393,8 +385,23 @@ void BfMain::__start_loop()
     bfAddToHolder(ort_z, set_linear_besises3_obj_data);
 
     __geometry_holder.get_geometry_set(BF_GEOMETRY_TYPE_CURVE_LINEAR)->write_to_buffers();
+// NEW LAYER SYSTEM
 
+    BfLayer layer({ 0,0,0 }, { 1,0,0 }, { 1,1,0 });
+    layer.bind_allocator(&__base.allocator);
     
+    auto rectangle_1 = std::make_shared<BfRectangle>(
+        BfVertex3({ 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }),
+        BfVertex3({0.0f,1.0f,0.0f}, {1.0f,1.0f,1.0f})
+    );
+
+    auto rec_id = layer.add_obj(rectangle_1);
+    rectangle_1->calculate_geometry(BF_DRAW_OBJECT_TRIANGLE_MODE_BIT);
+    
+    layer.allocate_buffers(100);
+    layer.write_to_buffers();
+
+
 
 // CURVE-SET
    
@@ -429,10 +436,10 @@ void BfMain::__start_loop()
         //uint32_t* downloadedData = static_cast<uint32_t*>(pDownloadedData);
 
 
-        for (auto& it : ddata) {
+        /*for (auto& it : ddata) {
             std::cout << it << " ";
         }
-        std::cout << "\n";
+        std::cout << "\n";*/
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();

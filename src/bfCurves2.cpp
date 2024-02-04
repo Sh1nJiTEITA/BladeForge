@@ -327,7 +327,7 @@ BfEvent BfLayer::bind_allocator(std::unique_ptr<VmaAllocator> allocator) {
 	return this->bind_allocator(std::move(allocator));
 }
 BfEvent BfLayer::bind_allocator(VmaAllocator* allocator) {
-	return this->bind_allocator(std::move(allocator));
+	return this->bind_allocator(std::make_shared<VmaAllocator>(*allocator));
 }
 
 BfEvent BfLayer::allocate_buffers(size_t max_vertices)
@@ -380,11 +380,25 @@ BfEvent BfLayer::allocate_buffers(size_t max_vertices)
 	return BfEvent(event);
 }
 
-void BfLayer::write_to_buffers()
+void* BfLayer::write_to_buffers()
 {
-	void* vertex_data;
+
+	size_t full_size = 0;
+	for (auto& it : __objects) {
+		full_size += it->get_pVertices()->size() * sizeof(BfVertex3);
+	}
+
+
+
+
+	void* vertex_data;// = operator new(full_size);
 	vmaMapMemory(*__pAllocator.get(), __vertex_buffer.allocation, &vertex_data);
 	{
+		char* current_ptr = static_cast<char*>(vertex_data);
+		for (const auto& ptr : __objects) {
+			std::memcpy(current_ptr, ptr->get_pVertices()->data(), ptr->get_pVertices()->size() * sizeof(BfVertex3));
+			current_ptr += ptr->get_pVertices()->size() * sizeof(BfVertex3);
+		}
 		//memcpy(vertex_data, vertices.data(), sizeof(BfVertex3) * vertices.size());
 	}
 	vmaUnmapMemory(*__pAllocator.get(), __vertex_buffer.allocation);
@@ -392,9 +406,17 @@ void BfLayer::write_to_buffers()
 	void* index_data;
 	vmaMapMemory(*__pAllocator.get(), __index_buffer.allocation, &index_data);
 	{
-		//memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+		char* current_ptr_index = static_cast<char*>(index_data);
+		for (const auto& ptr : __objects) {
+			const auto& indices = ptr->get_pIndices();
+
+
+		}
+
 	}
 	vmaUnmapMemory(*__pAllocator.get(), __index_buffer.allocation);
+
+	return vertex_data;
 }
 
 uint16_t BfLayer::add_obj(std::unique_ptr<Bf2DObject> obj)
@@ -417,9 +439,10 @@ uint16_t BfLayer::add_obj(std::shared_ptr<Bf2DObject> obj)
 
 void BfLayer::delete_obj(uint16_t id)
 {
-	for (auto& it : __objects) {
-		if (it->get_id() == id) {
-			it.reset();
+	for (auto it = __objects.begin(); it != __objects.end(); it++) {
+		if (it->get()->get_id() == id) {
+			it->reset();
+			__objects.erase(it);
 			break;
 		}
 	}
@@ -428,6 +451,15 @@ void BfLayer::delete_obj(uint16_t id)
 const uint16_t BfLayer::get_id() const
 {
 	return __id.get();
+}
+
+const uint16_t BfLayer::get_total_vertex_size() const
+{
+	uint16_t len = 0;
+	for (const auto& it : __objects) {
+		len += it->get_pVertices()->size();
+	}
+	return len;
 }
 
 std::shared_ptr<Bf2DObject> BfLayer::get_obj(uint16_t id)

@@ -9,6 +9,8 @@
 using pVecVert3 = std::shared_ptr<std::vector<BfVertex3>>;
 using pVecUint = std::shared_ptr<std::vector<uint16_t>>;
 
+using VecV3 = std::vector<BfVertex3>;
+using VecUi = std::vector<BfVertex3>;
 
 class Bf2DObject;
 
@@ -58,7 +60,7 @@ public:
 	BfEvent bind_allocator(VmaAllocator* allocator);
 
 	BfEvent allocate_buffers(size_t max_vertices);
-	void write_to_buffers();
+	void* write_to_buffers();
 
 	// Object management
 	uint16_t					add_obj(std::unique_ptr<Bf2DObject> obj); // returns object ID
@@ -67,6 +69,7 @@ public:
 	void						delete_obj(uint16_t id);
 
 	const uint16_t get_id() const;
+	const uint16_t get_total_vertex_size() const;
 
 	static bool is_layers_equal(const BfLayer& f, const BfLayer& s);
 };
@@ -87,9 +90,12 @@ protected:
 
 	
 	std::shared_ptr<VkPipeline> __pPipeline = nullptr;
-	std::shared_ptr<std::vector<BfVertex3>>	__def_vertices = nullptr;
-	std::shared_ptr<std::vector<BfVertex3>> __vertices = nullptr;
-	std::shared_ptr<std::vector<uint16_t>>	__indices = nullptr;
+	/*std::vector<BfVertex3> __def_vertices;
+	std::vector<BfVertex3> __vertices;
+	std::vector<uint16_t>  __indices;*/
+	pVecVert3 __def_vertices;
+	pVecVert3 __vertices;
+	pVecUint __indices;
 
 	bool __is_3D = false;
 	bool __is_changed = false;

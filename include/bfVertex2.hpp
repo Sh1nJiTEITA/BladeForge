@@ -84,7 +84,67 @@ struct BfVertex3 {
 
 		return attributeDescriptions;
 	}
+
+	friend std::ostream& operator<<(std::ostream& os, const BfVertex3& vert) {
+		os << "BfVertex3( p(" << vert.pos.x << ", " << vert.pos.y << ", " << vert.pos.z << "), c("
+			<< vert.color.r << ", " << vert.color.g << ", " << vert.color.b << "), n("
+			<< vert.normals.x << ", " << vert.normals.y << ", " << vert.normals.z << ") )";
+			
+		return os;
+	}
 };
+
+struct BfVertex4 {
+	glm::vec3 pos;
+	glm::vec3 color;
+	glm::vec3 normal;
+	glm::uint32_t obj_id;
+
+	static inline VkVertexInputBindingDescription getBindingDescription() {
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(BfVertex4);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		return bindingDescription;
+	}
+	static inline std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+		std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
+
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].location = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(BfVertex4, pos);
+
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(BfVertex4, color);
+
+		attributeDescriptions[2].binding = 0;
+		attributeDescriptions[2].location = 2;
+		attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[2].offset = offsetof(BfVertex4, normal);
+
+		attributeDescriptions[3].binding = 0;
+		attributeDescriptions[3].location = 2;
+		attributeDescriptions[3].format = VK_FORMAT_R32_UINT;//VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[3].offset = offsetof(BfVertex4, obj_id);
+
+		return attributeDescriptions;
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const BfVertex4& vert) {
+		os << "BfVertex3( p(" << vert.pos.x << ", " << vert.pos.y << ", " << vert.pos.z << "), c("
+			<< vert.color.r << ", " << vert.color.g << ", " << vert.color.b << "), n("
+			<< vert.normal.x << ", " << vert.normal.y << ", " << vert.normal.z << ") obj_id("
+			<< vert.obj_id << ')';
+
+		return os;
+	}
+};
+
+
 
 enum BfeMeshType {
 	BF_MESH_TYPE_TRIANGLE = 0,

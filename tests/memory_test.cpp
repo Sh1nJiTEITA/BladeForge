@@ -21,6 +21,7 @@ struct tC {
 };
 
 
+
 TEST_CASE("CURVES_H", "[single-file]") {
 	
 	REQUIRE(BfID().get() == 0);
@@ -63,9 +64,34 @@ TEST_CASE("CURVES_H", "[single-file]") {
 		)
 	);
 	uint16_t rec_id2 = layer1.add_obj(rec1);
+	uint16_t rec_id3 = layer1.add_obj(rec1);
 
 	layer1.get_obj(rec_id2)->calculate_geometry(BF_DRAW_OBJECT_TRIANGLE_MODE_BIT);
 	auto pvec = layer1.get_obj(rec_id2)->get_pVertices();
+	// Write to buffers // 
+	size_t total_vertex_len = layer1.get_total_vertex_size();
+	std::vector<BfVertex3> wtb_arr;
+	wtb_arr.reserve(total_vertex_len);
+	
+	auto obj1 = layer1.get_obj(rec_id2);
+	auto obj2 = layer1.get_obj(rec_id3);
+	for (size_t i = 0; i < obj1->get_pVertices()->size(); i++) {
+		wtb_arr.push_back(obj1->get_pVertices()->at(i));
+	}
+	for (size_t i = 0; i < obj2->get_pVertices()->size(); i++) {
+		wtb_arr.push_back(obj2->get_pVertices()->at(i));
+	}
+	VmaAllocator allocator{};
+	layer1.bind_allocator(&allocator);
+
+	void* ptr = layer1.write_to_buffers();
+	BfVertex3* ptr3 = static_cast<BfVertex3*>(ptr);
+	for (size_t i = 0; i < layer1.get_total_vertex_size(); i++) {
+		REQUIRE(ptr3[i].pos == wtb_arr[i].pos);
+		REQUIRE(ptr3[i].color == wtb_arr[i].color);
+		REQUIRE(ptr3[i].normals == wtb_arr[i].normals);
+	}
+	
 
 	//using p_arr = std::shared_ptr<std::vector<int>>;
 
