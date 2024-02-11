@@ -22,6 +22,25 @@ public:
 
 class BfDrawObj;
 
+struct BfDrawVar {
+	uint32_t index_count;// = __objects[element_index]->get_indices_count();
+	uint32_t instance_count;// = 1;
+	uint32_t first_index;// = __index_offsets[element_index];
+	uint32_t vertex_offset;// = __vertex_offsets[element_index];
+	uint32_t first_instance;// = 1;
+
+	friend std::ostream& operator<<(std::ostream& s, BfDrawVar v) {
+		s << "("
+			<< "index_count = " << v.index_count
+			<< " instance_count = " << v.instance_count
+			<< " first_index = " << v.first_index
+			<< " vertex_offset = " << v.vertex_offset
+			<< " first_instance = " << v.first_instance << ")";
+		return s;
+	}
+
+};
+
 class BfDrawLayer {
 	BfLayerBuffer __buffer;
 
@@ -43,39 +62,12 @@ public:
 	void add(std::shared_ptr<BfDrawObj> obj);
 	void update_vertex_offset();
 	void update_index_offset();
+	
+	// TODO: global model-matrix descriptor
+	void draw(VkCommandBuffer combuffer, VkPipeline pipeline);
 
 	void check_element_ready(size_t element_index);
 };
-
-	//void draw_indexed(VkCommandBuffer command_buffer, uint32_t obj_data_index_offset = 0) {
-	//	VkDeviceSize offsets[] = { 0 };
-
-	//	//BfExecutionTime::BeginTimeCut("VkBind");
-
-	//	vkCmdBindVertexBuffers(command_buffer, 0, 1, &vertices_buffer.buffer, offsets);
-	//	vkCmdBindIndexBuffer(command_buffer, indices_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-	//	
-	//	//BfExecutionTime::EndTimeCut("VkBind");
-
-	//	//BfExecutionTime::BeginTimeCut("FullDraw");
-	//	for (size_t i = 0; i < this->ready_elements_count; i++) {
-	//		
-	//		//BfExecutionTime::BeginTimeCut("GeometryPtr");
-
-	//		BfGeometryData* pData = &datas[i];
-	//		
-	//		//BfExecutionTime::EndTimeCut("GeometryPtr");
-
-
-	//		//BfExecutionTime::BeginTimeCut("VkDraw");
-	//		vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
-	//		//BfExecutionTime::EndTimeCut("VkDraw");
-
-	//	}
-	//	//BfExecutionTime::EndTimeCut("FullDraw");
-	//
-	//}
-
 
 class BfDrawObj {
 

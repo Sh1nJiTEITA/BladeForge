@@ -1,6 +1,12 @@
 #version 460
 #extension GL_EXT_debug_printf : enable
 
+struct ObjectData {
+    mat4 model_matrix;
+    uint index;
+    uint id;
+};
+
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 model; 
     mat4 view;
@@ -8,22 +14,15 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     vec2 cursor_pos;
 } ubo;
 
+layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
+    ObjectData obj_data[];
+} obj_data_buffer;
+
 #define DEPTH_ARRAY_SCALE 32
 layout(set = 1, binding = 1) buffer cursor_picking {
     uint data[DEPTH_ARRAY_SCALE];
 } cp;
 
-
-
-struct ObjectData {
-    mat4 model_matrix;
-    uint index;
-    uint id;
-};
-
-layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
-    ObjectData obj_data[];
-} obj_data_buffer;
 
 
 

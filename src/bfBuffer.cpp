@@ -52,15 +52,30 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*		allocatedBuffer,
 
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BUFFER_SUCCESS;
+		event.success = true;
 	}
 	else {
 		allocatedBuffer->is_allocated = false;
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_ALLOC_BUFFER_FAILURE;
+		event.success = false;
 	}
 
 	return BfEvent(event);
 }
+
+BfEvent bfDestroyBuffer(BfAllocatedBuffer* allocatedBuffer)
+{
+	vmaDestroyBuffer(allocatedBuffer->allocator, 
+					 allocatedBuffer->buffer, 
+					 allocatedBuffer->allocation);
+	BfSingleEvent event{};
+	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BfEnActionType::BF_ACTION_TYPE_DESTROY_BUFFER;
+	
+	return event;
+}
+
 
 BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator, 
 							 size_t single_vertex_size,

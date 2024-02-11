@@ -677,6 +677,10 @@ BfEvent bfCreateDescriptorSetLayout(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfCreateDiscriptor() {
+	return BfEvent();
+}
+
 BfEvent bfInitDescriptors(BfBase& base)
 {
 // BfEvent recording
@@ -701,9 +705,6 @@ BfEvent bfInitDescriptors(BfBase& base)
 	// pack
 	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
 		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-	if (pHolder->bezier_points_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
-		pHolder->bezier_points_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 	}
 	if (pHolder->model_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
 		pHolder->model_buffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1480,6 +1481,7 @@ BfEvent bfCreateCommandPool(BfBase& base)
 	return BfEvent(event);
 }
 
+// No use
 BfEvent bfCreateUniformBuffers(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();

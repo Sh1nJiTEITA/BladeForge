@@ -64,7 +64,7 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer* allocatedBuffer,
 					   VmaMemoryUsage memoryUsage,
 					   VmaAllocationCreateFlags flags = 0);
 
-
+BfEvent bfDestroyBuffer(BfAllocatedBuffer* allocatedBuffer);
 
 
 

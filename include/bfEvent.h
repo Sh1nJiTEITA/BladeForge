@@ -72,6 +72,18 @@ enum class BfEnActionType {
 	
 	BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_SUCCESS		 =  0x22,
 	BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_FAILURE		 = -0x22,
+	BF_ACTION_TYPE_CREATE_DESCRIPTOR_POOL_SUCSESS			 =  0x22A,
+	BF_ACTION_TYPE_CREATE_DESCRIPTOR_POOL_FAILURE			 = -0x22A,
+	BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_SUCCESS		 =  0x22B,
+	BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_FAILURE		 = -0x22B,
+	BF_ACTION_TYPE_ADD_DESCRIPTOR_CREATE_INFO_SUCCESS		 =  0x22C,
+	BF_ACTION_TYPE_ADD_DESCRIPTOR_CREATE_INFO_FAILURE		 =  0x22C,
+	BF_ACTION_TYPE_DESTROY_BF_DESCRIPTOR_BUFFERS			 =  0x22D,
+	BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_SETS_SUCCESS			 =  0x22E,
+	BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_SETS_FAILURE			 = -0x22E,
+	BF_ACTION_TYPE_UPDATE_DESCRIPTOR_SETS					 =  0x22F,
+	BF_ACTION_TYPE_DESTROY_DESCRIPTOR_POOL					 =  0x22A0,
+	BF_ACTION_TYPE_DESTROY_DESCRIPTOR_SET_LAYOUTS			 =  0x22A1,
 
 	BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS					 =  0x23,
 	BF_ACTION_TYPE_READ_SHADER_FILE_FAILURE					 = -0x23,
@@ -93,6 +105,7 @@ enum class BfEnActionType {
 
 	BF_ACTION_TYPE_ALLOC_BUFFER_SUCCESS						 =  0x29,
 	BF_ACTION_TYPE_ALLOC_BUFFER_FAILURE						 = -0x29,
+	BF_ACTION_TYPE_DESTROY_BUFFER							 =  0x29A,
 
 	BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS				 =  0x30,
 	BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE				 = -0x30,
@@ -200,6 +213,18 @@ const std::map<int, std::string> bfSetActionsStr{
 
 	{ 0x22,  "VkDescriptorSetLayout was created successfully"},
 	{-0x22,  "VkDescriptorSetLayout wasn't created sucessfully"},
+	{ 0x22A, "VkDescriptorPool was created successfully"},
+	{-0x22A, "VkDEscriptorPoll wasn't created"},
+	{ 0x22B, "BfAllocated buffers for BfDescriptor was successfully allocated"},
+	{-0x22B, "BfAllocated buffers for BfDescriptor wasn't allocated:"},
+	{ 0x22C, "BfDescriptorCreateInfo was added to BfDescriptor"},
+	{-0x22C, "BfDescriptorCreateInfo wasn't added to BfDescriptor"},
+	{ 0x22D, "Buffers in BfDescriptor were destroyed"},
+	{ 0x22E, "BfDescriptor sets were successfully allocated:"},
+	{-0x22E, "BfDescriptor sets were not allocated:"},
+	{ 0x22F, "BfDescriptor sets were updated"},
+	{ 0x22A0,"VkDescriptorPool was destroyed in BfDescriptor"},
+	{ 0x22A1,"VkDescriptorSetLayouts were destoyed in BfDescriptor"},
 
 	{ 0x23,  "Shader file was read successfully:"},
 	{-0x23,  "Shader file wasn't read successfully:"},
@@ -281,6 +306,7 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_GEOMETRY_HOLDER_EVENT = 0x40,
 	BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT = 0x80,
 	BF_SINGLE_EVENT_TYPE_LAYER_EVENT = 0x100,
+	BF_SINGLE_EVENT_TYPE_DESTROY_EVENT = 0x200
 };
 
 enum class BfEnMultipleEventType {
@@ -293,6 +319,7 @@ struct BfSingleEvent {
 	BfEnActionType			action;
 	std::string				info;
 	std::time_t				time;
+	bool					success = true;
 };
 
 struct BfMultipleEvent {

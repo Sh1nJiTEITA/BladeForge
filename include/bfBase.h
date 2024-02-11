@@ -27,10 +27,10 @@ struct BfImagePack {
 struct BfFramePack {
 	void*					uniform_view_data;
 
-	BfAllocatedBuffer*		uniform_view_buffer;
-	BfAllocatedBuffer*		bezier_points_buffer;
-	BfAllocatedBuffer*		model_matrix_buffer;
-	BfAllocatedBuffer*		pos_pick_buffer;
+	// Discriptors
+	BfAllocatedBuffer*		uniform_view_buffer; // For VIEW
+	BfAllocatedBuffer*		model_matrix_buffer; // For object model matrix
+	BfAllocatedBuffer*		pos_pick_buffer;	 // For picking object
 
 	VkCommandBuffer*		standart_command_buffer;
 	VkCommandBuffer*		gui_command_buffer;
@@ -107,6 +107,7 @@ struct BfBase {
 };
 
 
+
 // Main functions
 BfEvent bfCreateInstance(BfBase& base);
 BfEvent bfCreateDebugMessenger(BfBase& base);
@@ -118,7 +119,7 @@ BfEvent bfCreateImageViews(BfBase& base);
 BfEvent bfCreateStandartRenderPass(BfBase& base);
 BfEvent bfCreateGUIRenderPass(BfBase& base);
 BfEvent bfCreateDescriptorSetLayout(BfBase& base);
-BfEvent bfInitDescriptors(BfBase& base); //
+BfEvent bfInitDescriptors(BfBase& base); //Û
 BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);
@@ -147,6 +148,7 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 BfEvent bfaRecreateSwapchain(BfBase& base);
+BfEvent bfCreateDiscriptor();
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);

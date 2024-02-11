@@ -59,6 +59,7 @@ set(SOURCES
 	"src/bfMain.cpp"
 	"src/bfCurves2.cpp"
 	"src/bfDrawObject.cpp"
+	"src/bfDescriptor.cpp"
 )
 
 set(HEADERS
@@ -82,6 +83,7 @@ set(HEADERS
 	"include/BfMain.h"
 	"include/bfCurves2.h"
 	"include/bfDrawObject.h"
+	"include/bfDescriptor.h"
 )
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -189,7 +191,7 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
 	${SOURCES}
 	${INCLUDES}
- "src/bfDrawObject.cpp")
+)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
 #find_package(Vulkan REQUIRED)

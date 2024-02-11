@@ -22,23 +22,15 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     vec2 cursor_pos;
 } ubo;
 
+layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
+    ObjectData obj_data[];
+} obj_data_buffer;
+
 #define DEPTH_ARRAY_SCALE 32
 layout(set = 1, binding = 1) buffer cursor_picking {
     uint data[DEPTH_ARRAY_SCALE];
 } cp;
 
-//layout(set = 0, binding = 1) uniform BezierProperties {
-//    int points_count;
-//} bez;
-//
-//
-//layout(set = 1, binding = 0) buffer BezierPointsBuffer {
-//    int point_i;
-//} bezp;
-
-layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
-    ObjectData obj_data[];
-} obj_data_buffer;
 
 
 layout(location = 0) in vec3 inPosition;

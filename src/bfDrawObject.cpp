@@ -19,7 +19,7 @@ bool BfDrawObj::is_ok()
 	bool decision = !__vertices.empty() * !__indices.empty() * BfObjID::is_id_exists(id);
 
 
-	return false;
+	return decision;
 }
 
 void BfDrawObj::check_ok()
@@ -182,18 +182,39 @@ void BfDrawLayer::update_index_offset()
 	}
 }
 
+void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
+{
+	vkCmdBindVertexBuffers(combuffer, 0, 1, __buffer.get_p_vertex_buffer(), nullptr);
+	vkCmdBindIndexBuffer(combuffer, *__buffer.get_p_index_buffer(), 0, VK_INDEX_TYPE_UINT16);
+	
+	for (size_t i = 0; i < __objects.size(); i++) {
+		vkCmdDrawIndexed(
+			combuffer,
+			__objects[i]->get_indices_count(),
+			1,
+			__index_offsets[i],
+			__vertex_offsets[i],
+			i
+		);
+	}
+}
+
 void BfDrawLayer::check_element_ready(size_t element_index)
 {
 	//vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
-	uint32_t index_count = __objects[element_index]->get_indices_count();
-	uint32_t instance_count = 1;
-	uint32_t first_index = __index_offsets[element_index];
-	uint32_t vertex_offset = __vertex_offsets[element_index];
-	uint32_t  first_instance = 1;
+	
 
 	for (size_t i = 0; i < __objects.size(); i++) {
-		for (size_t j = 0; j < __objects[i]->get_rVertices().size(); j++) {
+		BfDrawVar var{};
+		var.index_count = __objects[i]->get_indices_count();
+		var.instance_count = 1;
+		var.first_index = __index_offsets[i];
+		var.vertex_offset = __vertex_offsets[i];
+		var.first_instance = 1;
 
-		}
+		std::cout << var << "\n";
+		/*for (size_t j = 0; j < __objects[i]->get_vertices_count(); j++) {
+			
+		}*/
 	}
 }
