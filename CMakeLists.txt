@@ -175,8 +175,8 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"

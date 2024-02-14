@@ -57,7 +57,8 @@ void BfMain::__init()
     bfCreateStandartRenderPass(__base);
     bfCreateGUIRenderPass(__base);
 
-    bfInitDescriptors(__base);
+    //bfInitDescriptors(__base);
+    bfInitOwnDescriptors(__base);
     // ToDo
     bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv");
     bfCreateStandartFrameBuffers(__base);

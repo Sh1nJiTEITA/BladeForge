@@ -107,7 +107,8 @@ TEST_CASE("bdDrawObject-x2") {
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	BfDescriptor desc(MAX_FRAMES_IN_FLIGHT);
+	BfDescriptor desc{};
+	desc.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
 	
 	BfDescriptorCreateInfo info_mtx{};
 

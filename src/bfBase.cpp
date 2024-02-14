@@ -733,7 +733,7 @@ BfEvent bfInitDescriptors(BfBase& base)
 					bezier_properties_uniform_buffer_size,
 					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 					VMA_MEMORY_USAGE_CPU_TO_GPU);*/
-	const int MAX_DEPTH_CURSOR_POS_ELEMENTS = 32;
+	//const int MAX_DEPTH_CURSOR_POS_ELEMENTS = 32;
 	const int MAX_BEZIER_POINTS = 1000;
 	const int MAX_OBJECTS = 10000;
 	// Bezier-points
@@ -1055,6 +1055,81 @@ BfEvent bfInitDescriptors(BfBase& base)
 	event.info = ss.str();
 
 	return BfEvent(event);
+}
+
+BfEvent bfInitOwnDescriptors(BfBase& base)
+{
+	base.descriptor.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
+	
+	std::vector<VkDescriptorPoolSize> sizes = {
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10}
+	};
+
+	base.descriptor.create_desc_pool(base.device, sizes);
+	
+	// Model matrix
+	BfDescriptorCreateInfo info_model_mtx{};
+	info_model_mtx.usage = BfDescriptorModelMtxUsage;
+	info_model_mtx.vma_allocator = base.allocator;
+	info_model_mtx.single_buffer_element_size = sizeof(BfObjectData);
+	info_model_mtx.elements_count = MAX_UNIQUE_DRAW_OBJECTS;
+	info_model_mtx.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	info_model_mtx.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	info_model_mtx.vma_alloc_flags = 0;
+
+	info_model_mtx.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	info_model_mtx.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_model_mtx.binding = 0;
+	
+	info_model_mtx.layout_binding = BfDescriptorSetMain;
+	
+	// View matrix
+	BfDescriptorCreateInfo info_view{};
+	info_view.usage = BfDescriptorViewDataUsage;
+	info_view.vma_allocator = base.allocator;
+	info_view.single_buffer_element_size = sizeof(BfUniformView);
+	info_view.elements_count = 1;
+	info_view.vk_buffer_usage_flags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	info_view.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	info_view.vma_alloc_flags = 0;
+
+	info_view.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	info_view.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_view.binding = 0;
+
+	info_view.layout_binding = BfDescriptorSetGlobal;
+
+	// PosPick 
+	BfDescriptorCreateInfo info_pos_pick{};
+	info_pos_pick.usage = BfDescriptorPosPickUsage;
+	info_pos_pick.vma_allocator = base.allocator;
+	info_pos_pick.single_buffer_element_size = sizeof(uint32_t);
+	info_pos_pick.elements_count = MAX_DEPTH_CURSOR_POS_ELEMENTS;
+	info_pos_pick.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	info_pos_pick.vma_memory_usage = VMA_MEMORY_USAGE_AUTO;
+	info_pos_pick.vma_alloc_flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	info_pos_pick.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	info_pos_pick.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_pos_pick.binding = 1;
+
+	info_pos_pick.layout_binding = BfDescriptorSetMain;
+
+	std::vector<BfDescriptorCreateInfo> infos{
+		info_model_mtx,
+		info_pos_pick,
+		info_view
+	};
+
+	base.descriptor.add_descriptor_create_info(infos);
+	base.descriptor.allocate_desc_buffers();
+	base.descriptor.create_desc_set_layouts(base.device);
+	base.descriptor.allocate_desc_sets(base.device);
+	base.descriptor.update_desc_sets(base.device);
+
+	return BfEvent();
 }
 
 

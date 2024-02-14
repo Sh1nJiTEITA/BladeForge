@@ -11,9 +11,14 @@
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
 #include "bfExecutionTime.hpp"
+#include "bfDescriptor.h"
 
 //static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 //static std::vector<BfWindow> bfWindowHolder{};
+
+
+#define MAX_UNIQUE_DRAW_OBJECTS 10000
+#define MAX_DEPTH_CURSOR_POS_ELEMENTS 32
 
 static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -77,7 +82,10 @@ struct BfBase {
 	VkDescriptorSetLayout	 global_set_layout;
 	VkDescriptorSetLayout    main_set_layout;
 
+	BfDescriptor			 descriptor;
+
 	VkCommandPool			 command_pool;
+	
 	VkDescriptorPool		 standart_descriptor_pool;
 	VkDescriptorPool		 gui_descriptor_pool;
 
@@ -120,6 +128,7 @@ BfEvent bfCreateStandartRenderPass(BfBase& base);
 BfEvent bfCreateGUIRenderPass(BfBase& base);
 BfEvent bfCreateDescriptorSetLayout(BfBase& base);
 BfEvent bfInitDescriptors(BfBase& base); //Û
+BfEvent bfInitOwnDescriptors(BfBase& base);
 BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);

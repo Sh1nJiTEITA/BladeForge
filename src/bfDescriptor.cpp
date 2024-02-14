@@ -9,13 +9,13 @@ std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr = {
 VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo create_info, 
 													   VkDescriptorSet set, 
 													   BfAllocatedBuffer* buffer,
-													   VkDescriptorBufferInfo& bufferInfo)
+													   VkDescriptorBufferInfo* bufferInfo)
 {	
 	/*VkDescriptorBufferInfo bufferInfo{};*/
-	bufferInfo.buffer = buffer->buffer;
-	bufferInfo.offset = 0;	// From start
+	bufferInfo->buffer = buffer->buffer;
+	bufferInfo->offset = 0;	// From start
 	// Length in bites of data
-	bufferInfo.range = create_info.elements_count * create_info.single_buffer_element_size;  
+	bufferInfo->range = create_info.elements_count * create_info.single_buffer_element_size;  
 
 	VkWriteDescriptorSet write = {};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -25,7 +25,7 @@ VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo cr
 	write.dstSet = set;
 	write.descriptorCount = 1;
 	write.descriptorType = create_info.type;
-	write.pBufferInfo = &bufferInfo;
+	write.pBufferInfo = bufferInfo;
 
 	return write;
 }
@@ -115,11 +115,12 @@ BfEvent BfDescriptor::create_desc_set_layouts(VkDevice device)
 		// For each layout create bindings (bindings from create info) 
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
 		for (auto& create_info : __desc_create_info_list) {
-
-			auto binding = __get_desc_set_layout_binding(create_info.type,
-														 create_info.shader_stages,
-														 create_info.binding);
-			bindings.push_back(binding);
+			if (create_info.layout_binding == unique_layout_type) {
+				auto binding = __get_desc_set_layout_binding(create_info.type,
+															 create_info.shader_stages,
+															 create_info.binding);
+				bindings.push_back(binding);
+			}
 		}
 		
 		VkDescriptorSetLayoutCreateInfo desc_set_layout_create_info{};
@@ -150,11 +151,9 @@ BfEvent BfDescriptor::create_desc_set_layouts(VkDevice device)
 	return event;
 }
 
-BfDescriptor::BfDescriptor(unsigned int frames_in_flight)
-	: __frames_in_flight{frames_in_flight}
-{
+BfDescriptor::BfDescriptor() {}
 
-}
+
 
 BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
 {
@@ -258,7 +257,9 @@ BfEvent BfDescriptor::update_desc_sets(VkDevice device)
 {
 	for (size_t i = 0; i < __frames_in_flight; i++) {
 		std::vector<VkWriteDescriptorSet> writes;
+		writes.reserve(std::distance(__desc_create_info_list.begin(), __desc_create_info_list.end()));
 		std::vector<VkDescriptorBufferInfo> buffer_infos;
+		buffer_infos.reserve(std::distance(__desc_create_info_list.begin(), __desc_create_info_list.end()));
 
 		size_t j = 0;
 		for (auto& create_info : __desc_create_info_list) {
@@ -269,7 +270,9 @@ BfEvent BfDescriptor::update_desc_sets(VkDevice device)
 				&__desc_buffers_map[create_info.usage][i];
 
 			buffer_infos.emplace_back();
-			writes.emplace_back(__write_desc_buffer(create_info, desc_set, buffer, buffer_infos[j]));
+			//auto write = __write_desc_buffer(create_info, desc_set, buffer, &buffer_infos[j]);
+			//write.pBufferInfo = &buffer_infos[j];
+			writes.emplace_back(__write_desc_buffer(create_info, desc_set, buffer, &buffer_infos[j]));
 			j++;
 		}
 
@@ -339,4 +342,9 @@ BfEvent BfDescriptor::deallocate_desc_buffers()
 		}
 	}
 	return event;
+}
+
+
+void BfDescriptor::set_frames_in_flight(unsigned int in) {
+	__frames_in_flight = in;
 }

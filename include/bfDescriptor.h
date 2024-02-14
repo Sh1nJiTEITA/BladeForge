@@ -23,8 +23,8 @@ extern std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr;
 
 
 enum BfEnDescriptorSetLayoutType {
-	BfDescriptorSetGlobal,
-	BfDescriptorSetMain,
+	BfDescriptorSetGlobal = 0,
+	BfDescriptorSetMain = 1,
 };
 
 struct BfDescriptorCreateInfo {
@@ -53,7 +53,7 @@ struct BfDescriptorLayoutPack {
 
 class BfDescriptor {
 
-	const unsigned int __frames_in_flight;
+	unsigned int __frames_in_flight;
 	
 	// 
 	bool __is_descriptor_mutable = true;
@@ -65,7 +65,8 @@ class BfDescriptor {
 	VkDescriptorPool __desc_pool;
 	
 public:
-	BfDescriptor(unsigned int frames_in_flight);
+	BfDescriptor();
+
 
 	BfEvent add_descriptor_create_info(BfDescriptorCreateInfo info);
 	BfEvent add_descriptor_create_info(std::vector<BfDescriptorCreateInfo> info);
@@ -86,11 +87,12 @@ public:
 	void map_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index, void* data);
 	void unmap_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index);
 
+	void set_frames_in_flight(unsigned int in);
 private:
 	VkWriteDescriptorSet __write_desc_buffer(BfDescriptorCreateInfo create_info,
 											 VkDescriptorSet set,
 											 BfAllocatedBuffer* buffer,
-											 VkDescriptorBufferInfo& bufferInfo);
+											 VkDescriptorBufferInfo* bufferInfo);
 	
 	VkDescriptorSetLayoutBinding  __get_desc_set_layout_binding(VkDescriptorType type, 
 																VkShaderStageFlags stage_flags, 
