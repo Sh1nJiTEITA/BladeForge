@@ -38,10 +38,10 @@ void BfDescriptor::unmap_descriptor(BfEnDescriptorUsage usage, unsigned int fram
 	vmaUnmapMemory(buffer->allocator, buffer->allocation);
 }
 
-void BfDescriptor::map_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index, void* data)
+void BfDescriptor::map_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index, void** data)
 {
 	BfAllocatedBuffer* buffer = &__desc_buffers_map[usage][frame_index];
-	if (vmaMapMemory(buffer->allocator, buffer->allocation, &data) != VK_SUCCESS) {
+	if (vmaMapMemory(buffer->allocator, buffer->allocation, data) != VK_SUCCESS) {
 		throw std::runtime_error("Couldn't map memory for BfDescriptor");
 	}
 }
@@ -57,6 +57,26 @@ VkDescriptorSetLayoutBinding BfDescriptor::__get_desc_set_layout_binding(VkDescr
 	setbind.stageFlags = stage_flags;
 
 	return setbind;
+}
+
+void BfDescriptor::bind_desc_sets(BfEnDescriptorSetLayoutType type,
+								  uint32_t frame_index,
+								  VkCommandBuffer command_buffer, 
+								  VkPipelineLayout pipeline_layout,
+								  uint32_t set_index)
+{
+	vkCmdBindDescriptorSets(
+		command_buffer,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		pipeline_layout,
+		set_index,
+		1,
+		&__desc_layout_packs_map[type].desc_sets[frame_index],//base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+		0,//1,
+		nullptr//&uniform_offset
+	);
+	
+
 }
 
 BfEvent BfDescriptor::create_desc_pool(VkDevice device, 
@@ -347,4 +367,9 @@ BfEvent BfDescriptor::deallocate_desc_buffers()
 
 void BfDescriptor::set_frames_in_flight(unsigned int in) {
 	__frames_in_flight = in;
+}
+
+BfAllocatedBuffer* BfDescriptor::get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index)
+{
+	return &__desc_buffers_map[usage][frame_index];
 }

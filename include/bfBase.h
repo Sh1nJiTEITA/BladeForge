@@ -44,8 +44,8 @@ struct BfFramePack {
 	VkSemaphore*			finish_render_image_semaphore;
 	VkFence*				frame_in_flight_fence;
 	
-	VkDescriptorSet*		global_descriptor_set;
-	VkDescriptorSet*		main_descriptor_set;
+	//VkDescriptorSet*		global_descriptor_set;
+	//VkDescriptorSet*		main_descriptor_set;
 };
 
 

@@ -215,6 +215,36 @@ void BfGeometryHolder::update_obj_data(VmaAllocation allocation)
 	vmaUnmapMemory(this->outside_allocator, allocation);
 }
 
+void BfGeometryHolder::update_obj_data_desc(BfDescriptor& desc, uint32_t frame_index)
+{
+	size_t obj_data_count = 0;
+
+	for (size_t i = 0; i < this->allocated_geometries; i++) {
+		BfGeometrySet* pGeometrySet = this->get_geometry_set_by_index(i);
+		obj_data_count += pGeometrySet->ready_elements_count;
+	}
+
+	std::vector<BfObjectData> obj_data(obj_data_count);
+
+	size_t last_obj_data_index = 0;
+	for (size_t i = 0; i < this->allocated_geometries; i++) {
+		BfGeometrySet* pGeometrySet = this->get_geometry_set_by_index(i);
+
+		for (size_t j = 0; j < pGeometrySet->ready_elements_count; j++) {
+			obj_data[last_obj_data_index + j] = pGeometrySet->datas[j].obj_data;
+			obj_data[last_obj_data_index + j].index = j;
+		}
+		last_obj_data_index += pGeometrySet->ready_elements_count;
+	}
+
+	void* pobjects_data;
+	desc.map_descriptor(BfDescriptorModelMtxUsage, frame_index, &pobjects_data);
+	{
+		memcpy(pobjects_data, obj_data.data(), sizeof(BfObjectData) * obj_data.size());
+	}
+	desc.unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);
+}
+
 void BfGeometryHolder::draw_indexed(VkCommandBuffer command_buffer)
 {
 	size_t geometry_sets_count = this->allocated_geometries;

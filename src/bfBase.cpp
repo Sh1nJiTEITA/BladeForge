@@ -680,382 +680,382 @@ BfEvent bfCreateDescriptorSetLayout(BfBase& base)
 BfEvent bfCreateDiscriptor() {
 	return BfEvent();
 }
-
-BfEvent bfInitDescriptors(BfBase& base)
-{
-// BfEvent recording
-	BfSingleEvent event{};
-	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-	
-	bool is_descriptors_init_successfull = true;
-	// Additional Infolog for bfSingleEvent
-	std::stringstream ss;
-
-// BfHolder bindings
-	BfHolder* pHolder = bfGetpHolder();
-
-// Resize holder storages ---------------------------------------------------------------
-
-	
-	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) { // FrameHolder
-		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-
-	// pack
-	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
-		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-	if (pHolder->model_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
-		pHolder->model_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-	if (pHolder->pos_pick_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
-		pHolder->pos_pick_buffers.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-	// sets 
-	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
-		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-	if (pHolder->main_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) {
-		pHolder->main_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-
-// Dynamic uniform buffer preparations
-	/*const size_t bezier_properties_uniform_buffer_size = MAX_FRAMES_IN_FLIGHT * 
-		bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties));*/
-
-	// Test buffer (bezier-properties)
-	/*bfCreateBuffer(&base.bezier_properties_uniform_buffer,
-					base.allocator,
-					bezier_properties_uniform_buffer_size,
-					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-					VMA_MEMORY_USAGE_CPU_TO_GPU);*/
-	//const int MAX_DEPTH_CURSOR_POS_ELEMENTS = 32;
-	const int MAX_BEZIER_POINTS = 1000;
-	const int MAX_OBJECTS = 10000;
-	// Bezier-points
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		// Create storage buffer for bezier_points
-		//bfCreateBuffer(&pHolder->bezier_points_buffers[i],
-		//			   base.allocator, 
-		//			   sizeof(BfStorageBezierPoints), //* MAX_BEZIER_POINTS,
-		//			   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-		//			   VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-		// Create storage buffer for object model matrices
-		bfCreateBuffer(&pHolder->model_buffers[i],
-						base.allocator,
-						sizeof(BfObjectData) * MAX_OBJECTS,
-						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-						VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-		// Create buffer for view uniform 
-		bfCreateBuffer(&pHolder->uniform_view_buffers[i],//*camUniformBuffer, 
-						base.allocator,
-						sizeof(BfUniformView),
-						VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-						VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-		// Create buffer for view uniform 
-		//bfCreateBuffer(&pHolder->pos_pick_buffers[i],//*camUniformBuffer, 
-		//				base.allocator,
-		//				sizeof(uint16_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS,
-		//	VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
-		//	VMA_ALLOCATION_CREATE_MAPPED_BIT,
-		//				VMA_MEMORY_USAGE_AUTO, 
-		//				&base.frame_pack[i].pos_pick_alloc_info);
-
-		/*VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-		bufCreateInfo.size = sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS;
-		bufCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-
-		VmaAllocationCreateInfo allocCreateInfo = {};
-		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
-			VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-		
-		vmaCreateBuffer(base.allocator, 
-			&bufCreateInfo, 
-			&allocCreateInfo, 
-			&pHolder->pos_pick_buffers[i].buffer,
-			&pHolder->pos_pick_buffers[i].allocation,
-			&base.frame_pack[i].pos_pick_alloc_info);*/
-		bfCreateBuffer(&pHolder->pos_pick_buffers[i],
-						base.allocator,
-						sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS,
-						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-						VMA_MEMORY_USAGE_AUTO,
-						VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
-	}
-
-
-
-// Global descriptor set layout ----------------------------------------------------------
-	// Uniform-bindings enumeration 
-
-	// View-uniform 
-	//VkDescriptorSetLayoutBinding camBufferBinding{};
-	/*camBufferBinding.binding		 = 0;
-	camBufferBinding.descriptorCount = 1;
-	camBufferBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	camBufferBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;*/
-
-	
-	VkDescriptorSetLayoutBinding viewBufferBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
-	//VkDescriptorSetLayoutBinding bezierPropertinesBufferbinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT, 1);
-
-	// Bindings to desctiptor set layout
-	std::vector<VkDescriptorSetLayoutBinding> global_bindings = {
-		viewBufferBinding,
-		//bezierPropertinesBufferbinding
-	};
-
-	// Create desctiptor-pool layout 
-	// Descriptor global set layout
-	VkDescriptorSetLayoutCreateInfo globalDescriptorSetLayoutInfo{};
-	globalDescriptorSetLayoutInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	globalDescriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(global_bindings.size());
-	globalDescriptorSetLayoutInfo.pNext		   = nullptr;
-	globalDescriptorSetLayoutInfo.flags		   = 0;
-	globalDescriptorSetLayoutInfo.pBindings	   = global_bindings.data();
-
-	if (vkCreateDescriptorSetLayout(base.device, 
-									&globalDescriptorSetLayoutInfo,
-									nullptr, 
-									&base.global_set_layout) == VK_SUCCESS) {
-		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings was"
-			"created successfully;";
-	}
-	else {
-		is_descriptors_init_successfull = false;
-		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings wasn't"
-			"created;";
-	}
-
-// Main descriptor set layout ------------------------------------------------------------
-
-	VkDescriptorSetLayoutBinding modelMatrixBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
-	VkDescriptorSetLayoutBinding cursorPosBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 1);
-
-	// Bindings to main desctiptor set layout
-	std::vector<VkDescriptorSetLayoutBinding> main_bindings = {
-		modelMatrixBinding,
-		cursorPosBinding
-	};
-
-	VkDescriptorSetLayoutCreateInfo mainSetLayourCreateInfo{};
-	mainSetLayourCreateInfo.sType		 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	mainSetLayourCreateInfo.pNext		 = nullptr;
-	mainSetLayourCreateInfo.flags		 = 0;
-	mainSetLayourCreateInfo.pBindings	 = main_bindings.data();
-	mainSetLayourCreateInfo.bindingCount = static_cast<uint32_t>(main_bindings.size());
-
-	if (vkCreateDescriptorSetLayout(base.device,
-		&mainSetLayourCreateInfo,
-		nullptr,
-		&base.main_set_layout) == VK_SUCCESS) {
-		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings was"
-			"created successfully;";
-	}
-	else {
-		is_descriptors_init_successfull = false;
-		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings wasn't"
-			"created;";
-	}
-
-
-// Create descriptor pool ----------------------------------------------------------------
-	std::vector<VkDescriptorPoolSize> sizes = {
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10}
-	};
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.pNext		   = nullptr;
-	poolInfo.flags		   = 0;
-	poolInfo.maxSets	   = 10;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
-	poolInfo.pPoolSizes	   = sizes.data();
-
-	if (vkCreateDescriptorPool(base.device,
-							   &poolInfo,
-							   nullptr,
-							   &base.standart_descriptor_pool) == VK_SUCCESS) {
-		ss << "VkDescriptorPool for " 
-		   << poolInfo.maxSets
-		   << " sets was created successfully";	
-	}
-	else {
-		is_descriptors_init_successfull = false;
-		
-		ss << "VkDescriptorPool for "
-		   << poolInfo.maxSets
-		   << " sets wasn't created";
-	}
-
-
-	
-// Allocate descriptors from desctiptor pool for each frame ------------------------------
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		
-		// Point to uniform buffer in holder
-		base.frame_pack[i].uniform_view_buffer   = &pHolder->uniform_view_buffers[i];
-		//base.frame_pack[i].bezier_points_buffer  = &pHolder->bezier_points_buffers[i];
-		base.frame_pack[i].model_matrix_buffer   = &pHolder->model_buffers[i];
-		base.frame_pack[i].pos_pick_buffer		 = &pHolder->pos_pick_buffers[i];
-
-		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
-		base.frame_pack[i].main_descriptor_set   = &pHolder->main_descriptor_sets[i];
-
-
-		// Use needed uniform buffer value
-		BfAllocatedBuffer* camUniformBuffer    = base.frame_pack[i].uniform_view_buffer;
-		//BfAllocatedBuffer* bezierStorageBuffer = base.frame_pack[i].bezier_points_buffer;
-		BfAllocatedBuffer* modelMatrixBuffer   = base.frame_pack[i].model_matrix_buffer;
-		BfAllocatedBuffer* posPickBuffer	   = base.frame_pack[i].pos_pick_buffer;
-		
-
-	// Allocate global descriptor sets ---------------------------------------------------
-
-		VkDescriptorSetAllocateInfo globalDescriptorSetAllocInfo{};
-		globalDescriptorSetAllocInfo.sType			    = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		globalDescriptorSetAllocInfo.pNext			    = nullptr;
-		globalDescriptorSetAllocInfo.descriptorPool	    = base.standart_descriptor_pool;
-		globalDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
-		globalDescriptorSetAllocInfo.pSetLayouts		= &base.global_set_layout;
-
-		if (vkAllocateDescriptorSets(base.device, 
-									 &globalDescriptorSetAllocInfo,
-									 base.frame_pack[i].global_descriptor_set) == VK_SUCCESS) {
-			ss << "Global VkDescriptorsSet for frame " << i << "was allocated;";
-		}
-		else {
-			is_descriptors_init_successfull = false;
-			ss << "Global VkDescriptorsSet for frame " << i << "wasn't allocated;";
-		}
-
-	// Allocate main descriptor sets -----------------------------------------------------
-
-		VkDescriptorSetAllocateInfo mainDescriptorSetAllocInfo{};
-		mainDescriptorSetAllocInfo.sType			  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		mainDescriptorSetAllocInfo.pNext			  = nullptr;
-		mainDescriptorSetAllocInfo.descriptorPool	  = base.standart_descriptor_pool;
-		mainDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
-		mainDescriptorSetAllocInfo.pSetLayouts		  =	&base.main_set_layout;
-
-		if (vkAllocateDescriptorSets(base.device,
-			&mainDescriptorSetAllocInfo,
-			base.frame_pack[i].main_descriptor_set) == VK_SUCCESS) {
-			ss << "Main VkDescriptorsSet for frame " << i << "was allocated;";
-		}
-		else {
-			is_descriptors_init_successfull = false;
-			ss << "Main VkDescriptorsSet for frame " << i << "wasn't allocated;";
-		}
-
-// Make descriptors point to uniform buffers (data) --------------------------------------
-
-		// View Uniform buffer
-		VkDescriptorBufferInfo viewUniformbufferInfo{};
-		viewUniformbufferInfo.buffer = camUniformBuffer->buffer;
-		viewUniformbufferInfo.offset = 0;						// From start
-		viewUniformbufferInfo.range  = sizeof(BfUniformView);  // Length in bites of data
-
-		//// Bezier properties Uniform buffer
-		//VkDescriptorBufferInfo bezierPropertiesUniformbufferInfo{};
-		//bezierPropertiesUniformbufferInfo.buffer = base.bezier_properties_uniform_buffer.buffer;
-		//bezierPropertiesUniformbufferInfo.offset = 0; 
-		//bezierPropertiesUniformbufferInfo.range = sizeof(BfUniformBezierProperties);  // Length in bites of data
-
-		//// Bezier points storage buffer
-		//VkDescriptorBufferInfo bezierPointStoragebufferInfo{};
-		//bezierPointStoragebufferInfo.buffer = bezierStorageBuffer->buffer;
-		//bezierPointStoragebufferInfo.offset = 0;
-		//bezierPointStoragebufferInfo.range = sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
-
-		VkDescriptorBufferInfo modelStoragebufferInfo{};
-		modelStoragebufferInfo.buffer = modelMatrixBuffer->buffer;
-		modelStoragebufferInfo.offset = 0;
-		modelStoragebufferInfo.range = sizeof(BfObjectData) * MAX_OBJECTS;
-
-		VkDescriptorBufferInfo posPickStoragebufferInfo{};
-		posPickStoragebufferInfo.buffer = posPickBuffer->buffer;
-		posPickStoragebufferInfo.offset = 0;
-		posPickStoragebufferInfo.range = sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS;
-
-		VkWriteDescriptorSet viewWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-																*base.frame_pack[i].global_descriptor_set, 
-																&viewUniformbufferInfo, 
-																 viewBufferBinding.binding);
-
-		VkWriteDescriptorSet posPickWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-																   *base.frame_pack[i].main_descriptor_set,
-																   &posPickStoragebufferInfo,
-																   cursorPosBinding.binding);
-
-		/*VkWriteDescriptorSet bezierPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-																			*base.frame_pack[i].global_descriptor_set,
-																			&bezierPropertiesUniformbufferInfo, 
-																			 bezierPropertinesBufferbinding.binding);
-
-		VkWriteDescriptorSet bezierPointsPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 
-																				  *base.frame_pack[i].main_descriptor_set, 
-																				  &bezierPointStoragebufferInfo, 
-																				   bezierPointsBinding.binding);*/
-
-		VkWriteDescriptorSet modelWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-																  *base.frame_pack[i].main_descriptor_set,
-																  &modelStoragebufferInfo,
-																  modelMatrixBinding.binding);
-
-		std::vector<VkWriteDescriptorSet> setWrites = {
-			viewWrite,
-			posPickWrite,
-			//bezierPropertiesWrite,
-			//bezierPointsPropertiesWrite,
-			modelWrite
-		};
-
-		vkUpdateDescriptorSets(base.device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
-
-		if (vmaMapMemory(base.allocator,
-						 base.frame_pack[i].uniform_view_buffer->allocation,
-						&base.frame_pack[i].uniform_view_data) == VK_SUCCESS) {
-			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
-		}
-		else {
-			is_descriptors_init_successfull = false;
-			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
-		}
-
-		/*if (vmaMapMemory(base.allocator,
-			base.bezier_properties_uniform_buffer.allocation,
-			(void**)&base.bezier_data) == VK_SUCCESS) {
-			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
-		}
-		else {
-			is_descriptors_init_successfull = false;
-			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
-		}*/
-
-	}
-
-	if (is_descriptors_init_successfull) {
-		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS;
-	}
-	else {
-		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE;
-	}
-	event.info = ss.str();
-
-	return BfEvent(event);
-}
+//
+//BfEvent bfInitDescriptors(BfBase& base)
+//{
+//// BfEvent recording
+//	BfSingleEvent event{};
+//	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+//	
+//	bool is_descriptors_init_successfull = true;
+//	// Additional Infolog for bfSingleEvent
+//	std::stringstream ss;
+//
+//// BfHolder bindings
+//	BfHolder* pHolder = bfGetpHolder();
+//
+//// Resize holder storages ---------------------------------------------------------------
+//
+//	
+//	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) { // FrameHolder
+//		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//
+//
+//	// pack
+//	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { // UniformBuffer's
+//		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//	if (pHolder->model_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+//		pHolder->model_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//	if (pHolder->pos_pick_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
+//		pHolder->pos_pick_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//
+//	// sets 
+//	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { // DescriptorSet's
+//		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//
+//	if (pHolder->main_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) {
+//		pHolder->main_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+//	}
+//
+//
+//// Dynamic uniform buffer preparations
+//	/*const size_t bezier_properties_uniform_buffer_size = MAX_FRAMES_IN_FLIGHT * 
+//		bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties));*/
+//
+//	// Test buffer (bezier-properties)
+//	/*bfCreateBuffer(&base.bezier_properties_uniform_buffer,
+//					base.allocator,
+//					bezier_properties_uniform_buffer_size,
+//					VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+//					VMA_MEMORY_USAGE_CPU_TO_GPU);*/
+//	//const int MAX_DEPTH_CURSOR_POS_ELEMENTS = 32;
+//	const int MAX_BEZIER_POINTS = 1000;
+//	const int MAX_OBJECTS = 10000;
+//	// Bezier-points
+//	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+//		// Create storage buffer for bezier_points
+//		//bfCreateBuffer(&pHolder->bezier_points_buffers[i],
+//		//			   base.allocator, 
+//		//			   sizeof(BfStorageBezierPoints), //* MAX_BEZIER_POINTS,
+//		//			   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
+//		//			   VMA_MEMORY_USAGE_CPU_TO_GPU);
+//
+//		// Create storage buffer for object model matrices
+//		bfCreateBuffer(&pHolder->model_buffers[i],
+//						base.allocator,
+//						sizeof(BfObjectData) * MAX_OBJECTS,
+//						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+//						VMA_MEMORY_USAGE_CPU_TO_GPU);
+//
+//		// Create buffer for view uniform 
+//		bfCreateBuffer(&pHolder->uniform_view_buffers[i],//*camUniformBuffer, 
+//						base.allocator,
+//						sizeof(BfUniformView),
+//						VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+//						VMA_MEMORY_USAGE_CPU_TO_GPU);
+//
+//		// Create buffer for view uniform 
+//		//bfCreateBuffer(&pHolder->pos_pick_buffers[i],//*camUniformBuffer, 
+//		//				base.allocator,
+//		//				sizeof(uint16_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS,
+//		//	VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+//		//	VMA_ALLOCATION_CREATE_MAPPED_BIT,
+//		//				VMA_MEMORY_USAGE_AUTO, 
+//		//				&base.frame_pack[i].pos_pick_alloc_info);
+//
+//		/*VkBufferCreateInfo bufCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+//		bufCreateInfo.size = sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS;
+//		bufCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+//
+//		VmaAllocationCreateInfo allocCreateInfo = {};
+//		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+//		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+//			VMA_ALLOCATION_CREATE_MAPPED_BIT;
+//
+//		
+//		vmaCreateBuffer(base.allocator, 
+//			&bufCreateInfo, 
+//			&allocCreateInfo, 
+//			&pHolder->pos_pick_buffers[i].buffer,
+//			&pHolder->pos_pick_buffers[i].allocation,
+//			&base.frame_pack[i].pos_pick_alloc_info);*/
+//		bfCreateBuffer(&pHolder->pos_pick_buffers[i],
+//						base.allocator,
+//						sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS,
+//						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+//						VMA_MEMORY_USAGE_AUTO,
+//						VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
+//	}
+//
+//
+//
+//// Global descriptor set layout ----------------------------------------------------------
+//	// Uniform-bindings enumeration 
+//
+//	// View-uniform 
+//	//VkDescriptorSetLayoutBinding camBufferBinding{};
+//	/*camBufferBinding.binding		 = 0;
+//	camBufferBinding.descriptorCount = 1;
+//	camBufferBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+//	camBufferBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;*/
+//
+//	
+//	VkDescriptorSetLayoutBinding viewBufferBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+//	//VkDescriptorSetLayoutBinding bezierPropertinesBufferbinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT, 1);
+//
+//	// Bindings to desctiptor set layout
+//	std::vector<VkDescriptorSetLayoutBinding> global_bindings = {
+//		viewBufferBinding,
+//		//bezierPropertinesBufferbinding
+//	};
+//
+//	// Create desctiptor-pool layout 
+//	// Descriptor global set layout
+//	VkDescriptorSetLayoutCreateInfo globalDescriptorSetLayoutInfo{};
+//	globalDescriptorSetLayoutInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+//	globalDescriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(global_bindings.size());
+//	globalDescriptorSetLayoutInfo.pNext		   = nullptr;
+//	globalDescriptorSetLayoutInfo.flags		   = 0;
+//	globalDescriptorSetLayoutInfo.pBindings	   = global_bindings.data();
+//
+//	if (vkCreateDescriptorSetLayout(base.device, 
+//									&globalDescriptorSetLayoutInfo,
+//									nullptr, 
+//									&base.global_set_layout) == VK_SUCCESS) {
+//		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings was"
+//			"created successfully;";
+//	}
+//	else {
+//		is_descriptors_init_successfull = false;
+//		ss << "Global VkDescriptorSetLayout for " << global_bindings.size() << "bindings wasn't"
+//			"created;";
+//	}
+//
+//// Main descriptor set layout ------------------------------------------------------------
+//
+//	VkDescriptorSetLayoutBinding modelMatrixBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+//	VkDescriptorSetLayoutBinding cursorPosBinding = bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 1);
+//
+//	// Bindings to main desctiptor set layout
+//	std::vector<VkDescriptorSetLayoutBinding> main_bindings = {
+//		modelMatrixBinding,
+//		cursorPosBinding
+//	};
+//
+//	VkDescriptorSetLayoutCreateInfo mainSetLayourCreateInfo{};
+//	mainSetLayourCreateInfo.sType		 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+//	mainSetLayourCreateInfo.pNext		 = nullptr;
+//	mainSetLayourCreateInfo.flags		 = 0;
+//	mainSetLayourCreateInfo.pBindings	 = main_bindings.data();
+//	mainSetLayourCreateInfo.bindingCount = static_cast<uint32_t>(main_bindings.size());
+//
+//	if (vkCreateDescriptorSetLayout(base.device,
+//		&mainSetLayourCreateInfo,
+//		nullptr,
+//		&base.main_set_layout) == VK_SUCCESS) {
+//		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings was"
+//			"created successfully;";
+//	}
+//	else {
+//		is_descriptors_init_successfull = false;
+//		ss << "Main VkDescriptorSetLayout for " << main_bindings.size() << "bindings wasn't"
+//			"created;";
+//	}
+//
+//
+//// Create descriptor pool ----------------------------------------------------------------
+//	std::vector<VkDescriptorPoolSize> sizes = {
+//		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
+//		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
+//		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10}
+//	};
+//
+//	VkDescriptorPoolCreateInfo poolInfo{};
+//	poolInfo.sType		   = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+//	poolInfo.pNext		   = nullptr;
+//	poolInfo.flags		   = 0;
+//	poolInfo.maxSets	   = 10;
+//	poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
+//	poolInfo.pPoolSizes	   = sizes.data();
+//
+//	if (vkCreateDescriptorPool(base.device,
+//							   &poolInfo,
+//							   nullptr,
+//							   &base.standart_descriptor_pool) == VK_SUCCESS) {
+//		ss << "VkDescriptorPool for " 
+//		   << poolInfo.maxSets
+//		   << " sets was created successfully";	
+//	}
+//	else {
+//		is_descriptors_init_successfull = false;
+//		
+//		ss << "VkDescriptorPool for "
+//		   << poolInfo.maxSets
+//		   << " sets wasn't created";
+//	}
+//
+//
+//	
+//// Allocate descriptors from desctiptor pool for each frame ------------------------------
+//	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+//		
+//		// Point to uniform buffer in holder
+//		base.frame_pack[i].uniform_view_buffer   = &pHolder->uniform_view_buffers[i];
+//		//base.frame_pack[i].bezier_points_buffer  = &pHolder->bezier_points_buffers[i];
+//		base.frame_pack[i].model_matrix_buffer   = &pHolder->model_buffers[i];
+//		base.frame_pack[i].pos_pick_buffer		 = &pHolder->pos_pick_buffers[i];
+//
+//		base.frame_pack[i].global_descriptor_set = &pHolder->global_descriptor_sets[i];
+//		base.frame_pack[i].main_descriptor_set   = &pHolder->main_descriptor_sets[i];
+//
+//
+//		// Use needed uniform buffer value
+//		BfAllocatedBuffer* camUniformBuffer    = base.frame_pack[i].uniform_view_buffer;
+//		//BfAllocatedBuffer* bezierStorageBuffer = base.frame_pack[i].bezier_points_buffer;
+//		BfAllocatedBuffer* modelMatrixBuffer   = base.frame_pack[i].model_matrix_buffer;
+//		BfAllocatedBuffer* posPickBuffer	   = base.frame_pack[i].pos_pick_buffer;
+//		
+//
+//	// Allocate global descriptor sets ---------------------------------------------------
+//
+//		VkDescriptorSetAllocateInfo globalDescriptorSetAllocInfo{};
+//		globalDescriptorSetAllocInfo.sType			    = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+//		globalDescriptorSetAllocInfo.pNext			    = nullptr;
+//		globalDescriptorSetAllocInfo.descriptorPool	    = base.standart_descriptor_pool;
+//		globalDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+//		globalDescriptorSetAllocInfo.pSetLayouts		= &base.global_set_layout;
+//
+//		if (vkAllocateDescriptorSets(base.device, 
+//									 &globalDescriptorSetAllocInfo,
+//									 base.frame_pack[i].global_descriptor_set) == VK_SUCCESS) {
+//			ss << "Global VkDescriptorsSet for frame " << i << "was allocated;";
+//		}
+//		else {
+//			is_descriptors_init_successfull = false;
+//			ss << "Global VkDescriptorsSet for frame " << i << "wasn't allocated;";
+//		}
+//
+//	// Allocate main descriptor sets -----------------------------------------------------
+//
+//		VkDescriptorSetAllocateInfo mainDescriptorSetAllocInfo{};
+//		mainDescriptorSetAllocInfo.sType			  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+//		mainDescriptorSetAllocInfo.pNext			  = nullptr;
+//		mainDescriptorSetAllocInfo.descriptorPool	  = base.standart_descriptor_pool;
+//		mainDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+//		mainDescriptorSetAllocInfo.pSetLayouts		  =	&base.main_set_layout;
+//
+//		if (vkAllocateDescriptorSets(base.device,
+//			&mainDescriptorSetAllocInfo,
+//			base.frame_pack[i].main_descriptor_set) == VK_SUCCESS) {
+//			ss << "Main VkDescriptorsSet for frame " << i << "was allocated;";
+//		}
+//		else {
+//			is_descriptors_init_successfull = false;
+//			ss << "Main VkDescriptorsSet for frame " << i << "wasn't allocated;";
+//		}
+//
+//// Make descriptors point to uniform buffers (data) --------------------------------------
+//
+//		// View Uniform buffer
+//		VkDescriptorBufferInfo viewUniformbufferInfo{};
+//		viewUniformbufferInfo.buffer = camUniformBuffer->buffer;
+//		viewUniformbufferInfo.offset = 0;						// From start
+//		viewUniformbufferInfo.range  = sizeof(BfUniformView);  // Length in bites of data
+//
+//		//// Bezier properties Uniform buffer
+//		//VkDescriptorBufferInfo bezierPropertiesUniformbufferInfo{};
+//		//bezierPropertiesUniformbufferInfo.buffer = base.bezier_properties_uniform_buffer.buffer;
+//		//bezierPropertiesUniformbufferInfo.offset = 0; 
+//		//bezierPropertiesUniformbufferInfo.range = sizeof(BfUniformBezierProperties);  // Length in bites of data
+//
+//		//// Bezier points storage buffer
+//		//VkDescriptorBufferInfo bezierPointStoragebufferInfo{};
+//		//bezierPointStoragebufferInfo.buffer = bezierStorageBuffer->buffer;
+//		//bezierPointStoragebufferInfo.offset = 0;
+//		//bezierPointStoragebufferInfo.range = sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
+//
+//		VkDescriptorBufferInfo modelStoragebufferInfo{};
+//		modelStoragebufferInfo.buffer = modelMatrixBuffer->buffer;
+//		modelStoragebufferInfo.offset = 0;
+//		modelStoragebufferInfo.range = sizeof(BfObjectData) * MAX_OBJECTS;
+//
+//		VkDescriptorBufferInfo posPickStoragebufferInfo{};
+//		posPickStoragebufferInfo.buffer = posPickBuffer->buffer;
+//		posPickStoragebufferInfo.offset = 0;
+//		posPickStoragebufferInfo.range = sizeof(uint32_t) * MAX_DEPTH_CURSOR_POS_ELEMENTS;
+//
+//		VkWriteDescriptorSet viewWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+//																*base.frame_pack[i].global_descriptor_set, 
+//																&viewUniformbufferInfo, 
+//																 viewBufferBinding.binding);
+//
+//		VkWriteDescriptorSet posPickWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+//																   *base.frame_pack[i].main_descriptor_set,
+//																   &posPickStoragebufferInfo,
+//																   cursorPosBinding.binding);
+//
+//		/*VkWriteDescriptorSet bezierPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+//																			*base.frame_pack[i].global_descriptor_set,
+//																			&bezierPropertiesUniformbufferInfo, 
+//																			 bezierPropertinesBufferbinding.binding);
+//
+//		VkWriteDescriptorSet bezierPointsPropertiesWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 
+//																				  *base.frame_pack[i].main_descriptor_set, 
+//																				  &bezierPointStoragebufferInfo, 
+//																				   bezierPointsBinding.binding);*/
+//
+//		VkWriteDescriptorSet modelWrite = bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+//																  *base.frame_pack[i].main_descriptor_set,
+//																  &modelStoragebufferInfo,
+//																  modelMatrixBinding.binding);
+//
+//		std::vector<VkWriteDescriptorSet> setWrites = {
+//			viewWrite,
+//			posPickWrite,
+//			//bezierPropertiesWrite,
+//			//bezierPointsPropertiesWrite,
+//			modelWrite
+//		};
+//
+//		vkUpdateDescriptorSets(base.device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
+//
+//		if (vmaMapMemory(base.allocator,
+//						 base.frame_pack[i].uniform_view_buffer->allocation,
+//						&base.frame_pack[i].uniform_view_data) == VK_SUCCESS) {
+//			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
+//		}
+//		else {
+//			is_descriptors_init_successfull = false;
+//			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
+//		}
+//
+//		/*if (vmaMapMemory(base.allocator,
+//			base.bezier_properties_uniform_buffer.allocation,
+//			(void**)&base.bezier_data) == VK_SUCCESS) {
+//			ss << "vmaMapMemory was successful for View-Uniform descriptor of frame " << i;
+//		}
+//		else {
+//			is_descriptors_init_successfull = false;
+//			ss << "vmaMapMemory wasn't successful for View-Uniform descriptor of frame " << i;
+//		}*/
+//
+//	}
+//
+//	if (is_descriptors_init_successfull) {
+//		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS;
+//	}
+//	else {
+//		event.action = BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE;
+//	}
+//	event.info = ss.str();
+//
+//	return BfEvent(event);
+//}
 
 BfEvent bfInitOwnDescriptors(BfBase& base)
 {
@@ -1152,6 +1152,7 @@ void bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInf
 	};
 	createInfo.pfnUserCallback = bfvDebugCallback;
 }
+
 
 BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
 {
@@ -1688,6 +1689,9 @@ BfEvent bfCreateStandartCommandBuffers(BfBase& base) {
 	if (holder->standart_command_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
 		holder->standart_command_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 	}
+	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) {
+		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
+	}
 
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -2081,10 +2085,14 @@ BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std
 
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 {
-	std::vector<VkDescriptorSetLayout> layouts = {
-		base.global_set_layout,
-		base.main_set_layout
-	};
+	std::vector<VkDescriptorSetLayout> layouts; layouts.reserve(10);
+	for (auto& pack : base.descriptor.__desc_layout_packs_map) {
+		layouts.push_back(pack.second.desc_set_layout);
+	}
+	//{
+	//	base.global_set_layout,
+	//	base.main_set_layout
+	//};
 	
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -2345,26 +2353,40 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		
 		uint32_t uniform_offset = bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * (base.current_frame % MAX_FRAMES_IN_FLIGHT);
 		
-		vkCmdBindDescriptorSets(
+		base.descriptor.bind_desc_sets(
+			BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
+			base.current_frame,
 			local_buffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			base.triangle_pipeline_layout,
-			0,
-			1,
-			base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
-			0,//1,
-			nullptr//&uniform_offset
+			0
 		);
-		vkCmdBindDescriptorSets(
+		base.descriptor.bind_desc_sets(
+			BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
+			base.current_frame,
 			local_buffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			base.triangle_pipeline_layout,
-			1,
-			1,
-			base.frame_pack[base.current_frame].main_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
-			0,
-			nullptr
+			1
 		);
+		//vkCmdBindDescriptorSets(
+		//	local_buffer,
+		//	VK_PIPELINE_BIND_POINT_GRAPHICS,
+		//	base.triangle_pipeline_layout,
+		//	0,
+		//	1,
+		//	base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+		//	0,//1,
+		//	nullptr//&uniform_offset
+		//);
+		//vkCmdBindDescriptorSets(
+		//	local_buffer,
+		//	VK_PIPELINE_BIND_POINT_GRAPHICS,
+		//	base.triangle_pipeline_layout,
+		//	1,
+		//	1,
+		//	base.frame_pack[base.current_frame].main_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+		//	0,
+		//	nullptr
+		//);
 
 
 		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
@@ -2603,7 +2625,10 @@ void bfUpdateUniformBuffer(BfBase& base)
 	}
 	ubo.cursor_pos = { base.window->xpos, base.window->ypos };
 
-	memcpy(base.frame_pack[base.current_frame].uniform_view_data, &ubo, sizeof(ubo));
+	void* view_data = nullptr;
+	base.descriptor.map_descriptor(BfDescriptorViewDataUsage, base.current_frame, &view_data);
+		memcpy(view_data, &ubo, sizeof(ubo));
+	base.descriptor.unmap_descriptor(BfDescriptorViewDataUsage, base.current_frame);
 
 	static int local_frame = base.current_frame;
 
@@ -2663,7 +2688,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 	
 	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
 
-	pGeometryHolder->update_obj_data(base.frame_pack[base.current_frame].model_matrix_buffer->allocation);
+	pGeometryHolder->update_obj_data_desc(base.descriptor, base.current_frame);
 	
 	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));

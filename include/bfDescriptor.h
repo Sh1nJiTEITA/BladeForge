@@ -84,9 +84,17 @@ public:
 
 	BfEvent update_desc_sets(VkDevice device);
 	
-	void map_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index, void* data);
+	void map_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index, void** data);
 	void unmap_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index);
+	
+	void bind_desc_sets(BfEnDescriptorSetLayoutType type,
+						uint32_t frame_index,
+						VkCommandBuffer command_buffer, 
+						VkPipelineLayout pipeline_layout,
+						uint32_t set_index);
 
+	//
+	BfAllocatedBuffer* get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index);
 	void set_frames_in_flight(unsigned int in);
 private:
 	VkWriteDescriptorSet __write_desc_buffer(BfDescriptorCreateInfo create_info,
@@ -97,6 +105,7 @@ private:
 	VkDescriptorSetLayoutBinding  __get_desc_set_layout_binding(VkDescriptorType type, 
 																VkShaderStageFlags stage_flags, 
 																uint32_t binding);
+	friend BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 };
 
 

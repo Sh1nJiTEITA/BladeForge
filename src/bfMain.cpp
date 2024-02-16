@@ -292,7 +292,7 @@ void BfMain::__start_loop()
     
     //BfBezier bezier2a(3, { {0.5, 0.35, 0.0f}, {0.45, 2.35, 0.0f}, {2.2, 2.35,0.0f},{2.2, 1.35, 0.0f} });
     float lam = 0.1;
-    size_t nuu = 2000;
+    size_t nuu = 2;
 
     std::vector<BfBezier> bez_less(1+ nuu);
     bez_less[0] = bezier2;
@@ -430,7 +430,8 @@ void BfMain::__start_loop()
 
         std::array<uint32_t, 32> ddata;
 
-        void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
+        void* pdata = __base.descriptor.get_buffer(BfDescriptorPosPickUsage, __base.current_frame)->allocation_info.pMappedData;
+        //void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
 
         memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
         //void* pDownloadedData = __base.frame_pack[__base.current_frame].pos_pick_alloc_info.pMappedData;

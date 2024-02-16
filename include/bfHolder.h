@@ -11,7 +11,7 @@
 #include "bfVertex2.hpp"
 #include "bfCurves.hpp"
 #include "bfExecutionTime.hpp"
-
+#include "bfDescriptor.h"
 
 
 struct BfHolder {
@@ -70,6 +70,7 @@ struct BfGeometryHolder {
 	BfGeometrySet* get_geometry_set(BfeGeometrySetType type);
 	BfGeometrySet* get_geometry_set_by_index(size_t i);
 	void update_obj_data(VmaAllocation allocation);
+	void update_obj_data_desc(BfDescriptor& desc, uint32_t frame_index);
 	void draw_indexed(VkCommandBuffer command_buffer);
 
 
