@@ -12,6 +12,7 @@
 #include "bfUniforms.h"
 #include "bfExecutionTime.hpp"
 #include "bfDescriptor.h"
+#include "bfLayerHandler.h"
 
 //static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
 //static std::vector<BfWindow> bfWindowHolder{};
@@ -88,6 +89,8 @@ struct BfBase {
 	
 	VkDescriptorPool		 standart_descriptor_pool;
 	VkDescriptorPool		 gui_descriptor_pool;
+
+	BfLayerHandler			 layer_handler;
 
 	/*BfAllocatedBuffer		 dynamic_vertex_buffer;
 	BfAllocatedBuffer		 dynamic_index_buffer;

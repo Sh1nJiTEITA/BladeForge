@@ -59,6 +59,19 @@ public:
 
 };
 
+class class_2 : public BfDrawObj {
+public:
+	class_2(const size_t n) : BfDrawObj() {
+		__vertices.reserve(n);
+		for (int i = 0; i < n; i++) {
+			__vertices.emplace_back(BfVertex3{ {i,i,i}, {i,i,i}, {i,i,i} });
+		}
+	}
+
+};
+
+
+
 void def_vulkan(BfBase& base, BfHolder& holder) {
 	
 	bfBindHolder(&holder);
@@ -94,19 +107,32 @@ TEST_CASE("bdDrawObject-x2") {
 	BfVertex3 v1 = { {10.0f, 10.0f, 10.0f} ,{10.0f, 10.0f, 10.0f} ,{10.0f, 10.0f, 10.0f} };
 	BfVertex3 v2 = { {12.0f, 12.0f, 12.0f} ,{12.0f, 12.0f, 12.0f} ,{12.0f, 12.0f, 12.0f} };
 
-	auto s1 = std::make_shared<class_1>(class_1());
+	auto s1 = std::make_shared<class_2>(class_2(10));
+	layer.add(s1);
+	auto s2 = std::make_shared<class_2>(class_2(10));
+	layer.add(s2);
+	/*auto s1 = std::make_shared<class_1>(class_1());
 	s1->create_indices();
 	layer.add(s1);
 	auto s2 = std::make_shared<BfDrawObj>(class_1());
-	layer.add(s2);
+	layer.add(s2);*/
 
 	layer.update_vertex_offset();
 	layer.update_index_offset();
 	//layer.check_element_ready(190);
 	auto d = gen_vertices();
 	
+	layer.update_buffer();
+
+	std::array<BfVertex3, 20> ddata;
+
+	void* pdata = layer.__buffer.get_vertex_allocation_info().pMappedData;//__base.descriptor.get_buffer(BfDescriptorPosPickUsage, __base.current_frame)->allocation_info.pMappedData;
+	memcpy(ddata.data(), pdata, sizeof(BfVertex3) * 20);
 	//////////////////////////////////////////////////////////////////////////////////////
 
+	
+}
+/*
 	BfDescriptor desc{};
 	desc.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
 	
@@ -157,8 +183,6 @@ TEST_CASE("bdDrawObject-x2") {
 	desc.create_desc_set_layouts(base.device);
 	desc.allocate_desc_sets(base.device);
 	desc.update_desc_sets(base.device);
-}
 
-TEST_CASE("Descriptor") {
-	
-}
+
+*/

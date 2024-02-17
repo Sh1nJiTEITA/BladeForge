@@ -93,6 +93,8 @@ public:
 						VkPipelineLayout pipeline_layout,
 						uint32_t set_index);
 
+	bool is_usage(BfEnDescriptorUsage usage);
+
 	//
 	BfAllocatedBuffer* get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index);
 	void set_frames_in_flight(unsigned int in);

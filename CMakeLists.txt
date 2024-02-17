@@ -60,7 +60,7 @@ set(SOURCES
 	"src/bfCurves2.cpp"
 	"src/bfDrawObject.cpp"
 	"src/bfDescriptor.cpp"
-)
+ "src/bfLayerHandler.cpp")
 
 set(HEADERS
 	#"include/BladeForgeBin.h"	
@@ -84,7 +84,7 @@ set(HEADERS
 	"include/bfCurves2.h"
 	"include/bfDrawObject.h"
 	"include/bfDescriptor.h"
-)
+ "include/bfLayerHandler.h")
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
 	"main.cpp"

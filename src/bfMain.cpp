@@ -419,6 +419,56 @@ void BfMain::__start_loop()
     bool is_y_rotating = false;
     bool is_z_rotating = false;
 
+// BfLayerHandler
+    auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator, 
+                                                 sizeof(BfVertex3), 
+                                                 1000, 
+                                                 100);
+
+    std::vector<BfVertex3> plane_vertices = {
+        {{0.0f, 10.0f, 0},  {0.91f,0.91f,0.91f},{0.81f,0.81f,0.81f}},
+        {{-10.0f, -10.0f, 0}, {0.92f,0.92f,0.92f},{0.82f,0.82f,0.82f}},
+        {{-10.0f, 0.0f, 0},{0.93f,0.93f,0.93f},{0.83f,0.83f,0.83f}},
+    };
+
+    auto obj_1 = std::make_shared<BfPlane>(plane_vertices);
+    BfObjectData obj_1_data{};
+    obj_1_data.model_matrix = glm::mat4(1.0f);
+    obj_1_data.id = 1;
+    obj_1_data.index = 0;
+    obj_1->create_vertices();
+    obj_1->create_indices();
+
+    obj_1->set_obj_data(obj_1_data);
+    obj_1->bind_pipeline(&__base.triangle_pipeline);
+    
+
+    auto obj_2 = std::make_shared<BfPlane>(plane_vertices);
+    BfObjectData obj_2_data{};
+    obj_2_data.model_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    obj_2_data.id = 2;
+    obj_2_data.index = 0;
+    obj_2->create_vertices();
+    obj_2->create_indices();
+
+    obj_2->set_obj_data(obj_2_data);
+    obj_2->bind_pipeline(&__base.triangle_pipeline);
+
+
+
+    layer_1->add(obj_1);
+    layer_1->add(obj_2);
+    layer_1->update_buffer();
+    __base.layer_handler.add(layer_1);
+
+    void* vert_d = layer_1->__buffer.get_vertex_allocation_info().pMappedData;
+    std::array<BfVertex3, 10> vert_dd;
+    memcpy(vert_dd.data(), vert_d, sizeof(BfVertex3) * 10);
+    void* ind_d = layer_1->__buffer.get_index_allocation_info().pMappedData;
+    std::array<uint16_t, 10> ind_dd;
+    memcpy(ind_dd.data(), ind_d, sizeof(uint16_t) * 10);
+
+
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
         glfwPollEvents();

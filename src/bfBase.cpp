@@ -1129,6 +1129,8 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	base.descriptor.allocate_desc_sets(base.device);
 	base.descriptor.update_desc_sets(base.device);
 
+	base.layer_handler.bind_descriptor(&base.descriptor);
+
 	return BfEvent();
 }
 
@@ -2411,10 +2413,9 @@ void bfMainRecordCommandBuffer(BfBase& base)
 			}
 		}*/
 		
-		BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
-		//BfExecutionTime::BeginTimeCut("draw_indexed");
-			pGeometryHolder->draw_indexed(local_buffer);
-		//BfExecutionTime::EndTimeCut("draw_indexed");
+		//BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();	
+		//pGeometryHolder->draw_indexed(local_buffer);
+		base.layer_handler.draw(local_buffer, base.triangle_pipeline);
 
 
 		//handler.bind_mesh(local_buffer, 0);
@@ -2688,8 +2689,9 @@ void bfUpdateUniformBuffer(BfBase& base)
 	
 	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
 
-	pGeometryHolder->update_obj_data_desc(base.descriptor, base.current_frame);
-	
+	//pGeometryHolder->update_obj_data_desc(base.descriptor, base.current_frame);
+	base.layer_handler.map_model_matrices(base.current_frame);
+
 	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
 

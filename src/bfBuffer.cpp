@@ -85,18 +85,32 @@ BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator,
 	, __max_obj_count{ max_obj_count }
 {
 	size_t vertex_size = __max_obj_size * __max_obj_count;
-	bfCreateBuffer(&__vertex_buffer,
-				   allocator,
-				   vertex_size,
-				   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-				   VMA_MEMORY_USAGE_CPU_TO_GPU);
-	
+	BfEvent v_event = bfCreateBuffer(
+		&__vertex_buffer,
+		allocator,
+		vertex_size,
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		//VMA_MEMORY_USAGE_CPU_TO_GPU 
+		VMA_MEMORY_USAGE_AUTO,
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+	);
+	if (!v_event.single_event.success) {
+		throw std::runtime_error("vertex buffer wasn't created");
+	}
+
 	size_t index_size = sizeof(uint16_t) * max_vertex_count * max_obj_count;
-	bfCreateBuffer(&__index_buffer,
-				   allocator,
-				   index_size,
-				   VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-				   VMA_MEMORY_USAGE_CPU_TO_GPU);
+	BfEvent i_event = bfCreateBuffer(
+		&__index_buffer,
+		allocator,
+		index_size,
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		//VMA_MEMORY_USAGE_CPU_TO_GPU);
+		VMA_MEMORY_USAGE_AUTO,
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+	);
+	if (!i_event.single_event.success) {
+		throw std::runtime_error("index buffer wasn't created");
+	}
 
 }
 
@@ -130,6 +144,16 @@ void BfLayerBuffer::unmap_vertex_memory()
 void BfLayerBuffer::unmap_index_memory()
 {
 	vmaUnmapMemory(__index_buffer.allocator, __index_buffer.allocation);
+}
+
+VmaAllocationInfo BfLayerBuffer::get_vertex_allocation_info()
+{
+	return __vertex_buffer.allocation_info;
+}
+
+VmaAllocationInfo BfLayerBuffer::get_index_allocation_info()
+{
+	return __index_buffer.allocation_info;
 }
 
 VkBuffer* BfLayerBuffer::get_p_vertex_buffer()

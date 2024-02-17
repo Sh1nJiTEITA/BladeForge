@@ -53,7 +53,10 @@ void print_mat4(mat4 matrix) {
 
 void main() {
     
-    
+    //print_mat4(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix );
+    debugPrintfEXT("pos = %f, %f. %f", inPosition[0], inPosition[1], inPosition[2]);
+    debugPrintfEXT("col = %f, %f. %f", inColor[0], inColor[1], inColor[2]);
+    debugPrintfEXT("nor = %f, %f. %f", inNormals[0], inNormals[1], inNormals[2]);
 
     gl_Position = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 

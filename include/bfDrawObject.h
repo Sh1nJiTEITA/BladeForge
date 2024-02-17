@@ -7,6 +7,7 @@
 
 #include "bfBuffer.h"
 #include "bfVertex2.hpp"
+#include "bfUniforms.h"
 
 class BfObjID {
 	uint32_t __value;
@@ -41,8 +42,9 @@ struct BfDrawVar {
 
 };
 
+class BfLayerHandler;
+
 class BfDrawLayer {
-	BfLayerBuffer __buffer;
 
 	uint32_t __reserved_n;
 	std::vector<std::shared_ptr<BfDrawObj>> __objects;
@@ -51,22 +53,27 @@ class BfDrawLayer {
 	std::vector<int32_t> __index_offsets; // offset of index of index in index buffer
 
 public:
+	BfLayerBuffer __buffer;
 	BfDrawLayer(VmaAllocator allocator, 
 				size_t vertex_size, 
 				size_t max_vertex_count, 
 				size_t max_reserved_count);
 	
-	size_t get_whole_vertex_count();
-	size_t get_whole_index_count();
+	const size_t get_whole_vertex_count() const noexcept;
+	const size_t get_whole_index_count() const noexcept;
+	const size_t get_obj_count() const noexcept;
+	const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
 	void add(std::shared_ptr<BfDrawObj> obj);
 	void update_vertex_offset();
 	void update_index_offset();
-	
+	void update_buffer();
 	// TODO: global model-matrix descriptor
 	void draw(VkCommandBuffer combuffer, VkPipeline pipeline);
 
 	void check_element_ready(size_t element_index);
+
+	friend BfLayerHandler;
 };
 
 class BfDrawObj {
@@ -76,7 +83,8 @@ protected:
 	std::vector<BfVertex3> __dvertices;
 	std::vector<uint16_t> __indices;
 
-	glm::mat4 __model_matrix;
+	VkPipeline* __pPipeline;
+	BfObjectData __obj_data;
 
 public:
 
@@ -90,6 +98,8 @@ public:
 	BfVertex3* get_pdVertices();
 	uint16_t* get_pIndices();
 
+	const BfObjectData& get_obj_data() const noexcept;
+
 	const size_t get_vertices_count() const ;
 	const size_t get_dvertices_count() const ;
 	const size_t get_indices_count() const ;
@@ -97,10 +107,26 @@ public:
 	size_t get_vertex_data_size();
 	size_t get_index_data_size();
 
+	VkPipeline* get_bound_pPipeline();
+
+	void set_obj_data(BfObjectData obj_data);
+	void bind_pipeline(VkPipeline* pPipeline);
+
 	virtual bool is_ok();
 	void check_ok();
 	virtual void create_indices();
+	virtual void create_vertices();
 };
+
+class BfPlane : public BfDrawObj {
+public:
+	BfPlane(std::vector<BfVertex3> d_vertices);
+	virtual void create_vertices() override;
+	virtual void create_indices() override;
+private:
+
+};
+
 
 
 #endif 

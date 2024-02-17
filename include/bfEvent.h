@@ -12,7 +12,7 @@
 #include <map>
 
 
-enum class BfEnActionType {
+enum BfEnActionType {
 	// Initializations
 	BF_ACTION_TYPE_INIT_INSTANCE_SUCCESS					 =  0x2,
 	BF_ACTION_TYPE_INIT_INSTANCE_FAILURE					 = -0x2,
@@ -151,7 +151,13 @@ enum class BfEnActionType {
 	BF_ACTION_TYPE_BIND_ALLOCATOR_TO_BFLAYER				 =  0x48,
 
 	BF_ACTION_TYPE_ALLOC_BFLAYER_SUCCESS					 =  0x49,
-	BF_ACTION_TYPE_ALLOC_BFLAYER_FAILURE					 = -0x49
+	BF_ACTION_TYPE_ALLOC_BFLAYER_FAILURE					 = -0x49,
+
+	BF_ACTION_TYPE_ADD_LAYER_TO_LAYER_HANDLER_SUCCESS		 =  0x50,
+	BF_ACTION_TYPE_ADD_LAYER_TO_LAYER_HANDLER_FAILURE		 = -0x50,
+	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS=  0x50A,
+	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE= -0x50A,
+
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -281,22 +287,26 @@ const std::map<int, std::string> bfSetActionsStr{
 			 
 	{ 0x44,  "VmaAllocator was bound to bound BfGeometryHolder"},
 
-	{ 0x45, "Vertices/Indices/BfGeometryData was added to set:"},
-	{-0x45, "Vertices/Indices/BfGeometryData wasn't added to set:"},
-
-	{ 0x46, "Graphics pipeline was bound to BfGeometrySet:"},
-
-	{ 0x47, "Graphics pipeline was bound to BfLayer:"},
-	
-	{ 0x48, "VmaAllocator was bound to BfLayer:"},
-
-	{ 0x49, "Buffers for BfLayer was allocated succefully:"},
-	{-0x49, "Buffers for BfLater wasn't allocated:"}
-
+	{ 0x45,  "Vertices/Indices/BfGeometryData was added to set:"},
+	{-0x45,  "Vertices/Indices/BfGeometryData wasn't added to set:"},
+			 
+	{ 0x46,  "Graphics pipeline was bound to BfGeometrySet:"},
+			 
+	{ 0x47,  "Graphics pipeline was bound to BfLayer:"},
+			 
+	{ 0x48,  "VmaAllocator was bound to BfLayer:"},
+			 
+	{ 0x49,  "Buffers for BfLayer was allocated succefully:"},
+	{-0x49,  "Buffers for BfLater wasn't allocated:"},
+			 
+	{ 0x50,  "BfLayer was added to BfLayerHandler successfully:"},
+	{-0x50,  "BfLayer wasn't added to BfLayerHandler:" },
+	{ 0x50A, "BfDescriptor was bound to BfLayerHandler"},
+	{-0x50A, "BfDescriptor wasn't bound to BfLayerHandler: pointer is nullptr"},
 };
 
 
-enum class BfEnSingleEventType {
+enum BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT = 0x1,
 	BF_SINGLE_EVENT_TYPE_HOLDER_EVENT = 0x2,
 	BF_SINGLE_EVENT_TYPE_USER_EVENT = 0x4,
@@ -309,7 +319,7 @@ enum class BfEnSingleEventType {
 	BF_SINGLE_EVENT_TYPE_DESTROY_EVENT = 0x200
 };
 
-enum class BfEnMultipleEventType {
+enum BfEnMultipleEventType {
 	BF_MULTIPLE_EVENT_TYPE_RENDER_FRAME = 0,
 };
 

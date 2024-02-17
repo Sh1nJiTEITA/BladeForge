@@ -79,6 +79,11 @@ void BfDescriptor::bind_desc_sets(BfEnDescriptorSetLayoutType type,
 
 }
 
+bool BfDescriptor::is_usage(BfEnDescriptorUsage usage)
+{
+	return __desc_buffers_map.contains(usage);
+}
+
 BfEvent BfDescriptor::create_desc_pool(VkDevice device, 
 									   std::vector<VkDescriptorPoolSize> sizes)
 {

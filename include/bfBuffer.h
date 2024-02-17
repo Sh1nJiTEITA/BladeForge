@@ -40,6 +40,9 @@ public:
 	void* map_index_memory();
 	void unmap_vertex_memory();
 	void unmap_index_memory();
+	
+	VmaAllocationInfo get_vertex_allocation_info();
+	VmaAllocationInfo get_index_allocation_info();
 
 	VkBuffer* get_p_vertex_buffer();
 	VkBuffer* get_p_index_buffer();

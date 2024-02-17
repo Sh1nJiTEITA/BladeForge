@@ -62,6 +62,11 @@ uint16_t* BfDrawObj::get_pIndices()
 	return __indices.data();
 }
 
+const BfObjectData& BfDrawObj::get_obj_data() const noexcept
+{
+	return __obj_data;
+}
+
 const size_t BfDrawObj::get_vertices_count() const
 {
 	return __vertices.size();
@@ -90,9 +95,28 @@ size_t BfDrawObj::get_index_data_size()
 	return sizeof(uint16_t) * __indices.size();
 }
 
+VkPipeline* BfDrawObj::get_bound_pPipeline()
+{
+	return __pPipeline;
+}
+
+void BfDrawObj::set_obj_data(BfObjectData obj_data)
+{
+	__obj_data = obj_data;
+}
+
+void BfDrawObj::bind_pipeline(VkPipeline* pPipeline)
+{
+	__pPipeline = pPipeline;
+}
+
 void BfDrawObj::create_indices()
 {
 
+}
+
+void BfDrawObj::create_vertices()
+{
 }
 
 std::unordered_set<unsigned int> BfObjID::__existing_values;
@@ -141,7 +165,7 @@ BfDrawLayer::BfDrawLayer(VmaAllocator allocator,
 	__index_offsets.resize(__reserved_n, 0);
 }
 
-size_t BfDrawLayer::get_whole_vertex_count()
+const size_t BfDrawLayer::get_whole_vertex_count() const noexcept
 {
 	size_t count = 0;
 	for (auto& it : __objects) {
@@ -150,13 +174,30 @@ size_t BfDrawLayer::get_whole_vertex_count()
 	return count;
 }
 
-size_t BfDrawLayer::get_whole_index_count()
+const size_t BfDrawLayer::get_whole_index_count() const noexcept
 {
 	size_t count = 0;
 	for (auto& it : __objects) {
 		count += it->get_indices_count();
 	}
 	return count;
+}
+
+const size_t BfDrawLayer::get_obj_count() const noexcept
+{
+	return __objects.size();
+}
+
+const std::vector<BfObjectData> BfDrawLayer::get_obj_model_matrices() const noexcept
+{
+	std::vector<BfObjectData> obj_data;
+	obj_data.reserve(this->get_obj_count());
+
+	for (const auto& obj : __objects) {
+		obj_data.push_back(obj->get_obj_data());
+	}
+	
+	return obj_data;
 }
 
 void BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
@@ -180,6 +221,40 @@ void BfDrawLayer::update_index_offset()
 		__index_offsets[i] = growing_offset;
 		growing_offset += __objects[i]->get_indices_count();
 	}
+}
+
+void BfDrawLayer::update_buffer()
+{
+	void* vertex_data = __buffer.map_vertex_memory();
+	{
+		size_t offset = 0;
+		for (const auto& obj : __objects) {
+			size_t size = sizeof(BfVertex3) * obj->get_vertices_count();
+
+			memcpy(reinterpret_cast<char*>(vertex_data) + offset, 
+				   obj->get_pVertices(), 
+				   size);
+
+			offset += size;
+		}
+	}
+	__buffer.unmap_vertex_memory();
+
+
+	void* index_data = __buffer.map_index_memory();
+	{
+		size_t offset = 0;
+		for (const auto& obj : __objects) {
+			size_t size = sizeof(uint16_t) * obj->get_indices_count();
+
+			memcpy(reinterpret_cast<char*>(index_data) + offset,
+				   obj->get_pIndices(),
+				   size);
+
+			offset += size;
+		}
+	}
+	__buffer.unmap_index_memory();
 }
 
 void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
@@ -216,5 +291,27 @@ void BfDrawLayer::check_element_ready(size_t element_index)
 		/*for (size_t j = 0; j < __objects[i]->get_vertices_count(); j++) {
 			
 		}*/
+	}
+}
+
+BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
+	: BfDrawObj()
+{
+	__dvertices = d_vertices;
+}
+
+void BfPlane::create_vertices()
+{
+	__vertices.reserve(__dvertices.size());
+	for (const auto& dvert : __dvertices) {
+		__vertices.emplace_back(dvert);
+	}
+}
+
+void BfPlane::create_indices()
+{
+	__indices.reserve(__vertices.size() * 2);
+	for (size_t i = 0; i < __vertices.size(); ++i) {
+		__indices.emplace_back(i);
 	}
 }
