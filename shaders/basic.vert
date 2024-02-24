@@ -9,6 +9,7 @@ struct BezierPoints {
 
 struct ObjectData {
     mat4 model_matrix;
+    vec3 select_color;
     int index;
     int id;
 };
@@ -26,7 +27,7 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
 
-#define DEPTH_ARRAY_SCALE 32
+#define DEPTH_ARRAY_SCALE 2048
 layout(set = 1, binding = 1) buffer cursor_picking {
     uint data[DEPTH_ARRAY_SCALE];
 } cp;
@@ -53,25 +54,35 @@ void print_mat4(mat4 matrix) {
 
 void main() {
     
-    //print_mat4(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix );
-    debugPrintfEXT("pos = %f, %f. %f", inPosition[0], inPosition[1], inPosition[2]);
-    debugPrintfEXT("col = %f, %f. %f", inColor[0], inColor[1], inColor[2]);
-    debugPrintfEXT("nor = %f, %f. %f", inNormals[0], inNormals[1], inNormals[2]);
+//    //print_mat4(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix );
+//    debugPrintfEXT("pos = %f, %f. %f", inPosition[0], inPosition[1], inPosition[2]);
+//    debugPrintfEXT("col = %f, %f. %f", inColor[0], inColor[1], inColor[2]);
+//    debugPrintfEXT("nor = %f, %f. %f", inNormals[0], inNormals[1], inNormals[2]);
 
     gl_Position = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
     obj_index = gl_BaseInstance;
     
-    for (int i = 0; i < DEPTH_ARRAY_SCALE+1; i++) {
-        if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[i]) {
-            cp.data[i] = 0;
-            fragColor = vec3(1.0, 1.0, 0.0);
-            break;
-        }
-        else {
-            fragColor = inColor;
-        }
+    //for (int i = 0; i < DEPTH_ARRAY_SCALE+1; i++) {
+
+    if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[DEPTH_ARRAY_SCALE-1]) {
+        cp.data[DEPTH_ARRAY_SCALE-1] = 0;
+        fragColor = vec3(0.0, 1.0, 0.5);
     }
+    else {
+        fragColor = inColor;
+    }
+
+//    for (int i = DEPTH_ARRAY_SCALE-1; i >= 0; i--) {
+//        if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[i]) {
+//            //cp.data[i] = 0;
+//            fragColor = vec3(0.0, 1.0, 0.5);
+//            break;
+//        }
+//        else {
+//            fragColor = inColor;
+//        }
+//    }
 //    for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
 //        cp.data[i] = 0;
 //    }

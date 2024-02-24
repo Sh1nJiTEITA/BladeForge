@@ -4,6 +4,9 @@
 cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
 include_directories(include)
+
+#include_directories(external/implot/)
+#add_subdirectory(external/implot)
 #include_directories(src)
 
 
@@ -60,7 +63,13 @@ set(SOURCES
 	"src/bfCurves2.cpp"
 	"src/bfDrawObject.cpp"
 	"src/bfDescriptor.cpp"
- "src/bfLayerHandler.cpp")
+	"src/bfLayerHandler.cpp" 
+	"src/bfGUI.cpp" 
+	"src/bfCurves3.cpp"
+	#"external/implot/implot.cpp"
+    #"external/implot/implot_demo.cpp"
+    #"external/implot/implot_items.cpp"
+)
 
 set(HEADERS
 	#"include/BladeForgeBin.h"	
@@ -84,12 +93,20 @@ set(HEADERS
 	"include/bfCurves2.h"
 	"include/bfDrawObject.h"
 	"include/bfDescriptor.h"
- "include/bfLayerHandler.h")
+	"include/bfLayerHandler.h"
+	"include/bfGUI.h" 
+	"include/bfCurves3.h"
+)
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
 	"main.cpp"
-	#"include/BladeForgeBin.h"
-	#"src/BladeForgeBin.cpp"
+
+	#"external/implot/implot.cpp"
+    #"external/implot/implot_demo.cpp"
+    #"external/implot/implot_items.cpp"
+	#"external/implot/implot.h"
+    #"external/implot/implot_internal.h"
+
 	${SOURCES}
 	${HEADERS}
 )
@@ -144,6 +161,11 @@ add_subdirectory(external/glm)
 add_subdirectory(external/VulkanMemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
 
+# implot
+#add_subdirectory(external/implot)
+#target_link_libraries(${PROJECT_NAME} PUBLIC implot)
+
+
 
 add_subdirectory(external/imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
@@ -197,6 +219,7 @@ target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
 #find_package(Vulkan REQUIRED)
 #target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES})
 target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
+#target_link_libraries(tests PUBLIC implot)
 target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
 #target_link_libraries(tests PUBLIC SimpleMatrix)
 

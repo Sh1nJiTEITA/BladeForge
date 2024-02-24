@@ -16,9 +16,13 @@ public:
 	BfEvent bind_descriptor(BfDescriptor* desc);
 	BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
 	
-	void map_model_matrices(size_t frame_index);
 	const size_t get_whole_obj_count() const noexcept;
+	const size_t get_layer_count() const noexcept;
+	
+	void map_model_matrices(size_t frame_index);
 	void draw(VkCommandBuffer command_buffer, VkPipeline);
+
+	std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
 
 private:
 

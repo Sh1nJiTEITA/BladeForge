@@ -15,6 +15,16 @@ struct BfAllocatedBuffer {
 	size_t size;
 };
 
+struct BfAllocatedImage {
+	VkImage image;
+	VkImageView view;
+	VmaAllocator allocator;
+	VmaAllocation allocation;
+	VmaAllocationInfo allocation_info;
+
+	bool is_view;
+};
+
 class BfLayerBuffer {
 private:
 	BfAllocatedBuffer __vertex_buffer;
@@ -53,10 +63,7 @@ struct BfAllocatedUniformBuffer : BfAllocatedBuffer {
 	VkDescriptorSet* descriptor_set;
 };
 
-struct BfAllocatedImage {
-	VkImage image;
-	VmaAllocation allocation;
-};
+
 
 
 
@@ -69,6 +76,20 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer* allocatedBuffer,
 
 BfEvent bfDestroyBuffer(BfAllocatedBuffer* allocatedBuffer);
 
+
+BfEvent bfCreateImage(BfAllocatedImage* allocatedImage, 
+					  VmaAllocator allocator,
+					  VkImageCreateInfo* image_create_info,
+					  VmaAllocationCreateInfo* alloc_create_info);
+
+BfEvent bfDestroyImage(BfAllocatedImage* allocatedImage);
+
+BfEvent bfCreateImageView(BfAllocatedImage* allocatedImage,
+						  VkDevice device, 
+						  VkImageViewCreateInfo* imageViewInfo);
+
+BfEvent bfDestroyImageView(BfAllocatedImage* allocatedImage,
+						   VkDevice device);
 
 
 #endif // !BF_BUFFER_H

@@ -3,6 +3,8 @@
 // Defines ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+#include "implot.h"
+//#include "implot_internal.h"
 
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN

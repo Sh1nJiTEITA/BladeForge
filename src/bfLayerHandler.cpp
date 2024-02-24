@@ -92,6 +92,11 @@ const size_t BfLayerHandler::get_whole_obj_count() const noexcept
 	return size;
 }
 
+const size_t BfLayerHandler::get_layer_count() const noexcept
+{
+	return __layers.size();
+}
+
 void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 {
 	size_t obj_data_offset = 0;
@@ -156,6 +161,13 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 		);
 	}*/
 
+}
+
+std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_index(size_t index)
+{
+	if (index > this->get_layer_count())
+		throw std::runtime_error("Index > number of layers inside handler");
+	return __layers.at(index);
 }
 
 bool BfLayerHandler::__is_space_for_new_layer()

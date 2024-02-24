@@ -51,14 +51,18 @@ void BfMain::__init()
     bfCreatePhysicalDevice(__base);
     bfCreateLogicalDevice(__base);
     bfCreateAllocator(__base);
+
     bfCreateSwapchain(__base);
+
     bfCreateImageViews(__base);
     bfCreateDepthBuffer(__base);
     bfCreateStandartRenderPass(__base);
     bfCreateGUIRenderPass(__base);
 
     //bfInitDescriptors(__base);
+    bfCreateIDMapImage(__base);
     bfInitOwnDescriptors(__base);
+    
     // ToDo
     bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv");
     bfCreateStandartFrameBuffers(__base);
@@ -425,6 +429,11 @@ void BfMain::__start_loop()
                                                  1000, 
                                                  100);
 
+    auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
+        sizeof(BfVertex3),
+        1000,
+        100);
+
     std::vector<BfVertex3> plane_vertices = {
         {{0.0f, 10.0f, 0},  {0.91f,0.91f,0.91f},{0.81f,0.81f,0.81f}},
         {{-10.0f, -10.0f, 0}, {0.92f,0.92f,0.92f},{0.82f,0.82f,0.82f}},
@@ -432,48 +441,59 @@ void BfMain::__start_loop()
     };
 
     auto obj_1 = std::make_shared<BfPlane>(plane_vertices);
-    BfObjectData obj_1_data{};
-    obj_1_data.model_matrix = glm::mat4(1.0f);
-    obj_1_data.id = 1;
-    obj_1_data.index = 0;
     obj_1->create_vertices();
     obj_1->create_indices();
-
-    obj_1->set_obj_data(obj_1_data);
     obj_1->bind_pipeline(&__base.triangle_pipeline);
     
 
     auto obj_2 = std::make_shared<BfPlane>(plane_vertices);
-    BfObjectData obj_2_data{};
-    obj_2_data.model_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    obj_2_data.id = 2;
-    obj_2_data.index = 0;
+    obj_2->get_model_matrix() = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     obj_2->create_vertices();
     obj_2->create_indices();
-
-    obj_2->set_obj_data(obj_2_data);
     obj_2->bind_pipeline(&__base.triangle_pipeline);
 
+    auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(1.0f,0.0f,0.0f));
+    o_line_x->set_color({ 1.0f, 0.0f, 0.0f });
+    o_line_x->create_vertices();
+    o_line_x->create_indices();
+    o_line_x->bind_pipeline(&__base.line_pipeline);
 
+    auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(0.0f,1.0f,0.0f));
+    o_line_y->set_color({ 0.0f, 1.0f, 0.0f });
+    o_line_y->create_vertices();
+    o_line_y->create_indices();
+    o_line_y->bind_pipeline(&__base.line_pipeline);
 
-    layer_1->add(obj_1);
-    layer_1->add(obj_2);
+    auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(0.0f,0.0f,1.0f));
+    o_line_z->set_color({ 0.0f, 0.0f, 1.0f });
+    o_line_z->create_vertices();
+    o_line_z->create_indices();
+    o_line_z->bind_pipeline(&__base.line_pipeline);
+
+    layer_1->add(o_line_x);
+    layer_1->add(o_line_y);
+    layer_1->add(o_line_z);
+
+    layer_2->add(obj_1);
+    layer_2->add(obj_2);
     layer_1->update_buffer();
-    __base.layer_handler.add(layer_1);
+    layer_2->update_buffer();
 
-    void* vert_d = layer_1->__buffer.get_vertex_allocation_info().pMappedData;
+    __base.layer_handler.add(layer_1);
+    __base.layer_handler.add(layer_2);
+
+   /* void* vert_d = layer_1->__buffer.get_vertex_allocation_info().pMappedData;
     std::array<BfVertex3, 10> vert_dd;
     memcpy(vert_dd.data(), vert_d, sizeof(BfVertex3) * 10);
     void* ind_d = layer_1->__buffer.get_index_allocation_info().pMappedData;
     std::array<uint16_t, 10> ind_dd;
-    memcpy(ind_dd.data(), ind_d, sizeof(uint16_t) * 10);
+    memcpy(ind_dd.data(), ind_d, sizeof(uint16_t) * 10);*/
 
 
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
         glfwPollEvents();
         __process_keys();
-
         double currentTime = glfwGetTime();
 
         // If a second has passed.
@@ -498,11 +518,42 @@ void BfMain::__start_loop()
         ImGui::NewFrame();
         //ImGui::ShowDemoWindow();
 
+        __present_menu_bar();
         __present_camera();
         __present_info(currentTime);
-
-
+        bfPresentLayerHandler(__base.layer_handler);
+        ShowTestPlot();
         
+        static ImVec2 button_pos{ 500, 500 };
+
+        ImGui::SetNextWindowPos(button_pos, 0, ImVec2(0.5, 0.5f));     
+
+
+        ImGui::SetNextWindowSize(ImVec2(20, 20));
+        ImGui::Begin(" ", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoDecoration);
+
+        // Определяем размер кнопки
+        float buttonWidth = 20;
+     
+
+        // Вычисляем позицию X для центрирования кнопки внутри окна
+        float centerX = ImGui::GetWindowSize().x * 0.5f - buttonWidth * 0.5f;
+        float centerY = ImGui::GetWindowSize().y * 0.5f - buttonWidth * 0.5f;
+
+        // Устанавливаем курсор по X координате для центрирования кнопки
+        ImGui::SetCursorPosX(centerX);
+        ImGui::SetCursorPosY(centerY);
+
+        // Создаем кнопку с заданным размером
+        ImGui::Button(" ", ImVec2(buttonWidth, buttonWidth));
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0)) {
+            button_pos = ImGui::GetMousePos();
+        }
+        ImGui::End();
+
+
+
+
 
 
 
@@ -638,51 +689,65 @@ void BfMain::__present_info(double currentTime) {
     static int print_counter = 0;
     
     static double previousTime = currentTime;
+    if (__gui.is_info) {
 
-    std::string fps = "Current FPS: ";
-    
-    ImGui::Begin("Info");
+        std::string fps = "Current FPS: ";
 
-    // Display the frame count here any way you want.
-    counter += 1;
+        int screenWidth = ImGui::GetIO().DisplaySize.x;
+        int screenHeight = ImGui::GetIO().DisplaySize.y;
 
-    float x = 1.0; // displays the frame rate every 1 second
-    if ((currentTime - previousTime) >= x) {
+        auto flags = ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBackground |
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoInputs;
 
-        print_counter = counter;
-        counter = 0;
-        previousTime = currentTime;
+        ImGui::SetNextWindowPos(ImVec2(screenWidth - 20, 20), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+        ImGui::Begin("Info", nullptr, flags);
+
+        // Display the frame count here any way you want.
+        counter += 1;
+
+        float x = 1.0; // displays the frame rate every 1 second
+        if ((currentTime - previousTime) >= x) {
+
+            print_counter = counter;
+            counter = 0;
+            previousTime = currentTime;
+        }
+        ImGui::Text((fps + std::to_string(print_counter)).c_str());
+
+        std::string pos_string = "Position = (" + std::to_string(__base.window->pos.x) + ", "
+            + std::to_string(__base.window->pos.y) + ", "
+            + std::to_string(__base.window->pos.z) + ")";
+
+        std::string up_string = "Up-vector = (" + std::to_string(__base.window->up.x) + ", "
+            + std::to_string(__base.window->up.y) + ", "
+            + std::to_string(__base.window->up.z) + ")";
+
+        std::string front_string = "Front-vector = (" + std::to_string(__base.window->front.x) + ", "
+            + std::to_string(__base.window->front.y) + ", "
+            + std::to_string(__base.window->front.z) + ")";
+
+        std::string center_string = "Center-vector = (" + std::to_string(__base.window->front.x + __base.window->pos.x) + ", "
+            + std::to_string(__base.window->front.y + __base.window->pos.y) + ", "
+            + std::to_string(__base.window->front.z + __base.window->pos.z) + ")";
+
+        std::string yaw_string = "Current-yaw = " + std::to_string(__base.window->yaw);
+        std::string pitch_string = "Current-pitch = " + std::to_string(__base.window->pitch);
+
+
+        ImGui::Text(pos_string.c_str());
+        ImGui::Text(up_string.c_str());
+        ImGui::Text(front_string.c_str());
+        ImGui::Text(center_string.c_str());
+        ImGui::Text(yaw_string.c_str());
+        ImGui::Text(pitch_string.c_str());
+
+        ImGui::End();
     }
-    ImGui::Text((fps + std::to_string(print_counter)).c_str());
-
-    std::string pos_string = "Position = (" + std::to_string(__base.window->pos.x) + ", "
-        + std::to_string(__base.window->pos.y) + ", "
-        + std::to_string(__base.window->pos.z) + ")";
-
-    std::string up_string = "Up-vector = (" + std::to_string(__base.window->up.x) + ", "
-        + std::to_string(__base.window->up.y) + ", "
-        + std::to_string(__base.window->up.z) + ")";
-
-    std::string front_string = "Front-vector = (" + std::to_string(__base.window->front.x) + ", "
-        + std::to_string(__base.window->front.y) + ", "
-        + std::to_string(__base.window->front.z) + ")";
-
-    std::string center_string = "Center-vector = (" + std::to_string(__base.window->front.x + __base.window->pos.x) + ", "
-        + std::to_string(__base.window->front.y + __base.window->pos.y) + ", "
-        + std::to_string(__base.window->front.z + __base.window->pos.z) + ")";
-
-    std::string yaw_string = "Current-yaw = " + std::to_string(__base.window->yaw);
-    std::string pitch_string = "Current-pitch = " + std::to_string(__base.window->pitch);
-  
-
-    ImGui::Text(pos_string.c_str());
-    ImGui::Text(up_string.c_str());
-    ImGui::Text(front_string.c_str());
-    ImGui::Text(center_string.c_str());
-    ImGui::Text(yaw_string.c_str());
-    ImGui::Text(pitch_string.c_str());
-
-    ImGui::End();
 }
 
 void BfMain::__present_camera()
@@ -739,6 +804,37 @@ void BfMain::__present_camera()
     ImGui::Checkbox("is_asp", &__base.window->is_asp);
 
     ImGui::End();
+}
+
+void BfMain::__present_menu_bar()
+{
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Create")) {
+            }
+            if (ImGui::MenuItem("Open", "Ctrl+O")) {
+            }
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {
+            }
+            if (ImGui::MenuItem("Save as..")) {
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View")) {
+            
+            /*std::string perfomance_view_pannel_str;
+            if (__gui.is_info) perfomance_view_pannel_str = "Hide perfomance/view pannel";
+            else perfomance_view_pannel_str = "Show perfomance/view pannel";*/
+
+            if (ImGui::MenuItem(bfGetMenueInfoStr(__gui).c_str())) {
+                __gui.is_info = !__gui.is_info;
+            }
+            ImGui::EndMenu();
+        }
+
+
+        ImGui::EndMainMenuBar();
+    }
 }
 
 

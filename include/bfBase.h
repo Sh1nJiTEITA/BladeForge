@@ -1,7 +1,5 @@
- #ifndef BF_BASE_H
+#ifndef BF_BASE_H
 #define BF_BASE_H
-
-
 
 #include "bfVariative.hpp"
 #include "bfEvent.h"
@@ -19,7 +17,7 @@
 
 
 #define MAX_UNIQUE_DRAW_OBJECTS 10000
-#define MAX_DEPTH_CURSOR_POS_ELEMENTS 32
+#define MAX_DEPTH_CURSOR_POS_ELEMENTS 2048
 
 static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -63,8 +61,10 @@ struct BfBase {
 	VkFormat				 swap_chain_format;
 	VkExtent2D				 swap_chain_extent;
 
+	BfAllocatedImage		 id_map_image;
+
 	BfAllocatedImage		 depth_image;
-	VkImageView				 depth_image_view;
+	//VkImageView				 depth_image_view;
 	VkFormat				 depth_format;
 
 	std::vector<BfImagePack> image_packs;
@@ -145,6 +145,8 @@ BfEvent bfCreateGUICommandBuffers(BfBase& base);
 BfEvent bfCreateSyncObjects(BfBase& base);
 BfEvent bfInitImGUI(BfBase& base);
 BfEvent bfCreateDepthBuffer(BfBase& base);
+
+BfEvent bfCreateIDMapImage(BfBase& base);
 
 void bfCreateAllocator(BfBase& base);
 void bfUploadMesh(BfBase& base, BfMesh& mesh);

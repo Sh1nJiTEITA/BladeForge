@@ -13,8 +13,10 @@ struct BfUniformView {
 
 struct BfObjectData {
 	alignas(16) glm::mat4 model_matrix;
+	alignas(16) glm::vec3 select_color;
 	alignas(4) uint32_t index;
 	alignas(4) uint32_t id = 999999;
+
 	
 	uint32_t __assign_id() {
 		static uint32_t next_id = 0;

@@ -3,6 +3,7 @@
 
 struct ObjectData {
     mat4 model_matrix;
+    vec3 select_color;
     uint index;
     uint id;
 };
@@ -18,7 +19,7 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
 
-#define DEPTH_ARRAY_SCALE 32
+#define DEPTH_ARRAY_SCALE 2048
 layout(set = 1, binding = 1) buffer cursor_picking {
     uint data[DEPTH_ARRAY_SCALE];
 } cp;
@@ -49,10 +50,12 @@ void main() {
    
     uint zIndex = uint(gl_FragCoord.z * DEPTH_ARRAY_SCALE);
 
-    if(length(ubo.cursor_pos - gl_FragCoord.xy) < 1) {
+
+    if(length(ubo.cursor_pos - gl_FragCoord.xy) <= 1) {
         //fill_cursor_pointer_array(obj_data_buffer.obj_data[obj_index].id);
         cp.data[zIndex] = obj_data_buffer.obj_data[obj_index].id;      
+        debugPrintfEXT("z: %f, i: %i", gl_FragCoord.z, zIndex);
     }
     
-    outColor = vec4(fragColor, 1.0);
+    outColor = vec4(fragColor * obj_data_buffer.obj_data[obj_index].select_color, 1.0);
 }

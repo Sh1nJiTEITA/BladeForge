@@ -1060,24 +1060,31 @@ BfEvent bfCreateDiscriptor() {
 BfEvent bfInitOwnDescriptors(BfBase& base)
 {
 	base.descriptor.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
-	
+	base.descriptor.bind_device(base.device);
+
 	std::vector<VkDescriptorPoolSize> sizes = {
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10}
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10},
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10}
 	};
 
-	base.descriptor.create_desc_pool(base.device, sizes);
+	base.descriptor.create_desc_pool(sizes);
 	
 	// Model matrix
+
+	BfDescriptorBufferCreateInfo binfo_model_mtx{};
+	binfo_model_mtx.single_buffer_element_size = sizeof(BfObjectData);
+	binfo_model_mtx.elements_count = MAX_UNIQUE_DRAW_OBJECTS;
+	binfo_model_mtx.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	binfo_model_mtx.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	binfo_model_mtx.vma_alloc_flags = 0;
+
 	BfDescriptorCreateInfo info_model_mtx{};
 	info_model_mtx.usage = BfDescriptorModelMtxUsage;
 	info_model_mtx.vma_allocator = base.allocator;
-	info_model_mtx.single_buffer_element_size = sizeof(BfObjectData);
-	info_model_mtx.elements_count = MAX_UNIQUE_DRAW_OBJECTS;
-	info_model_mtx.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	info_model_mtx.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	info_model_mtx.vma_alloc_flags = 0;
+	
+	info_model_mtx.pBuffer_info = &binfo_model_mtx;
 
 	info_model_mtx.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	info_model_mtx.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1086,14 +1093,18 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_model_mtx.layout_binding = BfDescriptorSetMain;
 	
 	// View matrix
+	BfDescriptorBufferCreateInfo binfo_view{};
+	binfo_view.single_buffer_element_size = sizeof(BfUniformView);
+	binfo_view.elements_count = 1;
+	binfo_view.vk_buffer_usage_flags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	binfo_view.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+	binfo_view.vma_alloc_flags = 0;
+	
 	BfDescriptorCreateInfo info_view{};
 	info_view.usage = BfDescriptorViewDataUsage;
 	info_view.vma_allocator = base.allocator;
-	info_view.single_buffer_element_size = sizeof(BfUniformView);
-	info_view.elements_count = 1;
-	info_view.vk_buffer_usage_flags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	info_view.vma_memory_usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-	info_view.vma_alloc_flags = 0;
+
+	info_view.pBuffer_info = &binfo_view;
 
 	info_view.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	info_view.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1102,14 +1113,18 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_view.layout_binding = BfDescriptorSetGlobal;
 
 	// PosPick 
+	BfDescriptorBufferCreateInfo binfo_pos_pick{};
+	binfo_pos_pick.single_buffer_element_size = sizeof(uint32_t);
+	binfo_pos_pick.elements_count = MAX_DEPTH_CURSOR_POS_ELEMENTS;
+	binfo_pos_pick.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	binfo_pos_pick.vma_memory_usage = VMA_MEMORY_USAGE_AUTO;
+	binfo_pos_pick.vma_alloc_flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	
 	BfDescriptorCreateInfo info_pos_pick{};
 	info_pos_pick.usage = BfDescriptorPosPickUsage;
 	info_pos_pick.vma_allocator = base.allocator;
-	info_pos_pick.single_buffer_element_size = sizeof(uint32_t);
-	info_pos_pick.elements_count = MAX_DEPTH_CURSOR_POS_ELEMENTS;
-	info_pos_pick.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	info_pos_pick.vma_memory_usage = VMA_MEMORY_USAGE_AUTO;
-	info_pos_pick.vma_alloc_flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	info_pos_pick.pBuffer_info = &binfo_pos_pick;
 
 	info_pos_pick.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	info_pos_pick.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1117,17 +1132,66 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 
 	info_pos_pick.layout_binding = BfDescriptorSetMain;
 
+	// id-image
+	VkImageCreateInfo id_image_create_info{};
+	//info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+	id_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	id_image_create_info.pNext = nullptr;
+	id_image_create_info.imageType = VK_IMAGE_TYPE_2D;
+	id_image_create_info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
+	id_image_create_info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+	id_image_create_info.mipLevels = 1;
+	id_image_create_info.arrayLayers = 1;
+	id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+	id_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	id_image_create_info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
+	id_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	id_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VmaAllocationCreateInfo allocinfo{};
+	allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+	VkImageViewCreateInfo id_image_view_info = {};
+	id_image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	id_image_view_info.image = base.id_map_image.image;
+	id_image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	id_image_view_info.format = VK_FORMAT_R32_UINT;
+	id_image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	id_image_view_info.subresourceRange.baseMipLevel = 0;
+	id_image_view_info.subresourceRange.levelCount = 1;
+	id_image_view_info.subresourceRange.baseArrayLayer = 0;
+	id_image_view_info.subresourceRange.layerCount = 1;
+
+	BfDescriptorImageCreateInfo binfo_id_map{};
+	binfo_id_map.alloc_create_info = allocinfo;
+	binfo_id_map.count = 1;
+	binfo_id_map.image_create_info = id_image_create_info;
+	binfo_id_map.is_image_view = true;
+	binfo_id_map.view_create_info = id_image_view_info;
+
+	BfDescriptorCreateInfo info_id_map{};
+	info_id_map.usage = BfDescriptorPosPickUsage;
+	info_id_map.vma_allocator = base.allocator;
+	info_id_map.pImage_info = &binfo_id_map;
+	info_id_map.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	info_id_map.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_id_map.binding = 1;
+	info_id_map.layout_binding = BfDescriptorSetGlobal;
+
+
 	std::vector<BfDescriptorCreateInfo> infos{
 		info_model_mtx,
 		info_pos_pick,
-		info_view
+		info_view,
+		info_id_map
 	};
 
 	base.descriptor.add_descriptor_create_info(infos);
 	base.descriptor.allocate_desc_buffers();
-	base.descriptor.create_desc_set_layouts(base.device);
-	base.descriptor.allocate_desc_sets(base.device);
-	base.descriptor.update_desc_sets(base.device);
+	base.descriptor.allocate_desc_images();
+	base.descriptor.create_desc_set_layouts();
+	base.descriptor.allocate_desc_sets();
+	base.descriptor.update_desc_sets();
 
 	base.layer_handler.bind_descriptor(&base.descriptor);
 
@@ -1441,7 +1505,8 @@ BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 		
 		std::vector<VkImageView> attachments = {
 			*base.image_packs[i].pImage_view,
-			base.depth_image_view
+			base.depth_image.view
+			//base.depth_image_view
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
@@ -1785,6 +1850,7 @@ BfEvent bfInitImGUI(BfBase& base)
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImPlot::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsClassic();
 
@@ -1858,7 +1924,7 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 	dimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 	dimg_allocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	vmaCreateImage(base.allocator, 
+	auto res = vmaCreateImage(base.allocator, 
 				   &dimg_info, 
 				   &dimg_allocinfo, 
 				   &base.depth_image.image, 
@@ -1869,7 +1935,7 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 																		  VK_IMAGE_ASPECT_DEPTH_BIT);
 
 	BfSingleEvent event{};
-	if (vkCreateImageView(base.device, &dview_info, nullptr, &base.depth_image_view) == VK_SUCCESS) {
+	if (vkCreateImageView(base.device, &dview_info, nullptr, &base.depth_image.view) == VK_SUCCESS) {
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_CREATE_DEPTH_IMAGE_VIEW_SUCCESS;
 	}
@@ -1879,6 +1945,61 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 	}
 
 	return BfEvent(event);
+}
+
+BfEvent bfCreateIDMapImage(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+
+	VkImageCreateInfo info{};
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	info.pNext = nullptr;
+	//info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+	info.imageType = VK_IMAGE_TYPE_2D;
+	
+	info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
+	info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+	info.mipLevels = 1;
+	info.arrayLayers = 1;
+	info.samples = VK_SAMPLE_COUNT_1_BIT;
+	info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
+	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VmaAllocationCreateInfo allocinfo{};
+	allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+
+
+	if (vmaCreateImage(base.allocator, 
+				   &info, 
+				   &allocinfo, 
+				   &base.id_map_image.image, 
+				   &base.id_map_image.allocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("id map image wasn't created");
+	}
+
+	VkImageViewCreateInfo viewInfo = {};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = base.id_map_image.image; 
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = VK_FORMAT_R32_UINT; 
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	if (vkCreateImageView(base.device, &viewInfo, nullptr, &base.id_map_image.view) != VK_SUCCESS) {
+		throw std::runtime_error("id map image view wasn't created");
+	}
+
+
+
+
+
+	return BfEvent();
 }
 
 void bfCreateAllocator(BfBase& base)
@@ -2560,7 +2681,7 @@ BfEvent bfCleanUpSwapchain(BfBase& base)
 		vkDestroyImageView(base.device, holder->image_views[i], nullptr);
 	}
 
-	vkDestroyImageView(base.device, base.depth_image_view, nullptr);
+	vkDestroyImageView(base.device, base.depth_image.view, nullptr);
 	vmaDestroyImage(base.allocator, base.depth_image.image, base.depth_image.allocation);
 
 	vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);

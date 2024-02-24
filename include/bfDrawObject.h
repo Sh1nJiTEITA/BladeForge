@@ -9,6 +9,7 @@
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class BfObjID {
 	uint32_t __value;
 	static std::unordered_set<uint32_t> __existing_values;
@@ -18,31 +19,14 @@ public:
 	~BfObjID();
 	const uint32_t get() const;
 	static bool is_id_exists(uint32_t id);
-	static bool is_id_exists(BfObjID id);
+	static bool is_id_exists(BfObjID& id);
 };
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class BfDrawObj;
-
-struct BfDrawVar {
-	uint32_t index_count;// = __objects[element_index]->get_indices_count();
-	uint32_t instance_count;// = 1;
-	uint32_t first_index;// = __index_offsets[element_index];
-	uint32_t vertex_offset;// = __vertex_offsets[element_index];
-	uint32_t first_instance;// = 1;
-
-	friend std::ostream& operator<<(std::ostream& s, BfDrawVar v) {
-		s << "("
-			<< "index_count = " << v.index_count
-			<< " instance_count = " << v.instance_count
-			<< " first_index = " << v.first_index
-			<< " vertex_offset = " << v.vertex_offset
-			<< " first_instance = " << v.first_instance << ")";
-		return s;
-	}
-
-};
-
 class BfLayerHandler;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class BfDrawLayer {
 
@@ -53,6 +37,9 @@ class BfDrawLayer {
 	std::vector<int32_t> __index_offsets; // offset of index of index in index buffer
 
 public:
+
+	BfObjID id;
+
 	BfLayerBuffer __buffer;
 	BfDrawLayer(VmaAllocator allocator, 
 				size_t vertex_size, 
@@ -71,20 +58,33 @@ public:
 	// TODO: global model-matrix descriptor
 	void draw(VkCommandBuffer combuffer, VkPipeline pipeline);
 
+	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
+
 	void check_element_ready(size_t element_index);
 
 	friend BfLayerHandler;
 };
 
-class BfDrawObj {
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class BfGuiIntegration {
+protected:
+	bool __is_selected = false;
+
+public:
+	bool* get_pSelection();
+};
+
+class BfDrawObj : public BfGuiIntegration {
 
 protected:
 	std::vector<BfVertex3> __vertices;
 	std::vector<BfVertex3> __dvertices;
 	std::vector<uint16_t> __indices;
 
-	VkPipeline* __pPipeline;
-	BfObjectData __obj_data;
+	VkPipeline* __pPipeline = nullptr;
+	glm::mat4 __model_matrix = glm::mat4(1.0f);
+	glm::vec3 __main_color = glm::vec3(1.0f);
 
 public:
 
@@ -98,7 +98,7 @@ public:
 	BfVertex3* get_pdVertices();
 	uint16_t* get_pIndices();
 
-	const BfObjectData& get_obj_data() const noexcept;
+	BfObjectData get_obj_data();
 
 	const size_t get_vertices_count() const ;
 	const size_t get_dvertices_count() const ;
@@ -109,23 +109,21 @@ public:
 
 	VkPipeline* get_bound_pPipeline();
 
-	void set_obj_data(BfObjectData obj_data);
+	glm::mat4& get_model_matrix();
 	void bind_pipeline(VkPipeline* pPipeline);
+	void set_color(glm::vec3 c);
 
 	virtual bool is_ok();
-	void check_ok();
 	virtual void create_indices();
 	virtual void create_vertices();
 };
 
-class BfPlane : public BfDrawObj {
-public:
-	BfPlane(std::vector<BfVertex3> d_vertices);
-	virtual void create_vertices() override;
-	virtual void create_indices() override;
-private:
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-};
+
+
+
+
 
 
 

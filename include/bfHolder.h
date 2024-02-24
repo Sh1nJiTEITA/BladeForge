@@ -22,6 +22,7 @@ struct BfHolder {
 
 	// Image-pack arrays
 	std::vector<VkImage> images;
+	//std::vector<VkImage> id_map_images;
 	std::vector<VkImageView> image_views;
 	std::vector<VkFramebuffer> standart_framebuffers;
 	std::vector<VkFramebuffer> gui_framebuffers;

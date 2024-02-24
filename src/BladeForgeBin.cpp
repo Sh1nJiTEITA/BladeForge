@@ -132,7 +132,7 @@ void BladeForge::initImGUI()
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	I();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 
@@ -325,7 +325,9 @@ void BladeForge::cleanup()
 {
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
+	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
+
 
 	cleanupSwapChain();
 	

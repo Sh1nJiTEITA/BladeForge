@@ -84,6 +84,7 @@ enum BfEnActionType {
 	BF_ACTION_TYPE_UPDATE_DESCRIPTOR_SETS					 =  0x22F,
 	BF_ACTION_TYPE_DESTROY_DESCRIPTOR_POOL					 =  0x22A0,
 	BF_ACTION_TYPE_DESTROY_DESCRIPTOR_SET_LAYOUTS			 =  0x22A1,
+	BF_ACTION_TYPE_DESTORY_DESCRIPTOR_IMAGES				 =  0x22A2,
 
 	BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS					 =  0x23,
 	BF_ACTION_TYPE_READ_SHADER_FILE_FAILURE					 = -0x23,
@@ -140,7 +141,7 @@ enum BfEnActionType {
 
 	BF_ACTION_TYPE_ADD_GEOMETRY_SET_TO_GEOMETRY_HOLDER		 =  0x43,
 
-	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_GEOMETRY_HOLDER = 0x44,
+	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_GEOMETRY_HOLDER= 0x44,
 
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_SUCCESS				 =  0x45,
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_FAILURE				 = -0x45,
@@ -157,6 +158,14 @@ enum BfEnActionType {
 	BF_ACTION_TYPE_ADD_LAYER_TO_LAYER_HANDLER_FAILURE		 = -0x50,
 	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS=  0x50A,
 	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE= -0x50A,
+
+	BF_ACTION_TYPE_CREATE_IMAGE_SUCCESS						 =	0x51,
+	BF_ACTION_TYPE_CREATE_IMAGE_FAILURE						 = -0x51,
+	BF_ACTION_TYPE_DESTROY_IMAGE							 =  0x52,
+
+	BF_ACTION_TYPE_CREATE_IMAGE_VIEW_SUCCESS				 =  0x53,
+	BF_ACTION_TYPE_CREATE_IMAGE_VIEW_FAILURE				 = -0x53,
+	BF_ACTION_TYPE_DESTROY_IMAGE_VIEW						 =  0x54
 
 };
 
@@ -231,6 +240,7 @@ const std::map<int, std::string> bfSetActionsStr{
 	{ 0x22F, "BfDescriptor sets were updated"},
 	{ 0x22A0,"VkDescriptorPool was destroyed in BfDescriptor"},
 	{ 0x22A1,"VkDescriptorSetLayouts were destoyed in BfDescriptor"},
+	{ 0x22A2,"VkImage's & VkImageView's were destroyed in BfDescriptor"},
 
 	{ 0x23,  "Shader file was read successfully:"},
 	{-0x23,  "Shader file wasn't read successfully:"},
@@ -303,6 +313,14 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x50,  "BfLayer wasn't added to BfLayerHandler:" },
 	{ 0x50A, "BfDescriptor was bound to BfLayerHandler"},
 	{-0x50A, "BfDescriptor wasn't bound to BfLayerHandler: pointer is nullptr"},
+
+	{ 0x51,  "VkImage was created"},
+	{-0x51,  "VkImage wasn't created"},
+	{ 0x52,  "VkImage was destroyed"},
+
+	{ 0x53,  "VkImageView was created"},
+	{-0x53,  "VkImageView wasm't created"},
+	{ 0x54,  "VkImageView was destroyed"}
 };
 
 

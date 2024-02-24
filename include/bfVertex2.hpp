@@ -56,6 +56,17 @@ struct BfVertex3 {
 	glm::vec3 color;
 	glm::vec3 normals;
 
+	BfVertex3(): BfVertex3({{0.0f,0.0f,0.0f}, {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f} }) {}
+
+	BfVertex3(glm::vec3 ipos, 
+			  glm::vec3 icol = {1.0f, 1.0f, 1.0f}, 
+			  glm::vec3 inor = {0.0f, 0.0f, 0.0f})
+		: pos{ipos}
+		, color{icol}
+		, normals{inor}
+	{}
+
+
 	static inline VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
 		bindingDescription.binding = 0;

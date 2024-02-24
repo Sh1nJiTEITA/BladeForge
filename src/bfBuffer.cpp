@@ -76,6 +76,81 @@ BfEvent bfDestroyBuffer(BfAllocatedBuffer* allocatedBuffer)
 	return event;
 }
 
+BfEvent bfCreateImage(BfAllocatedImage* allocatedImage, 
+					  VmaAllocator allocator, 
+					  VkImageCreateInfo* image_create_info, 
+					  VmaAllocationCreateInfo* alloc_create_info)
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	allocatedImage->allocator = allocator;
+
+	if (vmaCreateImage(allocator,
+					   image_create_info,
+					   alloc_create_info,
+					  &allocatedImage->image,
+					  &allocatedImage->allocation,
+					  &allocatedImage->allocation_info) != VK_SUCCESS)
+	{
+		event.action = BF_ACTION_TYPE_CREATE_IMAGE_FAILURE;
+		event.success = false;
+	}
+	else
+	{
+		event.action = BF_ACTION_TYPE_CREATE_IMAGE_SUCCESS;
+		event.success = true;
+	}
+	
+	return event;
+}
+
+BfEvent bfDestroyImage(BfAllocatedImage* allocatedImage)
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMAGE;
+
+	vmaDestroyImage(allocatedImage->allocator, allocatedImage->image, allocatedImage->allocation);
+	
+	return event;
+}
+
+BfEvent bfCreateImageView(BfAllocatedImage* allocatedImage, 
+						  VkDevice device, 
+						  VkImageViewCreateInfo* imageViewInfo)
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	if (vkCreateImageView(device, 
+						  imageViewInfo, 
+						  nullptr, 
+						 &allocatedImage->view) != VK_SUCCESS) 
+	{
+		event.action = BF_ACTION_TYPE_CREATE_IMAGE_VIEW_FAILURE;
+		event.success = false;
+	}
+	else
+	{
+		event.action = BF_ACTION_TYPE_CREATE_IMAGE_VIEW_SUCCESS;
+		event.success = true;
+	}
+	
+	return event;
+}
+
+BfEvent bfDestroyImageView(BfAllocatedImage* allocatedImage, VkDevice device)
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMAGE_VIEW;
+	
+	vkDestroyImageView(device, allocatedImage->view, nullptr);
+	
+	return event;
+}
+
 
 BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator, 
 							 size_t single_vertex_size,

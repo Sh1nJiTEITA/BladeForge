@@ -9,7 +9,7 @@ TEST_CASE("BF_MAIN_H", "[single-file]") {
 	BfMain main;
 	try {
 		BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
-		main.run();
+		main.run( );
 	}
 	catch (const std::exception& e)
 	{

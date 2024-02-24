@@ -22,15 +22,6 @@ bool BfDrawObj::is_ok()
 	return decision;
 }
 
-void BfDrawObj::check_ok()
-{
-	if (!is_ok())
-	{
-		std::stringstream ss;
-		ss << "BdDrawObj with id = " << id.get() << " is not OK";
-		throw std::runtime_error(ss.str());
-	}
-}
 
 const std::vector<BfVertex3>& BfDrawObj::get_rVertices() const
 {
@@ -62,9 +53,17 @@ uint16_t* BfDrawObj::get_pIndices()
 	return __indices.data();
 }
 
-const BfObjectData& BfDrawObj::get_obj_data() const noexcept
+BfObjectData BfDrawObj::get_obj_data()
 {
-	return __obj_data;
+	BfObjectData data{};
+	data.id = this->id.get();
+	data.model_matrix = __model_matrix;
+	
+	if (__is_selected)
+		data.select_color = glm::vec3(1.0f, 0.5f, 0.0f);
+	else
+		data.select_color = glm::vec3(1.0f, 1.0f, 1.0f);
+	return data;
 }
 
 const size_t BfDrawObj::get_vertices_count() const
@@ -83,15 +82,12 @@ const size_t BfDrawObj::get_indices_count() const
 }
 
 size_t BfDrawObj::get_vertex_data_size()
-{
-	this->check_ok();
-	
+{	
 	return sizeof(BfVertex3) * __vertices.size();
 }
 
 size_t BfDrawObj::get_index_data_size()
 {
-	this->check_ok();
 	return sizeof(uint16_t) * __indices.size();
 }
 
@@ -100,9 +96,14 @@ VkPipeline* BfDrawObj::get_bound_pPipeline()
 	return __pPipeline;
 }
 
-void BfDrawObj::set_obj_data(BfObjectData obj_data)
+//void BfDrawObj::set_obj_data(BfObjectData obj_data)
+//{
+//	__obj_data = obj_data;
+//}
+
+glm::mat4& BfDrawObj::get_model_matrix()
 {
-	__obj_data = obj_data;
+	return __model_matrix;
 }
 
 void BfDrawObj::bind_pipeline(VkPipeline* pPipeline)
@@ -110,9 +111,22 @@ void BfDrawObj::bind_pipeline(VkPipeline* pPipeline)
 	__pPipeline = pPipeline;
 }
 
+void BfDrawObj::set_color(glm::vec3 c)
+{
+	__main_color = c;
+}
+
 void BfDrawObj::create_indices()
 {
+	
+	
+	// TODO
+	if (!__indices.empty())
+		__indices.clear();
 
+	for (int i = 0; i < __vertices.size(); ++i) {
+		__indices.emplace_back(i);
+	}
 }
 
 void BfDrawObj::create_vertices()
@@ -123,6 +137,7 @@ std::unordered_set<unsigned int> BfObjID::__existing_values;
 
 BfObjID::BfObjID()
 {
+	//std::cout << "\nID CONSTRUCTOR\n";
 	static uint32_t value = 0;
 	__value = ++value;
 	BfObjID::__existing_values.insert(__value);
@@ -130,6 +145,7 @@ BfObjID::BfObjID()
 
 BfObjID::~BfObjID()
 {
+	//std::cout << "\nID DECONSTRUCTOR\n";
 	BfObjID::__existing_values.erase(__value);
 }
 
@@ -146,7 +162,7 @@ bool BfObjID::is_id_exists(uint32_t id)
 		return false;
 }
 
-bool BfObjID::is_id_exists(BfObjID id)
+bool BfObjID::is_id_exists(BfObjID& id)
 {
 	return BfObjID::is_id_exists(id.get());
 }
@@ -158,6 +174,7 @@ BfDrawLayer::BfDrawLayer(VmaAllocator allocator,
 
 	: __reserved_n{ static_cast<uint32_t>(max_reserved_count) }
 	, __buffer{ allocator, vertex_size, max_vertex_count, max_reserved_count }
+	, id {}
 
 {
 	__objects.reserve(__reserved_n);
@@ -202,6 +219,8 @@ const std::vector<BfObjectData> BfDrawLayer::get_obj_model_matrices() const noex
 
 void BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
 {
+	if (!obj->is_ok())
+		throw std::runtime_error("object is incorrect");
 	__objects.emplace_back(obj);
 }
 
@@ -274,44 +293,15 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
 	}
 }
 
-void BfDrawLayer::check_element_ready(size_t element_index)
+std::shared_ptr<BfDrawObj> BfDrawLayer::get_object_by_index(size_t index)
 {
-	//vkCmdDrawIndexed(command_buffer, (uint32_t)pData->indices_count, 1, (uint32_t)pData->index_offset, 0, i + obj_data_index_offset);
-	
-
-	for (size_t i = 0; i < __objects.size(); i++) {
-		BfDrawVar var{};
-		var.index_count = __objects[i]->get_indices_count();
-		var.instance_count = 1;
-		var.first_index = __index_offsets[i];
-		var.vertex_offset = __vertex_offsets[i];
-		var.first_instance = 1;
-
-		std::cout << var << "\n";
-		/*for (size_t j = 0; j < __objects[i]->get_vertices_count(); j++) {
-			
-		}*/
-	}
+	if (index > __objects.size())
+		throw std::runtime_error("input object index > objects in layer");
+	return __objects.at(index);
 }
 
-BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
-	: BfDrawObj()
-{
-	__dvertices = d_vertices;
-}
 
-void BfPlane::create_vertices()
+bool* BfGuiIntegration::get_pSelection()
 {
-	__vertices.reserve(__dvertices.size());
-	for (const auto& dvert : __dvertices) {
-		__vertices.emplace_back(dvert);
-	}
-}
-
-void BfPlane::create_indices()
-{
-	__indices.reserve(__vertices.size() * 2);
-	for (size_t i = 0; i < __vertices.size(); ++i) {
-		__indices.emplace_back(i);
-	}
+	return &__is_selected;
 }

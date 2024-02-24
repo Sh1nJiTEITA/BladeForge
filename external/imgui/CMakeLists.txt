@@ -214,6 +214,15 @@ if (IMGUI_ENABLE_ASAN AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_link_libraries(imgui INTERFACE -g -fsanitize=address)
 endif ()
 
+target_include_directories(imgui INTERFACE implot/)
+target_sources(imgui INTERFACE
+    "implot/implot.h"
+    "implot/implot_internal.h"
+    "implot/implot.cpp"
+    "implot/implot_demo.cpp"
+    "implot/implot_items.cpp"
+)
+
 ###############################################################################
 # Freetype
 ###############################################################################

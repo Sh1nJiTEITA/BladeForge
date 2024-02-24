@@ -15,7 +15,7 @@ VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo cr
 	bufferInfo->buffer = buffer->buffer;
 	bufferInfo->offset = 0;	// From start
 	// Length in bites of data
-	bufferInfo->range = create_info.elements_count * create_info.single_buffer_element_size;  
+	bufferInfo->range = create_info.pBuffer_info->elements_count * create_info.pBuffer_info->single_buffer_element_size;  
 
 	VkWriteDescriptorSet write = {};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -84,8 +84,7 @@ bool BfDescriptor::is_usage(BfEnDescriptorUsage usage)
 	return __desc_buffers_map.contains(usage);
 }
 
-BfEvent BfDescriptor::create_desc_pool(VkDevice device, 
-									   std::vector<VkDescriptorPoolSize> sizes)
+BfEvent BfDescriptor::create_desc_pool(std::vector<VkDescriptorPoolSize> sizes)
 {
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -99,7 +98,7 @@ BfEvent BfDescriptor::create_desc_pool(VkDevice device,
 
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-	if (vkCreateDescriptorPool(device,
+	if (vkCreateDescriptorPool(__device,
 		&poolInfo,
 		nullptr,
 		&this->__desc_pool) == VK_SUCCESS) {
@@ -119,7 +118,7 @@ BfEvent BfDescriptor::create_desc_pool(VkDevice device,
 	return event;
 }
 
-BfEvent BfDescriptor::create_desc_set_layouts(VkDevice device)
+BfEvent BfDescriptor::create_desc_set_layouts()
 {
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -157,7 +156,7 @@ BfEvent BfDescriptor::create_desc_set_layouts(VkDevice device)
 
 
 		if (!vkCreateDescriptorSetLayout(
-				device,
+				__device,
 				&desc_set_layout_create_info,
 				nullptr,
 				&__desc_layout_packs_map[unique_layout_type].desc_set_layout) == VK_SUCCESS)
@@ -184,6 +183,13 @@ BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
 {
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	if (info.pBuffer_info == nullptr && info.pImage_info == nullptr) {
+		event.action = BfEnActionType::BF_ACTION_TYPE_ADD_DESCRIPTOR_CREATE_INFO_FAILURE;
+		event.info = "Descriptor pInfos are nullptr's";
+		return event;
+	}
+
 
 	for (auto& create_info : __desc_create_info_list) {
 		if ((create_info.usage == info.usage) &&
@@ -217,9 +223,9 @@ BfEvent BfDescriptor::add_descriptor_create_info(std::vector<BfDescriptorCreateI
 	return event;
 }
 
-BfEvent BfDescriptor::destroy_desc_pool(VkDevice device)
+BfEvent BfDescriptor::destroy_desc_pool()
 {
-	vkDestroyDescriptorPool(device, __desc_pool, nullptr);
+	vkDestroyDescriptorPool(__device, __desc_pool, nullptr);
 	
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -227,7 +233,7 @@ BfEvent BfDescriptor::destroy_desc_pool(VkDevice device)
 	return event;
 }
 
-BfEvent BfDescriptor::allocate_desc_sets(VkDevice device)
+BfEvent BfDescriptor::allocate_desc_sets()
 {
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -246,7 +252,7 @@ BfEvent BfDescriptor::allocate_desc_sets(VkDevice device)
 			desc_set_alloc_info.pSetLayouts = &__desc_layout_pack.second.desc_set_layout;
 
 			if (vkAllocateDescriptorSets(
-				device,
+				__device,
 				&desc_set_alloc_info,
 				&__desc_layout_pack.second.desc_sets.at(i)) == VK_SUCCESS) 
 			{
@@ -270,15 +276,16 @@ BfEvent BfDescriptor::allocate_desc_sets(VkDevice device)
 	return event;
 }
 
-BfEvent BfDescriptor::destroy_desc_set_layouts(VkDevice device)
+BfEvent BfDescriptor::destroy_desc_set_layouts()
 {
 	for (auto& pack : this->__desc_layout_packs_map) {
-		vkDestroyDescriptorSetLayout(device, pack.second.desc_set_layout, nullptr);
+		vkDestroyDescriptorSetLayout(__device, pack.second.desc_set_layout, nullptr);
 	}
 	return BfEvent();
 }
 
-BfEvent BfDescriptor::update_desc_sets(VkDevice device)
+// TODO: UPDATE FUNCTION FOR IMAGE FUNCTIONALITY
+BfEvent BfDescriptor::update_desc_sets()
 {
 	for (size_t i = 0; i < __frames_in_flight; i++) {
 		std::vector<VkWriteDescriptorSet> writes;
@@ -301,7 +308,7 @@ BfEvent BfDescriptor::update_desc_sets(VkDevice device)
 			j++;
 		}
 
-		vkUpdateDescriptorSets(device, 
+		vkUpdateDescriptorSets(__device, 
 							   static_cast<uint32_t>(writes.size()), 
 							   writes.data(), 
 							   0, 
@@ -321,6 +328,8 @@ BfEvent BfDescriptor::allocate_desc_buffers()
 	// Allocate buffer holders
 	// Create buffers
 	for (auto& create_info : __desc_create_info_list) {
+		if (create_info.pBuffer_info == nullptr) continue;
+		
 		// Create storage for buffers
 		__desc_buffers_map.emplace(
 			create_info.usage, std::vector<BfAllocatedBuffer>()
@@ -337,10 +346,10 @@ BfEvent BfDescriptor::allocate_desc_buffers()
 			BfEvent event = bfCreateBuffer(
 				&__desc_buffers_map[create_info.usage][frame_index],
 				create_info.vma_allocator,
-				create_info.elements_count * create_info.single_buffer_element_size,
-				create_info.vk_buffer_usage_flags,
-				create_info.vma_memory_usage,
-				create_info.vma_alloc_flags
+				create_info.pBuffer_info->elements_count * create_info.pBuffer_info->single_buffer_element_size,
+				create_info.pBuffer_info->vk_buffer_usage_flags,
+				create_info.pBuffer_info->vma_memory_usage,
+				create_info.pBuffer_info->vma_alloc_flags
 			);
 			
 			if (!event.single_event.success) {
@@ -369,9 +378,96 @@ BfEvent BfDescriptor::deallocate_desc_buffers()
 	return event;
 }
 
+BfEvent BfDescriptor::allocate_desc_images()
+{
+	BfSingleEvent whole_event{};
+	whole_event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
+	// For each pImage in create_info
+	for (auto& create_info : __desc_create_info_list) {
+		if (create_info.pImage_info == nullptr) continue;
+
+		// Create storage for images
+		__desc_image_map.emplace(
+			create_info.usage, std::vector<BfAllocatedImage>()
+		);
+		// Reserve vector for buffers by number of frames in flight
+		__desc_image_map[create_info.usage].reserve(create_info.pImage_info->count * 2);
+
+		// For each frame in flight create buffer for current usage
+		for (size_t frame_index = 0; frame_index < create_info.pImage_info->count; frame_index++) {
+			// Add empty buffer to storage
+			__desc_image_map[create_info.usage].emplace_back();
+
+			// Create image
+			BfEvent res_image = bfCreateImage(
+				&__desc_image_map[create_info.usage][frame_index],
+				create_info.vma_allocator,
+				&create_info.pImage_info->image_create_info,
+				&create_info.pImage_info->alloc_create_info
+			);
+
+
+			/*VkResult res_image = vmaCreateImage(
+				 create_info.vma_allocator,
+				&create_info.pImage_info->image_create_info,
+				&create_info.pImage_info->alloc_create_info,
+				&__desc_image_map[create_info.usage][frame_index].image,
+				&__desc_image_map[create_info.usage][frame_index].allocation,
+				&__desc_image_map[create_info.usage][frame_index].allocation_info
+			);*/
+
+			BfEvent res_view{}; res_view.single_event.success = true;
+			if (create_info.pImage_info->is_image_view) {
+				res_view = bfCreateImageView(
+					&__desc_image_map[create_info.usage][frame_index],
+					 __device,
+					&create_info.pImage_info->view_create_info);
+			}
+
+
+			if (!res_image.single_event.success || !res_view.single_event.success) {
+				std::stringstream ss;
+				ss << "Image for type " << (int)create_info.usage
+					<< " (use: " << BfEnDescriptorUsageStr[create_info.usage]
+					<< ") wasn't created";
+				whole_event.action = BfEnActionType::BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_FAILURE;
+				whole_event.success = false;
+				return whole_event;
+			}
+		}
+	}
+	whole_event.action = BfEnActionType::BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_SUCCESS;
+	return whole_event;
+}
+
+BfEvent BfDescriptor::deallocate_desc_images()
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTORY_DESCRIPTOR_IMAGES;
+	event.success = true;
+
+	for (auto& create_info : __desc_image_map) {
+		for (auto& image : create_info.second) {
+			bfDestroyImage(&image);
+			if (image.is_view) {
+				bfDestroyImageView(&image, __device);
+			}
+		}
+	}
+	
+	return event;
+}
+
 
 void BfDescriptor::set_frames_in_flight(unsigned int in) {
 	__frames_in_flight = in;
+}
+
+void BfDescriptor::bind_device(VkDevice device)
+{
+	__device = device;
 }
 
 BfAllocatedBuffer* BfDescriptor::get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index)
