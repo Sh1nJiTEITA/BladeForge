@@ -119,12 +119,19 @@ public:
 
 	//
 	BfAllocatedBuffer* get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index);
+	BfAllocatedImage* get_image(BfEnDescriptorUsage usage, uint32_t index);
 private:
-	VkWriteDescriptorSet __write_desc_buffer(BfDescriptorCreateInfo create_info,
+	VkWriteDescriptorSet __write_desc_buffer(BfDescriptorCreateInfo& create_info,
 											 VkDescriptorSet set,
 											 BfAllocatedBuffer* buffer,
 											 VkDescriptorBufferInfo* bufferInfo);
 	
+	VkWriteDescriptorSet __write_desc_image(BfDescriptorCreateInfo& create_info,
+											VkDescriptorSet set,
+											BfAllocatedImage* image,
+											VkDescriptorImageInfo* imageInfo);
+
+
 	VkDescriptorSetLayoutBinding  __get_desc_set_layout_binding(VkDescriptorType type, 
 																VkShaderStageFlags stage_flags, 
 																uint32_t binding);

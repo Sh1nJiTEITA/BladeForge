@@ -6,7 +6,7 @@ std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr = {
 	{BfDescriptorPosPickUsage, "Descriptor for cursor position picking usage"}
 };
 
-VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo create_info, 
+VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo& create_info, 
 													   VkDescriptorSet set, 
 													   BfAllocatedBuffer* buffer,
 													   VkDescriptorBufferInfo* bufferInfo)
@@ -27,6 +27,27 @@ VkWriteDescriptorSet BfDescriptor::__write_desc_buffer(BfDescriptorCreateInfo cr
 	write.descriptorType = create_info.type;
 	write.pBufferInfo = bufferInfo;
 
+	return write;
+}
+
+VkWriteDescriptorSet BfDescriptor::__write_desc_image(BfDescriptorCreateInfo& create_info, 
+													  VkDescriptorSet set, 
+													  BfAllocatedImage* image,
+													  VkDescriptorImageInfo* imageInfo)
+{
+	imageInfo->imageView = image->view;
+	imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+	VkWriteDescriptorSet write = {};
+	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write.pNext = nullptr;
+
+	write.dstBinding = create_info.binding;
+	write.dstSet = set;
+	write.descriptorCount = 1;
+	write.descriptorType = create_info.type;
+	write.pImageInfo = imageInfo;
+	
 	return write;
 }
 
@@ -250,6 +271,7 @@ BfEvent BfDescriptor::allocate_desc_sets()
 			desc_set_alloc_info.descriptorSetCount = 1; // 1 for each frame
 			// 1 layout for each frame the same, but not for type
 			desc_set_alloc_info.pSetLayouts = &__desc_layout_pack.second.desc_set_layout;
+			
 
 			if (vkAllocateDescriptorSets(
 				__device,
@@ -290,22 +312,39 @@ BfEvent BfDescriptor::update_desc_sets()
 	for (size_t i = 0; i < __frames_in_flight; i++) {
 		std::vector<VkWriteDescriptorSet> writes;
 		writes.reserve(std::distance(__desc_create_info_list.begin(), __desc_create_info_list.end()));
+		
 		std::vector<VkDescriptorBufferInfo> buffer_infos;
 		buffer_infos.reserve(std::distance(__desc_create_info_list.begin(), __desc_create_info_list.end()));
+		
+		std::vector<VkDescriptorImageInfo> image_infos;
+		image_infos.reserve(std::distance(__desc_create_info_list.begin(), __desc_create_info_list.end()));
 
-		size_t j = 0;
+		size_t buffer_j = 0;
+		size_t image_j = 0;
 		for (auto& create_info : __desc_create_info_list) {
 			VkDescriptorSet desc_set = 
 				__desc_layout_packs_map[create_info.layout_binding].desc_sets[i];
 
-			BfAllocatedBuffer* buffer = 
-				&__desc_buffers_map[create_info.usage][i];
 
-			buffer_infos.emplace_back();
-			//auto write = __write_desc_buffer(create_info, desc_set, buffer, &buffer_infos[j]);
-			//write.pBufferInfo = &buffer_infos[j];
-			writes.emplace_back(__write_desc_buffer(create_info, desc_set, buffer, &buffer_infos[j]));
-			j++;
+			if (create_info.pBuffer_info != nullptr)
+			{
+				buffer_infos.emplace_back();
+				BfAllocatedBuffer* buffer = 
+					&__desc_buffers_map[create_info.usage][i];
+				writes.emplace_back(__write_desc_buffer(create_info, desc_set, buffer, &buffer_infos[buffer_j]));
+				buffer_j++;
+			}
+			
+			if (create_info.pImage_info != nullptr)
+			{
+				image_infos.emplace_back();
+				BfAllocatedImage* image =
+					&__desc_image_map[create_info.usage][i];
+				
+				writes.emplace_back(__write_desc_image(create_info, desc_set, image, &image_infos[image_j]));
+				image_j++;
+			}
+
 		}
 
 		vkUpdateDescriptorSets(__device, 
@@ -419,6 +458,8 @@ BfEvent BfDescriptor::allocate_desc_images()
 
 			BfEvent res_view{}; res_view.single_event.success = true;
 			if (create_info.pImage_info->is_image_view) {
+				create_info.pImage_info->view_create_info.image = 
+					__desc_image_map[create_info.usage][frame_index].image;
 				res_view = bfCreateImageView(
 					&__desc_image_map[create_info.usage][frame_index],
 					 __device,
@@ -473,4 +514,9 @@ void BfDescriptor::bind_device(VkDevice device)
 BfAllocatedBuffer* BfDescriptor::get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index)
 {
 	return &__desc_buffers_map[usage][frame_index];
+}
+
+BfAllocatedImage* BfDescriptor::get_image(BfEnDescriptorUsage usage, uint32_t index)
+{
+	return &__desc_image_map[usage][index];
 }

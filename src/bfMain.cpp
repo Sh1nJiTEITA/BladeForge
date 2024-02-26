@@ -504,14 +504,19 @@ void BfMain::__start_loop()
         //void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
 
         memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
-        //void* pDownloadedData = __base.frame_pack[__base.current_frame].pos_pick_alloc_info.pMappedData;
-        //uint32_t* downloadedData = static_cast<uint32_t*>(pDownloadedData);
+
+        size_t image_size = __base.swap_chain_extent.height * __base.swap_chain_extent.width * sizeof(uint32_t);
+        
+        std::vector<uint32_t> image_data_;
+        image_data_.resize(__base.swap_chain_extent.height * __base.swap_chain_extent.width);
+        
+        void* image_data = __base.id_image_buffer.allocation_info.pMappedData;
+        memcpy(image_data_.data(), image_data, image_size);
+
+        uint32_t pos_id = image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width];
 
 
-        /*for (auto& it : ddata) {
-            std::cout << it << " ";
-        }
-        std::cout << "\n";*/
+ 
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -520,7 +525,8 @@ void BfMain::__start_loop()
 
         __present_menu_bar();
         __present_camera();
-        __present_info(currentTime);
+        __present_info(currentTime, pos_id);
+        __present_id_map(__base, image_data_);
         bfPresentLayerHandler(__base.layer_handler);
         ShowTestPlot();
         
@@ -684,7 +690,7 @@ void BfMain::__kill()
 {
 }
 
-void BfMain::__present_info(double currentTime) {
+void BfMain::__present_info(double currentTime, uint32_t id_map) {
     static int counter = 0;
     static int print_counter = 0;
     
@@ -738,6 +744,8 @@ void BfMain::__present_info(double currentTime) {
         std::string yaw_string = "Current-yaw = " + std::to_string(__base.window->yaw);
         std::string pitch_string = "Current-pitch = " + std::to_string(__base.window->pitch);
 
+        std::string mpos_string = "Mouse-pos = " + std::to_string(__base.window->xpos) + ", " + std::to_string(__base.window->ypos);
+        std::string selected_id_string = "Selected_id = " + std::to_string(id_map);
 
         ImGui::Text(pos_string.c_str());
         ImGui::Text(up_string.c_str());
@@ -745,6 +753,8 @@ void BfMain::__present_info(double currentTime) {
         ImGui::Text(center_string.c_str());
         ImGui::Text(yaw_string.c_str());
         ImGui::Text(pitch_string.c_str());
+        ImGui::Text(mpos_string.c_str());
+        ImGui::Text(selected_id_string.c_str());
 
         ImGui::End();
     }
@@ -835,6 +845,55 @@ void BfMain::__present_menu_bar()
 
         ImGui::EndMainMenuBar();
     }
+}
+
+void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
+{
+    ImGui::Begin("IdMap");
+    {
+        
+ 
+        if (ImGui::Button("Show Id map")) {
+            std::ofstream outFile("id_map.txt");
+
+            if (outFile.is_open()) {
+                for (int i = 0; i < base.swap_chain_extent.height; i++) {
+                    for (int j = 0; j < base.swap_chain_extent.width; j++) {
+                        outFile << data[j + i * base.swap_chain_extent.width] << " ";
+                    }
+                    outFile << "\n";
+                }
+
+            }
+            
+            outFile << "Пример текста для записи в файл." << std::endl;
+            outFile << "Это вторая строка." << std::endl;
+            outFile << "И еще одна строка." << std::endl;
+
+            // Закрываем файл
+            outFile.close();
+            std::vector<unsigned char> rgba_data(base.swap_chain_extent.width * base.swap_chain_extent.height * 4);
+
+            for (int i = 0; i < base.swap_chain_extent.width * base.swap_chain_extent.height; ++i) {
+                uint32_t pixel = data[i];
+                rgba_data[i * 4] = (pixel >> 16) & 0xFF; // Красный канал
+                rgba_data[i * 4 + 1] = (pixel >> 8) & 0xFF; // Зеленый канал
+                rgba_data[i * 4 + 2] = pixel & 0xFF; // Синий канал
+                rgba_data[i * 4 + 3] = (pixel >> 24) & 0xFF; // Альфа канал
+            }
+
+            if (!stbi_write_png("output.png", base.swap_chain_extent.width, base.swap_chain_extent.height, 4, rgba_data.data(), base.swap_chain_extent.width * 4)) {
+                // Обработайте ошибку сохранения изображения
+                std::cerr << "Ошибка сохранения изображения." << std::endl;
+            }
+        }
+
+            
+
+
+        //ImGui::TextWrapped(s.c_str());
+    }
+    ImGui::End();
 }
 
 

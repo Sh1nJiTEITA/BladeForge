@@ -50,6 +50,8 @@ endif()
 set(SOURCES
 	#"src/BladeForgeBin.cpp"
 	#"src/bfVertex.cpp"
+	
+
 	"src/bfBase.cpp"
 	"src/bfEvent.cpp" 
 	"src/bfWindow.cpp" 
@@ -72,13 +74,15 @@ set(SOURCES
 )
 
 set(HEADERS
+	
+	
+
 	#"include/BladeForgeBin.h"	
 	"include/bfVariative.hpp"
 	"include/bfVertex2.hpp"
 	"include/BfExecutionTime.hpp"
 	"include/BfCurves.hpp"
 	"include/bfMatrix.hpp"
-
 	#"include/bfVertex.h"
 	"include/bfBase.h"
 	"include/bfEvent.h" 
@@ -106,6 +110,9 @@ add_executable(${PROJECT_NAME}
     #"external/implot/implot_items.cpp"
 	#"external/implot/implot.h"
     #"external/implot/implot_internal.h"
+
+	"include/stb_image.h"	
+	"include/stb_image_write.h"
 
 	${SOURCES}
 	${HEADERS}
@@ -210,7 +217,12 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/include/bfWindow.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
 	#"tests/bez_test.cpp"
-	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"	
+	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
+
+	"include/stb_image.h"	
+	"include/stb_image_write.h"
+
+
 	${SOURCES}
 	${INCLUDES}
 )

@@ -15,9 +15,12 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     vec2 cursor_pos;
 } ubo;
 
+
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
+
+layout(set = 0, binding = 1, r32ui) uniform  uimage2D id_map;
 
 #define DEPTH_ARRAY_SCALE 2048
 layout(set = 1, binding = 1) buffer cursor_picking {
@@ -45,16 +48,27 @@ void fill_cursor_pointer_array(uint iid) {
     }
 };
 
+void write_id_map(ivec2 texCoord, uint id) {
+    imageStore(id_map, texCoord, uvec4(id));
+};
+
+
 
 void main() {
-   
+    
+    //debugPrintfEXT("i: %i", read_id_map(ivec2(ubo.cursor_pos)));
+
     uint zIndex = uint(gl_FragCoord.z * DEPTH_ARRAY_SCALE);
 
+    ivec2 texCoord = ivec2(gl_FragCoord.xy); // ѕример текстурных координат (пиксельные координаты)
+
+    // «апись значени€ ID в изображение
+    write_id_map(texCoord, obj_data_buffer.obj_data[obj_index].id);
 
     if(length(ubo.cursor_pos - gl_FragCoord.xy) <= 1) {
         //fill_cursor_pointer_array(obj_data_buffer.obj_data[obj_index].id);
         cp.data[zIndex] = obj_data_buffer.obj_data[obj_index].id;      
-        debugPrintfEXT("z: %f, i: %i", gl_FragCoord.z, zIndex);
+        //debugPrintfEXT("z: %f, i: %i", gl_FragCoord.z, zIndex);
     }
     
     outColor = vec4(fragColor * obj_data_buffer.obj_data[obj_index].select_color, 1.0);

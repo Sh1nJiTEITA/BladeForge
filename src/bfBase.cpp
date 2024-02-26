@@ -278,6 +278,9 @@ BfEvent bfCreateLogicalDevice(BfBase& base)
 	}
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
+	deviceFeatures.vertexPipelineStoresAndAtomics = true;
+	deviceFeatures.fragmentStoresAndAtomics = true;
+	
 
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1066,7 +1069,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
 		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10},
-		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10}
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10},
 	};
 
 	base.descriptor.create_desc_pool(sizes);
@@ -1141,39 +1144,54 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	id_image_create_info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
 	id_image_create_info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
 	id_image_create_info.mipLevels = 1;
-	id_image_create_info.arrayLayers = 1;
+	id_image_create_info.arrayLayers = 10;
 	id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	id_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	id_image_create_info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
+	id_image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+							     VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+							     VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+							     VK_IMAGE_USAGE_STORAGE_BIT |
+								 VK_IMAGE_USAGE_SAMPLED_BIT;
+
 	id_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	id_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	VmaAllocationCreateInfo allocinfo{};
-	allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	allocinfo.usage = VMA_MEMORY_USAGE_AUTO;
+	//allocinfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
 
-	VkImageViewCreateInfo id_image_view_info = {};
-	id_image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	id_image_view_info.image = base.id_map_image.image;
-	id_image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	id_image_view_info.format = VK_FORMAT_R32_UINT;
-	id_image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	id_image_view_info.subresourceRange.baseMipLevel = 0;
-	id_image_view_info.subresourceRange.levelCount = 1;
-	id_image_view_info.subresourceRange.baseArrayLayer = 0;
-	id_image_view_info.subresourceRange.layerCount = 1;
+	VkImageViewUsageCreateInfo id_image_usage_info{};
+	id_image_usage_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO;
+	id_image_usage_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+								VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+								VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+								VK_IMAGE_USAGE_STORAGE_BIT |
+								VK_IMAGE_USAGE_SAMPLED_BIT;
+
+	VkImageViewCreateInfo id_image_info = {};
+	id_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	id_image_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	id_image_info.format = VK_FORMAT_R32_UINT;
+	id_image_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	id_image_info.subresourceRange.baseMipLevel = 0;
+	id_image_info.subresourceRange.levelCount = 1;
+	id_image_info.subresourceRange.baseArrayLayer = 0;
+	id_image_info.subresourceRange.layerCount = 1;
+	id_image_info.pNext = &id_image_usage_info;
+	
 
 	BfDescriptorImageCreateInfo binfo_id_map{};
 	binfo_id_map.alloc_create_info = allocinfo;
-	binfo_id_map.count = 1;
+	binfo_id_map.count = MAX_FRAMES_IN_FLIGHT;
 	binfo_id_map.image_create_info = id_image_create_info;
 	binfo_id_map.is_image_view = true;
-	binfo_id_map.view_create_info = id_image_view_info;
+	binfo_id_map.view_create_info = id_image_info;
 
 	BfDescriptorCreateInfo info_id_map{};
 	info_id_map.usage = BfDescriptorPosPickUsage;
 	info_id_map.vma_allocator = base.allocator;
 	info_id_map.pImage_info = &binfo_id_map;
-	info_id_map.type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	info_id_map.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	info_id_map.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	info_id_map.binding = 1;
 	info_id_map.layout_binding = BfDescriptorSetGlobal;
@@ -1194,6 +1212,15 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	base.descriptor.update_desc_sets();
 
 	base.layer_handler.bind_descriptor(&base.descriptor);
+
+	
+	bfCreateBuffer(&base.id_image_buffer,
+					base.allocator,
+					base.swap_chain_extent.height* base.swap_chain_extent.width * sizeof(uint32_t),
+					VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+					VMA_MEMORY_USAGE_AUTO,
+					VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
+
 
 	return BfEvent();
 }
@@ -1307,6 +1334,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
 
 	// How to use vertex data
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly_triangles{};
@@ -1949,51 +1977,51 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 
 BfEvent bfCreateIDMapImage(BfBase& base)
 {
-	auto holder = bfGetpHolder();
+	//auto holder = bfGetpHolder();
 
-	VkImageCreateInfo info{};
-	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	info.pNext = nullptr;
-	//info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
-	info.imageType = VK_IMAGE_TYPE_2D;
-	
-	info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
-	info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
-	info.mipLevels = 1;
-	info.arrayLayers = 1;
-	info.samples = VK_SAMPLE_COUNT_1_BIT;
-	info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
-	info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	//VkImageCreateInfo info{};
+	//info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	//info.pNext = nullptr;
+	////info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+	//info.imageType = VK_IMAGE_TYPE_2D;
+	//
+	//info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
+	//info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+	//info.mipLevels = 1;
+	//info.arrayLayers = 1;
+	//info.samples = VK_SAMPLE_COUNT_1_BIT;
+	//info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	//info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
+	////info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocinfo{};
-	allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	//VmaAllocationCreateInfo allocinfo{};
+	//allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
 
 
-	if (vmaCreateImage(base.allocator, 
-				   &info, 
-				   &allocinfo, 
-				   &base.id_map_image.image, 
-				   &base.id_map_image.allocation, nullptr) != VK_SUCCESS) {
-		throw std::runtime_error("id map image wasn't created");
-	}
+	//if (vmaCreateImage(base.allocator, 
+	//			   &info, 
+	//			   &allocinfo, 
+	//			   &base.id_map_image.image, 
+	//			   &base.id_map_image.allocation, nullptr) != VK_SUCCESS) {
+	//	throw std::runtime_error("id map image wasn't created");
+	//}
 
-	VkImageViewCreateInfo viewInfo = {};
-	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewInfo.image = base.id_map_image.image; 
-	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	viewInfo.format = VK_FORMAT_R32_UINT; 
-	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	viewInfo.subresourceRange.baseMipLevel = 0;
-	viewInfo.subresourceRange.levelCount = 1;
-	viewInfo.subresourceRange.baseArrayLayer = 0;
-	viewInfo.subresourceRange.layerCount = 1;
+	//VkImageViewCreateInfo viewInfo = {};
+	//viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	//viewInfo.image = base.id_map_image.image; 
+	//viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	//viewInfo.format = VK_FORMAT_R32_UINT; 
+	//viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	//viewInfo.subresourceRange.baseMipLevel = 0;
+	//viewInfo.subresourceRange.levelCount = 1;
+	//viewInfo.subresourceRange.baseArrayLayer = 0;
+	//viewInfo.subresourceRange.layerCount = 1;
 
-	if (vkCreateImageView(base.device, &viewInfo, nullptr, &base.id_map_image.view) != VK_SUCCESS) {
-		throw std::runtime_error("id map image view wasn't created");
-	}
+	//if (vkCreateImageView(base.device, &viewInfo, nullptr, &base.id_map_image.view) != VK_SUCCESS) {
+	//	throw std::runtime_error("id map image view wasn't created");
+	//}
 
 
 
@@ -2446,15 +2474,31 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	renderPassInfo.pClearValues = clear_values.data();//&clearColor;
 
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
+
+	{
+		VkImageMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+		barrier.image = base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = 0;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.levelCount = 1;
+
+		vkCmdPipelineBarrier(local_buffer,
+			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			0, 0, nullptr, 0, nullptr, 1, &barrier);
+	}
+
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
-		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
-		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
-
-		//VkBuffer vertexBuffers[] = { 
-		//	//mesh.vertex_buffer.buffer
-		//	base.dynamic_vertex_buffer.buffer 
-		//};
 		VkDeviceSize offsets[] = { 0 };
 
 		VkViewport viewport{};
@@ -2471,25 +2515,8 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		scissor.extent = base.swap_chain_extent;
 		vkCmdSetScissor(local_buffer, 0, 1, &scissor);
 
-		//vkCmdBindVertexBuffers(local_buffer, 0, 1, vertexBuffers, offsets);
-		//vkCmdBindIndexBuffer(local_buffer, base.dynamic_index_buffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 		
-		uint32_t uniform_offset = bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * (base.current_frame % MAX_FRAMES_IN_FLIGHT);
 		
-		base.descriptor.bind_desc_sets(
-			BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
-			base.current_frame,
-			local_buffer,
-			base.triangle_pipeline_layout,
-			0
-		);
-		base.descriptor.bind_desc_sets(
-			BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
-			base.current_frame,
-			local_buffer,
-			base.triangle_pipeline_layout,
-			1
-		);
 		//vkCmdBindDescriptorSets(
 		//	local_buffer,
 		//	VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -2536,13 +2563,69 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		
 		//BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();	
 		//pGeometryHolder->draw_indexed(local_buffer);
+
+		
+		
+		base.descriptor.bind_desc_sets(BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
+									   base.current_frame,
+									   local_buffer,
+									   base.triangle_pipeline_layout,
+									   0);
+		base.descriptor.bind_desc_sets(BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
+									   base.current_frame,
+									   local_buffer,
+									   base.triangle_pipeline_layout,
+									   1);
+
 		base.layer_handler.draw(local_buffer, base.triangle_pipeline);
-
-
-		//handler.bind_mesh(local_buffer, 0);
-		//handler.draw_indexed(local_buffer, 0);
 	}
 	vkCmdEndRenderPass(local_buffer);
+
+	{
+		VkImageMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.image = base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = 0;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.levelCount = 1;
+
+		vkCmdPipelineBarrier(local_buffer,
+			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+			0, 0, nullptr, 0, nullptr, 1, &barrier);
+	}
+
+	{
+		VkImageSubresourceLayers sub{};
+		sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		sub.mipLevel = 0;
+		sub.layerCount = 1;
+		sub.baseArrayLayer = 0;
+
+		VkBufferImageCopy region = {};
+		region.bufferOffset = 0;
+		region.bufferRowLength = base.swap_chain_extent.width;
+		region.bufferImageHeight = base.swap_chain_extent.height;
+		region.imageSubresource = sub;
+		region.imageOffset = { 0,0,0 };
+		region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+
+		vkCmdCopyImageToBuffer(local_buffer,
+			base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			base.id_image_buffer.buffer,
+			1,
+			&region);
+	}
+
 
 	if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to begin recoding command buffer");

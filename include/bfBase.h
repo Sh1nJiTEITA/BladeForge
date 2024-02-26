@@ -61,7 +61,7 @@ struct BfBase {
 	VkFormat				 swap_chain_format;
 	VkExtent2D				 swap_chain_extent;
 
-	BfAllocatedImage		 id_map_image;
+	BfAllocatedBuffer		 id_image_buffer;
 
 	BfAllocatedImage		 depth_image;
 	//VkImageView				 depth_image_view;
