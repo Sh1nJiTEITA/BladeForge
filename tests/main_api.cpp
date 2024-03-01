@@ -4,6 +4,8 @@
 #include "bfConsole.h"
 
 
+
+
 TEST_CASE("BF_MAIN_H", "[single-file]") {
 
 	BfMain main;

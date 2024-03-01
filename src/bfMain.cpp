@@ -884,7 +884,7 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 
             if (!stbi_write_png("output.png", base.swap_chain_extent.width, base.swap_chain_extent.height, 4, rgba_data.data(), base.swap_chain_extent.width * 4)) {
                 // Обработайте ошибку сохранения изображения
-                std::cerr << "Ошибка сохранения изображения." << std::endl;
+                //std::cerr << "Ошибка сохранения изображения." << std::endl;
             }
         }
 

@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
 include_directories(include)
-
+link_directories(include)
 #include_directories(external/implot/)
 #add_subdirectory(external/implot)
 #include_directories(src)
@@ -76,7 +76,7 @@ set(SOURCES
 set(HEADERS
 	
 	
-
+	"include/stb_image.h"
 	#"include/BladeForgeBin.h"	
 	"include/bfVariative.hpp"
 	"include/bfVertex2.hpp"
@@ -100,6 +100,7 @@ set(HEADERS
 	"include/bfLayerHandler.h"
 	"include/bfGUI.h" 
 	"include/bfCurves3.h"
+	"main.h"
 )
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
@@ -111,8 +112,8 @@ add_executable(${PROJECT_NAME}
 	#"external/implot/implot.h"
     #"external/implot/implot_internal.h"
 
-	"include/stb_image.h"	
-	"include/stb_image_write.h"
+		
+	
 
 	${SOURCES}
 	${HEADERS}
@@ -168,6 +169,16 @@ add_subdirectory(external/glm)
 add_subdirectory(external/VulkanMemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
 
+
+#add_subdirectory(external/FreeImage)
+
+# if you want RGB color order instead of BGR
+#target_compile_definitions(FreeImage PUBLIC FREEIMAGE_COLORORDER=1)
+
+# ...
+
+#target_link_libraries(${PROJECT_NAME} PUBLIC FreeImage)
+#target_include_directories(${PROJECT_NAME} PUBLIC external/FreeImage/Source)
 # implot
 #add_subdirectory(external/implot)
 #target_link_libraries(${PROJECT_NAME} PUBLIC implot)
@@ -204,7 +215,7 @@ add_subdirectory(external/catch2)
 ### Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
+	#"${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
@@ -219,8 +230,8 @@ add_executable(tests
 	#"tests/bez_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
 
-	"include/stb_image.h"	
-	"include/stb_image_write.h"
+		
+	
 
 
 	${SOURCES}

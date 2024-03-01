@@ -1,39 +1,20 @@
-﻿/*
-* Auther: sNj
-* Time Creation: 07.10.2023
-*
-*
-* Description:
-* Entry point.
-* 
-*
-*/
-
-
-
-/*
-* Contains vk-part of applicaion.
-*/
-//#include "BladeForgeBin.h"
-
+﻿#include "main.h"
 
 
 
 int main() {
-    //BladeForge app{};
-    /*
-    try
-    {
-        app.run();
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;*/
-    //}
 
 
-    return 0;
+
+	BfMain main;
+	try {
+		BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
+		main.run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
 }
 //
 //// Dear ImGui: standalone example application for Glfw + Vulkan
