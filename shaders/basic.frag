@@ -13,6 +13,7 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec2 cursor_pos;
+    uint id_on_cursor;
 } ubo;
 
 
@@ -21,6 +22,7 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
 } obj_data_buffer;
 
 layout(set = 0, binding = 1, r32ui) uniform  uimage2D id_map;
+//layout(set = 0, binding = 1, r32ui) uniform  uimageBuffer id_map;
 
 #define DEPTH_ARRAY_SCALE 2048
 layout(set = 1, binding = 1) buffer cursor_picking {

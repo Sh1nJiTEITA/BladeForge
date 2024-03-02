@@ -513,8 +513,8 @@ void BfMain::__start_loop()
         void* image_data = __base.id_image_buffer.allocation_info.pMappedData;
         memcpy(image_data_.data(), image_data, image_size);
 
-        uint32_t pos_id = image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width];
-
+        __base.pos_id = image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width];
+        //uint32_t pos_id = 0;
 
  
 
@@ -525,7 +525,7 @@ void BfMain::__start_loop()
 
         __present_menu_bar();
         __present_camera();
-        __present_info(currentTime, pos_id);
+        __present_info(currentTime, __base.pos_id);
         __present_id_map(__base, image_data_);
         bfPresentLayerHandler(__base.layer_handler);
         ShowTestPlot();
@@ -872,17 +872,41 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 
             // Закрываем файл
             outFile.close();
-            std::vector<unsigned char> rgba_data(base.swap_chain_extent.width * base.swap_chain_extent.height * 4);
+            
+            std::random_device rd;
+            std::mt19937 mt(rd());
 
+
+            std::map<uint32_t, glm::vec4> id_color_map;
             for (int i = 0; i < base.swap_chain_extent.width * base.swap_chain_extent.height; ++i) {
-                uint32_t pixel = data[i];
-                rgba_data[i * 4] = (pixel >> 16) & 0xFF; // Красный канал
-                rgba_data[i * 4 + 1] = (pixel >> 8) & 0xFF; // Зеленый канал
-                rgba_data[i * 4 + 2] = pixel & 0xFF; // Синий канал
-                rgba_data[i * 4 + 3] = (pixel >> 24) & 0xFF; // Альфа канал
+                if (!id_color_map.contains(data[i])) {
+                    
+
+                    float red = (float)(mt() % 255);
+                    float green = (float)(mt() % 255);
+                    float blue = (float)(mt() % 255);
+                    
+                    id_color_map[data[i]] = glm::vec4(red, green, blue, 1.0f);
+
+                    std::cout << id_color_map[data[i]].r << ", " << id_color_map[data[i]].g << ", " << id_color_map[data[i]].b << "\n";
+                }
+            }
+            
+
+
+            std::vector<uint8_t> rgba_data(base.swap_chain_extent.width * base.swap_chain_extent.height * 3);
+            size_t index = 0;
+            for (int i = 0; i < base.swap_chain_extent.width * base.swap_chain_extent.height * 3; i+=3) {
+                rgba_data[i + 0] = int(id_color_map[data[index]].r);
+                rgba_data[i + 1] = int(id_color_map[data[index]].g);
+                rgba_data[i + 2] = int(id_color_map[data[index]].b);
+                //rgba_data[i + 3] = id_color_map[data[i]].a;
+
+                index++;
+
             }
 
-            if (!stbi_write_png("output.png", base.swap_chain_extent.width, base.swap_chain_extent.height, 4, rgba_data.data(), base.swap_chain_extent.width * 4)) {
+            if (!stbi_write_png("output.png", base.swap_chain_extent.width, base.swap_chain_extent.height, 3, rgba_data.data(), base.swap_chain_extent.width * 3)) {
                 // Обработайте ошибку сохранения изображения
                 //std::cerr << "Ошибка сохранения изображения." << std::endl;
             }

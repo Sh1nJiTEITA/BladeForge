@@ -77,6 +77,8 @@ set(HEADERS
 	
 	
 	"include/stb_image.h"
+	"include/stb_image_write.h"
+
 	#"include/BladeForgeBin.h"	
 	"include/bfVariative.hpp"
 	"include/bfVertex2.hpp"

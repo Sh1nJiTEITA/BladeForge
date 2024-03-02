@@ -62,7 +62,6 @@ struct BfBase {
 	VkExtent2D				 swap_chain_extent;
 
 	BfAllocatedBuffer		 id_image_buffer;
-
 	BfAllocatedImage		 depth_image;
 	//VkImageView				 depth_image_view;
 	VkFormat				 depth_format;
@@ -115,6 +114,7 @@ struct BfBase {
 	//BfCurveSet* pLinear_set;
 
 	bool is_resized;
+	uint32_t pos_id;
 };
 
 

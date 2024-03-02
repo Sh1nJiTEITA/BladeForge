@@ -2475,6 +2475,20 @@ void bfMainRecordCommandBuffer(BfBase& base)
 
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
 
+	VkImageSubresourceLayers sub{};
+	sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	sub.mipLevel = 0;
+	sub.layerCount = 1;
+	sub.baseArrayLayer = 0;
+
+	VkBufferImageCopy region = {};
+	region.bufferOffset = 0;
+	region.bufferRowLength = base.swap_chain_extent.width;
+	region.bufferImageHeight = base.swap_chain_extent.height;
+	region.imageSubresource = sub;
+	region.imageOffset = { 0,0,0 };
+	region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+
 	{
 		VkImageMemoryBarrier barrier = {};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -2496,6 +2510,30 @@ void bfMainRecordCommandBuffer(BfBase& base)
 			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 			0, 0, nullptr, 0, nullptr, 1, &barrier);
 	}
+	{
+		VkClearColorValue clearColorValue{};
+		clearColorValue.uint32[0] = 0;
+		clearColorValue.uint32[1] = 0;
+		clearColorValue.uint32[2] = 0;
+		clearColorValue.uint32[3] = 0;
+
+		VkImageSubresourceRange clear_subsource_range;
+		clear_subsource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		clear_subsource_range.baseArrayLayer = 0;
+		clear_subsource_range.baseMipLevel = 0;
+		clear_subsource_range.layerCount = 1;
+		clear_subsource_range.levelCount = 1;
+
+
+		vkCmdClearColorImage(local_buffer,
+			base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
+			VK_IMAGE_LAYOUT_GENERAL,
+			&clearColorValue,
+			1,
+			&clear_subsource_range
+		);
+	}
+
 
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
@@ -2604,19 +2642,14 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	}
 
 	{
-		VkImageSubresourceLayers sub{};
-		sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		sub.mipLevel = 0;
-		sub.layerCount = 1;
-		sub.baseArrayLayer = 0;
+		
 
-		VkBufferImageCopy region = {};
-		region.bufferOffset = 0;
-		region.bufferRowLength = base.swap_chain_extent.width;
-		region.bufferImageHeight = base.swap_chain_extent.height;
-		region.imageSubresource = sub;
-		region.imageOffset = { 0,0,0 };
-		region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+		/*void* b_data;
+		vmaMapMemory(base.allocator, base.id_image_buffer.allocation, &b_data);
+		{
+			memset(b_data, 0, base.id_image_buffer.size);
+		}
+		vmaUnmapMemory(base.allocator, base.id_image_buffer.allocation);*/
 
 		vkCmdCopyImageToBuffer(local_buffer,
 			base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
@@ -2624,8 +2657,10 @@ void bfMainRecordCommandBuffer(BfBase& base)
 			base.id_image_buffer.buffer,
 			1,
 			&region);
-	}
 
+		
+		
+	}
 
 	if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to begin recoding command buffer");
@@ -2829,6 +2864,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 		}
 	}
 	ubo.cursor_pos = { base.window->xpos, base.window->ypos };
+	ubo.id_on_cursor = base.pos_id;
 
 	void* view_data = nullptr;
 	base.descriptor.map_descriptor(BfDescriptorViewDataUsage, base.current_frame, &view_data);

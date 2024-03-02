@@ -1,6 +1,5 @@
 #version 460
 #extension GL_EXT_debug_printf : enable
-
 // Structs 
 
 struct BezierPoints {
@@ -21,9 +20,13 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec2 cursor_pos;
+    uint id_on_cursor;
 } ubo;
 
+
+
 layout(set = 0, binding = 1, r32ui) uniform uimage2D id_map;
+//layout(set = 0, binding = 1, r32ui) uniform  uimageBuffer id_map;
 
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
@@ -83,9 +86,9 @@ void main() {
 //        fragColor = inColor;
 //    }
     //debugPrintfEXT("%f %f", ubo.cursor_pos.x, ubo.cursor_pos.y);
-    uvec4 pixel_value = imageLoad(id_map, ivec2(ubo.cursor_pos));
+    //uvec4 pixel_value = imageLoad(id_map, ivec2(ubo.cursor_pos));
     //debugPrintfEXT("%i, %i, %i, %i", pixel_value.x, pixel_value.y, pixel_value.z, pixel_value.w);
-    if (obj_data_buffer.obj_data[gl_BaseInstance].id == read_id_map(ivec2(ubo.cursor_pos))) {                
+    if (obj_data_buffer.obj_data[gl_BaseInstance].id == ubo.id_on_cursor) {                
         fragColor = vec3(0.0, 1.0, 0.5);
     }
     else {

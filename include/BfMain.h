@@ -1,9 +1,9 @@
 #ifndef BF_MAIN_H
 #define BF_MAIN_H
 
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image.h>
+//#include <stb_image.h>
 #include <stb_image_write.h>
 
 #include "bfBase.h"
@@ -12,10 +12,12 @@
 #include "bfGUI.h"
 #include "bfCurves3.h"
 
+#include <random>
+
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"
-#define BF_START_W 1600
-#define BF_START_H 1024
+#define BF_START_W 1000
+#define BF_START_H 800
 
 
 
@@ -27,7 +29,6 @@ private:
 	BfHolder __holder;
 	BfGeometryHolder __geometry_holder;
 	BfGUI __gui;
-
 
 
 	void __process_keys();
