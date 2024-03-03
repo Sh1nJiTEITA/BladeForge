@@ -198,6 +198,14 @@ BfEvent BfDescriptor::create_desc_set_layouts()
 
 BfDescriptor::BfDescriptor() {}
 
+BfDescriptor::~BfDescriptor()
+{
+	this->destroy_desc_set_layouts();
+	this->destroy_desc_pool();
+	this->deallocate_desc_images();
+	this->deallocate_desc_buffers();
+}
+
 
 
 BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)

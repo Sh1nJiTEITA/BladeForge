@@ -38,7 +38,6 @@ private:
 	void __kill();
 
 	// Presents // 
-	void __present_vertices(BfMeshHandler* handler);
 	void __present_info(double currentTime, uint32_t id_map);
 	void __present_camera();
 	void __present_menu_bar();

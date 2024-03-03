@@ -59,11 +59,9 @@ void BfMain::__init()
     bfCreateStandartRenderPass(__base);
     bfCreateGUIRenderPass(__base);
 
-    //bfInitDescriptors(__base);
     bfCreateIDMapImage(__base);
     bfInitOwnDescriptors(__base);
     
-    // ToDo
     bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv");
     bfCreateStandartFrameBuffers(__base);
     bfCreateGUIFrameBuffers(__base);
@@ -78,11 +76,31 @@ void BfMain::__init()
     bfBindGeometryHolderOutsideAllocator(__base.allocator);
 }
 
+void BfMain::__kill()
+{
+    bfDestoryImGUI(__base);
+    bfDestorySyncObjects(__base);
+    bfDestroyGUICommandBuffers(__base);
+    bfDestroyStandartCommandBuffers(__base);
+    bfDestroyCommandPool(__base);
+    bfDestroyGUIFrameBuffers(__base);
+    bfDestroyStandartFrameBuffers(__base);
+    bfDestroyDepthBuffer(__base);
+    bfDestroyGraphicsPipelines(__base);
+    bfDestroyIDMapImage(__base);
+    bfDestroyGUIRenderPass(__base);
+    bfDestroyStandartRenderPass(__base);
+    bfDestroyImageViews(__base);
+    bfDestroySwapchain(__base);
+    //bfDestroyAllocator(__base);
+    bfDestroyLogicalDevice(__base);
+    bfDestroySurface(__base);
+    bfDestroyInstance(__base);
+}
+
 void BfMain::__start_loop()
 {
     __base.current_frame = 0;
-    __base.x_scale = 1.0f;
-    __base.y_scale = 1.0f;
     __base.is_resized = true;
 
     float local_x = 0;
@@ -496,32 +514,12 @@ void BfMain::__start_loop()
         __process_keys();
         double currentTime = glfwGetTime();
 
-        // If a second has passed.
-
-        std::array<uint32_t, 32> ddata;
-
-        void* pdata = __base.descriptor.get_buffer(BfDescriptorPosPickUsage, __base.current_frame)->allocation_info.pMappedData;
-        //void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
-
-        //memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
-
-        size_t image_size = __base.swap_chain_extent.height * __base.swap_chain_extent.width * sizeof(uint32_t);
-        
-        //std::vector<uint32_t> image_data_;
-        //std::vector<float> image_data_;
-        //image_data_.resize(__base.swap_chain_extent.height * __base.swap_chain_extent.width);
-        
-        //void* image_data = __base.id_image_buffer.allocation_info.pMappedData;
-        //memcpy(image_data_.data(), image_data, image_size);
 
         uint32_t id_on_cursor;
         void* id_on_cursor_ = __base.id_image_buffer.allocation_info.pMappedData;
         memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
-
-
-        //__base.pos_id = (int)(image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width]);
         __base.pos_id = id_on_cursor;
-        //uint32_t pos_id = 0;
+
 
  
 
@@ -531,7 +529,7 @@ void BfMain::__start_loop()
         //ImGui::ShowDemoWindow();
 
         __present_menu_bar();
-        //__present_camera();
+        __present_camera();
         __present_info(currentTime, __base.pos_id);
        // __present_id_map(__base, image_data_);
         bfPresentLayerHandler(__base.layer_handler);
@@ -569,110 +567,6 @@ void BfMain::__start_loop()
 
 
 
-
-        ImGui::Begin("Scale Window");
-            
-            
-
-            ImGui::SliderFloat("x", &__base.x_scale, 0.0f, 2.0f);
-            ImGui::SliderFloat("y", &__base.y_scale, 0.0f, 2.0f);
-            ImGui::InputFloat("XYZ", &__base.xyz_scale, 0.1f);
-
-            ImGui::SliderFloat("+x", &__base.px, -1.0, 1.0f);
-            ImGui::SliderFloat("+y", &__base.py, -1.0f, 1.0f);
-            ImGui::SliderFloat("+z", &__base.pz, -1.0f, 1.0f);
-
-            /*ImGui::BeginTable("Move Objets", 2);
-                
-                ImGui::TableNextRow();
-
-                ImGui::TableSetColumnIndex(0);
-                if (ImGui::Button("+x_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(1.0f, 0.0f, 0.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(1.0f, 0.0f, 0.0f));
-                }
-                ImGui::TableSetColumnIndex(1);
-                if (ImGui::Button("-x_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(-1.0f, 0.0f, 0.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(-1.0f, 0.0f, 0.0f));
-                }
-                
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-
-                if (ImGui::Button("+y_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 1.0f, 0.0f));
-                }
-                ImGui::TableSetColumnIndex(1);
-                if (ImGui::Button("-y_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, -1.0f, 0.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, -1.0f, 0.0f));
-                }
-
-                ImGui::TableNextRow();
-                
-                ImGui::TableSetColumnIndex(0);
-                if (ImGui::Button("+z_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 0.0f, 1.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 0.0f, 1.0f));
-                }
-                ImGui::TableSetColumnIndex(1);
-                if (ImGui::Button("-z_pos")) {
-                    pMesh1->model_matrix = glm::translate(pMesh1->model_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
-                    pMesh2->model_matrix = glm::translate(pMesh2->model_matrix, glm::vec3(0.0f, 0.0f, -1.0f));
-                }
-
-            ImGui::EndTable();*/
-
-           /* ImGui::Checkbox("x_rot", &is_x_rotating);
-            ImGui::Checkbox("y_rot", &is_y_rotating);
-            ImGui::Checkbox("z_rot", &is_z_rotating);
-
-            float xr = 0.0f;
-            float yr = 0.0f;
-            float zr = 0.0f;
-
-            if (is_x_rotating == true) xr = 0.1;
-            if (is_y_rotating == true) yr = 0.1;
-            if (is_z_rotating == true) zr = 0.1;
-            
-            if (is_x_rotating || is_y_rotating || is_z_rotating)
-            {
-                pMesh1->model_matrix = glm::rotate(pMesh1->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
-                pMesh2->model_matrix = glm::rotate(pMesh2->model_matrix, (float)currentTime / 5, glm::vec3(xr, yr, zr));
-            }*/
-
-            if (ImGui::Button("Toggle Front-vec")) {
-                __base.window->front *= -1;
-            }
-
-        ImGui::End();
-
-        ImGui::Begin("coordinates");
-
-        ImGui::InputFloat("x", &local_x, 0.1f);
-        ImGui::InputFloat("y", &local_y, 0.1f);
-
-       /* if (ImGui::Button("Add")) {
-            if ((local_x != 0) and (local_y != 0)) {
-                __base.storage.push_back({ glm::vec2(local_x, local_y) });
-                __base.storage.push_back({ glm::vec2(local_x, local_y) });
-            }
-
-        }*/
-
-        
-
-       
-        
-        /*BfExecutionTime::BeginTimeCut("Vertices-present");
-            __present_vertices(&mesh_handler);
-        BfExecutionTime::EndTimeCut("Vertices-present");*/
-
-
-
-        ImGui::End();
         ImGui::Render();
 
         bfDrawFrame(__base);
@@ -693,9 +587,7 @@ void BfMain::__start_loop()
 
 }
 
-void BfMain::__kill()
-{
-}
+
 
 void BfMain::__present_info(double currentTime, uint32_t id_map) {
     static int counter = 0;
@@ -839,9 +731,6 @@ void BfMain::__present_menu_bar()
         }
         if (ImGui::BeginMenu("View")) {
             
-            /*std::string perfomance_view_pannel_str;
-            if (__gui.is_info) perfomance_view_pannel_str = "Hide perfomance/view pannel";
-            else perfomance_view_pannel_str = "Show perfomance/view pannel";*/
 
             if (ImGui::MenuItem(bfGetMenueInfoStr(__gui).c_str())) {
                 __gui.is_info = !__gui.is_info;
@@ -928,98 +817,6 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 }
 
 
-void BfMain::__present_vertices(BfMeshHandler* handler)
-{
-    ImGui::Begin("Vertices");
-        
-        static bool is_xyz = false;
-        ImGui::Checkbox("Enable [x],[y],[z]", &is_xyz);
-        
-        
-
-
-        // id/i | x | y | z | m |proj*view*model*x | proj*view*model*y | proj*view*model*z
-        if (is_xyz) {
-            static bool is_mat = false;
-            ImGui::Checkbox("Enable p*v*m*[]", &is_mat);
-            
-            if (is_mat)
-                ImGui::BeginTable("Vertices", 7);
-            else
-                ImGui::BeginTable("Vertices", 4);
-
-            ImGui::TableSetupColumn("id/i");
-            ImGui::TableSetupColumn("[x]");
-            ImGui::TableSetupColumn("[y]");
-            ImGui::TableSetupColumn("[z]");
-
-            if (is_mat) {
-                ImGui::TableSetupColumn("p*v*m*[x]");
-                ImGui::TableSetupColumn("p*v*m*[y]");
-                ImGui::TableSetupColumn("p*v*m*[z]");
-            }
-
-
-            ImGui::TableHeadersRow();
-
-            for (int i = 0; i < handler->get_allocated_meshes_count(); i++) {
-                BfMesh* pMesh = handler->get_pMesh(i);
-
-                ImGui::TableNextRow();
-
-
-                ImGui::TableSetColumnIndex(0);
-
-                std::string id_index_str = std::to_string(pMesh->id) + 
-                    "/" + std::to_string(i);
-
-                ImGui::Text(id_index_str.c_str());
-
-                for (const auto& vertex : pMesh->vertices) {
-
-                    glm::vec4 vec = glm::vec4(vertex.pos.x, vertex.pos.y, vertex.pos.z, 1.0f);
-
-                    ImGui::TableSetColumnIndex(1);
-                    ImGui::Text(std::to_string(vec.x).c_str());
-
-                    ImGui::TableSetColumnIndex(2);
-                    ImGui::Text(std::to_string(vec.y).c_str());
-
-                    ImGui::TableSetColumnIndex(3);
-                    ImGui::Text(std::to_string(vec.z).c_str());
-
-                    //std::string model_str = std::to_string(pMesh->model_matrix[0][0]) + ", " + std::to_string(pMesh->model_matrix[0][1]) + ", " + std::to_string(pMesh->model_matrix[0][2]) + ", " + std::to_string(pMesh->model_matrix[0][3]) + "\n" +
-                    //    std::to_string(pMesh->model_matrix[1][0]) + ", " + std::to_string(pMesh->model_matrix[1][1]) + ", " + std::to_string(pMesh->model_matrix[1][2]) + ", " + std::to_string(pMesh->model_matrix[1][3]) + "\n" +
-                    //    std::to_string(pMesh->model_matrix[2][0]) + ", " + std::to_string(pMesh->model_matrix[2][1]) + ", " + std::to_string(pMesh->model_matrix[2][2]) + ", " + std::to_string(pMesh->model_matrix[2][3]) + "\n" +
-                    //    std::to_string(pMesh->model_matrix[3][0]) + ", " + std::to_string(pMesh->model_matrix[3][1]) + ", " + std::to_string(pMesh->model_matrix[3][2]) + ", " + std::to_string(pMesh->model_matrix[3][3]);
-
-
-                    //ImGui::TableSetColumnIndex(4);
-                    //ImGui::Text(model_str.c_str());
-
-                    if (is_mat) {
-                        glm::vec4 cvec = __base.window->proj * pMesh->model_matrix * __base.window->view * vec;
-
-                        ImGui::TableSetColumnIndex(4);
-                        ImGui::Text(std::to_string(cvec.x).c_str());
-
-                        ImGui::TableSetColumnIndex(5);
-                        ImGui::Text(std::to_string(cvec.y).c_str());
-
-                        ImGui::TableSetColumnIndex(6);
-                        ImGui::Text(std::to_string(cvec.z).c_str());
-                    }
-
-                    ImGui::TableNextRow();
-                }
-            }
-
-
-            ImGui::EndTable();
-        }
-        
-    ImGui::End();
-}
 
 BfMain::BfMain() :
     __base{},
@@ -1033,4 +830,4 @@ void BfMain::run()
     __start_loop();
 
     __kill();
-}
+ }

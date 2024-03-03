@@ -13,6 +13,30 @@
 
 
 enum BfEnActionType {
+	// Destroy
+
+	BF_ACTION_TYPE_DESTROY_IMGUI							 =  0x1A0,
+	BF_ACTION_TYPE_DESTROY_SYNC_OBJECTS						 =  0x1A1,
+	BF_ACTION_TYPE_DESTROY_IMGUI_COMMAND_BUFFERS			 =  0x1A2,
+	BF_ACTION_TYPE_DESTROY_MAIN_COMMAND_BUFFERS				 =  0x1A3,
+	BF_ACTION_TYPE_DESTROY_IMGUI_DESCRIPTOR_POOL			 =  0x1A4,
+	//BF_ACTION_TYPE_DESTROY_MAIN_DESCRIPTOR_POOL				 =  0x1A5,
+	BF_ACTION_TYPE_DESTROY_COMMAND_POOL						 =  0x1A6,
+	BF_ACTION_TYPE_DESTROY_MAIN_FRAMEBUFFERS				 =  0x1A7,
+	BF_ACTION_TYPE_DESTROY_IMGUI_FRAMEBUFFERS				 =  0x1A8,
+	BF_ACTION_TYPE_DESTROY_DEPTH_BUFFER						 =  0x1A9,
+	BF_ACTION_TYPE_DESTROY_PIPELINES						 =  0x1B0,
+	BF_ACTION_TYPE_DESTROY_IDMAP							 =  0x1B1,
+	BF_ACTION_TYPE_DESTROY_IMGUI_RENDER_PASS				 =  0x1B2,
+	BF_ACTION_TYPE_DESTROY_MAIN_RENDER_PASS					 =  0x1B2,
+	BF_ACTION_TYPE_DESTROY_IMAGE_VIEWS						 =  0x1B3,
+	BF_ACTION_TYPE_DESTROY_SWAPCHAIN						 =  0x1B4,
+	BF_ACTION_TYPE_DESTROY_SWAPCHAIN_PARTS					 =  0x1B5,
+	BF_ACTION_TYPE_DESTROY_SURFACE							 =  0x1B6,
+	BF_ACTION_TYPE_DESTROY_INSTANCE							 =  0x1B7,
+	BF_ACTION_TYPE_DESTROY_VMA_ALLOCATOR					 =  0x1B8,
+	BF_ACTION_TYPE_DESTROY_DEVICE							 =  0x1B9,
+
 	// Initializations
 	BF_ACTION_TYPE_INIT_INSTANCE_SUCCESS					 =  0x2,
 	BF_ACTION_TYPE_INIT_INSTANCE_FAILURE					 = -0x2,
@@ -141,7 +165,7 @@ enum BfEnActionType {
 
 	BF_ACTION_TYPE_ADD_GEOMETRY_SET_TO_GEOMETRY_HOLDER		 =  0x43,
 
-	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_GEOMETRY_HOLDER= 0x44,
+	BF_ACTION_TYPE_BIND_OUTSIDE_ALLOCATOR_FOR_GEOMETRY_HOLDER=  0x44,
 
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_SUCCESS				 =  0x45,
 	BF_ACTION_TYPE_ADD_GEOMETRY_TO_SET_FAILURE				 = -0x45,
@@ -165,11 +189,38 @@ enum BfEnActionType {
 
 	BF_ACTION_TYPE_CREATE_IMAGE_VIEW_SUCCESS				 =  0x53,
 	BF_ACTION_TYPE_CREATE_IMAGE_VIEW_FAILURE				 = -0x53,
-	BF_ACTION_TYPE_DESTROY_IMAGE_VIEW						 =  0x54
+	BF_ACTION_TYPE_DESTROY_IMAGE_VIEW						 =  0x54,
 
+	BF_ACTION_TYPE_CREATE_IDMAP_SUCCESS						 =  0x55,
+	BF_ACTION_TYPE_CREATE_IDMAP_FAILURE						 = -0x55,
+	
+	BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_SUCCESS				 =  0x56,
+	BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_FAILURE				 = -0x56,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
+	// Destroy
+	{ 0x1A0, "ImGUI were destroyed"},
+	{ 0x1A1, "Sync objects were destroyed"},
+	{ 0x1A2, "ImGUI command buffers were freed"},
+	{ 0x1A3, "Main command buffers were freed"},
+	{ 0x1A4, "ImGUI descriptor pool was destroyed"},
+	//{ 0x1A5, "Main descriptor pool was destroyed"},
+	{ 0x1A6, "VkCommandPool was destroyed"},
+	{ 0x1A7, "ImGUI Framebuffers were destroyed"},
+	{ 0x1A8, "Main Framebuffers were destroyed"},
+	{ 0x1A9, "Depth buffer parts were destroyed"},
+	{ 0x1B0, "VkPipeline's were destroyed"},
+	{ 0x1B1, "IdMap parts were destroyed"},
+	{ 0x1B2, "ImGUI Render pass was destroyed"},
+	{ 0x1B3, "Image views of SwapChain images were destroyed"},
+	{ 0x1B4, "VkSwapchain was destroyed"},
+	{ 0x1B5, "VkSwapchain parts were destroyed"},
+	{ 0x1B6, "VkSurfaceKHR was destroyed"},
+	{ 0x1B7, "VkInstance was destroyed"},
+	{ 0x1B8, "VmaAllocator was destroyed"},
+	{ 0x1B9, "VkDevice was destroyed"},
+	
 	// Initializations
 	{ 0x2,   "Vulkan Instance was created successfully"},
 	{-0x2,   "Vulkan Instance wasn't created"},
@@ -320,7 +371,13 @@ const std::map<int, std::string> bfSetActionsStr{
 
 	{ 0x53,  "VkImageView was created"},
 	{-0x53,  "VkImageView wasm't created"},
-	{ 0x54,  "VkImageView was destroyed"}
+	{ 0x54,  "VkImageView was destroyed"},
+	
+	{ 0x55,  "IdMap parts were created successfully"},
+	{-0x55,  "IdMap parts weren't created" },
+
+	{ 0x56,  "VmaAllocator was created"},
+	{-0x56,  "VmaALlocator wasn't created"}
 };
 
 

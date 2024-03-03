@@ -27,17 +27,17 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 
 
 //layout(set = 0, binding = 1, r32ui) uniform uimage2D id_map;
-layout(set = 0, binding = 1, r32f) uniform image2DArray id_map;
+//layout(set = 0, binding = 1, r32f) uniform image2DArray id_map;
 //layout(set = 0, binding = 1, r32ui) uniform  uimageBuffer id_map;
 
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
 
-#define DEPTH_ARRAY_SCALE 2048
-layout(set = 1, binding = 1) buffer cursor_picking {
-    uint data[DEPTH_ARRAY_SCALE];
-} cp;
+//#define DEPTH_ARRAY_SCALE 2048
+//layout(set = 1, binding = 1) buffer cursor_picking {
+//    uint data[DEPTH_ARRAY_SCALE];
+//} cp;
 
 
 
@@ -46,7 +46,6 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormals;
 
 layout(location = 0) out vec3 fragColor;
-
 layout(location = 4) flat out uint obj_index;
 
 void print_mat4(mat4 matrix) {

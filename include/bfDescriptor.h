@@ -83,7 +83,7 @@ class BfDescriptor {
 	VkDevice __device;
 public:
 	BfDescriptor();
-
+	~BfDescriptor();
 	void set_frames_in_flight(unsigned int in);
 	void bind_device(VkDevice device);
 

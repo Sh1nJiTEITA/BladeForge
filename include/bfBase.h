@@ -12,12 +12,9 @@
 #include "bfDescriptor.h"
 #include "bfLayerHandler.h"
 
-//static std::vector<BfPhysicalDevice> bfPhysicalDeviceHolder{};
-//static std::vector<BfWindow> bfWindowHolder{};
 
 
 #define MAX_UNIQUE_DRAW_OBJECTS 10000
-#define MAX_DEPTH_CURSOR_POS_ELEMENTS 2048
 
 static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -31,10 +28,8 @@ struct BfImagePack {
 };
 
 struct BfFramePack {
-	void*					uniform_view_data;
 
 	// Discriptors
-	BfAllocatedBuffer*		uniform_view_buffer; // For VIEW
 	BfAllocatedBuffer*		model_matrix_buffer; // For object model matrix
 	BfAllocatedBuffer*		pos_pick_buffer;	 // For picking object
 
@@ -44,9 +39,6 @@ struct BfFramePack {
 	VkSemaphore*			available_image_semaphore;
 	VkSemaphore*			finish_render_image_semaphore;
 	VkFence*				frame_in_flight_fence;
-	
-	//VkDescriptorSet*		global_descriptor_set;
-	//VkDescriptorSet*		main_descriptor_set;
 };
 
 
@@ -81,40 +73,17 @@ struct BfBase {
 	VkPipeline				 line_pipeline;
 	VkPipelineLayout		 line_pipeline_layout;
 
-	VkDescriptorSetLayout	 global_set_layout;
-	VkDescriptorSetLayout    main_set_layout;
-
 	BfDescriptor			 descriptor;
 
 	VkCommandPool			 command_pool;
 	
-	VkDescriptorPool		 standart_descriptor_pool;
 	VkDescriptorPool		 gui_descriptor_pool;
 
 	BfLayerHandler			 layer_handler;
 
-	/*BfAllocatedBuffer		 dynamic_vertex_buffer;
-	BfAllocatedBuffer		 dynamic_index_buffer;
-	BfAllocatedBuffer		 bezier_properties_uniform_buffer;
-	char*					 bezier_data;*/
 
 	VmaAllocator			 allocator;
 	
-	float					 x_scale;
-	float					 y_scale;
-	float					 xyz_scale = 1; 
-
-	float					 px;
-	float				     py;
-	float					 pz;
-
-	std::vector<BfStorageBezierPoints> storage;
-
-	uint32_t				 vert_number;
-
-	//BfCurveSet* pBezier_set;
-	//BfCurveSet* pLinear_set;
-
 	bool is_resized;
 	uint32_t pos_id;
 };
@@ -123,34 +92,70 @@ struct BfBase {
 
 // Main functions
 BfEvent bfCreateInstance(BfBase& base);
+BfEvent bfDestroyInstance(BfBase& base);
+
+BfEvent bfDestroyInstance(BfBase& base);
+
 BfEvent bfCreateDebugMessenger(BfBase& base);
+
 BfEvent bfCreateSurface(BfBase& base);
+BfEvent bfDestroySurface(BfBase& base);
+
 BfEvent bfCreatePhysicalDevice(BfBase& base);
+
 BfEvent bfCreateLogicalDevice(BfBase& base);
+BfEvent bfDestroyLogicalDevice(BfBase& base);
+
 BfEvent bfCreateSwapchain(BfBase& base);
+BfEvent bfDestroySwapchain(BfBase& base);
+
 BfEvent bfCreateImageViews(BfBase& base);
+BfEvent bfDestroyImageViews(BfBase& base);
+
 BfEvent bfCreateStandartRenderPass(BfBase& base);
+BfEvent bfDestroyStandartRenderPass(BfBase& base);
+
 BfEvent bfCreateGUIRenderPass(BfBase& base);
-BfEvent bfCreateDescriptorSetLayout(BfBase& base);
-BfEvent bfInitDescriptors(BfBase& base); //Û
+BfEvent bfDestroyGUIRenderPass(BfBase& base);
+
 BfEvent bfInitOwnDescriptors(BfBase& base);
+
 BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
+BfEvent bfDestroyGraphicsPipelines(BfBase& base);
+
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
+BfEvent bfDestroyStandartFrameBuffers(BfBase& base);
+
 BfEvent bfCreateGUIFrameBuffers(BfBase& base);
+BfEvent bfDestroyGUIFrameBuffers(BfBase& base);
+
 BfEvent bfCreateCommandPool(BfBase& base);
-BfEvent bfCreateUniformBuffers(BfBase& base);
-BfEvent bfCreateStandartDescriptorPool(BfBase& base);
+BfEvent bfDestroyCommandPool(BfBase& base);
+
 BfEvent bfCreateGUIDescriptorPool(BfBase& base);
-BfEvent bfCreateDescriptorSets(BfBase& base);
+BfEvent bfDestroyGUIDescriptorPool(BfBase& base);
+
 BfEvent bfCreateStandartCommandBuffers(BfBase& base);
+BfEvent bfDestroyStandartCommandBuffers(BfBase& base);
+
 BfEvent bfCreateGUICommandBuffers(BfBase& base);
+BfEvent bfDestroyGUICommandBuffers(BfBase& base);
+
 BfEvent bfCreateSyncObjects(BfBase& base);
+BfEvent bfDestorySyncObjects(BfBase& base);
+
 BfEvent bfInitImGUI(BfBase& base);
+BfEvent bfDestoryImGUI(BfBase& base);
+
 BfEvent bfCreateDepthBuffer(BfBase& base);
+BfEvent bfDestroyDepthBuffer(BfBase& base);
 
 BfEvent bfCreateIDMapImage(BfBase& base);
+BfEvent bfDestroyIDMapImage(BfBase& base);
 
-void bfCreateAllocator(BfBase& base);
+BfEvent bfCreateAllocator(BfBase& base);
+BfEvent bfDestroyAllocator(BfBase& base);
+
 void bfUploadMesh(BfBase& base, BfMesh& mesh);
 void bfUploadVertices(BfBase& base, BfMesh& mesh);
 void bfUploadIndices(BfBase& base, BfMesh& mesh);
@@ -164,7 +169,6 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 BfEvent bfaRecreateSwapchain(BfBase& base);
-BfEvent bfCreateDiscriptor();
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);

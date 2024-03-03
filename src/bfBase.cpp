@@ -145,6 +145,17 @@ BfEvent bfCreateInstance(BfBase& base)
 	}
 }
 
+BfEvent bfDestroyInstance(BfBase& base)
+{
+	vkDestroyInstance(base.instance, nullptr);
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_INSTANCE;
+	
+	return BfEvent(event);
+}
+
 BfEvent bfCreateDebugMessenger(BfBase& base)
 {
 	// If layer is disabled, то DebugMessenger is not neccesery
@@ -191,6 +202,17 @@ BfEvent bfCreateSurface(BfBase& base)
 		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_SURFACE_SUCCESS;
 	}
 	
+	return BfEvent(event);
+}
+
+BfEvent bfDestroySurface(BfBase& base)
+{
+	vkDestroySurfaceKHR(base.instance, base.surface, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_SURFACE;
+
 	return BfEvent(event);
 }
 
@@ -249,6 +271,8 @@ BfEvent bfCreatePhysicalDevice(BfBase& base)
 	}
 
 }
+
+
 
 BfEvent bfCreateLogicalDevice(BfBase& base)
 {
@@ -330,6 +354,17 @@ BfEvent bfCreateLogicalDevice(BfBase& base)
 	}
 	return BfEvent(event);
 }
+
+BfEvent bfDestroyLogicalDevice(BfBase& base) {
+	vkDestroyDevice(base.device, nullptr);
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_DEVICE;
+
+	return BfEvent(event);
+}
+
 
 BfEvent bfCreateSwapchain(BfBase& base)
 {
@@ -426,6 +461,17 @@ BfEvent bfCreateSwapchain(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfDestroySwapchain(BfBase& base)
+{
+	vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_SWAPCHAIN;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateImageViews(BfBase& base)
 {
 	// NUMBER OF IMAGES -> NUMBER OF VIEWS
@@ -495,6 +541,22 @@ BfEvent bfCreateImageViews(BfBase& base)
 		ss_s << ss_f.str();
 		event.info = ss_s.str();
 	}
+	return BfEvent(event);
+}
+
+BfEvent bfDestroyImageViews(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+	for (size_t i = 0; i < holder->image_views.size(); i++) {
+		vkDestroyImageView(base.device, 
+						  *base.image_packs[i].pImage_view, 
+						   nullptr);
+	}
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMAGE_VIEWS;
+
 	return BfEvent(event);
 }
 
@@ -633,6 +695,17 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfDestroyStandartRenderPass(BfBase& base)
+{
+	vkDestroyRenderPass(base.device, base.standart_render_pass, nullptr);
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_MAIN_RENDER_PASS;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateGUIRenderPass(BfBase& base)
 {
 	VkAttachmentDescription attachment = {};
@@ -686,37 +759,17 @@ BfEvent bfCreateGUIRenderPass(BfBase& base)
 	return BfEvent(event);
 }
 
-BfEvent bfCreateDescriptorSetLayout(BfBase& base)
+BfEvent bfDestroyGUIRenderPass(BfBase& base)
 {
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.pImmutableSamplers = nullptr;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
-
+	vkDestroyRenderPass(base.device, base.gui_render_pass, nullptr);
+	
 	BfSingleEvent event{};
-	if (vkCreateDescriptorSetLayout(
-		base.device, &layoutInfo, nullptr, &base.global_set_layout
-	) == VK_SUCCESS) {
-		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_SUCCESS;
-	}
-	else {
-		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-		event.action = BfEnActionType::BF_ACTION_TYPE_INIT_DESCRIPTOR_SET_LAYOUT_FAILURE;
-	}
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMGUI_RENDER_PASS;
+
 	return BfEvent(event);
 }
 
-BfEvent bfCreateDiscriptor() {
-	return BfEvent();
-}
 //
 //BfEvent bfInitDescriptors(BfBase& base)
 //{
@@ -1152,7 +1205,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	// PosPick 
 	BfDescriptorBufferCreateInfo binfo_pos_pick{};
 	binfo_pos_pick.single_buffer_element_size = sizeof(uint32_t);
-	binfo_pos_pick.elements_count = MAX_DEPTH_CURSOR_POS_ELEMENTS;
+	binfo_pos_pick.elements_count = 32;// MAX_DEPTH_CURSOR_POS_ELEMENTS;
 	binfo_pos_pick.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	binfo_pos_pick.vma_memory_usage = VMA_MEMORY_USAGE_AUTO;
 	binfo_pos_pick.vma_alloc_flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -1233,9 +1286,9 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 
 	std::vector<BfDescriptorCreateInfo> infos{
 		info_model_mtx,
-		info_pos_pick,
+		//info_pos_pick,
 		info_view,
-		info_id_map
+		//info_id_map
 	};
 
 	base.descriptor.add_descriptor_create_info(infos);
@@ -1570,6 +1623,18 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	return BfEvent(event);
 }
 
+BfEvent bfDestroyGraphicsPipelines(BfBase& base)
+{
+	vkDestroyPipeline(base.device, base.line_pipeline, nullptr);
+	vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_PIPELINES;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
@@ -1630,6 +1695,22 @@ BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfDestroyStandartFrameBuffers(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+
+	for (uint32_t i = 0; i < base.image_pack_count; i++)
+	{
+		vkDestroyFramebuffer(base.device, holder->standart_framebuffers[i], nullptr);
+	}
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_MAIN_FRAMEBUFFERS;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateGUIFrameBuffers(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
@@ -1685,6 +1766,22 @@ BfEvent bfCreateGUIFrameBuffers(BfBase& base)
 	return BfEvent(event);
 }
 
+BfEvent bfDestroyGUIFrameBuffers(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+
+	for (uint32_t i = 0; i < base.image_pack_count; i++)
+	{
+		vkDestroyFramebuffer(base.device, holder->gui_framebuffers[i], nullptr);
+	}
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMGUI_FRAMEBUFFERS;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateCommandPool(BfBase& base)
 {
 	
@@ -1707,68 +1804,19 @@ BfEvent bfCreateCommandPool(BfBase& base)
 	return BfEvent(event);
 }
 
-// No use
-BfEvent bfCreateUniformBuffers(BfBase& base)
+BfEvent bfDestroyCommandPool(BfBase& base)
 {
-	BfHolder* holder = bfGetpHolder();
-	holder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+	vkDestroyCommandPool(base.device, base.command_pool, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_COMMAND_POOL;
 
-	if (base.frame_pack.size() != MAX_FRAMES_IN_FLIGHT) {
-		base.frame_pack.resize(MAX_FRAMES_IN_FLIGHT);
-	}
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		base.frame_pack[i].uniform_view_buffer = &holder->uniform_view_buffers[i];
-
-		VkBufferCreateInfo bufferInfo{};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = sizeof(BfUniformView);
-		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-
-		VmaAllocationCreateInfo allocationInfo{};
-		allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
-		allocationInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-
-		if (vmaCreateBuffer(base.allocator, 
-							&bufferInfo,
-							&allocationInfo, 
-							&base.frame_pack[i].uniform_view_buffer->buffer, 
-							&base.frame_pack[i].uniform_view_buffer->allocation, 
-							nullptr) != VK_SUCCESS) 
-		{ 
-			throw std::runtime_error("vmaCrateBuffer didn't work"); 
-		}
-
-		/*vmaMapMemory(base.allocator, 
-					 base.frame_pack[i].uniform_view_buffer->allocation, 
-					 &base.frame_pack[i].uniform_view_buffer->data);*/
-
-		/*glm::mat4 local_mat = glm::mat4(1.0f);
-		BfUniformView uniform{ local_mat,local_mat,local_mat };
-
-		memcpy(base.frame_pack[i].uniform_view_buffer->data, &uniform, sizeof(BfUniformView));*/
-	}
-
-	return BfEvent();
+	return BfEvent(event);
 }
 
-BfEvent bfCreateStandartDescriptorPool(BfBase& base)
-{
-	VkDescriptorPoolSize poolSize{};
-	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = 1;
-	poolInfo.pPoolSizes = &poolSize;
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-	if (vkCreateDescriptorPool(base.device, &poolInfo, nullptr, &base.standart_descriptor_pool) != VK_SUCCESS) {
-		throw std::runtime_error("Descriptor pool wasn't created");
-	}
-	return BfEvent();
-}
 
 BfEvent bfCreateGUIDescriptorPool(BfBase& base)
 {
@@ -1787,50 +1835,16 @@ BfEvent bfCreateGUIDescriptorPool(BfBase& base)
 	}
 	return BfEvent();
 }
-//
-//BfEvent bfCreateDescriptorSets(BfBase& base)
-//{
-//	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, base.global_set_layout);
-//	
-//	VkDescriptorSetAllocateInfo allocInfo{};
-//	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-//	allocInfo.descriptorPool = base.standart_descriptor_pool;
-//	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-//	allocInfo.pSetLayouts = layouts.data();
-//
-//	BfHolder* holder = bfGetpHolder();
-//	if (holder->uniform_view_descriptor_set.size() != MAX_FRAMES_IN_FLIGHT) {
-//		holder->uniform_view_descriptor_set.resize(MAX_FRAMES_IN_FLIGHT);
-//	}
-//	
-//	if (vkAllocateDescriptorSets(base.device, &allocInfo, holder->uniform_view_descriptor_set.data()) != VK_SUCCESS)
-//	{
-//		throw std::runtime_error("Descriptor sets wasn't created");
-//	}
-//
-//	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-//		holder->uniform_view_buffers[i].descriptor_set = &holder->uniform_view_descriptor_set[i];
-//		
-//		VkDescriptorBufferInfo bufferInfo{};
-//		bufferInfo.buffer = base.frame_pack[i].uniform_view_buffer->buffer;
-//		bufferInfo.offset = 0;
-//		bufferInfo.range = sizeof(BfUniformView);
-//
-//
-//		VkWriteDescriptorSet descriptorWrite{};
-//		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-//		descriptorWrite.dstSet = *base.frame_pack[i].uniform_view_buffer->descriptor_set;
-//		descriptorWrite.dstBinding = 0;
-//		descriptorWrite.dstArrayElement = 0;
-//		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//		descriptorWrite.descriptorCount = 1;
-//		descriptorWrite.pBufferInfo = &bufferInfo;
-//
-//		vkUpdateDescriptorSets(base.device, 1, &descriptorWrite, 0, nullptr);
-//	}
-//	
-//	return BfEvent();
-//}
+BfEvent bfDestroyGUIDescriptorPool(BfBase& base)
+{
+	vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMGUI_DESCRIPTOR_POOL;
+
+	return BfEvent(event);
+}
 
 
 BfEvent bfCreateStandartCommandBuffers(BfBase& base) {
@@ -1860,6 +1874,22 @@ BfEvent bfCreateStandartCommandBuffers(BfBase& base) {
 	return BfEvent();
 }
 
+BfEvent bfDestroyStandartCommandBuffers(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+
+	vkFreeCommandBuffers(base.device,
+						 base.command_pool,
+						 holder->standart_command_buffers.size(),
+						 holder->standart_command_buffers.data());
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_MAIN_COMMAND_BUFFERS;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateGUICommandBuffers(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
@@ -1884,6 +1914,22 @@ BfEvent bfCreateGUICommandBuffers(BfBase& base)
 
 	
 	return BfEvent();
+}
+
+BfEvent bfDestroyGUICommandBuffers(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+	
+	vkFreeCommandBuffers(base.device, 
+						 base.command_pool, 
+						 holder->gui_command_buffers.size(), 
+						 holder->gui_command_buffers.data());
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMGUI_COMMAND_BUFFERS;
+
+	return BfEvent(event);
 }
 
 BfEvent bfCreateSyncObjects(BfBase& base)
@@ -1926,6 +1972,22 @@ BfEvent bfCreateSyncObjects(BfBase& base)
 	}
 
 	return BfEvent();
+}
+
+BfEvent bfDestorySyncObjects(BfBase& base)
+{
+	auto holder = bfGetpHolder();
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		vkDestroySemaphore(base.device, holder->available_image_semaphores[i], nullptr);
+		vkDestroySemaphore(base.device, holder->finish_render_image_semaphores[i], nullptr);
+		vkDestroyFence(base.device, holder->frame_in_flight_fences[i], nullptr);
+	}
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_SYNC_OBJECTS;
+
+	return BfEvent(event);
 }
 
 BfEvent bfInitImGUI(BfBase& base)
@@ -1989,6 +2051,19 @@ BfEvent bfInitImGUI(BfBase& base)
 	return BfEvent();
 }
 
+BfEvent bfDestoryImGUI(BfBase& base)
+{
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IMGUI;
+
+	return BfEvent(event);
+}
+
 BfEvent bfCreateDepthBuffer(BfBase& base)
 {
 	VkExtent3D depthImageExtent = {
@@ -2012,6 +2087,7 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 				   &dimg_allocinfo, 
 				   &base.depth_image.image, 
 				   &base.depth_image.allocation, nullptr);
+	base.depth_image.allocator = base.allocator;
 
 	VkImageViewCreateInfo dview_info = bfPopulateDepthImageViewCreateInfo(base.depth_format, 
 																		  base.depth_image.image, 
@@ -2026,6 +2102,22 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 		event.action = BfEnActionType::BF_CREATE_DEPTH_IMAGE_VIEW_FAILURE;
 	}
+
+	return BfEvent(event);
+}
+
+BfEvent bfDestroyDepthBuffer(BfBase& base)
+{
+	
+	bfDestroyImageView(&base.depth_image, base.device);
+	//vkDestroyImageView(base.device, base.depth_image.view, nullptr);
+	bfDestroyImage(&base.depth_image);
+	
+	//vmaDestroyImage(base.allocator, base.depth_image.image, nullptr);
+	
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_DEPTH_BUFFER;
 
 	return BfEvent(event);
 }
@@ -2079,82 +2171,86 @@ BfEvent bfCreateIDMapImage(BfBase& base)
 	auto holder = bfGetpHolder();
 	holder->images_id.resize(base.image_pack_count);
 
+	bool success = 1;
 	for (int frame_index = 0; frame_index < base.image_pack_count; frame_index++) {
-		bfCreateImage(&holder->images_id[frame_index],
-					   base.allocator,
-					   &id_image_create_info,
-					   &allocinfo);
+		auto image_event = bfCreateImage(&holder->images_id[frame_index],
+										  base.allocator,
+										  &id_image_create_info,
+										  &allocinfo);
 		id_image_info.image = holder->images_id[frame_index].image;
-		bfCreateImageView(&holder->images_id[frame_index],
-						  base.device,
-						  &id_image_info);
+
+		auto view_event = bfCreateImageView(&holder->images_id[frame_index],
+											 base.device,
+											 &id_image_info);
+
 		base.image_packs[frame_index].pImage_id = &holder->images_id[frame_index].image;
 		base.image_packs[frame_index].pImage_view_id = &holder->images_id[frame_index].view;
+
+		success *= image_event.single_event.success * view_event.single_event.success;
 	}
 
-	//auto holder = bfGetpHolder();
-
-	//VkImageCreateInfo info{};
-	//info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	//info.pNext = nullptr;
-	////info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
-	//info.imageType = VK_IMAGE_TYPE_2D;
-	//
-	//info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
-	//info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
-	//info.mipLevels = 1;
-	//info.arrayLayers = 1;
-	//info.samples = VK_SAMPLE_COUNT_1_BIT;
-	//info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	//info.usage = VK_IMAGE_USAGE_STORAGE_BIT;
-	////info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	//info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	//VmaAllocationCreateInfo allocinfo{};
-	//allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-
-
-	//if (vmaCreateImage(base.allocator, 
-	//			   &info, 
-	//			   &allocinfo, 
-	//			   &base.id_map_image.image, 
-	//			   &base.id_map_image.allocation, nullptr) != VK_SUCCESS) {
-	//	throw std::runtime_error("id map image wasn't created");
-	//}
-
-	//VkImageViewCreateInfo viewInfo = {};
-	//viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	//viewInfo.image = base.id_map_image.image; 
-	//viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	//viewInfo.format = VK_FORMAT_R32_UINT; 
-	//viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	//viewInfo.subresourceRange.baseMipLevel = 0;
-	//viewInfo.subresourceRange.levelCount = 1;
-	//viewInfo.subresourceRange.baseArrayLayer = 0;
-	//viewInfo.subresourceRange.layerCount = 1;
-
-	//if (vkCreateImageView(base.device, &viewInfo, nullptr, &base.id_map_image.view) != VK_SUCCESS) {
-	//	throw std::runtime_error("id map image view wasn't created");
-	//}
-
-
-
-
-
-	return BfEvent();
+	BfSingleEvent event{};
+	{
+		event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+		if (success) {
+			event.action = BF_ACTION_TYPE_CREATE_IDMAP_SUCCESS;
+			event.success = true;
+		}
+		else {
+			event.action = BF_ACTION_TYPE_CREATE_IDMAP_FAILURE;
+			event.success = false;
+		}
+	}
+	return BfEvent(event);
 }
 
-void bfCreateAllocator(BfBase& base)
+BfEvent bfDestroyIDMapImage(BfBase& base)
 {
+	auto holder = bfGetpHolder();
+	for (int frame_index = 0; frame_index < base.image_pack_count; frame_index++) {
+		bfDestroyImage(&holder->images_id[frame_index]);
+		bfDestroyImageView(&holder->images_id[frame_index], base.device);
+
+		base.image_packs[frame_index].pImage_id = nullptr;
+		base.image_packs[frame_index].pImage_view_id = nullptr;
+	}
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_IDMAP;
+	
+	return BfEvent(event);
+}
+
+BfEvent bfCreateAllocator(BfBase& base)
+{
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+
 	VmaAllocatorCreateInfo info{};
 	info.device = base.device;
 	info.instance = base.instance;
 	info.physicalDevice = base.physical_device->physical_device;
 	
 	if (vmaCreateAllocator(&info, &base.allocator) != VK_SUCCESS) {
-		throw std::runtime_error("allocator wasn't created");
+		event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_FAILURE;
+		event.success = false;
 	}
+	else {
+		event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_SUCCESS;
+		event.success = true;
+	}
+	return BfEvent(event);
+}
+
+BfEvent bfDestroyAllocator(BfBase& base) {
+	vmaDestroyAllocator(base.allocator);
+
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_VMA_ALLOCATOR;
+
+	return BfEvent(event);
 }
 
 //void bfAllocateBuffersForDynamicMesh(BfBase& base)
@@ -2413,11 +2509,13 @@ BfEvent bfaRecreateSwapchain(BfBase& base)
 
 	vkDeviceWaitIdle(base.device);
 
+	bfDestroyIDMapImage(base);
 	bfCleanUpSwapchain(base);
 
 	bfCreateSwapchain(base);
 	bfCreateDepthBuffer(base);
 	bfCreateImageViews(base);
+	bfCreateIDMapImage(base);
 	bfCreateStandartFrameBuffers(base);
 	bfCreateGUIFrameBuffers(base);
 	
@@ -2587,62 +2685,8 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		depth_clear
 	};
 
-	renderPassInfo.pClearValues = clear_values.data();//&clearColor;
-
+	renderPassInfo.pClearValues = clear_values.data();
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
-
-	
-
-	{
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-		barrier.image = base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = 0;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.layerCount = 2;
-		barrier.subresourceRange.levelCount = 1;
-
-		vkCmdPipelineBarrier(local_buffer,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			0, 0, nullptr, 0, nullptr, 1, &barrier);
-	}
-	{
-		VkClearColorValue clearColorValue{};
-		/*clearColorValue.uint32[0] = 0;
-		clearColorValue.uint32[1] = 0;
-		clearColorValue.uint32[2] = 0;
-		clearColorValue.uint32[3] = 0;*/
-		clearColorValue.float32[0] = 0.0f;
-		clearColorValue.float32[1] = 0.0f;
-		clearColorValue.float32[2] = 0.0f;
-		clearColorValue.float32[3] = 0.0f;
-
-		VkImageSubresourceRange clear_subsource_range;
-		clear_subsource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		clear_subsource_range.baseArrayLayer = 0;
-		clear_subsource_range.baseMipLevel = 0;
-		clear_subsource_range.layerCount = 2;
-		clear_subsource_range.levelCount = 1;
-
-
-		vkCmdClearColorImage(local_buffer,
-			base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
-			VK_IMAGE_LAYOUT_GENERAL,
-			&clearColorValue,
-			1,
-			&clear_subsource_range
-		);
-
-	}
-
 
 	vkCmdBeginRenderPass(local_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	{
@@ -2664,55 +2708,6 @@ void bfMainRecordCommandBuffer(BfBase& base)
 
 		
 		
-		//vkCmdBindDescriptorSets(
-		//	local_buffer,
-		//	VK_PIPELINE_BIND_POINT_GRAPHICS,
-		//	base.triangle_pipeline_layout,
-		//	0,
-		//	1,
-		//	base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
-		//	0,//1,
-		//	nullptr//&uniform_offset
-		//);
-		//vkCmdBindDescriptorSets(
-		//	local_buffer,
-		//	VK_PIPELINE_BIND_POINT_GRAPHICS,
-		//	base.triangle_pipeline_layout,
-		//	1,
-		//	1,
-		//	base.frame_pack[base.current_frame].main_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
-		//	0,
-		//	nullptr
-		//);
-
-
-		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
-		//vkCmdDraw(local_buffer, base.vert_number, 1, 0, 0);
-		//vkCmdDrawIndexed(local_buffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
-		//vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.line_pipeline);
-		/*
-		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
-			BfMesh* mesh = handler.get_pMesh(i);
-			if (mesh->type == BF_MESH_TYPE_CURVE) {
-				handler.bind_mesh(local_buffer, i);
-				handler.draw_indexed(local_buffer, i);
-			}
-		}
-		
-		vkCmdBindPipeline(local_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, base.triangle_pipeline);
-		for (size_t i = 0; i < handler.get_allocated_meshes_count(); i++) {
-			BfMesh* mesh = handler.get_pMesh(i);
-			if (mesh->type != BF_MESH_TYPE_CURVE) {
-				handler.bind_mesh(local_buffer, i);
-				handler.draw_indexed(local_buffer, i);
-			}
-		}*/
-		
-		//BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();	
-		//pGeometryHolder->draw_indexed(local_buffer);
-
-		
-		
 		base.descriptor.bind_desc_sets(BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
 									   base.current_frame,
 									   local_buffer,
@@ -2729,28 +2724,6 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	vkCmdEndRenderPass(local_buffer);
 
 	{
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barrier.image = base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = 0;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.layerCount = 2;
-		barrier.subresourceRange.levelCount = 1;
-
-		vkCmdPipelineBarrier(local_buffer,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-			0, 0, nullptr, 0, nullptr, 1, &barrier);
-	}
-
-	{
 		VkImageSubresourceLayers sub{};
 		sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		sub.mipLevel = 0;
@@ -2764,15 +2737,6 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		region.imageSubresource = sub;
 		region.imageOffset = { (int)base.window->xpos,(int)base.window->ypos,0 };
 		region.imageExtent = { 1,1,1 };
-		//region.imageOffset = { 0,0,0 };
-		//region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
-
-		/*void* b_data;
-		vmaMapMemory(base.allocator, base.id_image_buffer.allocation, &b_data);
-		{
-			memset(b_data, 0, base.id_image_buffer.size);
-		}
-		vmaUnmapMemory(base.allocator, base.id_image_buffer.allocation);*/
 
 		vkCmdCopyImageToBuffer(local_buffer,
 			//base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
@@ -2781,9 +2745,6 @@ void bfMainRecordCommandBuffer(BfBase& base)
 			base.id_image_buffer.buffer,
 			1,
 			&region);
-
-		
-		
 	}
 
 	if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
@@ -2913,36 +2874,24 @@ BfEvent bfCleanUpSwapchain(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
 	 
-	for (size_t i = 0; i < holder->standart_framebuffers.size(); i++) {
-		vkDestroyFramebuffer(base.device, holder->standart_framebuffers[i], nullptr);
-	}
-	for (size_t i = 0; i < holder->gui_framebuffers.size(); i++) {
-		vkDestroyFramebuffer(base.device, holder->gui_framebuffers[i], nullptr);
-	}
-	for (size_t i = 0; i < holder->image_views.size(); i++) {
-		vkDestroyImageView(base.device, holder->image_views[i], nullptr);
-	}
-
-	vkDestroyImageView(base.device, base.depth_image.view, nullptr);
-	vmaDestroyImage(base.allocator, base.depth_image.image, base.depth_image.allocation);
-
-	vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);
+	bfDestroyStandartFrameBuffers(base);
+	bfDestroyGUIFrameBuffers(base);
+	bfDestroyImageViews(base);
+	bfDestroyDepthBuffer(base);
+	bfDestroySwapchain(base);
 	
-	return BfEvent();
+	BfSingleEvent event{};
+	event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+	event.action = BF_ACTION_TYPE_DESTROY_SWAPCHAIN_PARTS;
+
+	return BfEvent(event);
 }
 
 void bfUpdateUniformBuffer(BfBase& base)
 {
 
-	static auto startTime = std::chrono::high_resolution_clock::now();
-
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
 	BfUniformView ubo{};
-
-	ubo.model = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
-
+	ubo.model = glm::mat4(1.0f);
 
 	switch (base.window->cam_mode) {
 	case 0:
@@ -2956,12 +2905,8 @@ void bfUpdateUniformBuffer(BfBase& base)
 		break;
 	}
 	base.window->cam_mode = 99;
-
-
 	bfUpdateView(base.window);
 
-
-	static float counter = -10.0f;
 
 	ubo.view = base.window->view;
 
@@ -2993,82 +2938,13 @@ void bfUpdateUniformBuffer(BfBase& base)
 
 	void* view_data = nullptr;
 	base.descriptor.map_descriptor(BfDescriptorViewDataUsage, base.current_frame, &view_data);
+	{
 		memcpy(view_data, &ubo, sizeof(ubo));
+	}
 	base.descriptor.unmap_descriptor(BfDescriptorViewDataUsage, base.current_frame);
 
-	static int local_frame = base.current_frame;
 
-	BfUniformBezierProperties prop{};
-	prop.points_count = 3;
-	base.vert_number = prop.points_count;
-	
-	int frameIndex = local_frame % MAX_FRAMES_IN_FLIGHT;
-	
-	/*char* bezier_data;
-	vmaMapMemory(base.allocator, base.bezier_properties_uniform_buffer.allocation, (void**)&bezier_data);
-	{
-		bezier_data += bfPadUniformBufferSize(base.physical_device, sizeof(BfUniformBezierProperties)) * frameIndex;
-
-		memcpy(bezier_data, &prop, sizeof(BfUniformBezierProperties));
-
-	}
-	vmaUnmapMemory(base.allocator, base.bezier_properties_uniform_buffer.allocation);*/
-
-	void* bezier_points_data;
-
-	std::vector<BfStorageBezierPoints> localvec = base.storage;
-
-	/*for (auto& it : localvec) {
-		it.coo += glm::vec2(base.px, base.py);
-	}*/
-	base.vert_number = static_cast<uint32_t>(localvec.size());
-	/*for (int i = 0; i < prop.points_count; i++) {
-		glm::vec2 lVec = glm::vec2((float)i/10, (float)i/10);
-		localvec.push_back(BfStorageBezierPoints(lVec));
-	}*/
-
-	/*std::vector<BfStorageBezierPoints> localvec = {
-		{{base.px, base.py}},
-		{{base.px, base.py}},
-		{{base.px, base.py}},
-	};*/
-
-	
-
-	//vmaMapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation, &bezier_points_data);
-	//{
-	//	/*BfStorageBezierPoints* bezier_points_ssbo = (BfStorageBezierPoints*)bezier_points_data;
-	//	for (int i = 0; i < prop.points_count; i++) {
-	//		glm::vec2& lVec = localvec[i];
-	//		
-	//		bezier_points_ssbo[i].coo = localvec[i];
-	//	}*/
-	//	memcpy(bezier_points_data, localvec.data(), sizeof(BfStorageBezierPoints) * localvec.size());
-	//}
-	//vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].bezier_points_buffer->allocation);
-
-	// Onject data
-	//BfMeshHandler* pHandler = BfMeshHandler::get_bound_handler();
-	//std::vector<BfObjectData> objects_data(10);
-		//pHandler->get_allocated_meshes_count());
-	
-	BfGeometryHolder* pGeometryHolder = bfGetpGeometryHolder();
-
-	//pGeometryHolder->update_obj_data_desc(base.descriptor, base.current_frame);
 	base.layer_handler.map_model_matrices(base.current_frame);
-
-	//objects_data[0].model_matrix = glm::mat4(1.0f);//glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
-	//objects_data[1].model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(base.x_scale, base.y_scale, 1.0f));
-
-	/*void* pobjects_data;
-	vmaMapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation, &pobjects_data);
-	{
-		memcpy(pobjects_data, objects_data.data(), sizeof(BfObjectData) * objects_data.size());
-	}
-	vmaUnmapMemory(base.allocator, base.frame_pack[base.current_frame].model_matrix_buffer->allocation);*/
-	counter += 1.0f;
-	local_frame++;
-
 
 	base.window->proj = ubo.proj;
 	base.window->view = ubo.view;
