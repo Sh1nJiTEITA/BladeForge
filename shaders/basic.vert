@@ -20,12 +20,14 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
     vec2 cursor_pos;
+    vec3 camera_pos;
     uint id_on_cursor;
 } ubo;
 
 
 
-layout(set = 0, binding = 1, r32ui) uniform uimage2D id_map;
+//layout(set = 0, binding = 1, r32ui) uniform uimage2D id_map;
+layout(set = 0, binding = 1, r32f) uniform image2DArray id_map;
 //layout(set = 0, binding = 1, r32ui) uniform  uimageBuffer id_map;
 
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
@@ -54,14 +56,14 @@ void print_mat4(mat4 matrix) {
     debugPrintfEXT("matrix[3] = %f, %f, %f, %f", matrix[3][0],matrix[3][1],matrix[3][2],matrix[3][3]);
 };
 
-uint read_id_map(ivec2 texCoord) { 
-    uvec4 value = imageLoad(id_map, texCoord);
-    return value.x;
-}
-
-void write_id_map(ivec2 texCoord, uint id)  {
-    imageStore(id_map, texCoord, uvec4(id));
-};
+//uint read_id_map(ivec2 texCoord) { 
+//    uvec4 value = imageLoad(id_map, texCoord);
+//    return value.x;
+//}
+//
+//void write_id_map(ivec2 texCoord, uint id)  {
+//    imageStore(id_map, texCoord, uvec4(id));
+//};
 
 
 void main() {
@@ -75,7 +77,8 @@ void main() {
 
     gl_Position = coo;
     obj_index = gl_BaseInstance;
-    
+ 
+    //pos_distance = length(inPosition);
     //for (int i = 0; i < DEPTH_ARRAY_SCALE+1; i++) {
 
 //    if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[DEPTH_ARRAY_SCALE-1]) {

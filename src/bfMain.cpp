@@ -503,17 +503,24 @@ void BfMain::__start_loop()
         void* pdata = __base.descriptor.get_buffer(BfDescriptorPosPickUsage, __base.current_frame)->allocation_info.pMappedData;
         //void* pdata = __base.frame_pack[__base.current_frame].pos_pick_buffer->allocation_info.pMappedData;
 
-        memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
+        //memcpy(ddata.data(), pdata, sizeof(uint32_t) * 32);
 
         size_t image_size = __base.swap_chain_extent.height * __base.swap_chain_extent.width * sizeof(uint32_t);
         
-        std::vector<uint32_t> image_data_;
-        image_data_.resize(__base.swap_chain_extent.height * __base.swap_chain_extent.width);
+        //std::vector<uint32_t> image_data_;
+        //std::vector<float> image_data_;
+        //image_data_.resize(__base.swap_chain_extent.height * __base.swap_chain_extent.width);
         
-        void* image_data = __base.id_image_buffer.allocation_info.pMappedData;
-        memcpy(image_data_.data(), image_data, image_size);
+        //void* image_data = __base.id_image_buffer.allocation_info.pMappedData;
+        //memcpy(image_data_.data(), image_data, image_size);
 
-        __base.pos_id = image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width];
+        uint32_t id_on_cursor;
+        void* id_on_cursor_ = __base.id_image_buffer.allocation_info.pMappedData;
+        memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
+
+
+        //__base.pos_id = (int)(image_data_[__base.window->xpos + __base.window->ypos * __base.swap_chain_extent.width]);
+        __base.pos_id = id_on_cursor;
         //uint32_t pos_id = 0;
 
  
@@ -524,9 +531,9 @@ void BfMain::__start_loop()
         //ImGui::ShowDemoWindow();
 
         __present_menu_bar();
-        __present_camera();
+        //__present_camera();
         __present_info(currentTime, __base.pos_id);
-        __present_id_map(__base, image_data_);
+       // __present_id_map(__base, image_data_);
         bfPresentLayerHandler(__base.layer_handler);
         ShowTestPlot();
         
@@ -879,16 +886,16 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 
             std::map<uint32_t, glm::vec4> id_color_map;
             for (int i = 0; i < base.swap_chain_extent.width * base.swap_chain_extent.height; ++i) {
-                if (!id_color_map.contains(data[i])) {
+                if (!id_color_map.contains((int)data[i])) {
                     
 
                     float red = (float)(mt() % 255);
                     float green = (float)(mt() % 255);
                     float blue = (float)(mt() % 255);
                     
-                    id_color_map[data[i]] = glm::vec4(red, green, blue, 1.0f);
+                    id_color_map[(int)data[i]] = glm::vec4(red, green, blue, 1.0f);
 
-                    std::cout << id_color_map[data[i]].r << ", " << id_color_map[data[i]].g << ", " << id_color_map[data[i]].b << "\n";
+                    std::cout << id_color_map[(int)data[i]].r << ", " << id_color_map[(int)data[i]].g << ", " << id_color_map[data[i]].b << "\n";
                 }
             }
             
@@ -897,9 +904,9 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
             std::vector<uint8_t> rgba_data(base.swap_chain_extent.width * base.swap_chain_extent.height * 3);
             size_t index = 0;
             for (int i = 0; i < base.swap_chain_extent.width * base.swap_chain_extent.height * 3; i+=3) {
-                rgba_data[i + 0] = int(id_color_map[data[index]].r);
-                rgba_data[i + 1] = int(id_color_map[data[index]].g);
-                rgba_data[i + 2] = int(id_color_map[data[index]].b);
+                rgba_data[i + 0] = int(id_color_map[(int)data[index]].r);
+                rgba_data[i + 1] = int(id_color_map[(int)data[index]].g);
+                rgba_data[i + 2] = int(id_color_map[(int)data[index]].b);
                 //rgba_data[i + 3] = id_color_map[data[i]].a;
 
                 index++;

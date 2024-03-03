@@ -280,6 +280,7 @@ BfEvent bfCreateLogicalDevice(BfBase& base)
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	deviceFeatures.vertexPipelineStoresAndAtomics = true;
 	deviceFeatures.fragmentStoresAndAtomics = true;
+	deviceFeatures.independentBlend = true;
 	
 
 	VkDeviceCreateInfo createInfo{};
@@ -499,9 +500,24 @@ BfEvent bfCreateImageViews(BfBase& base)
 
 BfEvent bfCreateStandartRenderPass(BfBase& base)
 {
+// Color attachment	
+	// Id map attachment
+	VkAttachmentDescription id_map_attachment{};
+	id_map_attachment.format = VK_FORMAT_R32_UINT;
+	id_map_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	id_map_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	id_map_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	id_map_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	id_map_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	id_map_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	id_map_attachment.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 	
 
+	VkAttachmentReference id_map_attachment_ref{};
+	id_map_attachment_ref.attachment = 1;
+	id_map_attachment_ref.layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
+	// Color attachment
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = base.swap_chain_format;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -517,8 +533,11 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-	
-	
+	std::vector<VkAttachmentReference> attachment_refs{
+		colorAttachmentRef,
+		id_map_attachment_ref
+	};
+
 
 // Depth buffer
 	VkAttachmentDescription depth_attachment{};
@@ -533,19 +552,31 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference depth_attachment_ref = {};
-	depth_attachment_ref.attachment = 1;
+	depth_attachment_ref.attachment = 2;
 	depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 
 
 	// How to use subPass
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &colorAttachmentRef;
+	subpass.colorAttachmentCount = attachment_refs.size();
+	subpass.pColorAttachments = attachment_refs.data();
 	subpass.pDepthStencilAttachment = &depth_attachment_ref;
 
 
 // Dependencies
+	
+	// id depen
+	VkSubpassDependency id_dependency{};
+	id_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	id_dependency.dstSubpass = 0;
+	id_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	id_dependency.srcAccessMask = 0;
+	id_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	id_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	// Color depen
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
@@ -553,7 +584,8 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	dependency.srcAccessMask = 0;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
+	
+	// Depth depen
 	VkSubpassDependency depth_dependency{};
 	depth_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	depth_dependency.dstSubpass = 0;
@@ -566,11 +598,13 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 
 	std::vector<VkAttachmentDescription> attachments {
 		colorAttachment,
+		id_map_attachment,
 		depth_attachment
 	};
 
 	std::vector<VkSubpassDependency> dependencies{
 		dependency,
+		id_dependency,
 		depth_dependency
 	};
 
@@ -578,9 +612,9 @@ BfEvent bfCreateStandartRenderPass(BfBase& base)
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.attachmentCount = 2;
+	renderPassInfo.attachmentCount = attachments.size();
 	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.dependencyCount = 2;
+	renderPassInfo.dependencyCount = dependencies.size();
 	renderPassInfo.pDependencies = dependencies.data();
 
 
@@ -1141,10 +1175,10 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	id_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	id_image_create_info.pNext = nullptr;
 	id_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-	id_image_create_info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
+	id_image_create_info.format = VK_FORMAT_R32_SFLOAT;//base.swap_chain_format;
 	id_image_create_info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
 	id_image_create_info.mipLevels = 1;
-	id_image_create_info.arrayLayers = 10;
+	id_image_create_info.arrayLayers = 2;
 	id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	id_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 	id_image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
@@ -1170,13 +1204,13 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 
 	VkImageViewCreateInfo id_image_info = {};
 	id_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	id_image_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	id_image_info.format = VK_FORMAT_R32_UINT;
+	id_image_info.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;//VK_IMAGE_VIEW_TYPE_2D;
+	id_image_info.format = VK_FORMAT_R32_SFLOAT;//VK_FORMAT_R32_UINT;
 	id_image_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	id_image_info.subresourceRange.baseMipLevel = 0;
 	id_image_info.subresourceRange.levelCount = 1;
 	id_image_info.subresourceRange.baseArrayLayer = 0;
-	id_image_info.subresourceRange.layerCount = 1;
+	id_image_info.subresourceRange.layerCount = 2;
 	id_image_info.pNext = &id_image_usage_info;
 	
 
@@ -1366,7 +1400,8 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	// Dynamic viewport/scissors
 	std::vector<VkDynamicState> dynamicStates = {
 		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
+		VK_DYNAMIC_STATE_SCISSOR,
+		VK_DYNAMIC_STATE_BLEND_CONSTANTS
 	};
 
 	VkPipelineDynamicStateCreateInfo dynamicState{};
@@ -1388,7 +1423,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rasterizer.depthBiasEnable = VK_FALSE;
+	//rasterizer.depthBiasEnable = VK_TRUE;
 	//rasterizer.depthBiasConstantFactor = 0.0f; // Optional
 	//rasterizer.depthBiasClamp = 0.0f; // Optional
 	//rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
@@ -1419,12 +1454,31 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
 	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
 
+	// id Color blending
+	VkPipelineColorBlendAttachmentState idBlendAttachment{};
+	idBlendAttachment.colorWriteMask = {
+		VK_COLOR_COMPONENT_R_BIT
+	};
+	idBlendAttachment.blendEnable = VK_FALSE;
+	idBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
+	idBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+	idBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
+	idBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
+	idBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+	idBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
+
+	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments = {
+		colorBlendAttachment,
+		idBlendAttachment
+	};
+
+
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	colorBlending.logicOpEnable = VK_FALSE;
 	colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
-	colorBlending.attachmentCount = 1;
-	colorBlending.pAttachments = &colorBlendAttachment;
+	colorBlending.attachmentCount = colorBlendAttachments.size();
+	colorBlending.pAttachments = colorBlendAttachments.data();
 	colorBlending.blendConstants[0] = 0.0f; // Optional
 	colorBlending.blendConstants[1] = 0.0f; // Optional
 	colorBlending.blendConstants[2] = 0.0f; // Optional
@@ -1533,6 +1587,7 @@ BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 		
 		std::vector<VkImageView> attachments = {
 			*base.image_packs[i].pImage_view,
+			*base.image_packs[i].pImage_view_id,
 			base.depth_image.view
 			//base.depth_image_view
 		};
@@ -1540,7 +1595,7 @@ BfEvent bfCreateStandartFrameBuffers(BfBase& base)
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = base.standart_render_pass;
-		framebufferInfo.attachmentCount = 2;
+		framebufferInfo.attachmentCount = attachments.size();
 		framebufferInfo.pAttachments = attachments.data();
 		framebufferInfo.width = base.swap_chain_extent.width;
 		framebufferInfo.height = base.swap_chain_extent.height;
@@ -1977,6 +2032,66 @@ BfEvent bfCreateDepthBuffer(BfBase& base)
 
 BfEvent bfCreateIDMapImage(BfBase& base)
 {
+	VkImageCreateInfo id_image_create_info{};
+	//info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+	id_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	id_image_create_info.pNext = nullptr;
+	id_image_create_info.imageType = VK_IMAGE_TYPE_2D;
+	id_image_create_info.format = VK_FORMAT_R32_UINT;//base.swap_chain_format;
+	id_image_create_info.extent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+	id_image_create_info.mipLevels = 1;
+	id_image_create_info.arrayLayers = 1;
+	id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+	id_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	id_image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+							     VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+							     VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+							     VK_IMAGE_USAGE_STORAGE_BIT |
+								 VK_IMAGE_USAGE_SAMPLED_BIT;
+	
+	id_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	id_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VmaAllocationCreateInfo allocinfo{};
+	allocinfo.usage = VMA_MEMORY_USAGE_AUTO;
+	//allocinfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+
+	VkImageViewUsageCreateInfo id_image_usage_info{};
+	id_image_usage_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO;
+	id_image_usage_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+								VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+								VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+								VK_IMAGE_USAGE_STORAGE_BIT |
+								VK_IMAGE_USAGE_SAMPLED_BIT;
+
+	VkImageViewCreateInfo id_image_info = {};
+	id_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	id_image_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	id_image_info.format = VK_FORMAT_R32_UINT;
+	id_image_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	id_image_info.subresourceRange.baseMipLevel = 0;
+	id_image_info.subresourceRange.levelCount = 1;
+	id_image_info.subresourceRange.baseArrayLayer = 0;
+	id_image_info.subresourceRange.layerCount = 1;
+	id_image_info.pNext = &id_image_usage_info;
+	
+
+	auto holder = bfGetpHolder();
+	holder->images_id.resize(base.image_pack_count);
+
+	for (int frame_index = 0; frame_index < base.image_pack_count; frame_index++) {
+		bfCreateImage(&holder->images_id[frame_index],
+					   base.allocator,
+					   &id_image_create_info,
+					   &allocinfo);
+		id_image_info.image = holder->images_id[frame_index].image;
+		bfCreateImageView(&holder->images_id[frame_index],
+						  base.device,
+						  &id_image_info);
+		base.image_packs[frame_index].pImage_id = &holder->images_id[frame_index].image;
+		base.image_packs[frame_index].pImage_view_id = &holder->images_id[frame_index].view;
+	}
+
 	//auto holder = bfGetpHolder();
 
 	//VkImageCreateInfo info{};
@@ -2464,9 +2579,10 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	renderPassInfo.renderArea.extent = base.swap_chain_extent;
 
 	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-	renderPassInfo.clearValueCount = 2;
+	renderPassInfo.clearValueCount = 3;
 	
 	std::vector<VkClearValue> clear_values{
+		clearColor,
 		clearColor,
 		depth_clear
 	};
@@ -2475,19 +2591,7 @@ void bfMainRecordCommandBuffer(BfBase& base)
 
 	VkCommandBuffer local_buffer = *base.frame_pack[base.current_frame].standart_command_buffer;
 
-	VkImageSubresourceLayers sub{};
-	sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	sub.mipLevel = 0;
-	sub.layerCount = 1;
-	sub.baseArrayLayer = 0;
-
-	VkBufferImageCopy region = {};
-	region.bufferOffset = 0;
-	region.bufferRowLength = base.swap_chain_extent.width;
-	region.bufferImageHeight = base.swap_chain_extent.height;
-	region.imageSubresource = sub;
-	region.imageOffset = { 0,0,0 };
-	region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
+	
 
 	{
 		VkImageMemoryBarrier barrier = {};
@@ -2502,7 +2606,7 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.layerCount = 2;
 		barrier.subresourceRange.levelCount = 1;
 
 		vkCmdPipelineBarrier(local_buffer,
@@ -2512,16 +2616,20 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	}
 	{
 		VkClearColorValue clearColorValue{};
-		clearColorValue.uint32[0] = 0;
+		/*clearColorValue.uint32[0] = 0;
 		clearColorValue.uint32[1] = 0;
 		clearColorValue.uint32[2] = 0;
-		clearColorValue.uint32[3] = 0;
+		clearColorValue.uint32[3] = 0;*/
+		clearColorValue.float32[0] = 0.0f;
+		clearColorValue.float32[1] = 0.0f;
+		clearColorValue.float32[2] = 0.0f;
+		clearColorValue.float32[3] = 0.0f;
 
 		VkImageSubresourceRange clear_subsource_range;
 		clear_subsource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		clear_subsource_range.baseArrayLayer = 0;
 		clear_subsource_range.baseMipLevel = 0;
-		clear_subsource_range.layerCount = 1;
+		clear_subsource_range.layerCount = 2;
 		clear_subsource_range.levelCount = 1;
 
 
@@ -2532,6 +2640,7 @@ void bfMainRecordCommandBuffer(BfBase& base)
 			1,
 			&clear_subsource_range
 		);
+
 	}
 
 
@@ -2632,7 +2741,7 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.layerCount = 2;
 		barrier.subresourceRange.levelCount = 1;
 
 		vkCmdPipelineBarrier(local_buffer,
@@ -2642,7 +2751,21 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	}
 
 	{
-		
+		VkImageSubresourceLayers sub{};
+		sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		sub.mipLevel = 0;
+		sub.layerCount = 1;
+		sub.baseArrayLayer = 0;
+
+		VkBufferImageCopy region = {};
+		region.bufferOffset = 0;
+		region.bufferRowLength = base.swap_chain_extent.width;
+		region.bufferImageHeight = base.swap_chain_extent.height;
+		region.imageSubresource = sub;
+		region.imageOffset = { (int)base.window->xpos,(int)base.window->ypos,0 };
+		region.imageExtent = { 1,1,1 };
+		//region.imageOffset = { 0,0,0 };
+		//region.imageExtent = { base.swap_chain_extent.width, base.swap_chain_extent.height, 1 };
 
 		/*void* b_data;
 		vmaMapMemory(base.allocator, base.id_image_buffer.allocation, &b_data);
@@ -2652,7 +2775,8 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		vmaUnmapMemory(base.allocator, base.id_image_buffer.allocation);*/
 
 		vkCmdCopyImageToBuffer(local_buffer,
-			base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
+			//base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,
+			*base.image_packs[base.current_image].pImage_id,
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 			base.id_image_buffer.buffer,
 			1,
@@ -2788,7 +2912,7 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(bool
 BfEvent bfCleanUpSwapchain(BfBase& base)
 {
 	BfHolder* holder = bfGetpHolder();
-	
+	 
 	for (size_t i = 0; i < holder->standart_framebuffers.size(); i++) {
 		vkDestroyFramebuffer(base.device, holder->standart_framebuffers[i], nullptr);
 	}
@@ -2865,6 +2989,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 	}
 	ubo.cursor_pos = { base.window->xpos, base.window->ypos };
 	ubo.id_on_cursor = base.pos_id;
+	ubo.camera_pos = base.window->pos;
 
 	void* view_data = nullptr;
 	base.descriptor.map_descriptor(BfDescriptorViewDataUsage, base.current_frame, &view_data);

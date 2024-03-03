@@ -24,6 +24,8 @@ static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 struct BfImagePack {
 	VkImage*				pImage;
 	VkImageView*			pImage_view;
+	VkImage*				pImage_id;
+	VkImageView*			pImage_view_id;
 	VkFramebuffer*			pStandart_Buffer;
 	VkFramebuffer*			pGUI_buffer;
 };

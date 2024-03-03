@@ -9,6 +9,7 @@ struct BfUniformView {
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
 	alignas(8) glm::vec2 cursor_pos;
+	alignas(16) glm::vec3 camera_pos;
 	alignas(4) uint32_t id_on_cursor;
 };
 
