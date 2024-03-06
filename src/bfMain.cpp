@@ -731,10 +731,12 @@ void BfMain::__present_menu_bar()
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
-            
-
+          
             if (ImGui::MenuItem(bfGetMenueInfoStr(__gui).c_str())) {
                 __gui.is_info = !__gui.is_info;
+            }
+            if (ImGui::MenuItem(bfGetMenueEventLogStr(__gui).c_str())) {
+                __gui.is_event_log = !__gui.is_event_log;
             }
             ImGui::EndMenu();
         }
@@ -820,34 +822,55 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 void BfMain::__present_event_log()
 {
     
-    ImVec2 size = { 400, 300 };
-    ImVec2 pos = { __base.swap_chain_extent.width - size[0], (float)(__base.swap_chain_extent.height / 2) };
+    if (__gui.is_event_log) {
+        ImVec2 size = { 400, 600 };
+        ImVec2 pos = { __base.swap_chain_extent.width - size[0], (float)(__base.swap_chain_extent.height - size[1])};
     
-    ImGui::SetNextWindowPos(pos);
-    ImGui::SetNextWindowSize(size);
+        ImGui::SetNextWindowPos(pos);
+        ImGui::SetNextWindowSize(size);
 
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | 
+                                       ImGuiWindowFlags_NoResize | 
+                                       ImGuiWindowFlags_NoCollapse |
+                                       ImGuiWindowFlags_NoBackground |
+                                       ImGuiWindowFlags_NoTitleBar | 
+                                       ImGuiWindowFlags_AlwaysVerticalScrollbar;
+        
+        static bool is_start_scroll = true;
+        float scrollMaxY = ImGui::GetScrollMaxY();
 
-    ImGui::Begin("Console");
-    {
-        auto it_event = BfEventHandler::single_events.begin();
-        auto it_time = BfEventHandler::single_event_time.begin();
+        // Устанавливаем скролл внизу
 
-        // Перебираем оба списка одновременно
-        while (it_event != BfEventHandler::single_events.end() && it_time != BfEventHandler::single_event_time.end()) {
-            ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f}, it_time->c_str());
-            ImGui::SameLine();
-            ImGui::Text(it_event->action)
-            ImGui::Text(it_event->info.c_str());
-           
-            ++it_event;
-            ++it_time;
+        ImGui::Begin("Console", nullptr, windowFlags);
+        {
+            ImGui::SetScrollY(scrollMaxY);
+            if (is_start_scroll) {
+                //ImGui::SetScrollHereY(0.0f);
+                is_start_scroll = false;
+            }
+                
+            
+            auto it_event = BfEventHandler::single_events.rbegin();
+            auto it_time = BfEventHandler::single_event_time.rbegin();
+            auto it_message = BfEventHandler::single_event_message.rbegin();
+
+            // Перебираем оба списка одновременно в обратном порядке
+            while (it_event != BfEventHandler::single_events.rend() &&
+                it_time != BfEventHandler::single_event_time.rend() &&
+                it_message != BfEventHandler::single_event_message.rend()) {
+                ImGui::TextColored(ImVec4{ 1.0f, 0.5f, 0.0f, 1.0f }, it_time->c_str());
+                ImGui::SameLine();
+                ImGui::TextWrapped(it_message->c_str());
+
+                ++it_event;
+                ++it_time;
+                ++it_message;
+            }
+
+
         }
-
-
-
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 

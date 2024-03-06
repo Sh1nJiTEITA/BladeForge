@@ -436,6 +436,7 @@ private:
 struct BfEventHandler {
 	static std::list<BfSingleEvent> single_events;
 	static std::list<std::string> single_event_time;
+	static std::list<std::string> single_event_message;
 	//std::set<BfMultipleEvent> multiple_events;
 
 	static void add_single_event(BfSingleEvent event);

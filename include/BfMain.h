@@ -12,6 +12,7 @@
 #include "bfGUI.h"
 #include "bfCurves3.h"
 #include "bfConsole.h"
+#include "bfEvent.h"
 
 #include <random>
 

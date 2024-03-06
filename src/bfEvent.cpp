@@ -4,6 +4,7 @@
 
 std::list<BfSingleEvent> BfEventHandler::single_events{};
 std::list<std::string> BfEventHandler::single_event_time{};
+std::list<std::string> BfEventHandler::single_event_message{};
 
 
 BfEventHandler::FunctionPointer BfEventHandler::funcPtr = nullptr;
@@ -23,6 +24,16 @@ void BfEventHandler::add_single_event(BfSingleEvent event)
 	}
 	single_events.push_front(event);
 	single_event_time.push_front(time_t_to_text(event.time));
+	
+	std::string whole_message = "";
+
+	auto it_standart_messege = bfSetActionsStr.find((int)event.action);
+	if (it_standart_messege != bfSetActionsStr.end()) {
+		whole_message.append(it_standart_messege->second);
+		whole_message.append(event.info);
+	}
+
+	single_event_message.push_front(whole_message);
 }
 
 void BfEventHandler::add_multiple_event(BfMultipleEvent event)

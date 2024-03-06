@@ -6,6 +6,11 @@ std::string bfGetMenueInfoStr(BfGUI gui)
 	else return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_DISABLED);
 };
 
+std::string bfGetMenueEventLogStr(BfGUI gui) {
+    if (gui.is_info) return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
+    else return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
+}
+
 void bfPresentLayerHandler(BfLayerHandler& layer_handler)
 {
 
