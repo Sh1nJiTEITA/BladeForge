@@ -184,3 +184,41 @@ void BfConsole::print_single_single_event(BfSingleEvent event)
 	
 	std::cout << std::endl;
 }
+
+std::string BfConsole::print_single_single_event_to_string(BfSingleEvent event)
+{
+	static std::stringstream ss;
+	
+	/*auto getTimeStr = [](const time_t& timeValue) {
+		struct tm* timeInfo = std::localtime(&timeValue);
+		int hours = timeInfo->tm_hour;
+		int minutes = timeInfo->tm_min;
+		int seconds = timeInfo->tm_sec;
+		
+		
+		ss << "[" << hours << ":" << minutes << ":" << seconds << "]";
+		return ss.str();
+	};*/
+
+	auto it_standart_messege = bfSetActionsStr.find((int)event.action);
+	if (it_standart_messege != bfSetActionsStr.end()) {
+		struct tm* timeInfo = std::localtime(&event.time);
+		int hours = timeInfo->tm_hour;
+		int minutes = timeInfo->tm_min;
+		int seconds = timeInfo->tm_sec;
+		
+		ss << "[" << hours << ":" << minutes << ":" << seconds << "] ";
+		
+		ss << it_standart_messege->second << " " << event.info << "\n";
+	}
+	else {
+		ss << "INVALID_PRINT_PARAMETERS" << "\n";
+	}
+
+	return ss.str();
+}
+
+std::string BfConsole::print_single_single_event_to_string_single(BfSingleEvent event) {
+	return std::string();
+}
+

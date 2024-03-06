@@ -11,6 +11,7 @@
 #include "bfCurves2.h"
 #include "bfGUI.h"
 #include "bfCurves3.h"
+#include "bfConsole.h"
 
 #include <random>
 
@@ -42,6 +43,8 @@ private:
 	void __present_camera();
 	void __present_menu_bar();
 	void __present_id_map(BfBase& base, std::vector<uint32_t> image_data_);
+	void __present_event_log();
+
 
 public:
 	BfMain();

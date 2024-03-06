@@ -2,9 +2,13 @@
 
 // Static members ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-std::forward_list<BfSingleEvent> BfEventHandler::single_events{};
+std::list<BfSingleEvent> BfEventHandler::single_events{};
+std::list<std::string> BfEventHandler::single_event_time{};
+
 
 BfEventHandler::FunctionPointer BfEventHandler::funcPtr = nullptr;
+BfEventHandler::FunctionPointerStr BfEventHandler::funcPtrStr = nullptr;
+std::string BfEventHandler::whole_log = "";
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Static members //
 
 // BfEventHandler ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -14,14 +18,18 @@ void BfEventHandler::add_single_event(BfSingleEvent event)
 		// Вызываем функцию
 		funcPtr(event);
 	}
+	if (funcPtrStr != nullptr) {
+		BfEventHandler::whole_log = funcPtrStr(event);
+	}
 	single_events.push_front(event);
+	single_event_time.push_front(time_t_to_text(event.time));
 }
 
 void BfEventHandler::add_multiple_event(BfMultipleEvent event)
 {
 }
 
-const std::forward_list<BfSingleEvent>& BfEventHandler::get_single_events()
+const std::list<BfSingleEvent>& BfEventHandler::get_single_events()
 {
 	return single_events;
 }
@@ -100,3 +108,14 @@ void BfEvent::record_event()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BfEvent //
+
+std::string time_t_to_text(const time_t& time) {
+	struct tm* timeInfo = std::localtime(&time);
+	int hours = timeInfo->tm_hour;
+	int minutes = timeInfo->tm_min;
+	int seconds = timeInfo->tm_sec;
+
+	std::stringstream ss;
+	ss << "[" << hours << ":" << minutes << ":" << seconds << "]";
+	return ss.str();
+}

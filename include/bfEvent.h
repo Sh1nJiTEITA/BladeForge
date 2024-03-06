@@ -434,22 +434,28 @@ private:
 };
 
 struct BfEventHandler {
-	static std::forward_list<BfSingleEvent> single_events;
+	static std::list<BfSingleEvent> single_events;
+	static std::list<std::string> single_event_time;
 	//std::set<BfMultipleEvent> multiple_events;
 
 	static void add_single_event(BfSingleEvent event);
 	static void add_multiple_event(BfMultipleEvent event);
 	
-	static const std::forward_list<BfSingleEvent>& get_single_events();
+	static const std::list<BfSingleEvent>& get_single_events();
 	static std::time_t get_time();
 
 	static bool is_all_ok();
 
 	typedef void (*FunctionPointer)(BfSingleEvent);
+	typedef std::string (*FunctionPointerStr)(BfSingleEvent);
+	//using FunctionPointerStr = std::string(*)(BfSingleEvent);
 
 	static FunctionPointer funcPtr;
+	static FunctionPointerStr funcPtrStr;
+
+	static std::string whole_log;
 };
 
+std::string time_t_to_text(const time_t& time);
 
-
-#endif,
+#endif

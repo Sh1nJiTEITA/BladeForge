@@ -2735,8 +2735,31 @@ void bfMainRecordCommandBuffer(BfBase& base)
 		region.bufferRowLength = base.swap_chain_extent.width;
 		region.bufferImageHeight = base.swap_chain_extent.height;
 		region.imageSubresource = sub;
-		region.imageOffset = { (int)base.window->xpos,(int)base.window->ypos,0 };
 		region.imageExtent = { 1,1,1 };
+		
+		int x = 0;
+		if ((int)base.window->xpos >= base.swap_chain_extent.width) {
+			x = base.swap_chain_extent.width - 1;
+		}
+		else if ((int)base.window->xpos <= 0) {
+			x = 1;
+		}
+		else {
+			x = (int)base.window->xpos;
+		}
+
+		int y = 0;
+		if ((int)base.window->ypos >= base.swap_chain_extent.height) {
+			y = base.swap_chain_extent.height - 1;
+		}
+		else if ((int)base.window->ypos <= 0) {
+			y = 1;
+		}
+		else {
+			y = (int)base.window->ypos;
+		}
+
+		region.imageOffset = { x, y, 0 };
 
 		vkCmdCopyImageToBuffer(local_buffer,
 			//base.descriptor.get_image(BfDescriptorPosPickUsage, base.current_frame)->image,

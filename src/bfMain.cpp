@@ -93,9 +93,9 @@ void BfMain::__kill()
     bfDestroyImageViews(__base);
     bfDestroySwapchain(__base);
     //bfDestroyAllocator(__base);
-    bfDestroyLogicalDevice(__base);
-    bfDestroySurface(__base);
-    bfDestroyInstance(__base);
+    //bfDestroyLogicalDevice(__base);
+    //bfDestroySurface(__base);
+    //bfDestroyInstance(__base);
 }
 
 void BfMain::__start_loop()
@@ -526,11 +526,12 @@ void BfMain::__start_loop()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        //ImGui::ShowDemoWindow();
+        ImGui::ShowDemoWindow();
 
         __present_menu_bar();
         __present_camera();
         __present_info(currentTime, __base.pos_id);
+        __present_event_log();
        // __present_id_map(__base, image_data_);
         bfPresentLayerHandler(__base.layer_handler);
         ShowTestPlot();
@@ -812,6 +813,39 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 
 
         //ImGui::TextWrapped(s.c_str());
+    }
+    ImGui::End();
+}
+
+void BfMain::__present_event_log()
+{
+    
+    ImVec2 size = { 400, 300 };
+    ImVec2 pos = { __base.swap_chain_extent.width - size[0], (float)(__base.swap_chain_extent.height / 2) };
+    
+    ImGui::SetNextWindowPos(pos);
+    ImGui::SetNextWindowSize(size);
+
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+    ImGui::Begin("Console");
+    {
+        auto it_event = BfEventHandler::single_events.begin();
+        auto it_time = BfEventHandler::single_event_time.begin();
+
+        // Перебираем оба списка одновременно
+        while (it_event != BfEventHandler::single_events.end() && it_time != BfEventHandler::single_event_time.end()) {
+            ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f}, it_time->c_str());
+            ImGui::SameLine();
+            ImGui::Text(it_event->action)
+            ImGui::Text(it_event->info.c_str());
+           
+            ++it_event;
+            ++it_time;
+        }
+
+
+
     }
     ImGui::End();
 }
