@@ -836,18 +836,14 @@ void BfMain::__present_event_log()
                                        ImGuiWindowFlags_NoTitleBar | 
                                        ImGuiWindowFlags_AlwaysVerticalScrollbar;
         
-        static bool is_start_scroll = true;
-        float scrollMaxY = ImGui::GetScrollMaxY();
+       
+     
 
         // Устанавливаем скролл внизу
 
         ImGui::Begin("Console", nullptr, windowFlags);
         {
-            ImGui::SetScrollY(scrollMaxY);
-            if (is_start_scroll) {
-                //ImGui::SetScrollHereY(0.0f);
-                is_start_scroll = false;
-            }
+            
                 
             
             auto it_event = BfEventHandler::single_events.rbegin();

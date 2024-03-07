@@ -3,8 +3,24 @@
 #
 cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
-include_directories(include)
+
+file(GLOB SUBDIRECTORIES RELATIVE 
+	${CMAKE_CURRENT_SOURCE_DIR}/include 
+	${CMAKE_CURRENT_SOURCE_DIR}/include/*
+)
+list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.h$")
+list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.cpp$")
+list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.hpp$")
+
+
+foreach(subdir ${SUBDIRECTORIES})
+    message("Subfolder found: ${subdir}")
+	include_directories(include/${subdir})
+endforeach()
+
 link_directories(include)
+include_directories(include)
+
 #include_directories(external/implot/)
 #add_subdirectory(external/implot)
 #include_directories(src)
@@ -46,79 +62,70 @@ if (WIN32)
 endif()
 
 
+set(BF_BASE
+	"include/base/bfVertex2.hpp"
+	"include/base/bfBase.h"			  "src/base/bfBase.cpp"
+	"include/base/bfBuffer.h"		  "src/base/bfBuffer.cpp"
+	"include/base/bfDescriptor.h"	  "src/base/bfDescriptor.cpp"
+	"include/base/bfPhysicalDevice.h" "src/base/bfPhysicalDevice.cpp"
+	"include/base/bfSwapChain.h"	  "src/base/bfSwapChain.cpp"
+	"include/base/bfUniforms.h"		  "src/base/bfUniforms.cpp"
+	"include/base/bfHolder.h"		  "src/base/bfHolder.cpp"
+	"include/base/bfWindow.h"		  "src/base/bfWindow.cpp"
+)	
+
+set(BF_GEOMETRY 
+	"include/geometry/BfCurves.hpp"
+	"include/geometry/bfCurves2.h"  "src/geometry/bfCurves2.cpp"
+	"include/geometry/bfCurves3.h"  "src/geometry/bfCurves3.cpp"
+)
+
+set(BF_INTERACTION
+	"include/interaction/bfConsole.h" "src/interaction/bfConsole.cpp"
+	"include/interaction/bfEvent.h"	  "src/interaction/bfEvent.cpp"
+	"include/interaction/bfGUI.h"	  "src/interaction/bfGUI.cpp"
+)
+
+set(BF_OTHER 
+	"include/other/BfExecutionTime.hpp"
+	"include/other/bfMatrix.hpp"
+	"include/other/bfVariative.hpp"
+)
+
+set(BF_DRAW 
+	"include/draw/bfDrawObject.h"   "src/draw/bfDrawObject.cpp"
+	"include/draw/bfLayerHandler.h" "src/draw/bfLayerHandler.cpp" 
+)
+
+set(BF_OTHER
+	"include/other/stb_image.h"
+	"include/other/stb_image_write.h"
+)
+
+
 # Headers/Sources
 set(SOURCES
-	#"src/BladeForgeBin.cpp"
-	#"src/bfVertex.cpp"
-	
-
-	"src/bfBase.cpp"
-	"src/bfEvent.cpp" 
-	"src/bfWindow.cpp" 
-	"src/bfPhysicalDevice.cpp"
-	"src/bfSwapChain.cpp"
-	"src/bfConsole.cpp"
-	"src/bfHolder.cpp"
-	"src/bfBuffer.cpp"
-	"src/bfUniforms.cpp" 
 	"src/bfMain.cpp"
-	"src/bfCurves2.cpp"
-	"src/bfDrawObject.cpp"
-	"src/bfDescriptor.cpp"
-	"src/bfLayerHandler.cpp" 
-	"src/bfGUI.cpp" 
-	"src/bfCurves3.cpp"
-	#"external/implot/implot.cpp"
-    #"external/implot/implot_demo.cpp"
-    #"external/implot/implot_items.cpp"
-)
-
-set(HEADERS
-	
-	
-	"include/stb_image.h"
-	"include/stb_image_write.h"
-
-	#"include/BladeForgeBin.h"	
-	"include/bfVariative.hpp"
-	"include/bfVertex2.hpp"
-	"include/BfExecutionTime.hpp"
-	"include/BfCurves.hpp"
-	"include/bfMatrix.hpp"
-	#"include/bfVertex.h"
-	"include/bfBase.h"
-	"include/bfEvent.h" 
-	"include/bfWindow.h"
-	"include/bfPhysicalDevice.h"
-	"include/bfSwapChain.h"
-	"include/bfConsole.h"
-	"include/bfHolder.h"
-	"include/bfBuffer.h"
-	"include/bfUniforms.h"
 	"include/BfMain.h"
-	"include/bfCurves2.h"
-	"include/bfDrawObject.h"
-	"include/bfDescriptor.h"
-	"include/bfLayerHandler.h"
-	"include/bfGUI.h" 
-	"include/bfCurves3.h"
-	"main.h"
 )
+
+list(APPEND SOURCES
+	${BF_BASE}
+	${BF_GEOMETRY}
+	${BF_INTERACTION}
+	${BF_OTHER}
+	${BF_DRAW}
+	${BF_OTHER}
+)
+
+
+
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
+	"main.h"
 	"main.cpp"
-
-	#"external/implot/implot.cpp"
-    #"external/implot/implot_demo.cpp"
-    #"external/implot/implot_items.cpp"
-	#"external/implot/implot.h"
-    #"external/implot/implot_internal.h"
-
-		
-	
-
+	${BF_GEOMETRY}
 	${SOURCES}
-	${HEADERS}
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -127,8 +134,6 @@ endif()
 
 
 # Copies allShaderFiles to binary.
-
-
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
 file(GLOB SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.spv)
 foreach(shaderi ${SHADERS})
