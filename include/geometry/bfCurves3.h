@@ -26,26 +26,26 @@ glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1,
 size_t bfMathGetFactorial(size_t n);
 size_t bfMathGetBinomialCoefficient(size_t n, size_t k);
 
-glm::vec3 bfMathGetNormal(const glm::vec3& p1, 
-						  const glm::vec3& p2, 
-						  const glm::vec3& p3);
+glm::vec3	   bfMathGetNormal(const glm::vec3& p1, 
+							   const glm::vec3& p2, 
+							   const glm::vec3& p3);
 
 glm::vec4 bfMathGetPlaneCoeffs(const glm::vec3& p1, 
 							   const glm::vec3& p2, 
 							   const glm::vec3& p3);
 
-bool bfMathIsVertexInPlain(const glm::vec4& plane, 
-						   const glm::vec3& p);
+bool	 bfMathIsVertexInPlain(const glm::vec4& plane, 
+							   const glm::vec3& p);
 
-bool bfMathIsVertexInPlain(const glm::vec3& np, 
-						   const glm::vec3& f, 
-						   const glm::vec3& s, 
-						   const glm::vec3& t);
+bool	 bfMathIsVertexInPlain(const glm::vec3& np, 
+							   const glm::vec3& f, 
+							   const glm::vec3& s, 
+							   const glm::vec3& t);
 
-bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np, 
-							 const glm::vec3& f, 
-							 const glm::vec3& s, 
-							 const glm::vec3& t);
+bool   bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np, 
+	   						   const glm::vec3& f, 
+	   						   const glm::vec3& s, 
+	   						   const glm::vec3& t);
 
 bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np);
 
