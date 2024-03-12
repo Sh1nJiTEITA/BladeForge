@@ -122,7 +122,7 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 			layer->update_index_offset();
 			vkCmdDrawIndexed(
 				command_buffer,
-				10,//layer->__objects[i]->get_indices_count(),
+				layer->__objects[i]->get_indices_count(),
 				1,
 				layer->__index_offsets[i],
 				layer->__vertex_offsets[i],

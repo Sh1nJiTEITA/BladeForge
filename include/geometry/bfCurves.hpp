@@ -3,7 +3,7 @@
 
 #include "bfVariative.hpp"
 #include "bfVertex2.hpp"
-#include "bfMatrix.hpp"
+//#include "bfMatrix.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -719,124 +719,124 @@ public:
 	* BF_ALLIGN_BEZIER_Z
 	* 
 	*/
-	BfBezier get_alligned(unsigned int plane, unsigned int axis) {
-		
-		BfBezier o = *this;
+	//BfBezier get_alligned(unsigned int plane, unsigned int axis) {
+	//	
+	//	BfBezier o = *this;
 
-		glm::vec3 to_start = *vertices.begin();
+	//	glm::vec3 to_start = *vertices.begin();
 
-		glm::vec3 last = (*(o.vertices.end() - 1)) - to_start;
-		float r = sqrt(last.x * last.x + last.y * last.y + last.z * last.z);
-
-
-		float angle_x = glm::degrees(glm::asin(-last.y / r));
-		float angle_y = glm::degrees(glm::asin(-last.x / r));
-		float angle_z = glm::degrees(last.z / r);
+	//	glm::vec3 last = (*(o.vertices.end() - 1)) - to_start;
+	//	float r = sqrt(last.x * last.x + last.y * last.y + last.z * last.z);
 
 
-		for (size_t i = 0; i < this->vertices.size(); i++) {
-			o.vertices[i] -= to_start;
-			//o.vertices[i] = BfMatrix::multiply(rotate_matrix, o.vertices[i]).get_vec3();
-		}
-		
-		glm::vec3 last_m;
-
-		switch (axis) {
-			case BF_AXIS_X:
-			{
-				last_m = glm::normalize((*(o.vertices.end() - 1)));
-				BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)), 
-					-asinf(last_m.y / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
-				);
-				BfQuaternion totalx = qx * BfQuaternion{ 1,0,0,0 };
-				BfMatrix mx = totalx.get_rotation_matrix4();
-				
-				last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
-			
-				BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)),
-					asinf(last_m.z / sqrtf(last_m.x * last_m.x + last_m.z * last_m.z))
-				);
-				BfQuaternion totaly = qy * BfQuaternion{ 1,0,0,0 };
-				BfMatrix my = totaly.get_rotation_matrix4();
-			
-				for (size_t i = 0; i < this->vertices.size(); i++) {
-					glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
-					o.vertices[i] = (my * mx * l).get_vec4();
-				}
-
-				if (plane == BF_PLANE_XY) {
-
-				}
-				else if (plane == BF_PLANE_XZ) {
-
-				}
-				else {
-					throw std::runtime_error("Input BF_AXIS_X can't be processed with BF_PLANE_YZ");
-				}
+	//	float angle_x = glm::degrees(glm::asin(-last.y / r));
+	//	float angle_y = glm::degrees(glm::asin(-last.x / r));
+	//	float angle_z = glm::degrees(last.z / r);
 
 
-				break;
-			}
-			case BF_AXIS_Y:
-			{
-				last_m = glm::normalize((*(o.vertices.end() - 1)));
-				BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)),
-					-asinf(last_m.x / sqrtf(last_m.x * last_m.x + last_m.z * last_m.z))
-				);
-				BfQuaternion totalx = qy * BfQuaternion{ 1,0,0,0 };
-				BfMatrix mx = totalx.get_rotation_matrix4();
+	//	for (size_t i = 0; i < this->vertices.size(); i++) {
+	//		o.vertices[i] -= to_start;
+	//		//o.vertices[i] = BfMatrix::multiply(rotate_matrix, o.vertices[i]).get_vec3();
+	//	}
+	//	
+	//	glm::vec3 last_m;
 
-				last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
+	//	switch (axis) {
+	//		case BF_AXIS_X:
+	//		{
+	//			last_m = glm::normalize((*(o.vertices.end() - 1)));
+	//			BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)), 
+	//				-asinf(last_m.y / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
+	//			);
+	//			BfQuaternion totalx = qx * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix mx = totalx.get_rotation_matrix4();
+	//			
+	//			last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
+	//		
+	//			BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)),
+	//				asinf(last_m.z / sqrtf(last_m.x * last_m.x + last_m.z * last_m.z))
+	//			);
+	//			BfQuaternion totaly = qy * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix my = totaly.get_rotation_matrix4();
+	//		
+	//			for (size_t i = 0; i < this->vertices.size(); i++) {
+	//				glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
+	//				o.vertices[i] = (my * mx * l).get_vec4();
+	//			}
 
-				BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)),
-					asinf(last_m.z / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
-				);
-				BfQuaternion totaly = qx * BfQuaternion{ 1,0,0,0 };
-				BfMatrix my = totaly.get_rotation_matrix4();
+	//			if (plane == BF_PLANE_XY) {
 
+	//			}
+	//			else if (plane == BF_PLANE_XZ) {
 
-				for (size_t i = 0; i < this->vertices.size(); i++) {
-					glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
-					o.vertices[i] = (my * mx * l).get_vec4();
-				}
-				break;
-			}
-			case BF_AXIS_Z:
-			{
-				last_m = glm::normalize((*(o.vertices.end() - 1)));
-				BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)),
-					asinf(last_m.x / sqrtf(last_m.x * last_m.x + last_m.y * last_m.y))
-				);
-				BfQuaternion totalx = qy * BfQuaternion{ 1,0,0,0 };
-				BfMatrix mx = totalx.get_rotation_matrix4();
-
-				last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
-
-				BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
-					glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)),
-					-asinf(last_m.y / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
-				);
-				BfQuaternion totaly = qx * BfQuaternion{ 1,0,0,0 };
-				BfMatrix my = totaly.get_rotation_matrix4();
+	//			}
+	//			else {
+	//				throw std::runtime_error("Input BF_AXIS_X can't be processed with BF_PLANE_YZ");
+	//			}
 
 
-				for (size_t i = 0; i < this->vertices.size(); i++) {
-					glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
-					o.vertices[i] = (my * mx * l).get_vec4();
-				}
-				break;
-			}
-		}
-			
+	//			break;
+	//		}
+	//		case BF_AXIS_Y:
+	//		{
+	//			last_m = glm::normalize((*(o.vertices.end() - 1)));
+	//			BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)),
+	//				-asinf(last_m.x / sqrtf(last_m.x * last_m.x + last_m.z * last_m.z))
+	//			);
+	//			BfQuaternion totalx = qy * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix mx = totalx.get_rotation_matrix4();
 
-	
-		return o;
-	}
+	//			last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
+
+	//			BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)),
+	//				asinf(last_m.z / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
+	//			);
+	//			BfQuaternion totaly = qx * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix my = totaly.get_rotation_matrix4();
+
+
+	//			for (size_t i = 0; i < this->vertices.size(); i++) {
+	//				glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
+	//				o.vertices[i] = (my * mx * l).get_vec4();
+	//			}
+	//			break;
+	//		}
+	//		case BF_AXIS_Z:
+	//		{
+	//			last_m = glm::normalize((*(o.vertices.end() - 1)));
+	//			BfQuaternion qy = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)),
+	//				asinf(last_m.x / sqrtf(last_m.x * last_m.x + last_m.y * last_m.y))
+	//			);
+	//			BfQuaternion totalx = qy * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix mx = totalx.get_rotation_matrix4();
+
+	//			last_m = BfMatrix::multiply(mx, glm::vec4(last_m.x, last_m.y, last_m.z, 1.0f)).get_vec4();
+
+	//			BfQuaternion qx = BfQuaternion::get_rotation_quaternion(
+	//				glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)),
+	//				-asinf(last_m.y / sqrtf(last_m.y * last_m.y + last_m.z * last_m.z))
+	//			);
+	//			BfQuaternion totaly = qx * BfQuaternion{ 1,0,0,0 };
+	//			BfMatrix my = totaly.get_rotation_matrix4();
+
+
+	//			for (size_t i = 0; i < this->vertices.size(); i++) {
+	//				glm::vec4 l = { o.vertices[i].x, o.vertices[i].y, o.vertices[i].z, 1.0f };
+	//				o.vertices[i] = (my * mx * l).get_vec4();
+	//			}
+	//			break;
+	//		}
+	//	}
+	//		
+
+	//
+	//	return o;
+	//}
 
 	/*
 	* Returns average increment by axis along curve.

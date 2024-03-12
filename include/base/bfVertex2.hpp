@@ -20,6 +20,8 @@
 #include "bfBuffer.h"
 #include "bfUniforms.h"
 #include "bfExecutionTime.hpp"
+//#include "bfMatrix2.h"
+
 
 struct bfVertex {
 	glm::vec3 pos;
@@ -56,15 +58,40 @@ struct BfVertex3 {
 	glm::vec3 color;
 	glm::vec3 normals;
 
-	BfVertex3(): BfVertex3({{0.0f,0.0f,0.0f}, {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f} }) {}
+	BfVertex3()
+		: pos{ 0.0f,0.0f,0.0f }
+		, color{ 1.0f,1.0f,1.0f }
+		, normals{0.0f, 0.0f, 0.0f} {}
 
-	BfVertex3(glm::vec3 ipos, 
-			  glm::vec3 icol = {1.0f, 1.0f, 1.0f}, 
-			  glm::vec3 inor = {0.0f, 0.0f, 0.0f})
+	BfVertex3(glm::vec3 ipos)
+			  //glm::vec3 icol = {1.0f, 1.0f, 1.0f}, 
+			  //glm::vec3 inor = {0.0f, 0.0f, 0.0f})
 		: pos{ipos}
-		, color{icol}
-		, normals{inor}
+		/*, color{icol}
+		, normals{inor}*/
+		, color{ 1.0f,1.0f,1.0f }
+		, normals{ 0.0f,0.0f,0.0f }
+
 	{}
+
+	BfVertex3(glm::vec3 ipos,
+		glm::vec3 icol, 
+		glm::vec3 inor)
+		: pos{ ipos }
+		/*, color{icol}
+		, normals{inor}*/
+		, color{ icol }
+		, normals{ inor }
+
+	{}
+
+//#ifdef BF_MATRIX2_H
+//	BfVertex3(BfVec2 _pos) 
+//		: pos(_pos.x, _pos.y, 0.0f)
+//		, color{ 1.0f,1.0f,1.0f }
+//		, normals{ 0.0f,0.0f,0.0f } 
+//	{}
+//#endif // BF_MATRIX2_H
 
 
 	static inline VkVertexInputBindingDescription getBindingDescription() {

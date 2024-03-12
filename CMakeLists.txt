@@ -88,8 +88,11 @@ set(BF_INTERACTION
 
 set(BF_OTHER 
 	"include/other/BfExecutionTime.hpp"
-	"include/other/bfMatrix.hpp"
+	#"include/other/bfMatrix.hpp"
 	"include/other/bfVariative.hpp"
+	"include/other/bfMatrix2.h" "src/other/bfMatrix2.cpp"
+	"include/other/stb_image.h"
+	"include/other/stb_image_write.h"
 )
 
 set(BF_DRAW 
@@ -97,10 +100,6 @@ set(BF_DRAW
 	"include/draw/bfLayerHandler.h" "src/draw/bfLayerHandler.cpp" 
 )
 
-set(BF_OTHER
-	"include/other/stb_image.h"
-	"include/other/stb_image_write.h"
-)
 
 
 # Headers/Sources
@@ -124,7 +123,7 @@ list(APPEND SOURCES
 add_executable(${PROJECT_NAME} 
 	"main.h"
 	"main.cpp"
-	${BF_GEOMETRY}
+	#${BF_GEOMETRY}
 	${SOURCES}
 )
 
@@ -226,6 +225,7 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/matrix.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
@@ -242,7 +242,6 @@ add_executable(tests
 
 
 	${SOURCES}
-	${INCLUDES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PRIVATE VulkanMemoryAllocator)

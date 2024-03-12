@@ -153,12 +153,20 @@ void BfMain::__start_loop()
     o_line_z->create_indices();
     o_line_z->bind_pipeline(&__base.line_pipeline);
 
+    auto circle_1 = std::make_shared<BfCircle>(100, glm::vec3(0.0f), 1);
+    circle_1->set_color({ 1.0f,1.0f,1.0f });
+    circle_1->create_vertices();
+    circle_1->create_indices();
+    circle_1->bind_pipeline(&__base.line_pipeline);
+    
     layer_1->add(o_line_x);
     layer_1->add(o_line_y);
     layer_1->add(o_line_z);
 
-    layer_2->add(obj_1);
-    layer_2->add(obj_2);
+    //layer_2->add(obj_1);
+    //layer_2->add(obj_2);
+    layer_2->add(circle_1);
+
     layer_1->update_buffer();
     layer_2->update_buffer();
 

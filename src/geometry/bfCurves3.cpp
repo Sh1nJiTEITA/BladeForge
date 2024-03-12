@@ -26,24 +26,38 @@ void BfPlane::create_indices()
 BfSingleLine::BfSingleLine()
 	: BfSingleLine{ {{0.0f, 0.0f, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}},
 					{{0.0f, 0.0f, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}} }
+
 {
 
 }
 
 BfSingleLine::BfSingleLine(const BfVertex3& fp, const BfVertex3& sp)
+	: BfDrawObj{{fp, sp}}
+	, first(__dvertices[0])
+	, second(__dvertices[1])
 {
-	__dvertices.reserve(2);
+	//__dvertices.reserve(2);
 	__vertices.reserve(2);
 	__indices.reserve(2);
 
-	__dvertices.emplace_back(fp);
-	__dvertices.emplace_back(sp);
+	//__dvertices.emplace_back(fp);
+	//__dvertices.emplace_back(sp);
 }
 
-BfSingleLine::BfSingleLine(const glm::vec3 fp, const glm::vec3 sp)
+BfSingleLine::BfSingleLine(const glm::vec3& fp, const glm::vec3& sp)
 	: BfSingleLine(
 		{ fp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
 		{ sp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} }
+	)
+{
+}
+
+BfSingleLine::BfSingleLine(const BfVec2& fp, const BfVec2& sp) 
+	/*: BfSingleLine{ {{fp.x, fp.y, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}},
+					{{sp.x, sp.y, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}} }*/
+	: BfSingleLine(
+		{ {fp.x, fp.y, 0.0f }, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
+		{ {sp.x, sp.y, 0.0f }, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
 	)
 {
 }
@@ -467,3 +481,61 @@ void BfBezierCurve::create_vertices()
 	}
 }
 
+BfCircle::BfCircle(size_t m, const BfVertex3& center, float radius)
+	: __out_vertices_count{ m }
+	, __radius{ radius }
+
+{
+	__dvertices = { center };
+	__vertices.reserve(__out_vertices_count);
+	__indices.reserve(__out_vertices_count * 2);
+}
+
+const BfVertex3& BfCircle::get_center() {
+	return __dvertices[0];
+}
+
+void BfCircle::create_vertices() {
+	float theta;
+
+	if (!__vertices.empty()) __vertices.clear();
+	for (size_t i = 0; i < __out_vertices_count+1; ++i) {
+		theta = 2 * BF_PI * i / __out_vertices_count;
+		__vertices.emplace_back(
+			glm::vec3(__radius * cosf(theta), __radius * sinf(theta), 0.0f),
+			this->__main_color,
+			glm::vec3(0.0f,0.0f,0.0f)
+		);
+	}
+	
+}
+
+//BfArc::BfArc(size_t vertices_count,  
+//			 const BfVertex3& l,		//1
+//			 const BfVertex3& m,	//2
+//			 const BfVertex3& r)	//3
+//	: __out_vertices_count{vertices_count}
+//	, left(__dvertices[0])
+//	, mid(__dvertices[1])
+//	, right(__dvertices[2])
+//	, center(__dvertices[3])
+//
+//{
+//	auto p_12 = BfLineProp(l, m).get_perpendicular((l.pos + r.pos) / 2.0f);
+//	auto p_23 = BfLineProp(m, r).get_perpendicular((m.pos + r.pos) / 2.0f);
+//	auto p_31 = BfLineProp(r, l).get_perpendicular((r.pos + l.pos) / 2.0f);
+//
+//	BfMatrix A{
+//		{-p_12.get_k(), 1},
+//		{-p_23.get_k(), 1}
+//	};
+//	BfMatrix B{
+//		{-p_12.get_b()},
+//		{-p_23.get_b()}
+//	};
+//	BfVec2 center = solve_linear_mtx(A, B);
+//	this->__dvertices.emplace_back(center.x, center.y, 0.0f);
+//	
+//
+//
+//}

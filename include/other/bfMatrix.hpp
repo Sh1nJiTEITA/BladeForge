@@ -15,6 +15,14 @@
 #define fori(beg, end) for (int i = beg; i < end; i++)
 #define forj(beg, end) for (int j = beg; j < end; j++)
 
+class BfVectorf {
+	std::vector<float> __data;
+public:
+
+	inline size_t size();
+};
+
+
 class BfMatrix {
 	
 	size_t __n;
@@ -88,6 +96,24 @@ public:
 		}
 		return o;
 	}
+
+	/*BfMatrix operator*(const BfMatrix& mtx) {
+		return multiply(*this, mtx);;
+	}
+
+	BfMatrix operator*(float v) {
+		BfMatrix mtx = *this;
+		for (auto& it_row : mtx.data) {
+			for (auto& it_col : it_row) {
+				it_col *= v;
+			}
+		}
+		return mtx;
+	}*/
+
+	
+
+
 #ifdef GLM_SETUP_INCLUDED
 	static inline BfMatrix multiply(const BfMatrix& m1, const glm::vec3 vec3) {
 		if (m1.__m != 3) {

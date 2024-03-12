@@ -88,6 +88,9 @@ protected:
 
 public:
 
+	BfDrawObj();
+	BfDrawObj(const std::vector<BfVertex3>& dvert);
+
 	BfObjID id;
 
 	const std::vector<BfVertex3>& get_rVertices() const ;

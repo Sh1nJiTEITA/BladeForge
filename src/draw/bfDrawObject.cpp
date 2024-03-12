@@ -14,6 +14,14 @@
 //	this->id = obj.id;
 //}
 
+BfDrawObj::BfDrawObj() {}
+
+BfDrawObj::BfDrawObj(const std::vector<BfVertex3>& dvert)
+	: __dvertices{dvert}
+{
+
+}
+
 bool BfDrawObj::is_ok()
 {
 	bool decision = !__vertices.empty() * !__indices.empty() * BfObjID::is_id_exists(id);
