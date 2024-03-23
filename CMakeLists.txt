@@ -23,7 +23,7 @@ include_directories(include)
 
 #include_directories(external/implot/)
 #add_subdirectory(external/implot)
-#include_directories(src)
+	#include_directories(src)
 
 
 # Enable Hot Reload for MSVC compilers if supported.
@@ -78,6 +78,7 @@ set(BF_GEOMETRY
 	"include/geometry/BfCurves.hpp"
 	"include/geometry/bfCurves2.h"  "src/geometry/bfCurves2.cpp"
 	"include/geometry/bfCurves3.h"  "src/geometry/bfCurves3.cpp"
+	"include/geometry/bfBladeSection.h" "src/geometry/bfBladeSection.cpp"
 )
 
 set(BF_INTERACTION

@@ -190,6 +190,22 @@ BfDrawLayer::BfDrawLayer(VmaAllocator allocator,
 	__index_offsets.resize(__reserved_n, 0);
 }
 
+BfDrawLayer::BfDrawLayer(const BfDrawLayerCreateInfo& info)
+	: BfDrawLayer(
+		info.allocator,
+		info.vertex_size,
+		info.max_vertex_count,
+		info.max_reserved_count
+	)
+{}
+
+std::vector<std::shared_ptr<BfDrawObj>>::iterator BfDrawLayer::begin() {
+	return __objects.begin();
+}
+std::vector<std::shared_ptr<BfDrawObj>>::iterator BfDrawLayer::end() {
+	return __objects.end();
+}
+
 const size_t BfDrawLayer::get_whole_vertex_count() const noexcept
 {
 	size_t count = 0;
@@ -231,6 +247,35 @@ void BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
 		throw std::runtime_error("object is incorrect");
 	__objects.emplace_back(obj);
 }
+
+void BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj) {
+	__objects.emplace_back(obj);
+}
+
+void BfDrawLayer::del(uint32_t id) {
+	__objects.erase(
+		std::remove_if(__objects.begin(), __objects.end(),
+			[id](const auto& obj) { return obj->id.get() == id; }),
+		__objects.end()
+	);
+}
+
+void BfDrawLayer::del(const std::vector<uint32_t>& id) {
+	if (id.size() == 0) return;
+	auto con = [&id](std::shared_ptr<BfDrawObj> obj) {
+		auto it = std::find(id.begin(), id.end(), obj->id.get());
+
+		if (it != id.end()) {
+			return true;
+		}
+		else
+			return false;
+	};
+	auto rem = std::remove_if(__objects.begin(), __objects.end(), con);
+	__objects.erase(rem, __objects.end());
+	this->update_buffer();
+}
+
 
 void BfDrawLayer::update_vertex_offset()
 {
@@ -290,6 +335,7 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
 	vkCmdBindIndexBuffer(combuffer, *__buffer.get_p_index_buffer(), 0, VK_INDEX_TYPE_UINT16);
 	
 	for (size_t i = 0; i < __objects.size(); i++) {
+		if (__objects[i] == nullptr) continue;
 		vkCmdDrawIndexed(
 			combuffer,
 			__objects[i]->get_indices_count(),

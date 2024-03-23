@@ -117,6 +117,30 @@ void BfMain::__start_loop()
         1000,
         100);
 
+    BfDrawLayerCreateInfo layer_info_1{};
+    layer_info_1.allocator = __base.allocator;
+    layer_info_1.vertex_size = sizeof(BfVertex3);
+    layer_info_1.max_vertex_count = 1000;
+    layer_info_1.max_reserved_count = 100;
+
+    BfBladeSectionCreateInfo section_info_1{};
+    section_info_1.layer_create_info = layer_info_1;
+
+    section_info_1.width = 1.0f;
+    section_info_1.install_angle = 102.0f;
+    section_info_1.inlet_angle = 25.0f;
+    section_info_1.outlet_angle = 42.0f;
+    section_info_1.inlet_radius = 0.025f;
+    section_info_1.outlet_radius = 0.005f;
+    section_info_1.border_length = 2.0f;
+    section_info_1.pipeline = __base.line_pipeline;
+
+
+
+    auto blade_section_1 = std::make_shared<BfBladeSection>(
+        section_info_1
+    );
+
     std::vector<BfVertex3> plane_vertices = {
         {{0.0f, 10.0f, 0},  {0.91f,0.91f,0.91f},{0.81f,0.81f,0.81f}},
         {{-10.0f, -10.0f, 0}, {0.92f,0.92f,0.92f},{0.82f,0.82f,0.82f}},
@@ -153,26 +177,88 @@ void BfMain::__start_loop()
     o_line_z->create_indices();
     o_line_z->bind_pipeline(&__base.line_pipeline);
 
-    auto circle_1 = std::make_shared<BfCircle>(100, glm::vec3(0.0f), 1);
+    auto circle_1 = std::make_shared<BfArc>(
+        100, 
+        BfVertex3({1.0f, 0.0f, 0.0f}),
+        BfVertex3({0.0f, 1.0f, 0.0f}),
+        BfVertex3({0.0f, 0.0f, 1.0f})
+    );
     circle_1->set_color({ 1.0f,1.0f,1.0f });
     circle_1->create_vertices();
     circle_1->create_indices();
     circle_1->bind_pipeline(&__base.line_pipeline);
     
+    auto circle_2 = std::make_shared<BfCircle>(
+        100,
+        BfVertex3({1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}),
+        0.2f
+    );
+
+    circle_2->set_color({ 1.0f,1.0f,1.0f });
+    circle_2->create_vertices();
+    circle_2->create_indices();
+    circle_2->bind_pipeline(&__base.line_pipeline);
+
+   
+    glm::vec4 pl = bfMathGetPlaneCoeffs({ 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
+
+
+    glm::vec3 ta = { 1.5f, 1.5f, (-1.5 * pl.x - 1.5 * pl.y - pl.w) / pl.z };
+    
+
+    
+    auto tangent_1 = std::make_shared<BfSingleLine>(
+        ta,
+        circle_1->get_tangent_vert(ta)[0]
+    );
+    tangent_1->set_color({ 1.0f,1.0f,1.0f });
+    tangent_1->create_vertices();
+    tangent_1->create_indices();
+    tangent_1->bind_pipeline(&__base.line_pipeline);
+
+    auto tangent_2 = std::make_shared<BfSingleLine>(
+        ta,
+        circle_1->get_tangent_vert(ta)[1]
+    );
+    tangent_2->set_color({ 1.0f,1.0f,1.0f });
+    tangent_2->create_vertices();
+    tangent_2->create_indices();
+    tangent_2->bind_pipeline(&__base.line_pipeline);
+
+
+    auto add_circle = std::make_shared<BfCircle>(
+        100,
+        BfVertex3(
+            { (ta + circle_1->get_center().pos) / 2.0f },
+            {1.0f, 1.0f, 1.0f},
+            {circle_1->get_center().normals}
+        ),
+        glm::distance(ta, circle_1->get_center().pos)/2
+    );
+
+    add_circle->set_color({ 1.0f,1.0f,1.0f });
+    add_circle->create_vertices();
+    add_circle->create_indices();
+    add_circle->bind_pipeline(&__base.line_pipeline);
+
     layer_1->add(o_line_x);
     layer_1->add(o_line_y);
     layer_1->add(o_line_z);
 
     //layer_2->add(obj_1);
     //layer_2->add(obj_2);
-    layer_2->add(circle_1);
+    //layer_2->add(circle_1);
+    //layer_2->add(circle_2);
+    //layer_2->add(tangent_1);
+    //layer_2->add(tangent_2);
+    //layer_2->add(add_circle);
 
     layer_1->update_buffer();
     layer_2->update_buffer();
 
     __base.layer_handler.add(layer_1);
     __base.layer_handler.add(layer_2);
-
+    __base.layer_handler.add(blade_section_1);
 
 
     while (!glfwWindowShouldClose(__base.window->pWindow))
@@ -193,15 +279,16 @@ void BfMain::__start_loop()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
 
         __present_menu_bar();
         __present_camera();
         __present_info(currentTime, __base.pos_id);
         __present_event_log();
-       // __present_id_map(__base, image_data_);
+      
+
         bfPresentLayerHandler(__base.layer_handler);
-        ShowTestPlot();
+        //ShowTestPlot();
         
        
 
@@ -303,58 +390,60 @@ void BfMain::__present_info(double currentTime, uint32_t id_map) {
 
 void BfMain::__present_camera()
 {
-    ImGui::Begin("Camera");
-    static bool is_per = true;
-    static bool is_ort = false;
+    if (__gui.is_camera_info) {
+        ImGui::Begin("Camera");
+        static bool is_per = true;
+        static bool is_ort = false;
 
-    ImGui::BeginTable("VIEWS", 3);
+        ImGui::BeginTable("VIEWS", 3);
 
         ImGui::TableNextRow(); // 0
-    
-            ImGui::TableSetColumnIndex(0);
-            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Up", ImVec2(50,50))) bfSetOrthoUp(__base.window);
-            ImGui::TableSetColumnIndex(2);
+
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TableSetColumnIndex(1); if (ImGui::Button("Up", ImVec2(50, 50))) bfSetOrthoUp(__base.window);
+        ImGui::TableSetColumnIndex(2);
 
         ImGui::TableNextRow(); // 1
 
-            ImGui::TableSetColumnIndex(0); if (ImGui::Button("Left", ImVec2(50, 50))) bfSetOrthoLeft(__base.window);
-            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Near", ImVec2(50, 50))) bfSetOrthoNear(__base.window);
-            ImGui::TableSetColumnIndex(2); if (ImGui::Button("Right", ImVec2(50, 50))) bfSetOrthoRight(__base.window);
+        ImGui::TableSetColumnIndex(0); if (ImGui::Button("Left", ImVec2(50, 50))) bfSetOrthoLeft(__base.window);
+        ImGui::TableSetColumnIndex(1); if (ImGui::Button("Near", ImVec2(50, 50))) bfSetOrthoNear(__base.window);
+        ImGui::TableSetColumnIndex(2); if (ImGui::Button("Right", ImVec2(50, 50))) bfSetOrthoRight(__base.window);
 
         ImGui::TableNextRow(); //2
 
-            ImGui::TableSetColumnIndex(0); 
-            ImGui::TableSetColumnIndex(1); if (ImGui::Button("Bottom", ImVec2(50, 50))) bfSetOrthoBottom(__base.window);
-            ImGui::TableSetColumnIndex(2); if (ImGui::Button("Far", ImVec2(50, 50))) bfSetOrthoFar(__base.window);
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TableSetColumnIndex(1); if (ImGui::Button("Bottom", ImVec2(50, 50))) bfSetOrthoBottom(__base.window);
+        ImGui::TableSetColumnIndex(2); if (ImGui::Button("Far", ImVec2(50, 50))) bfSetOrthoFar(__base.window);
 
-    ImGui::EndTable();
+        ImGui::EndTable();
 
-    if (ImGui::RadioButton("Perspective", is_per)) {
-        is_ort = false;
-        is_per = true;
+        if (ImGui::RadioButton("Perspective", is_per)) {
+            is_ort = false;
+            is_per = true;
 
-        __base.window->proj_mode = 0;
+            __base.window->proj_mode = 0;
 
-        std::cout << "pers active" << "\n";
-    }
-    if (ImGui::RadioButton("Ortho", is_ort)) {
-        is_ort = true;
-        is_per = false;
+            std::cout << "pers active" << "\n";
+        }
+        if (ImGui::RadioButton("Ortho", is_ort)) {
+            is_ort = true;
+            is_per = false;
 
-        __base.window->proj_mode = 1;
+            __base.window->proj_mode = 1;
 
-        std::cout << "Ortho active" << "\n";
-    }
+            std::cout << "Ortho active" << "\n";
+        }
 
-    ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);
-    ImGui::InputFloat("Ortho-right", &__base.window->ortho_right, 0.1f);
-    ImGui::InputFloat("Ortho-top", &__base.window->ortho_top, 0.1f);
-    ImGui::InputFloat("Ortho-bottom", &__base.window->ortho_bottom, 0.1f);
-    ImGui::InputFloat("Ortho-near", &__base.window->ortho_near, 0.1f);
-    ImGui::InputFloat("Ortho-far", &__base.window->ortho_far, 0.1f);
-    ImGui::Checkbox("is_asp", &__base.window->is_asp);
+        ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);
+        ImGui::InputFloat("Ortho-right", &__base.window->ortho_right, 0.1f);
+        ImGui::InputFloat("Ortho-top", &__base.window->ortho_top, 0.1f);
+        ImGui::InputFloat("Ortho-bottom", &__base.window->ortho_bottom, 0.1f);
+        ImGui::InputFloat("Ortho-near", &__base.window->ortho_near, 0.1f);
+        ImGui::InputFloat("Ortho-far", &__base.window->ortho_far, 0.1f);
+        ImGui::Checkbox("is_asp", &__base.window->is_asp);
 
-    ImGui::End();
+        ImGui::End();
+   }
 }
 
 void BfMain::__present_menu_bar()
@@ -379,8 +468,13 @@ void BfMain::__present_menu_bar()
             if (ImGui::MenuItem(bfGetMenueEventLogStr(__gui).c_str())) {
                 __gui.is_event_log = !__gui.is_event_log;
             }
+            if (ImGui::MenuItem(bfGetMenueCameraInfoStr(__gui).c_str())) {
+                __gui.is_camera_info = !__gui.is_camera_info;
+            }
+
             ImGui::EndMenu();
         }
+
 
 
         ImGui::EndMainMenuBar();

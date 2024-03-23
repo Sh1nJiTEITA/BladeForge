@@ -7,8 +7,13 @@ std::string bfGetMenueInfoStr(BfGUI gui)
 };
 
 std::string bfGetMenueEventLogStr(BfGUI gui) {
-    if (gui.is_info) return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
+    if (gui.is_event_log) return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
     else return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
+}
+
+std::string bfGetMenueCameraInfoStr(BfGUI gui) {
+    if (gui.is_camera_info) return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_ENABLED);
+    else return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_DISABLED);
 }
 
 void bfPresentLayerHandler(BfLayerHandler& layer_handler)
@@ -37,13 +42,7 @@ void bfPresentLayerHandler(BfLayerHandler& layer_handler)
                     ImGui::Selectable(obj_name.c_str(),
                         layer->get_object_by_index(j)->get_pSelection(),
                         ImGuiSelectableFlags_AllowDoubleClick);
-                    /*if (ImGui::TreeNode(obj_name.c_str())) {
-                        
-                        
-                        ImGui::TreePop();
-                    }*/
-
-
+                   
                 }
 
                 
@@ -54,28 +53,29 @@ void bfPresentLayerHandler(BfLayerHandler& layer_handler)
         }
         
         
-        /*if (ImGui::TreeNode(var1.name.c_str())) {
-            if (ImGui::IsItemClicked()) {
-                ImGui::OpenPopup("Variable 1 Popup");
-            }
-            if (ImGui::BeginPopup("Variable 1 Popup")) {
-                ShowVariableContents(var1);
-                ImGui::EndPopup();
-            }
-            ImGui::TreePop();
-        }
-
-        if (ImGui::TreeNode(var2.name.c_str())) {
-            if (ImGui::IsItemClicked()) {
-                ImGui::OpenPopup("Variable 2 Popup");
-            }
-            if (ImGui::BeginPopup("Variable 2 Popup")) {
-                ShowVariableContents(var2);
-                ImGui::EndPopup();
-            }
-            ImGui::TreePop();
-        }*/
+        
     }
+
+    if (ImGui::Button("Delete")) {
+               
+        std::vector<uint32_t> ids;
+        ids.reserve(layer_handler.get_whole_obj_count());
+
+        for (size_t i = 0; i < layer_handler.get_layer_count(); i++) {
+            ids.clear();
+            auto layer = layer_handler.get_layer_by_index(i);
+            for (size_t j = 0; j < layer->get_obj_count(); j++) {
+                if (*layer->get_object_by_index(j)->get_pSelection())
+   
+                    ids.emplace_back(layer->get_object_by_index(j)->id.get());
+     
+            }
+
+            layer->del(ids);
+        }
+     
+    }
+
 
     ImGui::End();
 

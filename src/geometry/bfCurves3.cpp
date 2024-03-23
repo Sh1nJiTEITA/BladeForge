@@ -31,20 +31,17 @@ BfSingleLine::BfSingleLine()
 
 }
 
-BfSingleLine::BfSingleLine(const BfVertex3& fp, const BfVertex3& sp)
-	: BfDrawObj{{fp, sp}}
-	, first(__dvertices[0])
-	, second(__dvertices[1])
+BfSingleLine::BfSingleLine(const BfVertex3& fp, 
+						   const BfVertex3& sp)
+	: BfDrawObj{{ fp, sp }}
 {
-	//__dvertices.reserve(2);
+	__dvertices.reserve(2);
 	__vertices.reserve(2);
 	__indices.reserve(2);
-
-	//__dvertices.emplace_back(fp);
-	//__dvertices.emplace_back(sp);
 }
 
-BfSingleLine::BfSingleLine(const glm::vec3& fp, const glm::vec3& sp)
+BfSingleLine::BfSingleLine(const glm::vec3& fp, 
+						   const glm::vec3& sp)
 	: BfSingleLine(
 		{ fp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
 		{ sp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} }
@@ -52,29 +49,105 @@ BfSingleLine::BfSingleLine(const glm::vec3& fp, const glm::vec3& sp)
 {
 }
 
-BfSingleLine::BfSingleLine(const BfVec2& fp, const BfVec2& sp) 
-	/*: BfSingleLine{ {{fp.x, fp.y, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}},
-					{{sp.x, sp.y, 0.0f},{1.0f, 1.0f, 1.0f},{0.0f, 0.0f,0.0f}} }*/
-	: BfSingleLine(
-		{ {fp.x, fp.y, 0.0f }, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} },
-		{ {sp.x, sp.y, 0.0f }, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
-	)
-{
+
+
+float BfSingleLine::get_k(int proj) {
+	
+	glm::vec3 f{ this->get_first().pos };
+	glm::vec3 s{ this->get_second().pos };
+	
+	switch (proj) {
+	case BF_SINGLE_LINE_PROJ_XY:
+		return	(s.y - f.y) / 
+				(s.x - f.x); 
+	case BF_SINGLE_LINE_PROJ_XZ:
+		return	(s.z - f.z) /
+				(s.x - f.x);
+	case BF_SINGLE_LINE_PROJ_YX:
+		return	(s.x - f.x) /
+				(s.y - f.y);
+	case BF_SINGLE_LINE_PROJ_YZ:
+		return	(s.z - f.z) /
+				(s.y - f.y);
+	case BF_SINGLE_LINE_PROJ_ZX:
+		return	(s.x - f.x) /
+				(s.z - f.z);
+	case BF_SINGLE_LINE_PROJ_ZY:
+		return	(s.y - f.y) /
+				(s.z - f.z);
+	default:
+		throw std::runtime_error("BfSingleLine::get_k - invalid proj");
+	}
 }
 
-const BfVertex3& BfSingleLine::get_first_point() const
+float BfSingleLine::get_k_perpendicular(int proj) {
+	return -1.0f / this->get_k(proj);
+}
+
+float BfSingleLine::get_b(int proj) {
+	glm::vec3 f{ this->get_first().pos };
+	glm::vec3 s{ this->get_second().pos };
+
+	switch (proj) {
+	case BF_SINGLE_LINE_PROJ_XY:
+		return f.y - this->get_k(proj) * f.x;
+	case BF_SINGLE_LINE_PROJ_XZ:
+		return f.z - this->get_k(proj) * f.x;
+	case BF_SINGLE_LINE_PROJ_YX:
+		return f.x - this->get_k(proj) * f.y;
+	case BF_SINGLE_LINE_PROJ_YZ:
+		return f.z - this->get_k(proj) * f.y;
+	case BF_SINGLE_LINE_PROJ_ZX:
+		return f.x - this->get_k(proj) * f.z;
+	case BF_SINGLE_LINE_PROJ_ZY:
+		return f.y - this->get_k(proj) * f.z;
+	default:
+		throw std::runtime_error("BfSingleLine::get_b - invalid proj");
+	}
+}
+
+float BfSingleLine::get_b_perpendicular(glm::vec3 f, int proj) {
+	float k_per{ this->get_k_perpendicular(proj) };
+
+	switch (proj) {
+	case BF_SINGLE_LINE_PROJ_XY:
+		return f.y - k_per * f.x;
+	case BF_SINGLE_LINE_PROJ_XZ:
+		return f.z - k_per * f.x;
+	case BF_SINGLE_LINE_PROJ_YX:
+		return f.x - k_per * f.y;
+	case BF_SINGLE_LINE_PROJ_YZ:
+		return f.z - k_per * f.y;
+	case BF_SINGLE_LINE_PROJ_ZX:
+		return f.x - k_per * f.z;
+	case BF_SINGLE_LINE_PROJ_ZY:
+		return f.y - k_per * f.z;
+	default:
+		throw std::runtime_error("BfSingleLine::get_b_perpenduclar - invalid proj");
+	}
+}
+
+float BfSingleLine::get_single_proj(float ival, int proj) {
+	return this->get_k(proj) * ival + this->get_b(proj);
+}
+
+float BfSingleLine::get_length() {
+	return glm::distance(get_first().pos, get_second().pos);
+}
+
+const BfVertex3& BfSingleLine::get_first() const
 {
 	return __dvertices.at(0);
 }
 
-const BfVertex3& BfSingleLine::get_second_point() const
+const BfVertex3& BfSingleLine::get_second() const
 {
 	return __dvertices.at(1);
 }
 
 glm::vec3 BfSingleLine::get_direction_from_start() const
 {
-	return this->get_second_point().pos - this->get_first_point().pos;
+	return glm::normalize(this->get_second().pos - this->get_first().pos);
 }
 
 glm::vec3 BfSingleLine::get_direction_from_end() const
@@ -96,28 +169,24 @@ void BfSingleLine::create_vertices()
 	
 }
 
-glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1, const BfSingleLine& line2)
-{
-	glm::mat3 plane;
-	
-
-	plane[0][0] = line2.get_second_point().pos.x - line1.get_first_point().pos.x;
-	plane[0][1] = line2.get_second_point().pos.y - line1.get_first_point().pos.y;
-	plane[0][2] = line2.get_second_point().pos.z - line1.get_first_point().pos.z;
-	plane[1][0] = line1.get_second_point().pos.x - line1.get_first_point().pos.x;
-	plane[1][1] = line1.get_second_point().pos.y - line1.get_first_point().pos.y;
-	plane[1][2] = line1.get_second_point().pos.z - line1.get_first_point().pos.z;
-	plane[2][0] = line2.get_first_point().pos.x - line1.get_first_point().pos.x;
-	plane[2][1] = line2.get_first_point().pos.y - line1.get_first_point().pos.y;
-	plane[2][2] = line2.get_first_point().pos.z - line1.get_first_point().pos.z;
-
-	if (glm::determinant(plane) == 0) {
+glm::vec3 bfMathFindLinesIntersection(
+	const BfSingleLine& line1, 
+	const BfSingleLine& line2,
+	int mode
+) {
+	if (bfMathIsVerticesInPlain({
+			line1.get_first(),
+			line1.get_second(),
+			line2.get_first(),
+			line2.get_second()
+		})) 
+	{
 		// a1.x + b1.x * t1 = a2.x + b2.x * t2
 		// a1.y + b1.y * t1 = a2.y + b2.y * t2
-		glm::vec3 a1 = line1.get_first_point().pos;
+		glm::vec3 a1 = line1.get_first().pos;
 		glm::vec3 b1 = line1.get_direction_from_start();
 
-		glm::vec3 a2 = line2.get_first_point().pos;
+		glm::vec3 a2 = line2.get_first().pos;
 		glm::vec3 b2 = line2.get_direction_from_start();
 
 		float frac = b1.x * b2.y - b1.y * b2.x;
@@ -129,13 +198,21 @@ glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1, const BfSingleL
 		if (glm::isnan(t1) || glm::isnan(t2)) {
 			return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
 		}
-
-		if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f)) {
+		if (mode == BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES) {
+			if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f)) {
+				return a1 + b1 * t1;
+			}
+			else {
+				return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+			}
+		}
+		else if (mode == BF_MATH_FIND_LINES_INTERSECTION_ANY) {
 			return a1 + b1 * t1;
 		}
 		else {
-			return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+			throw std::runtime_error("Invalid bfMathFindLinesIntersection mode inputed");
 		}
+
 	}
 	else {
 		return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
@@ -175,8 +252,8 @@ glm::vec3 bfMathGetNormal(const glm::vec3& p1,
 						  const glm::vec3& p2, 
 						  const glm::vec3& p3)
 {
-	glm::vec3 _v1{ p2 - p1 };//{ p2.x - p1.x, p2.y - p1.y, p2.z - p1.z };
-	glm::vec3 _v2{ p3 - p1 };//{ p3.x - p1.x, p3.y - p1.y, p3.z - p1.z };
+	glm::vec3 _v1{ p2 - p1 };
+	glm::vec3 _v2{ p3 - p1 };
 	glm::vec3 normal = glm::cross(_v1, _v2);
 
 	if (normal == glm::vec3(0.0f))
@@ -222,6 +299,21 @@ glm::vec4 bfMathGetPlaneCoeffs(const glm::vec3& f,
 	return { direction, -glm::determinant(D) };
 }
 
+std::array<glm::vec3, 3> bfMathGetPlaneOrths(glm::vec4 plane) {
+	std::array<glm::vec3, 3> orths;
+	orths[0] = {plane.x, plane.y, plane.z }; // normal
+	orths[1] = glm::normalize(glm::cross(orths[0], glm::vec3(0.0f, 0.0f, 1.0f)));
+	orths[2] = glm::normalize(glm::cross(glm::cross(orths[0], orths[1]), orths[1]));
+	return orths;
+}
+
+std::array<glm::vec3, 2> bfMathGetOrthsByNormal(glm::vec3 normal) {
+	std::array<glm::vec3, 2> orths;
+	orths[0] = glm::normalize(glm::cross(normal, glm::vec3(0.0f, 1.0f, 0.0f)));
+	orths[1] = glm::normalize(glm::cross(glm::cross(orths[0], normal), orths[0]));
+	return orths;
+}
+
 bool bfMathIsVertexInPlain(const glm::vec4& plane, 
 						   const glm::vec3& p)
 {
@@ -236,23 +328,60 @@ bool bfMathIsVertexInPlain(const glm::vec3& np,
 						   const glm::vec3& s, 
 						   const glm::vec3& t)
 {
-	glm::vec3 first = bfMathGetNormal(f, s, t);
-	glm::vec3 second = bfMathGetNormal(np, f, s);
-	glm::vec3 delta = second - first;
+	
+	// Вычисляем векторы между точками
+	glm::vec3 fs = s - f;
+	glm::vec3 ft = t - f;
+	glm::vec3 fn = np - f;
 
-	if ((delta.x <= BF_MATH_ABS_ACCURACY) &&
-		(delta.y <= BF_MATH_ABS_ACCURACY) &&
-		(delta.z <= BF_MATH_ABS_ACCURACY))
+	// Вычисляем скалярное тройное произведение
+	float volume = glm::dot(glm::cross(fs, ft), fn);
+
+	// Проверяем, если объем равен нулю (точки лежат в одной плоскости)
+	if (glm::abs(volume) < BF_MATH_ABS_ACCURACY)
 		return true;
 	else
 		return false;
+	
+	//glm::vec3 first = bfMathGetNormal(f, s, t);
+	//glm::vec3 second = bfMathGetNormal(np, f, s);
+	//
+	//// On 1 line
+	//if (glm::length(first) < BF_MATH_ABS_ACCURACY && 
+	//	glm::length(second) < BF_MATH_ABS_ACCURACY) {
+	//	return true;
+	//}
+	//if (glm::dot(first, second) > 1.0f - BF_MATH_ABS_ACCURACY) {
+	//	glm::vec3 fs = s - f;
+	//	glm::vec3 ft = t - f;
+	//	glm::vec3 npf = np - f;
+	//	float volume = glm::dot(glm::cross(fs, ft), npf);
 
-	/*if (((bfMathGetNormal(np, f, s).x - bfMathGetNormal(f, s, t).x) <= BF_MATH_ABS_ACCURACY) &&
-		((bfMathGetNormal(np, f, s).y - bfMathGetNormal(f, s, t).y) <= BF_MATH_ABS_ACCURACY) &&
-		((bfMathGetNormal(np, f, s).z - bfMathGetNormal(f, s, t).z) <= BF_MATH_ABS_ACCURACY))
-		return true;
-	else
-		return false;*/
+	//	if (glm::abs(volume) < BF_MATH_ABS_ACCURACY) {
+	//		return true;
+	//	}
+	//}
+
+	///*if ((CHECK_FLOAT_EQUALITY_TO_NULL(first.x, 0.0f) &&
+	//	 CHECK_FLOAT_EQUALITY_TO_NULL(first.y, 0.0f) &&
+	//	 CHECK_FLOAT_EQUALITY_TO_NULL(first.z, 0.0f)) 
+	//	 ||
+	//	(CHECK_FLOAT_EQUALITY_TO_NULL(second.x, 0.0f) &&
+	//	 CHECK_FLOAT_EQUALITY_TO_NULL(second.y, 0.0f) &&
+	//	 CHECK_FLOAT_EQUALITY_TO_NULL(second.z, 0.0f))) 
+	//{
+	//	first = bfMathGetNormal(f, s, t);
+	//	second = bfMathGetNormal(np, f, s);
+	//}*/
+
+	//glm::vec3 delta = second - first;
+
+	//if ((delta.x <= BF_MATH_ABS_ACCURACY) &&
+	//	(delta.y <= BF_MATH_ABS_ACCURACY) &&
+	//	(delta.z <= BF_MATH_ABS_ACCURACY))
+	//	return true;
+	//else
+	//	return false;
 }
 
 bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np, 
@@ -268,8 +397,49 @@ bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np,
 	return decision;
 }
 
-bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
+bool bfMathFindLinesIntersection(glm::vec3& intersection,
+								 const BfSingleLine& line1,
+								 const BfSingleLine& line2) 
 {
+	glm::vec3 P1_first{ line1.get_first().pos };
+	glm::vec3 P1_second{ line1.get_second().pos };
+	glm::vec3 P2_first{ line2.get_first().pos };
+	glm::vec3 P2_second{ line2.get_second().pos };
+
+	if (bfMathIsVerticesInPlain({ P1_first, P1_second, P2_first, P2_second })) {
+		
+		glm::vec3 a1 = P1_first;
+		glm::vec3 b1 = line1.get_direction_from_start();
+
+		glm::vec3 a2 = P2_first;
+		glm::vec3 b2 = line2.get_direction_from_start();
+
+		float frac = b1.x * b2.y - b1.y * b2.x;
+
+		float t1 = (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
+		float t2 = (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) / (-frac);
+
+		// if lines are parallel
+		if (glm::isnan(t1) || glm::isnan(t2)) {
+			return false;
+		}
+
+		if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f)) {
+			intersection = a1 + b1 * t1;
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+
+bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
+{ 
 	if (np.size() <= 3)
 		return true;
 	
@@ -280,6 +450,38 @@ bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
 
 	return decision;
 }
+
+bool bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np) {
+
+	std::vector<BfVertex3> _np;
+	_np.reserve(np.size());
+	for (const auto& it : np) {
+		_np.emplace_back(it);
+	}
+	return bfMathIsVerticesInPlain(_np);
+}
+
+
+bool bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np) {
+	std::vector<glm::vec3> _np;
+	_np.reserve(np.size());
+	for (const auto& it : np) {
+		_np.emplace_back(it);
+	}
+	
+	return bfMathIsVerticesInPlain(_np);
+}
+
+bool bfMathIsSingleLinesInPlain(const BfSingleLine& L1, const BfSingleLine& L2) {
+	return bfMathIsVerticesInPlain({
+		L1.get_first(),
+		L1.get_second(),
+		L2.get_first(),
+		L2.get_second()
+	});
+}
+
+
 
 float bfMathGetBezierCurveLength(BfBezierCurve* curve)
 {
@@ -324,6 +526,64 @@ std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve
 	}
 	return d;
 }
+
+std::vector<BfCircle> bfMathGetInscribedCircles(size_t m,
+												const BfSingleLine& L1,
+												const BfSingleLine& L2,
+												float radius)
+{
+	glm::vec3 line_intersection = bfMathFindLinesIntersection(L1, L2, BF_MATH_FIND_LINES_INTERSECTION_ANY);
+
+	glm::vec3 L1_dir = L1.get_direction_from_start();
+	glm::vec3 L2_dir = L2.get_direction_from_start();
+
+	float angle_1 = glm::degrees(glm::angle(L1_dir, L2_dir));
+	float angle_2 = 180.0f - angle_1;
+	
+	glm::vec3 normal = bfMathGetNormal(
+		L1.get_first().pos,
+		L1.get_second().pos,
+		L2.get_first().pos
+	);
+	if (normal == glm::vec3(0.0f)) {
+		normal = bfMathGetNormal(
+			L1.get_first().pos,
+			L2.get_second().pos,
+			L2.get_first().pos
+		);
+	}
+
+	L1_dir = glm::vec3(glm::rotate(glm::mat4(1.0f), -glm::radians(angle_1 / 2.0f), normal) * glm::vec4(L1_dir, 1.0f));
+	L2_dir = glm::vec3(glm::rotate(glm::mat4(1.0f), -glm::radians(angle_2 / 2.0f), normal) * glm::vec4(L2_dir, 1.0f));
+
+	auto c1 = line_intersection + glm::normalize(L1_dir) * radius / glm::sin(glm::radians(angle_1) / 2.0f);
+	auto c2 = line_intersection + -glm::normalize(L1_dir) * radius / glm::sin(glm::radians(angle_1) / 2.0f);
+	auto c3 = line_intersection + glm::normalize(L2_dir) * radius / glm::sin(glm::radians(angle_2) / 2.0f);
+	auto c4 = line_intersection + -glm::normalize(L2_dir) * radius / glm::sin(glm::radians(angle_2) / 2.0f);
+
+	return {
+		{m, {c1, {1.0f, 1.0f, 1.0f}, normal}, radius},
+		{m, {c2, {1.0f, 1.0f, 1.0f}, normal}, radius},
+		{m, {c3, {1.0f, 1.0f, 1.0f}, normal}, radius},
+		{m, {c4, {1.0f, 1.0f, 1.0f}, normal}, radius},
+	};
+}
+
+float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P) {
+	// Находим вектор, который соединяет две точки на прямой
+	glm::vec3 lineVector = L.get_second().pos - L.get_first().pos;
+	// Находим вектор, который соединяет одну из точек прямой с данной точкой
+	glm::vec3 pointToLinePointVector = L.get_first().pos - P.pos;
+	// Находим проекцию вектора pointToLinePointVector на вектор lineVector
+	float projectionLength = glm::dot(pointToLinePointVector, lineVector) / glm::dot(lineVector, lineVector);
+	glm::vec3 projection = projectionLength * lineVector;
+	// Находим вектор, который соединяет проекцию с данной точкой
+	glm::vec3 distanceVector = pointToLinePointVector - projection;
+	// Находим длину этого вектора, которая и будет расстоянием до прямой
+	return glm::length(distanceVector);
+
+}
+
 
 
 BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert)
@@ -484,31 +744,200 @@ void BfBezierCurve::create_vertices()
 BfCircle::BfCircle(size_t m, const BfVertex3& center, float radius)
 	: __out_vertices_count{ m }
 	, __radius{ radius }
-
+	, __define_type{ BF_CIRCLE_DEFINE_TYPE_CENTER_RADIUS }
 {
 	__dvertices = { center };
 	__vertices.reserve(__out_vertices_count);
 	__indices.reserve(__out_vertices_count * 2);
 }
 
-const BfVertex3& BfCircle::get_center() {
-	return __dvertices[0];
+BfCircle::BfCircle(size_t m,
+				   const BfVertex3& P_1, 
+				   const BfVertex3& P_2, 
+				   const BfVertex3& P_3)
+	: __out_vertices_count{ m }
+	, __define_type{ BF_CIRCLE_DEFINE_TYPE_3_VERTICES }
+{
+
+	BfSingleLine l_12(P_1, P_2);
+	BfSingleLine l_23(P_2, P_3);
+	BfSingleLine l_31(P_3, P_1);
+
+	glm::vec3 ave_12 = (P_1.pos + P_2.pos) / 2.0f;
+	glm::vec3 ave_23 = (P_2.pos + P_3.pos) / 2.0f;
+	glm::vec3 ave_31 = (P_3.pos + P_1.pos) / 2.0f;
+
+	glm::vec3 v_12 = l_12.get_direction_from_start();
+	glm::vec3 v_23 = l_23.get_direction_from_start();
+	glm::vec3 v_31 = l_31.get_direction_from_start();
+
+	glm::vec3 n_12 = glm::cross(glm::cross(v_12, v_23), v_12);
+	glm::vec3 n_23 = glm::cross(glm::cross(v_23, v_12), v_23);
+	glm::vec3 n_31 = glm::cross(glm::cross(v_31, v_23), v_31);
+
+	BfSingleLine per_l_12(ave_12, ave_12 + n_12);
+	BfSingleLine per_l_23(ave_23, ave_23 + n_23);
+	BfSingleLine per_l_31(ave_31, ave_31 + n_31);
+	
+	BfVertex3 center;
+	center.pos = bfMathFindLinesIntersection(
+		per_l_12, 
+		per_l_23,
+		BF_MATH_FIND_LINES_INTERSECTION_ANY
+	);
+	
+	if (glm::isnan(center.pos.x) || glm::isnan(center.pos.y) || glm::isnan(center.pos.z)) {
+		throw std::runtime_error("Circle define points are invalid");
+	}
+
+	float rad_1 = glm::distance(center.pos, P_1.pos);
+	float rad_2 = glm::distance(center.pos, P_1.pos);
+	float rad_3 = glm::distance(center.pos, P_1.pos);
+
+	if (!CHECK_FLOAT_EQUALITY(rad_1, rad_2) ||
+		!CHECK_FLOAT_EQUALITY(rad_2, rad_3) ||
+		!CHECK_FLOAT_EQUALITY(rad_3, rad_1)) 
+	{
+		throw std::runtime_error("Circle was'n made -> different radious");
+	}
+	
+	center.normals = bfMathGetPlaneCoeffs(P_1.pos, P_2.pos, P_3.pos);
+
+	__radius = rad_1;
+	__dvertices = { center, P_1, P_2, P_3 };
 }
 
+
+const BfVertex3& BfCircle::get_center()  const noexcept {
+	return __dvertices[0];
+}
+const BfVertex3& BfCircle::get_first()  const noexcept {
+	return __dvertices[1];
+}
+const BfVertex3& BfCircle::get_second()  const noexcept {
+	return __dvertices[2];
+}
+const BfVertex3& BfCircle::get_third()  const noexcept {
+	return __dvertices[3];
+}
+
+const float BfCircle::get_radius() const noexcept {
+	return __radius;
+}
+
+std::array<BfVertex3, 2> BfCircle::get_tangent_vert(const BfVertex3& P) const {
+
+	glm::vec4 plane{
+		this->get_center().normals,
+		-(this->get_center().normals.x * P.pos.x +
+		this->get_center().normals.y * P.pos.y +
+		this->get_center().normals.z * P.pos.z)
+	};
+
+	if (!bfMathIsVertexInPlain(plane, P.pos)) {
+		throw std::runtime_error("BfCircle::get_tangent_vert - point not in the same plane as circle");
+	}
+
+	BfSingleLine dist{ P, this->get_center() };
+	float distance = glm::distance(dist.get_first().pos, dist.get_second().pos);
+
+	glm::vec3 dir = dist.get_direction_from_start();
+
+	glm::vec3 c1 = glm::rotate(glm::mat4(1.0f), 
+		 					   glm::acos(this->get_radius() / distance), 
+							   this->get_center().normals) * glm::vec4(dir, 1.0f);
+	
+	glm::vec3 c2 = glm::rotate(glm::mat4(1.0f),
+							   -glm::acos(this->get_radius() / distance),
+							   this->get_center().normals) * glm::vec4(dir, 1.0f);
+
+
+
+	return {
+		BfVertex3{{this->get_center().pos - glm::normalize(c1) * __radius}, {1.0f, 1.0f, 1.0f}, this->get_center().normals },
+		BfVertex3{{this->get_center().pos - glm::normalize(c2) * __radius}, {1.0f, 1.0f, 1.0f}, this->get_center().normals }
+	};
+}
+
+
 void BfCircle::create_vertices() {
-	float theta;
 
 	if (!__vertices.empty()) __vertices.clear();
+
+
+	glm::vec3 orth_1;
+	glm::vec3 orth_2;
+	glm::vec3 normal = this->get_center().normals;
+
+	if (std::abs(normal.x) > std::abs(normal.y)) {
+		orth_1 = glm::normalize(glm::vec3(-normal.z, 0.0f, normal.x));
+	}
+	else {
+		orth_1 = glm::normalize(glm::vec3(0.0f, normal.z, -normal.y));
+	}
+	orth_2 = glm::normalize(glm::cross(normal, orth_1));
+
+
+	float theta;
+	glm::vec3 center = this->get_center().pos;
 	for (size_t i = 0; i < __out_vertices_count+1; ++i) {
 		theta = 2 * BF_PI * i / __out_vertices_count;
 		__vertices.emplace_back(
-			glm::vec3(__radius * cosf(theta), __radius * sinf(theta), 0.0f),
+			center +
+			__radius * cosf(theta) * orth_1 +
+			__radius * sinf(theta) * orth_2,
+
 			this->__main_color,
 			glm::vec3(0.0f,0.0f,0.0f)
 		);
 	}
 	
 }
+
+BfArc::BfArc(size_t m,
+	const BfVertex3& P_1,
+	const BfVertex3& P_2,
+	const BfVertex3& P_3) 
+	: BfCircle(m, P_1, P_2, P_3)
+{}
+
+void BfArc::create_vertices()
+{
+	if (!__vertices.empty()) __vertices.clear();
+
+	glm::vec3 center = this->get_center().pos;
+	glm::vec3 firstPoint = this->get_first().pos;
+	glm::vec3 secondPoint = this->get_second().pos;
+	glm::vec3 thirdPoint = this->get_third().pos;
+
+	glm::vec3 vecToFirst = firstPoint - center;
+	glm::vec3 vecToSecond = secondPoint - center;
+	glm::vec3 vecToThird = thirdPoint - center;
+
+	float angle_12 = acos(glm::dot(vecToFirst, vecToSecond) / 
+		(glm::length(vecToFirst) * glm::length(vecToSecond)));
+
+	float angle_23 = acos(glm::dot(vecToSecond, vecToThird) / 
+		(glm::length(vecToSecond) * glm::length(vecToThird)));
+
+
+	float theta;
+	//glm::vec3 center = this->get_center().pos;
+	for (size_t i = 0; i <= __out_vertices_count; ++i) {
+		float theta = (angle_12 + angle_23) * i / (__out_vertices_count);
+		
+		__vertices.emplace_back(
+			center -
+			glm::vec3(glm::rotate(glm::mat4(1.0f), theta, this->get_center().normals) * 
+				glm::vec4((center - firstPoint), 1.0f)),
+
+			this->__main_color,
+			glm::vec3(0.0f, 0.0f, 0.0f)
+		);
+	}
+
+}
+
 
 //BfArc::BfArc(size_t vertices_count,  
 //			 const BfVertex3& l,		//1

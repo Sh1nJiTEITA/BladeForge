@@ -26,10 +26,17 @@ public:
 class BfDrawObj;
 class BfLayerHandler;
 
+struct BfDrawLayerCreateInfo {
+	VmaAllocator allocator;
+	size_t vertex_size;
+	size_t max_vertex_count;
+	size_t max_reserved_count;
+};
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class BfDrawLayer {
-
 	uint32_t __reserved_n;
 	std::vector<std::shared_ptr<BfDrawObj>> __objects;
 	
@@ -46,17 +53,29 @@ public:
 				size_t max_vertex_count, 
 				size_t max_reserved_count);
 	
+	BfDrawLayer(const BfDrawLayerCreateInfo& info);
+
+	std::vector<std::shared_ptr<BfDrawObj>>::iterator begin();
+	std::vector<std::shared_ptr<BfDrawObj>>::iterator end();
+
 	const size_t get_whole_vertex_count() const noexcept;
 	const size_t get_whole_index_count() const noexcept;
 	const size_t get_obj_count() const noexcept;
 	const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
 	void add(std::shared_ptr<BfDrawObj> obj);
+	void add_l(std::shared_ptr<BfDrawObj> obj);
+	void del(uint32_t id);
+	void del(const std::vector<uint32_t>& id);
+
+
 	void update_vertex_offset();
 	void update_index_offset();
 	void update_buffer();
 	// TODO: global model-matrix descriptor
 	void draw(VkCommandBuffer combuffer, VkPipeline pipeline);
+	
+
 
 	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
 

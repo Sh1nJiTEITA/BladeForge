@@ -14,7 +14,8 @@
 
 struct BfGUI {
 	bool is_info = true;
-	bool is_event_log = true;
+	bool is_event_log = false;
+	bool is_camera_info = false;
 };
 
 enum BfEnMenueStatus {
@@ -23,6 +24,9 @@ enum BfEnMenueStatus {
 
 	BF_MENUE_STATUS_EVENT_LOG_ENABLED = 0x2,
 	BF_MENUE_STATUS_EVENT_LOG_DISABLED = -0x2,
+
+	BF_MENUE_STATUS_CAMERA_INFO_ENABLED = 0x3,
+	BF_MENUE_STATUS_CAMERA_INFO_DISABLED = -0x3,
 };
 
 
@@ -31,11 +35,15 @@ const std::map<int, std::string> bfSetMenueStr{
 	{-0x1, "Show perfomance/view pannel"},
 
 	{ 0x2, "Hide console log window"},
-	{-0x2, "Show console log window"}
+	{-0x2, "Show console log window"},
+
+	{ 0x3, "Hide camera info window"},
+	{-0x3, "Show camera info window"}
 };
 
 std::string bfGetMenueInfoStr(BfGUI gui);
 std::string bfGetMenueEventLogStr(BfGUI gui);
+std::string bfGetMenueCameraInfoStr(BfGUI gui);
 
 void bfPresentLayerHandler(BfLayerHandler&);
 

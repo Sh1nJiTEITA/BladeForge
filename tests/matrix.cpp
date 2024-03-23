@@ -1,10 +1,18 @@
-#include <catch2/catch_test_macros.hpp>
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch_all.hpp>
+//#include <catch2/catch_test_macros.hpp>
 
-#include <glm/glm.hpp>
-#include <bfVertex2.hpp>
+//#include <glm/glm.hpp>
+//#include <bfVertex2.hpp>
 
 #include "bfMatrix2.h"
 #include "bfCurves3.h"
+
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& vec) {
+	os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+	return os;
+}
 
 
 TEST_CASE("CURVES_H", "[single-file]") {
@@ -251,11 +259,74 @@ TEST_CASE("CURVES_H", "[single-file]") {
 	BfLineProp line_prop_1_per = line_prop_1.get_perpendicular({ 1.0f, 2.0f });
 	REQUIRE(CHECK_FLOAT_EQUALITY(line_prop_1_per.get_b(), 1.76842105));
 	REQUIRE(CHECK_FLOAT_EQUALITY(line_prop_1_per.get_k(), 0.23157894736842));
+}
 
 
-	BfSingleLine bf_line_1{ BfVec2(0.0f,1.0f), BfVec2(0.3f,4.0f) };
-	REQUIRE(bf_line_1.first.pos == glm::vec3{0.0f, 1.0f, 0.0f});
-	REQUIRE(bf_line_1.second.pos == glm::vec3{ 0.3f, 4.0f, 0.0f });
+TEST_CASE("BfSingleLine::get_k;get_b;get_single_proj", "[get_k][get_b][get_single_proj]") {
+	BfSingleLine line
+	(
+		BfVertex3(glm::vec3(1.0f, 2.0f, 3.0f)),
+		BfVertex3(glm::vec3(4.0f, 5.0f, 6.0f))
+	);
+	SECTION("Test get_k function") {
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_XY) == 1.0f);
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_YX) == 1.0f);
+
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_XZ) == 1.0f);
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_ZX) == 1.0f);
+
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_YZ) == 1.0f);
+		REQUIRE(line.get_k(BF_SINGLE_LINE_PROJ_ZY) == 1.0f);
+	}
+
+	SECTION("Test get_b function") {
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_XY) == 1.0f);
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_YX) == -1.0f);
+		
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_XZ) == 2.0f);
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_ZX) == -2.0f);
+
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_YZ) == 1.0f);
+		REQUIRE(line.get_b(BF_SINGLE_LINE_PROJ_ZY) == -1.0f);
+	}
+}
+
+TEST_CASE("BfCircle") {
+	SECTION("Test BfCircle constructor") {
+		
+		BfVertex3 v1({ -6, 3, 0 });
+		BfVertex3 v2({ -3, 2, 0 });
+		BfVertex3 v3({  0, 3, 0 });
+		
+		BfCircle circle(50, v1, v2, v3);
+	}
+}
 
 
+TEST_CASE("BfMath", "[BfMath]") {
+
+	SECTION("Test Are Vertices in plain") {
+		REQUIRE(bfMathIsVerticesInPlain(
+			{ 
+				{0.0f,0.0f,0.0f}, 
+				{1.0f, 3.0f, 0.0f}, 
+				{33.0, 3123.0f, 0.0f}, 
+				{313.0f, 3123.0f, 0.0f}
+			}
+		));
+	}
+	
+	SECTION("Test line_intersection") {
+		// https://mathter.pro/angem/5_5_5_peresekayuschiesya_pryamye_v_prostranstve.html
+		BfSingleLine l1({ 3.0f, -3.0f, 2.0f }, { 3.0f - 1.0f, -3.0f + 1.0f, 2.0f + 2.0f });
+		BfSingleLine l2({ -1.0f, 4.0f, -26.0f }, { -1.0f + 3.0f, -4.0f + 4.0f, -26.0f + 6.0f});
+
+		REQUIRE(bfMathIsSingleLinesInPlain(l1, l2));
+
+		glm::vec3 inter = bfMathFindLinesIntersection(l1, l2, BF_MATH_FIND_LINES_INTERSECTION_ANY);
+		
+		REQUIRE(inter.x == 8.0f);
+		REQUIRE(inter.y == -8.0f);
+		REQUIRE(inter.z == -8.0f);
+	}
 }
