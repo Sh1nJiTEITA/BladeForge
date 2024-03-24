@@ -57,7 +57,6 @@ struct BfBase {
 
 	BfAllocatedBuffer		 id_image_buffer;
 	BfAllocatedImage		 depth_image;
-	//VkImageView				 depth_image_view;
 	VkFormat				 depth_format;
 
 	std::vector<BfImagePack> image_packs;
@@ -83,7 +82,6 @@ struct BfBase {
 
 
 	VmaAllocator			 allocator;
-	
 	bool is_resized;
 	uint32_t pos_id;
 };
@@ -120,7 +118,7 @@ BfEvent bfDestroyGUIRenderPass(BfBase& base);
 
 BfEvent bfInitOwnDescriptors(BfBase& base);
 
-BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path);
+BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path, std::string geom_shader_path);
 BfEvent bfDestroyGraphicsPipelines(BfBase& base);
 
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
@@ -174,6 +172,7 @@ void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfDrawFrame(BfBase& base);
 void bfMainRecordCommandBuffer(BfBase& base);
+uint32_t bfGetCurrentObjectId(BfBase& base);
 
 // Uniform buffers
 size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size);

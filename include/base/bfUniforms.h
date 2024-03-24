@@ -18,6 +18,7 @@ struct BfObjectData {
 	alignas(16) glm::vec3 select_color;
 	alignas(4) uint32_t index;
 	alignas(4) uint32_t id = 999999;
+	alignas(4) float line_thickness;
 
 	
 	uint32_t __assign_id() {

@@ -16,7 +16,10 @@ struct BfGUI {
 	bool is_info = true;
 	bool is_event_log = false;
 	bool is_camera_info = false;
+
+	uint32_t current_id;
 };
+
 
 enum BfEnMenueStatus {
 	BF_MENUE_STATUS_INFO_ENABLED = 0x1,

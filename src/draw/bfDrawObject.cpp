@@ -14,10 +14,18 @@
 //	this->id = obj.id;
 //}
 
-BfDrawObj::BfDrawObj() {}
+BfDrawObj::BfDrawObj() 
+	: BfDrawObj(0)
+{}
 
-BfDrawObj::BfDrawObj(const std::vector<BfVertex3>& dvert)
+BfDrawObj::BfDrawObj(uint32_t type) 
+	: id(type)
+{ 
+}
+
+BfDrawObj::BfDrawObj(const std::vector<BfVertex3>& dvert, uint32_t type)
 	: __dvertices{dvert}
+	, id(type)
 {
 
 }
@@ -66,7 +74,8 @@ BfObjectData BfDrawObj::get_obj_data()
 	BfObjectData data{};
 	data.id = this->id.get();
 	data.model_matrix = __model_matrix;
-	
+	data.line_thickness = __line_thickness;
+
 	if (__is_selected)
 		data.select_color = glm::vec3(1.0f, 0.5f, 0.0f);
 	else
@@ -142,24 +151,35 @@ void BfDrawObj::create_vertices()
 }
 
 std::unordered_set<unsigned int> BfObjID::__existing_values;
+std::map<uint32_t, uint32_t> BfObjID::__existing_pairs;
 
 BfObjID::BfObjID()
+	: BfObjID(0)
+{}
+
+BfObjID::BfObjID(uint32_t type) 
+	: __type{type}
 {
-	//std::cout << "\nID CONSTRUCTOR\n";
 	static uint32_t value = 0;
 	__value = ++value;
 	BfObjID::__existing_values.insert(__value);
+	BfObjID::__existing_pairs.insert(std::make_pair(__value, __type));
 }
 
 BfObjID::~BfObjID()
 {
 	//std::cout << "\nID DECONSTRUCTOR\n";
 	BfObjID::__existing_values.erase(__value);
+	BfObjID::__existing_pairs.erase(__value);
 }
 
 const uint32_t BfObjID::get() const
 {
 	return __value;
+}
+
+const uint32_t BfObjID::get_type() const {
+	return __type;
 }
 
 bool BfObjID::is_id_exists(uint32_t id)
@@ -173,6 +193,10 @@ bool BfObjID::is_id_exists(uint32_t id)
 bool BfObjID::is_id_exists(BfObjID& id)
 {
 	return BfObjID::is_id_exists(id.get());
+}
+
+uint32_t BfObjID::find_type(uint32_t type) {
+	return BfObjID::__existing_pairs[type];
 }
 
 BfDrawLayer::BfDrawLayer(VmaAllocator allocator, 
@@ -248,6 +272,10 @@ void BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
 	__objects.emplace_back(obj);
 }
 
+void BfDrawLayer::add(std::shared_ptr<BfDrawLayer> layer) {
+	__layers.emplace_back(layer);
+}
+
 void BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj) {
 	__objects.emplace_back(obj);
 }
@@ -258,11 +286,19 @@ void BfDrawLayer::del(uint32_t id) {
 			[id](const auto& obj) { return obj->id.get() == id; }),
 		__objects.end()
 	);
+	__layers.erase(
+		std::remove_if(__layers.begin(), __layers.end(),
+			[id](const auto& layer) { return layer->id.get() == id; }),
+		__layers.end()
+	);
+
+	this->update_buffer();
 }
 
 void BfDrawLayer::del(const std::vector<uint32_t>& id) {
 	if (id.size() == 0) return;
-	auto con = [&id](std::shared_ptr<BfDrawObj> obj) {
+	
+	auto con_o = [&id](std::shared_ptr<BfDrawObj> obj) {
 		auto it = std::find(id.begin(), id.end(), obj->id.get());
 
 		if (it != id.end()) {
@@ -271,10 +307,36 @@ void BfDrawLayer::del(const std::vector<uint32_t>& id) {
 		else
 			return false;
 	};
-	auto rem = std::remove_if(__objects.begin(), __objects.end(), con);
-	__objects.erase(rem, __objects.end());
+
+	auto con_l = [&id](std::shared_ptr<BfDrawLayer> obj) {
+		auto it = std::find(id.begin(), id.end(), obj->id.get());
+
+		if (it != id.end()) {
+			return true;
+		}
+		else
+			return false;
+		};
+
+	auto rem_o = std::remove_if(__objects.begin(), __objects.end(), con_o);
+	__objects.erase(rem_o, __objects.end());
+	auto rem_l = std::remove_if(__layers.begin(), __layers.end(), con_l);
+	__layers.erase(rem_l, __layers.end());
+
 	this->update_buffer();
 }
+
+void BfDrawLayer::generate_draw_data() {
+	for (size_t i = 0; i < this->get_obj_count(); ++i) {
+		auto obj = this->get_object_by_index(i);
+		//obj->set_color({ 1.0f, 1.0f, 1.0f });
+		obj->create_vertices();
+		obj->create_indices();
+		//obj->bind_pipeline(&__info.pipeline);
+	}
+	this->update_buffer();
+}
+
 
 
 void BfDrawLayer::update_vertex_offset()
@@ -331,8 +393,20 @@ void BfDrawLayer::update_buffer()
 
 void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
 {
-	vkCmdBindVertexBuffers(combuffer, 0, 1, __buffer.get_p_vertex_buffer(), nullptr);
-	vkCmdBindIndexBuffer(combuffer, *__buffer.get_p_index_buffer(), 0, VK_INDEX_TYPE_UINT16);
+	for (size_t i = 0; i < __layers.size(); i++) {
+		__layers[i]->draw(combuffer, pipeline);
+	}
+	
+	// Local elements
+	vkCmdBindVertexBuffers(combuffer, 
+						   0, 
+						   1, 
+						   __buffer.get_p_vertex_buffer(), 
+						   nullptr);
+	vkCmdBindIndexBuffer(combuffer, 
+						 *__buffer.get_p_index_buffer(), 
+						 0, 
+						 VK_INDEX_TYPE_UINT16);
 	
 	for (size_t i = 0; i < __objects.size(); i++) {
 		if (__objects[i] == nullptr) continue;

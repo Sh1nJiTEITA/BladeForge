@@ -2,8 +2,9 @@
 
 
 BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
-	: BfDrawObj()
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
 {
+	
 	__dvertices = d_vertices;
 }
 
@@ -33,7 +34,7 @@ BfSingleLine::BfSingleLine()
 
 BfSingleLine::BfSingleLine(const BfVertex3& fp, 
 						   const BfVertex3& sp)
-	: BfDrawObj{{ fp, sp }}
+	: BfDrawObj{{ fp, sp }, BF_DRAW_OBJ_TYPE_SINGLE_LINE}
 {
 	__dvertices.reserve(2);
 	__vertices.reserve(2);
@@ -587,7 +588,8 @@ float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P) {
 
 
 BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert)
-	: __n{in_n}
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
+	, __n{in_n}
 	, __out_vertices_count{in_m}
 {
 	if (in_n + 1 !=  dvert.size())
@@ -600,7 +602,8 @@ BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& 
 }
 
 BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>& dvert)
-	: __n{in_n}
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
+	, __n{in_n}
 	, __out_vertices_count{ in_m }
 {
 	if (in_n + 1 != dvert.size())
@@ -613,7 +616,8 @@ BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>& d
 }
 
 BfBezierCurve::BfBezierCurve(BfBezierCurve&& ncurve) noexcept
-	: __n {ncurve.__n}
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
+	, __n {ncurve.__n}
 	, __out_vertices_count {ncurve.__out_vertices_count}
 {
 	this->__dvertices = std::move(ncurve.__dvertices);
@@ -742,7 +746,8 @@ void BfBezierCurve::create_vertices()
 }
 
 BfCircle::BfCircle(size_t m, const BfVertex3& center, float radius)
-	: __out_vertices_count{ m }
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE)
+	, __out_vertices_count{ m }
 	, __radius{ radius }
 	, __define_type{ BF_CIRCLE_DEFINE_TYPE_CENTER_RADIUS }
 {
@@ -755,7 +760,8 @@ BfCircle::BfCircle(size_t m,
 				   const BfVertex3& P_1, 
 				   const BfVertex3& P_2, 
 				   const BfVertex3& P_3)
-	: __out_vertices_count{ m }
+	: BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE)
+	, __out_vertices_count{ m }
 	, __define_type{ BF_CIRCLE_DEFINE_TYPE_3_VERTICES }
 {
 
@@ -936,6 +942,32 @@ void BfArc::create_vertices()
 		);
 	}
 
+}
+
+BfBezierCurveFrame::BfBezierCurveFrame(
+	std::shared_ptr<BfBezierCurve> curve, 
+	VmaAllocator allocator,
+	VkPipeline lines_pipeline,
+	VkPipeline triangle_pipeline
+) 
+	: BfDrawLayer(allocator, sizeof(BfVertex3), 50, 20)
+	, __curve{curve}
+	, __lines_pipeline{ lines_pipeline }
+	, __triangle_pipeline{ triangle_pipeline }
+	
+{
+	for (size_t i = 0; i < curve->get_dvertices_count(); i++) {
+		auto handle = std::make_shared<BfCircle>(
+			20,
+			curve->get_rdVertices()[i],
+			BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+		);
+		handle->bind_pipeline(&__lines_pipeline);
+		this->add_l(handle);
+	}
+
+	this->generate_draw_data();
+	this->update_buffer();
 }
 
 

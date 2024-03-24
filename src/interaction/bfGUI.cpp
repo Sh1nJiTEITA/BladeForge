@@ -1,5 +1,8 @@
 #include "bfGUI.h"
 
+
+
+
 std::string bfGetMenueInfoStr(BfGUI gui)
 {
 	if (gui.is_info) return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_ENABLED);
@@ -37,7 +40,7 @@ void bfPresentLayerHandler(BfLayerHandler& layer_handler)
                 for (size_t j = 0; j < layer->get_obj_count(); ++j) {
                     
                     auto obj = layer->get_object_by_index(j);
-                    std::string obj_name = "Obj " + std::to_string(obj->id.get());
+                    std::string obj_name = "Obj " + std::to_string(obj->id.get()) + ", " + bfGetStrNameDrawObjType(obj->id.get_type());
                     
                     ImGui::Selectable(obj_name.c_str(),
                         layer->get_object_by_index(j)->get_pSelection(),

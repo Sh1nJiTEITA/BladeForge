@@ -35,13 +35,15 @@ private:
 
 
 	void __process_keys();
+	void __poll_events();
 
 	void __init();
 	void __start_loop();
 	void __kill();
 
 	// Presents // 
-	void __present_info(double currentTime, uint32_t id_map);
+	void __present_tooltype();
+	void __present_info();
 	void __present_camera();
 	void __present_menu_bar();
 	void __present_id_map(BfBase& base, std::vector<uint32_t> image_data_);

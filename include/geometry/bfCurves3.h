@@ -7,12 +7,11 @@
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
 
+#include "bfDrawObjectDefineType.h"
 
 class BfPlane;
 class BfSingleLine;
 class BfBezierCurve;
-class BfEllipse;
-class BfArc;
 class BfCircle;
 
 
@@ -210,6 +209,23 @@ public:
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+#define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.2f
+
+class BfBezierCurveFrame : public BfDrawLayer {
+	std::shared_ptr<BfBezierCurve> __curve;
+
+	VkPipeline __lines_pipeline;
+	VkPipeline __triangle_pipeline;
+public:
+	BfBezierCurveFrame(
+		std::shared_ptr<BfBezierCurve> curve,
+		VmaAllocator allocator,
+		VkPipeline lines_pipeline,
+		VkPipeline triangle_pipeline
+	);
+
+
+};
 
 
 

@@ -111,6 +111,7 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 							 *layer->__buffer.get_p_index_buffer(), 
 							 0, 
 							 VK_INDEX_TYPE_UINT16);
+
 		for (size_t i = 0; i < layer->__objects.size(); i++) {
 			if (layer->__objects[i]->get_bound_pPipeline() == nullptr) {
 				throw std::runtime_error("Object pipeline pointer is nullptr");
@@ -132,18 +133,6 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 		obj_data_offset += layer->__objects.size();
 
 
-
-		/*for (const auto& obj : layer->__objects) {
-
-		}*/
-
-		/*std::vector<BfObjectData> obj_data = layer->get_obj_model_matrices();
-		if (obj_data.empty()) {
-			throw std::runtime_error("Input layer object data is empty");
-		}
-
-		std::copy(obj_data.begin(), obj_data.end(), obj_datas.begin() + offset);
-		offset += obj_data.size();*/
 	}
 	
 	

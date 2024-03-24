@@ -305,6 +305,7 @@ BfEvent bfCreateLogicalDevice(BfBase& base)
 	deviceFeatures.vertexPipelineStoresAndAtomics = true;
 	deviceFeatures.fragmentStoresAndAtomics = true;
 	deviceFeatures.independentBlend = true;
+	deviceFeatures.geometryShader = true;
 	
 
 	VkDeviceCreateInfo createInfo{};
@@ -1177,7 +1178,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_model_mtx.pBuffer_info = &binfo_model_mtx;
 
 	info_model_mtx.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	info_model_mtx.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_model_mtx.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 	info_model_mtx.binding = 0;
 	
 	info_model_mtx.layout_binding = BfDescriptorSetMain;
@@ -1197,7 +1198,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_view.pBuffer_info = &binfo_view;
 
 	info_view.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	info_view.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_view.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 	info_view.binding = 0;
 
 	info_view.layout_binding = BfDescriptorSetGlobal;
@@ -1217,7 +1218,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_pos_pick.pBuffer_info = &binfo_pos_pick;
 
 	info_pos_pick.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	info_pos_pick.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_pos_pick.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 	info_pos_pick.binding = 1;
 
 	info_pos_pick.layout_binding = BfDescriptorSetMain;
@@ -1279,7 +1280,7 @@ BfEvent bfInitOwnDescriptors(BfBase& base)
 	info_id_map.vma_allocator = base.allocator;
 	info_id_map.pImage_info = &binfo_id_map;
 	info_id_map.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	info_id_map.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	info_id_map.shader_stages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 	info_id_map.binding = 1;
 	info_id_map.layout_binding = BfDescriptorSetGlobal;
 
@@ -1352,7 +1353,7 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
 	
 	if (!file.is_open()) {
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
-		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS;
+		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_FAILURE;
 		return BfSingleEvent(event);
 	}
 	else {
@@ -1372,25 +1373,31 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
 	}
 }
 
-BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path)
+BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path, std::string geom_shader_path)
 {
 	// Shader Modules Creation
 	std::vector<char> vertShaderCode;
 	std::vector<char> fragShaderCode;
+	std::vector<char> geomShaderCode;
 	
 	if (!vert_shader_path.empty()) {
 		bfaReadFile(vertShaderCode, vert_shader_path);
 	}
-	if (!vert_shader_path.empty()) {
+	if (!frag_shader_path.empty()) {
 		bfaReadFile(fragShaderCode, frag_shader_path);
+	}
+	if (!geom_shader_path.empty()) {
+		bfaReadFile(geomShaderCode, geom_shader_path);
 	}
 	
 	
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
+	VkShaderModule geomShaderModule;
 
 	bfaCreateShaderModule(vertShaderModule, base.device, vertShaderCode);
 	bfaCreateShaderModule(fragShaderModule, base.device, fragShaderCode);
+	bfaCreateShaderModule(geomShaderModule, base.device, geomShaderCode);
 
 	// Pipeline creation
 	VkPipelineShaderStageCreateInfo vertShaderCreateInfo{};
@@ -1405,8 +1412,15 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	fragShaderCreateInfo.module = fragShaderModule;
 	fragShaderCreateInfo.pName = "main";
 
+	VkPipelineShaderStageCreateInfo geomShaderCreateInfo{};
+	geomShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	geomShaderCreateInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+	geomShaderCreateInfo.module = geomShaderModule;
+	geomShaderCreateInfo.pName = "main";
+
 	VkPipelineShaderStageCreateInfo shaderStages[] = {
 		vertShaderCreateInfo,
+		geomShaderCreateInfo,
 		fragShaderCreateInfo
 	};
 
@@ -1551,7 +1565,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = 2;
+	pipelineInfo.stageCount = 3;
 	pipelineInfo.pStages = shaderStages;
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pViewportState = &viewportState;
@@ -1608,6 +1622,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 
 	vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
 	vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
+	vkDestroyShaderModule(base.device, geomShaderModule, nullptr);
 
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -2798,6 +2813,14 @@ void bfMainRecordCommandBuffer(BfBase& base)
 	}
 
 }
+
+uint32_t bfGetCurrentObjectId(BfBase& base) {
+	uint32_t id_on_cursor;
+	void* id_on_cursor_ = base.id_image_buffer.allocation_info.pMappedData;
+	memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
+	return id_on_cursor;
+}
+
 
 size_t bfPadUniformBufferSize(const BfPhysicalDevice* physical_device, size_t original_size)
 {

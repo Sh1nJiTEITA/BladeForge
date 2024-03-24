@@ -47,6 +47,7 @@ if (WIN32)
 	execute_process(
 		#COMMAND cmd /C ${CMAKE_SOURCE_DIR}/compile.bat
 		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.vert -o shaders/vert.spv"
+		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.geom -o shaders/geom.spv"
 		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.frag -o shaders/frag.spv"
 
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -98,7 +99,8 @@ set(BF_OTHER
 
 set(BF_DRAW 
 	"include/draw/bfDrawObject.h"   "src/draw/bfDrawObject.cpp"
-	"include/draw/bfLayerHandler.h" "src/draw/bfLayerHandler.cpp" 
+	"include/draw/bfLayerHandler.h" "src/draw/bfLayerHandler.cpp"
+	"include/draw/bfDrawObjectDefineType.h"
 )
 
 

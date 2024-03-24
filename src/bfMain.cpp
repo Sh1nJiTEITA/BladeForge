@@ -33,6 +33,21 @@ void BfMain::__process_keys()
  
 }
 
+void BfMain::__poll_events() {
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureMouse || io.WantCaptureKeyboard) {
+        
+    }
+    else {
+        __base.pos_id = bfGetCurrentObjectId(__base);
+    }
+    
+    __process_keys();
+
+  
+}
+
+
 void BfMain::__init()
 {
     bfBindHolder(&__holder);
@@ -62,7 +77,7 @@ void BfMain::__init()
     bfCreateIDMapImage(__base);
     bfInitOwnDescriptors(__base);
     
-    bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv");
+    bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv", "shaders/geom.spv");
     bfCreateStandartFrameBuffers(__base);
     bfCreateGUIFrameBuffers(__base);
     bfCreateCommandPool(__base);
@@ -133,7 +148,9 @@ void BfMain::__start_loop()
     section_info_1.inlet_radius = 0.025f;
     section_info_1.outlet_radius = 0.005f;
     section_info_1.border_length = 2.0f;
-    section_info_1.pipeline = __base.line_pipeline;
+    section_info_1.l_pipeline = __base.line_pipeline;
+    section_info_1.t_pipeline = __base.triangle_pipeline;
+
 
 
 
@@ -264,14 +281,12 @@ void BfMain::__start_loop()
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
         glfwPollEvents();
-        __process_keys();
+        __poll_events();
         double currentTime = glfwGetTime();
 
 
-        uint32_t id_on_cursor;
-        void* id_on_cursor_ = __base.id_image_buffer.allocation_info.pMappedData;
-        memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
-        __base.pos_id = id_on_cursor;
+ 
+        
 
 
  
@@ -280,11 +295,11 @@ void BfMain::__start_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         //ImGui::ShowDemoWindow();
-
         __present_menu_bar();
         __present_camera();
-        __present_info(currentTime, __base.pos_id);
+        __present_info();
         __present_event_log();
+        __present_tooltype();
       
 
         bfPresentLayerHandler(__base.layer_handler);
@@ -316,9 +331,47 @@ void BfMain::__start_loop()
 
 }
 
+void BfMain::__present_tooltype() {
+    /*
+        Пастельные оттенки:
+        Светло-розовый: ImVec4(1.0f, 0.8f, 0.8f, 1.0f)
+        Светло-голубой: ImVec4(0.8f, 0.8f, 1.0f, 1.0f)
+        Светло-зеленый: ImVec4(0.8f, 1.0f, 0.8f, 1.0f)
+        Светло-желтый: ImVec4(1.0f, 1.0f, 0.8f, 1.0f)
+        
+        Приглушенные оттенки:
+        Серый: ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+        Светло-коричневый: ImVec4(0.7f, 0.6f, 0.5f, 1.0f)
+        Светло-фиолетовый: ImVec4(0.7f, 0.6f, 0.8f, 1.0f)
+        Светло-оранжевый: ImVec4(0.8f, 0.7f, 0.6f, 1.0f)
+        
+        Яркие оттенки:
+        Красный: ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+        Синий: ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
+        Зеленый: ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
+        Желтый: ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
+    */
+    if (__base.pos_id != 0) {
+        ImGui::BeginTooltip();
+        
+   
+        
+        ImGui::Text((std::string("type=")
+            .append(bfGetStrNameDrawObjType(BfObjID::find_type(__base.pos_id))))
+            .c_str());
+        
+        
+        ImGui::Text((std::string("id=")
+            .append(std::to_string(__base.pos_id))
+            .c_str()));
+        ImGui::EndTooltip();
+    }
 
+}
 
-void BfMain::__present_info(double currentTime, uint32_t id_map) {
+void BfMain::__present_info() {
+    double currentTime = glfwGetTime();
+
     static int counter = 0;
     static int print_counter = 0;
     
@@ -373,7 +426,7 @@ void BfMain::__present_info(double currentTime, uint32_t id_map) {
         std::string pitch_string = "Current-pitch = " + std::to_string(__base.window->pitch);
 
         std::string mpos_string = "Mouse-pos = " + std::to_string(__base.window->xpos) + ", " + std::to_string(__base.window->ypos);
-        std::string selected_id_string = "Selected_id = " + std::to_string(id_map);
+        std::string selected_id_string = "Selected_id = " + std::to_string(__base.pos_id);
 
         ImGui::Text(pos_string.c_str());
         ImGui::Text(up_string.c_str());

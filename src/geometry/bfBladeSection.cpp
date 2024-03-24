@@ -45,6 +45,9 @@ std::shared_ptr<BfSingleLine> BfBladeSection::get_inlet_io() {
 std::shared_ptr<BfSingleLine> BfBladeSection::get_outlet_io() {
 	return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(8));
 }
+std::shared_ptr<BfBezierCurve> BfBladeSection::get_ave_curve() {
+	return std::dynamic_pointer_cast<BfBezierCurve>(this->get_object_by_index(9));
+}
 
 
 
@@ -259,7 +262,17 @@ void BfBladeSection::__generate_blade_geometry() {
 		);
 		ave_curve->set_color({ .0f, 1.0f, 1.0f });
 		this->add_l(ave_curve);
+
+		auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
+			this->get_ave_curve(),
+			__info.layer_create_info.allocator,
+			__info.l_pipeline,
+			__info.t_pipeline
+		);
+		this->add(ave_curve_frame);
 	}
+
+	
 
 	{ // BACK
 		glm::vec3 back_intersection = io_intersection + this->get_top_border()->get_direction_from_start() * 0.4f;
@@ -389,17 +402,42 @@ void BfBladeSection::__generate_blade_geometry() {
 		this->add_l(face_curve);
 	}
 
+
+
+	/*{
+		auto ave_curve = std::make_shared<BfBezierCurveFrame>(this->ge)
+
+	}*/
+
 }
 
 
 void BfBladeSection::__generate_draw_data() {
+	
+	/*for (size_t i = 0; i < this->get_obj_count(); ++i) {
+		auto obj = this->get_object_by_index(i);
+		for (size_t j = 0; j < obj->get_dvertices_count(); ++j) {
+			if (obj->get_rdVertices().at(j).normals != __info.up_direction ||
+				obj->get_rdVertices().at(j).normals != -__info.up_direction
+				
+				
+				) 
+			
+			
+			{
+				std::cout << obj->id.get() << "\n";
+				break;
+			}
+		}
+	}*/
+
 
 	for (size_t i = 0; i < this->get_obj_count(); ++i) {
 		auto obj = this->get_object_by_index(i);
 		//obj->set_color({ 1.0f, 1.0f, 1.0f });
 		obj->create_vertices();
 		obj->create_indices();
-		obj->bind_pipeline(&__info.pipeline);
+		obj->bind_pipeline(&__info.l_pipeline);
 	}
 	this->update_buffer();
 }

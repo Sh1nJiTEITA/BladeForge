@@ -11,6 +11,7 @@ struct ObjectData {
     vec3 select_color;
     int index;
     int id;
+    float line_thickness;
 };
 
 
@@ -45,6 +46,7 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormals;
 
+layout(location = 2) out vec3 outNormals;
 layout(location = 0) out vec3 fragColor;
 layout(location = 4) flat out uint obj_index;
 
@@ -74,6 +76,8 @@ void main() {
 
     vec4 coo = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
+
+    outNormals = inNormals;
     gl_Position = coo;
     obj_index = gl_BaseInstance;
  

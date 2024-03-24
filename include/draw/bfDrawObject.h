@@ -12,14 +12,19 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class BfObjID {
 	uint32_t __value;
+	uint32_t __type;
 	static std::unordered_set<uint32_t> __existing_values;
+	static std::map<uint32_t, uint32_t> __existing_pairs;
 
 public:
 	BfObjID();
+	BfObjID(uint32_t type);
 	~BfObjID();
 	const uint32_t get() const;
+	const uint32_t get_type() const;
 	static bool is_id_exists(uint32_t id);
 	static bool is_id_exists(BfObjID& id);
+	static uint32_t find_type(uint32_t);
 };
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -39,7 +44,8 @@ struct BfDrawLayerCreateInfo {
 class BfDrawLayer {
 	uint32_t __reserved_n;
 	std::vector<std::shared_ptr<BfDrawObj>> __objects;
-	
+	std::vector<std::shared_ptr<BfDrawLayer>> __layers;
+
 	std::vector<int32_t> __vertex_offsets; // offset of index of vertex in vertex buffer
 	std::vector<int32_t> __index_offsets; // offset of index of index in index buffer
 
@@ -64,10 +70,14 @@ public:
 	const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
 	void add(std::shared_ptr<BfDrawObj> obj);
+	void add(std::shared_ptr<BfDrawLayer> layer);
 	void add_l(std::shared_ptr<BfDrawObj> obj);
+
+
 	void del(uint32_t id);
 	void del(const std::vector<uint32_t>& id);
 
+	void generate_draw_data();
 
 	void update_vertex_offset();
 	void update_index_offset();
@@ -78,13 +88,12 @@ public:
 
 
 	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
-
-	void check_element_ready(size_t element_index);
-
 	friend BfLayerHandler;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 class BfGuiIntegration {
 protected:
@@ -104,11 +113,13 @@ protected:
 	VkPipeline* __pPipeline = nullptr;
 	glm::mat4 __model_matrix = glm::mat4(1.0f);
 	glm::vec3 __main_color = glm::vec3(1.0f);
+	float __line_thickness = 0.01;
 
 public:
 
 	BfDrawObj();
-	BfDrawObj(const std::vector<BfVertex3>& dvert);
+	BfDrawObj(uint32_t type);
+	BfDrawObj(const std::vector<BfVertex3>& dvert, uint32_t type = 0);
 
 	BfObjID id;
 
