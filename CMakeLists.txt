@@ -13,6 +13,7 @@ list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.cpp$")
 list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.hpp$")
 
 
+
 foreach(subdir ${SUBDIRECTORIES})
     message("Subfolder found: ${subdir}")
 	include_directories(include/${subdir})
@@ -43,24 +44,84 @@ project(${PROJECT_NAME})
 
 # Shaders (PRE-BUIL D) 
 # Shader files must be compiled from GLSL to SPIR-V before build is done.
-if (WIN32)
-	execute_process(
-		#COMMAND cmd /C ${CMAKE_SOURCE_DIR}/compile.bat
-		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.vert -o shaders/vert.spv"
-		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.geom -o shaders/geom.spv"
-		COMMAND cmd /C "${VULKAN_DIR}/Bin/glslc.exe shaders/basic.frag -o shaders/frag.spv"
+SET(VULKAN_SHADER_COMPILER "${VULKAN_DIR}/Bin/glslc.exe")
 
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-		RESULT_VARIABLE command_result
-		OUTPUT_VARIABLE command_output
+
+SET(SHADER_PACK_PATHS 
+	"${CMAKE_SOURCE_DIR}/shaders/basic"
+	"${CMAKE_SOURCE_DIR}/shaders/thick_lines"
+	"${CMAKE_SOURCE_DIR}/shaders/lines"
+)
+
+
+
+if (WIN32 AND EXISTS ${VULKAN_SHADER_COMPILER})
+	SET(SHADER_EXTENSIONS
+		"*.vert"
+		"*.frag"
+		"*.geom"
+		"*.glsl"
+		"*.comp"
+		"*.tesse"
+		"*.tessc"
 	)
-	if (command_result EQUAL 0)
-		message(STATUS "All shaders is correctly compiled.")
-	else()
-		message(STATUS "Shader compile failed with error code: ${command_result}")
-		message(STATUS "Shader output: ${command_output}")
-	endif()
+
+	SET(ALL_SHADER_FILES "")
+	foreach(SHADER_DIR_PATH ${SHADER_PACK_PATHS}) 
+		
+		SET(ALL_LOCAL_SHADER_FILES "")
+
+		foreach(SHADER_EXT ${SHADER_EXTENSIONS})
+			
+			file(GLOB_RECURSE SHADER_FILES_TEMP
+				"${SHADER_DIR_PATH}/${SHADER_EXT}"
+			)
+			list(APPEND ALL_LOCAL_SHADER_FILES ${SHADER_FILES_TEMP})
+
+		endforeach()
+		
+	
+	
+		set(LOCAL_MESSAGE "[SHADER_PATH_SEARCH] Found shader files in dir ${SHADER_DIR_PATH}:")
+		
+		foreach(SHADER_FILE ${ALL_LOCAL_SHADER_FILES})
+			#message(STATUS ${SHADER_FILE})	
+			get_filename_component(FILE_NAME ${SHADER_FILE} NAME)
+			string(APPEND LOCAL_MESSAGE " ${FILE_NAME}")
+		endforeach()
+		
+		message(${LOCAL_MESSAGE})
+		list(APPEND ALL_SHADER_FILES ${ALL_LOCAL_SHADER_FILES})
+	endforeach()
+
+	foreach(SHADER_FILE ${ALL_SHADER_FILES})
+		get_filename_component(NEW_FILE_EXT ${SHADER_FILE} EXT)   
+		string(REPLACE "." "" NEW_FILE_EXT ${NEW_FILE_EXT})
+		get_filename_component(NEW_FILE_DIR ${SHADER_FILE} DIRECTORY)
+
+		execute_process(
+		    COMMAND cmd /C "${VULKAN_SHADER_COMPILER} ${SHADER_FILE} -o ${NEW_FILE_DIR}/${NEW_FILE_EXT}.spv"
+		    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+		    RESULT_VARIABLE command_result
+		    OUTPUT_VARIABLE command_output
+		)
+		if (command_result EQUAL 0)
+		    message("[SHADER_COMPILE_SUCCESS] Shader file ${SHADER_FILE} was compiled to ${NEW_FILE_DIR}/${NEW_FILE_EXT}.spv")
+		else()
+		    message("[SHADER_COMPILE_ERROR] Shader compile failed with error code: ${command_result}")
+		    message("[SHADER_COMPILE_ERROR] Shader output: ${command_output}")
+		endif()
+
+		get_filename_component(LAST_FOLDER_NAME ${NEW_FILE_DIR} NAME)
+	
+		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders/${LAST_FOLDER_NAME})
+		file(COPY ${NEW_FILE_DIR}/${NEW_FILE_EXT}.spv DESTINATION ${CMAKE_BINARY_DIR}/shaders/${LAST_FOLDER_NAME})
+
+	endforeach()
+else()
+	message(FATAL_ERROR "Vulkan shader compiler wasn't found at path ${VULKAN_SHADER_COMPILER}")
 endif()
+
 
 
 set(BF_BASE
@@ -136,12 +197,12 @@ endif()
 
 
 # Copies allShaderFiles to binary.
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
-file(GLOB SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.spv)
-foreach(shaderi ${SHADERS})
-	file(COPY ${shaderi} DESTINATION ${CMAKE_BINARY_DIR}/shaders/)
-	message("-- [SHADER-COPY] File ${shaderi} is copied to binary dir.")
-endforeach()
+#file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders)
+#file(GLOB SHADERS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.spv)
+#foreach(shaderi ${SHADERS})
+#	file(COPY ${shaderi} DESTINATION ${CMAKE_BINARY_DIR}/shaders/)
+#	message("-- [SHADER-COPY] File ${shaderi} is copied to binary dir.")
+#endforeach()
 
 
 ### External libraries ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

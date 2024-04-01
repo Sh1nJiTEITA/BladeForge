@@ -37,7 +37,7 @@ struct BfWindow {
 	glm::mat4 proj;
 	glm::mat4 view;
 
-
+	float ortho_scale = 1.0f;
 
 	bool is_scroll = false;
 

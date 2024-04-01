@@ -1354,6 +1354,7 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
 	if (!file.is_open()) {
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_FAILURE;
+		event.success = false;
 		return BfSingleEvent(event);
 	}
 	else {
@@ -1369,60 +1370,25 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename)
 
 		event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
 		event.action = BfEnActionType::BF_ACTION_TYPE_READ_SHADER_FILE_SUCCESS;
+		event.success = true;
 		return BfSingleEvent(event);
 	}
 }
 
-BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path, std::string geom_shader_path)
+BfEvent bfCreateGraphicsPipelines(BfBase& base)
 {
-	// Shader Modules Creation
-	std::vector<char> vertShaderCode;
-	std::vector<char> fragShaderCode;
-	std::vector<char> geomShaderCode;
-	
-	if (!vert_shader_path.empty()) {
-		bfaReadFile(vertShaderCode, vert_shader_path);
-	}
-	if (!frag_shader_path.empty()) {
-		bfaReadFile(fragShaderCode, frag_shader_path);
-	}
-	if (!geom_shader_path.empty()) {
-		bfaReadFile(geomShaderCode, geom_shader_path);
-	}
-	
-	
-	VkShaderModule vertShaderModule;
-	VkShaderModule fragShaderModule;
-	VkShaderModule geomShaderModule;
+	std::vector<VkShaderModule> modules_basic;
+	std::vector<VkPipelineShaderStageCreateInfo> infos_basic;
+	bfaCreateShaderCreateInfos(base.device, "shaders/basic", modules_basic, infos_basic);
 
-	bfaCreateShaderModule(vertShaderModule, base.device, vertShaderCode);
-	bfaCreateShaderModule(fragShaderModule, base.device, fragShaderCode);
-	bfaCreateShaderModule(geomShaderModule, base.device, geomShaderCode);
+	std::vector<VkShaderModule> modules_tlines;
+	std::vector<VkPipelineShaderStageCreateInfo> infos_tlines;
+	bfaCreateShaderCreateInfos(base.device, "shaders/thick_lines", modules_tlines, infos_tlines);
 
-	// Pipeline creation
-	VkPipelineShaderStageCreateInfo vertShaderCreateInfo{};
-	vertShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertShaderCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderCreateInfo.module = vertShaderModule;
-	vertShaderCreateInfo.pName = "main";
+	std::vector<VkShaderModule> modules_lines;
+	std::vector<VkPipelineShaderStageCreateInfo> infos_lines;
+	bfaCreateShaderCreateInfos(base.device, "shaders/lines", modules_lines, infos_lines);
 
-	VkPipelineShaderStageCreateInfo fragShaderCreateInfo{};
-	fragShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragShaderCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderCreateInfo.module = fragShaderModule;
-	fragShaderCreateInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo geomShaderCreateInfo{};
-	geomShaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	geomShaderCreateInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-	geomShaderCreateInfo.module = geomShaderModule;
-	geomShaderCreateInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo shaderStages[] = {
-		vertShaderCreateInfo,
-		geomShaderCreateInfo,
-		fragShaderCreateInfo
-	};
 
 	// Vertex Data
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -1448,6 +1414,12 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	inputAssembly_lines.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
 	inputAssembly_lines.primitiveRestartEnable = VK_FALSE;
 
+
+	/*VkPipelineShaderStageCreateInfo lines_shaderStages[] = {
+		lines_vertShaderCreateInfo,
+		lines_geomShaderCreateInfo,
+		lines_fragShaderCreateInfo
+	};*/
 	//// Viewports 
 	//VkViewport viewport{};
 	//viewport.x = 0.0f;
@@ -1558,15 +1530,14 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 		VK_COMPARE_OP_LESS_OR_EQUAL
 	);
 
-
+	bool is_pipelines_created = true;
+	std::stringstream ss;
 
 	// Uniforms
 	bfaCreateGraphicsPipelineLayouts(base);
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = 3;
-	pipelineInfo.pStages = shaderStages;
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
@@ -1577,19 +1548,13 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 	pipelineInfo.renderPass = base.standart_render_pass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-	//pipelineInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
-	// basic
+	pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
+	
+	// basic (triangles)
+	pipelineInfo.stageCount = infos_basic.size();
+	pipelineInfo.pStages = infos_basic.data();
 	pipelineInfo.pInputAssemblyState = &inputAssembly_triangles;
 	pipelineInfo.layout = base.triangle_pipeline_layout;
-	pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
-
-
-	bool is_pipelines_created = true;
-	std::stringstream ss;
-
-
-
-
 	if (vkCreateGraphicsPipelines(
 		base.device,
 		VK_NULL_HANDLE,
@@ -1602,11 +1567,29 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 		ss << "Base pipeline (triangles) wasn't created;";
 	}
 	
+	// tline
+	pipelineInfo.stageCount = infos_tlines.size();
+	pipelineInfo.pStages = infos_tlines.data();
+	pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
+	pipelineInfo.layout = base.tline_pipeline_layout;
+	if (vkCreateGraphicsPipelines(
+		base.device,
+		VK_NULL_HANDLE,
+		1,
+		&pipelineInfo,
+		nullptr,
+		&base.tline_pipeline
+	) != VK_SUCCESS) {
+		is_pipelines_created = false;
+		ss << "Base pipeline (slines) wasn't created;";
+	}
+
+	pipelineInfo.stageCount = infos_lines.size();
+	pipelineInfo.pStages = infos_lines.data();
 	pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
 	pipelineInfo.layout = base.line_pipeline_layout;
-	pipelineInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
-	pipelineInfo.basePipelineIndex = -1;
-	pipelineInfo.basePipelineHandle = base.triangle_pipeline;
+	//pipelineInfo.basePipelineIndex = -1;
+	//pipelineInfo.basePipelineHandle = base.triangle_pipeline;
 
 	if (vkCreateGraphicsPipelines(
 		base.device,
@@ -1620,9 +1603,17 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, st
 		ss << "Derivative pipeline (lines) wasn't created;";
 	}
 
-	vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
+	for (auto& mod : modules_tlines) {
+		vkDestroyShaderModule(base.device, mod, nullptr);
+	}
+
+	for (auto& mod : modules_basic) {
+		vkDestroyShaderModule(base.device, mod, nullptr);
+	}
+
+	/*vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
 	vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
-	vkDestroyShaderModule(base.device, geomShaderModule, nullptr);
+	vkDestroyShaderModule(base.device, geomShaderModule, nullptr);*/
 
 	BfSingleEvent event{};
 	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -2482,6 +2473,13 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base)
 
 	std::stringstream ss;
 	
+	if (vkCreatePipelineLayout(base.device, &pipelineLayoutCreateInfo, nullptr, &base.tline_pipeline_layout) == VK_SUCCESS) {
+		ss << "SLine pipeline layout is done;";
+	}
+	else {
+		ss << "SLine pipeline layout isn't done;";
+		is_pipeline_layouts_done = false;
+	}
 	if (vkCreatePipelineLayout(base.device, &pipelineLayoutCreateInfo, nullptr, &base.triangle_pipeline_layout) == VK_SUCCESS) {
 		ss << "Triangle pipeline layout is done;";
 	}
@@ -2540,6 +2538,87 @@ BfEvent bfaRecreateSwapchain(BfBase& base)
 
 	return BfEvent();
 }
+// TODO СДЕЛАТЬ ЗАГРУЗЧИК ШЕЙДЕРОВ 
+/*
+	Далее исправить шейдеры для случая (с толстыми линиями)
+	Применять матрицу преобразования видов после создания 
+	новых точек, то есть в в .geom шейдере
+*/
+BfEvent bfaCreateShaderCreateInfos(VkDevice device,
+								   std::string path,
+								   std::vector<VkShaderModule>& modules,
+								   std::vector<VkPipelineShaderStageCreateInfo>& out) 
+{
+	/*
+		"*.vert"
+		"*.frag"
+		"*.geom"
+		"*.glsl"
+		"*.comp"
+		"*.tesse"
+		"*.tessc"
+	*/
+	
+	static std::map<std::string, VkShaderStageFlagBits> stage_bits = {
+		{"vert", VK_SHADER_STAGE_VERTEX_BIT},
+		{"frag", VK_SHADER_STAGE_FRAGMENT_BIT},
+		{"geom", VK_SHADER_STAGE_GEOMETRY_BIT},
+		{"comp", VK_SHADER_STAGE_COMPUTE_BIT},
+		{"tesse", VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT},
+		{"tessc", VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT}
+	};
+
+
+	BfSingleEvent event{
+		.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT
+	};
+	std::stringstream ss; ss << " ";
+
+
+	std::vector<std::string> file_names;
+	
+	for (const auto& entry : std::filesystem::directory_iterator(path)) {
+		if (entry.path().extension().string() != ".spv") continue;
+		file_names.push_back(entry.path().filename().string());
+	}
+
+	modules.clear();
+	modules.reserve(file_names.size());
+
+	for (size_t i = 0; i < file_names.size(); ++i) {
+		std::vector<char> code;
+		BfEvent e = bfaReadFile(code, path + "/" + file_names[i]);
+
+		if (e.single_event.success) {
+			modules.emplace_back();
+			bfaCreateShaderModule(modules[i], device, code);
+			ss << "shader file " << path << "/" << file_names[i] << " was processed ";
+		}
+		else {
+			ss << "shader file " << path << "/" << file_names[i] << " wasn't processed";
+			event.action = BF_ACTION_TYPE_CREATE_SHADER_MODULE_PACK_FAILURE;
+			event.success = false;
+			event.info = ss.str();
+			return event;
+		}
+
+		VkPipelineShaderStageCreateInfo info{};
+		info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		info.pName = "main";
+		info.module = modules[i];
+		info.stage = stage_bits[std::filesystem::path(file_names[i]).stem().string()];
+		
+		out.push_back(info);
+	}
+	
+	{
+		event.action = BF_ACTION_TYPE_CREATE_SHADER_MODULE_PACK_SUCCESS;
+		event.success = true;
+		event.info = ss.str();
+		return event;
+	}
+}
+
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 {
@@ -2937,7 +3016,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 {
 
 	BfUniformView ubo{};
-	ubo.model = glm::mat4(1.0f);
+	
 
 	switch (base.window->cam_mode) {
 	case 0:
@@ -2953,11 +3032,17 @@ void bfUpdateUniformBuffer(BfBase& base)
 	base.window->cam_mode = 99;
 	bfUpdateView(base.window);
 
-
 	ubo.view = base.window->view;
+	
+	
 
 	if (base.window->proj_mode == 0) {
-		ubo.proj = glm::perspective(glm::radians(45.0f), (float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 0.01f, 100.0f);
+		ubo.proj = glm::perspective(
+			glm::radians(45.0f), 
+			(float)base.swap_chain_extent.width / (float)base.swap_chain_extent.height, 
+			0.01f, 100.0f
+		);
+		ubo.model = glm::mat4(1.0f);
 	}
 	else if (base.window->proj_mode == 1) {
 		if (base.window->is_asp) {
@@ -2977,6 +3062,7 @@ void bfUpdateUniformBuffer(BfBase& base)
 				base.window->ortho_near,
 				base.window->ortho_far);
 		}
+		ubo.model = glm::scale(glm::mat4(1.0f), { base.window->ortho_scale, base.window->ortho_scale, base.window->ortho_scale});
 	}
 	ubo.cursor_pos = { base.window->xpos, base.window->ypos };
 	ubo.id_on_cursor = base.pos_id;

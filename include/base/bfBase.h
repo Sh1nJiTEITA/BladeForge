@@ -12,7 +12,7 @@
 #include "bfDescriptor.h"
 #include "bfLayerHandler.h"
 
-
+#include <filesystem>
 
 #define MAX_UNIQUE_DRAW_OBJECTS 10000
 
@@ -67,6 +67,9 @@ struct BfBase {
 
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
+
+	VkPipeline				 tline_pipeline;
+	VkPipelineLayout		 tline_pipeline_layout;
 	VkPipeline				 triangle_pipeline;
 	VkPipelineLayout		 triangle_pipeline_layout;
 	VkPipeline				 line_pipeline;
@@ -118,7 +121,7 @@ BfEvent bfDestroyGUIRenderPass(BfBase& base);
 
 BfEvent bfInitOwnDescriptors(BfBase& base);
 
-BfEvent bfCreateGraphicsPipelines(BfBase& base, std::string vert_shader_path, std::string frag_shader_path, std::string geom_shader_path);
+BfEvent bfCreateGraphicsPipelines(BfBase& base);
 BfEvent bfDestroyGraphicsPipelines(BfBase& base);
 
 BfEvent bfCreateStandartFrameBuffers(BfBase& base);
@@ -167,6 +170,11 @@ BfEvent bfaReadFile(std::vector<char>& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 BfEvent bfaRecreateSwapchain(BfBase& base);
+
+BfEvent bfaCreateShaderCreateInfos(VkDevice device,
+								   std::string path, 
+								   std::vector<VkShaderModule>& modules,
+								   std::vector<VkPipelineShaderStageCreateInfo>& out);
 
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);

@@ -50,6 +50,7 @@ layout(location = 2) out vec3 outNormals;
 layout(location = 0) out vec3 fragColor;
 layout(location = 4) flat out uint obj_index;
 
+
 void print_mat4(mat4 matrix) {
     debugPrintfEXT("matrix[0] = %f, %f, %f, %f", matrix[0][0],matrix[0][1],matrix[0][2],matrix[0][3]);
     debugPrintfEXT("matrix[1] = %f, %f, %f, %f", matrix[1][0],matrix[1][1],matrix[1][2],matrix[1][3]);

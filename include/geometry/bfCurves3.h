@@ -209,7 +209,7 @@ public:
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-#define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.2f
+#define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.01f
 
 class BfBezierCurveFrame : public BfDrawLayer {
 	std::shared_ptr<BfBezierCurve> __curve;

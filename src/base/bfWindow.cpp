@@ -79,7 +79,13 @@ void bfCalculateViewPartsFree(BfWindow* window)
 	
 	
 
-	double sensitivity = 0.1f;
+	double sensitivity;
+	if (window->proj_mode == 0) {
+		sensitivity = 0.1f;
+	}
+	else {
+		sensitivity = 0.01f;
+	}
 
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
@@ -140,12 +146,45 @@ void bfCalculateViewPartsS(BfWindow* window)
 	glm::vec3 z_dir;
 	if (window->is_scroll) {
 		if (window->proj_mode == 0)
+		{
 			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+			window->scroll_yoffset = 0;
+		}
 		else if (window->proj_mode == 1)
-			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 10.0f;
+			//z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 10.0f;
+		{
+			/*if (window->scroll_yoffset < 0) {
+				window->ortho_scale -= 1 / (1 + glm::exp(-static_cast<float>(window->scroll_yoffset)));
+			}
+			else {
+				window->ortho_scale += 1 / (1 + glm::exp(-static_cast<float>(window->scroll_yoffset)));
+			}*/
+			
+			static float last_yoffset = window->scroll_yoffset;
+			static float st = 0.0f;
+			
+			float delta_yoffset = window->scroll_yoffset - last_yoffset;
+			st += delta_yoffset / 2.0;
+			if (st < -10) {
+				st = -10;
+			}
+			if (st > 6) {
+				st = 6;
+			}
+			
+
+			window->ortho_scale = 0.1 + 32.0f / (1 + glm::exp(-static_cast<float>(st)) );
+
+			/*if (window->ortho_scale - 0.1 < 1e-4) {
+				window->scroll_yoffset = 0;
+			}*/
+			std::cout << st << "\n";
+			last_yoffset = window->scroll_yoffset;
+			z_dir = glm::vec3(0.0f);
+		}
+			
 
 		window->is_scroll = false;
-		window->scroll_yoffset = 0;
 	}
 	else {
 		z_dir = glm::vec3(0.0f);
@@ -188,7 +227,13 @@ void bfCalculateRotateView(BfWindow* window)
 	yoffset *= -1;
 
 
-	double sensitivity = 0.1f;
+	double sensitivity;
+	if (window->proj_mode == 0) {
+		sensitivity = 0.1f;
+	}
+	else {
+		sensitivity = 0.01f;
+	}
 
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
@@ -278,7 +323,9 @@ BfEvent bfCreateWindow(BfWindow* window) {
 	glfwInit();
 	bfvSetGLFWProperties();
 
-	window->pos = { 2.0f, -2.0f, -1.0f};
+	//window->pos = { 2.0f, -2.0f, -1.0f};
+
+	window->pos = { 0.04, 0.72, -3.1 };
 	
 	
 	window->up = { 0.0f, 1.0f, 0.0f };

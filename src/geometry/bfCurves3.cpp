@@ -894,7 +894,7 @@ void BfCircle::create_vertices() {
 			__radius * sinf(theta) * orth_2,
 
 			this->__main_color,
-			glm::vec3(0.0f,0.0f,0.0f)
+			normal
 		);
 	}
 	

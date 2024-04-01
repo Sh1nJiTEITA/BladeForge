@@ -77,7 +77,7 @@ void BfMain::__init()
     bfCreateIDMapImage(__base);
     bfInitOwnDescriptors(__base);
     
-    bfCreateGraphicsPipelines(__base, "shaders/vert.spv", "shaders/frag.spv", "shaders/geom.spv");
+    bfCreateGraphicsPipelines(__base);
     bfCreateStandartFrameBuffers(__base);
     bfCreateGUIFrameBuffers(__base);
     bfCreateCommandPool(__base);
@@ -148,7 +148,7 @@ void BfMain::__start_loop()
     section_info_1.inlet_radius = 0.025f;
     section_info_1.outlet_radius = 0.005f;
     section_info_1.border_length = 2.0f;
-    section_info_1.l_pipeline = __base.line_pipeline;
+    section_info_1.l_pipeline = __base.tline_pipeline;
     section_info_1.t_pipeline = __base.triangle_pipeline;
 
 
@@ -277,7 +277,7 @@ void BfMain::__start_loop()
     __base.layer_handler.add(layer_2);
     __base.layer_handler.add(blade_section_1);
 
-
+    bfSetOrthoLeft(__base.window);
     while (!glfwWindowShouldClose(__base.window->pWindow))
     {
         glfwPollEvents();

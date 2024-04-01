@@ -196,6 +196,9 @@ enum BfEnActionType {
 	
 	BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_SUCCESS				 =  0x56,
 	BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_FAILURE				 = -0x56,
+
+	BF_ACTION_TYPE_CREATE_SHADER_MODULE_PACK_SUCCESS		 =  0x57,
+	BF_ACTION_TYPE_CREATE_SHADER_MODULE_PACK_FAILURE		 =  0x57,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -377,7 +380,10 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x55,  "IdMap parts weren't created" },
 
 	{ 0x56,  "VmaAllocator was created"},
-	{-0x56,  "VmaALlocator wasn't created"}
+	{-0x56,  "VmaALlocator wasn't created"}, 
+
+	{ 0x57,  "Shader Module pack was created:"},
+	{-0x57, "Shader Module pack wasn't created:"}
 };
 
 

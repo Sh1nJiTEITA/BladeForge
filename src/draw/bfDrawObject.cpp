@@ -391,18 +391,18 @@ void BfDrawLayer::update_buffer()
 	__buffer.unmap_index_memory();
 }
 
-void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
+void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
 {
 	for (size_t i = 0; i < __layers.size(); i++) {
-		__layers[i]->draw(combuffer, pipeline);
+		__layers[i]->draw(combuffer, offset);
 	}
-	
+	std::vector<VkDeviceSize> vert_offset = { 0 };
 	// Local elements
 	vkCmdBindVertexBuffers(combuffer, 
 						   0, 
 						   1, 
 						   __buffer.get_p_vertex_buffer(), 
-						   nullptr);
+						   vert_offset.data());
 	vkCmdBindIndexBuffer(combuffer, 
 						 *__buffer.get_p_index_buffer(), 
 						 0, 
@@ -410,14 +410,37 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, VkPipeline pipeline)
 	
 	for (size_t i = 0; i < __objects.size(); i++) {
 		if (__objects[i] == nullptr) continue;
+		if (__objects[i]->get_bound_pPipeline() == nullptr) {
+			throw std::runtime_error("Object pipeline pointer is nullptr");
+		}
+		vkCmdBindPipeline(combuffer,
+						  VK_PIPELINE_BIND_POINT_GRAPHICS,
+						  *__objects[i]->get_bound_pPipeline());
+		this->update_vertex_offset();
+		this->update_index_offset();
 		vkCmdDrawIndexed(
 			combuffer,
 			__objects[i]->get_indices_count(),
 			1,
 			__index_offsets[i],
 			__vertex_offsets[i],
-			i
+			i + offset
 		);
+	}
+	offset += __objects.size();
+}
+
+void BfDrawLayer::map_model_matrices(size_t frame_index, 
+									 size_t& offset, 
+									 void* data) 
+{
+	for (size_t i = 0; i < __layers.size(); i++) {
+		__layers[i]->map_model_matrices(frame_index, offset, data);
+	}
+	for (size_t i = 0; i < __objects.size(); i++) {
+		BfObjectData obj_data = __objects[i]->get_obj_data();
+		memcpy(reinterpret_cast<char*>(data) + offset, &obj_data, sizeof(BfObjectData));
+		offset += sizeof(BfObjectData);
 	}
 }
 

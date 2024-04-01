@@ -83,8 +83,8 @@ public:
 	void update_index_offset();
 	void update_buffer();
 	// TODO: global model-matrix descriptor
-	void draw(VkCommandBuffer combuffer, VkPipeline pipeline);
-	
+	void draw(VkCommandBuffer combuffer, size_t& offset);
+	void map_model_matrices(size_t frame_index, size_t& offset, void* data);
 
 
 	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
@@ -113,7 +113,7 @@ protected:
 	VkPipeline* __pPipeline = nullptr;
 	glm::mat4 __model_matrix = glm::mat4(1.0f);
 	glm::vec3 __main_color = glm::vec3(1.0f);
-	float __line_thickness = 0.01;
+	float __line_thickness = 0.005;
 
 public:
 

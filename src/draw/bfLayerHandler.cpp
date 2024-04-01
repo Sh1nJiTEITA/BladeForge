@@ -62,12 +62,14 @@ void BfLayerHandler::map_model_matrices(size_t frame_index)
 	{
 		size_t offset = 0;
 		for (const auto& layer : __layers) {
-			for (const auto& obj : layer->__objects) {
+			/*for (const auto& obj : layer->__objects) {
 				BfObjectData obj_data = obj->get_obj_data();
 				memcpy(reinterpret_cast<char*>(data) + offset, &obj_data, sizeof(BfObjectData));
 				offset += sizeof(BfObjectData);
-			}
+			}*/
 			
+			layer->map_model_matrices(frame_index, offset, data);
+
 			/*std::vector<BfObjectData> obj_data = layer->get_obj_model_matrices();
 			if (obj_data.empty()) {
 				throw std::runtime_error("Input layer object data is empty");
@@ -101,7 +103,7 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 {
 	size_t obj_data_offset = 0;
 	for (const auto& layer : __layers) {
-		std::vector<VkDeviceSize> vert_offset = { 0 };
+		/*std::vector<VkDeviceSize> vert_offset = { 0 };
 		vkCmdBindVertexBuffers(command_buffer, 
 							   0, 
 							   1, 
@@ -130,8 +132,8 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 				i + obj_data_offset
 			);
 		}
-		obj_data_offset += layer->__objects.size();
-
+		obj_data_offset += layer->__objects.size();*/
+		layer->draw(command_buffer, obj_data_offset);
 
 	}
 	

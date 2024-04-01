@@ -269,6 +269,7 @@ void BfBladeSection::__generate_blade_geometry() {
 			__info.l_pipeline,
 			__info.t_pipeline
 		);
+		ave_curve_frame->update_buffer();
 		this->add(ave_curve_frame);
 	}
 
