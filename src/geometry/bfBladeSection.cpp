@@ -4,14 +4,25 @@ bool bfCheckBladeSectionCreateInfoEquality(
 	const BfBladeSectionCreateInfo& i_1,
 	const BfBladeSectionCreateInfo& i_2
 ) {
-	if (i_1.width == 0 or i_2.width == 0) return true;
+	
+	
+	/*if (i_1.width == 0 or i_2.width == 0) return true;
 	if (i_1.install_angle	== 0 or i_2.install_angle == 0) return true;
 	if (i_1.inlet_angle		== 0 or i_2.inlet_angle == 0) return true;
 	if (i_1.outlet_angle	== 0 or i_2.outlet_angle == 0) return true;
 	if (i_1.inlet_radius	== 0 or i_2.inlet_radius == 0) return true;
 	if (i_1.outlet_radius	== 0 or i_2.outlet_radius == 0) return true;
 	if (i_1.border_length	== 0 or i_2.border_length == 0) return true;
-		
+	*/
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.width, 0)				or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.width			, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.install_angle, 0)		or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.install_angle	, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.inlet_angle, 0)		or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.inlet_angle		, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.outlet_angle, 0)		or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.outlet_angle		, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.inlet_radius, 0)		or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.inlet_radius		, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.outlet_radius, 0)		or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.outlet_radius	, 0)) return true;
+	if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.border_length	, 0)	or CHECK_FLOAT_EQUALITY_TO_NULL(i_2.border_length	, 0)) return true;
+
+
 	return {
 		i_1.width == i_2.width &&
 		i_1.install_angle == i_2.install_angle &&
@@ -193,7 +204,17 @@ void BfBladeSection::__generate_blade_geometry() {
 		BF_MATH_FIND_LINES_INTERSECTION_ANY
 	);
 
+	
+	glm::vec3 section_center_line_vert_1 =
+		(get_top_border()->get_first().pos + get_bot_border()->get_first().pos) / 2.0f;
 
+	glm::vec3 section_center_line_vert_2 =
+		(get_top_border()->get_second().pos + get_bot_border()->get_second().pos) / 2.0f;
+
+	auto center_line = std::make_shared<BfSingleLine>(
+		BfVertex3{ section_center_line_vert_1, {1.0f,1.0f,1.0f}, {get_inlet_center().normals} },
+		BfVertex3{ section_center_line_vert_2, {1.0f,1.0f,1.0f}, {get_inlet_center().normals} }
+	);
 
 		
 	{ // INLET EDGE
@@ -204,15 +225,21 @@ void BfBladeSection::__generate_blade_geometry() {
 			__info.inlet_radius
 		);
 
-		float min_distance = FLT_MAX;
+		float min_distance_to_intersection = FLT_MAX;
+		float min_distance_to_center_line = FLT_MAX;
 		size_t index = -1;
 		for (size_t i = 0; i < c.size(); i++) {
-			float distance = glm::distance(potencial_io_intersection, c[i].get_center().pos);
-			if (distance < min_distance) {
+			float distance_to_intersection = glm::distance(potencial_io_intersection, c[i].get_center().pos);
+			float distance_to_center_line = bfMathGetDistanceToLine(*center_line, c[i].get_center().pos);
+
+			if (distance_to_center_line <= min_distance_to_center_line &&
+				distance_to_intersection < min_distance_to_intersection)
+			{
 				index = i;
-				min_distance = distance;
+
+				min_distance_to_center_line = distance_to_center_line;
+				min_distance_to_intersection = distance_to_intersection;
 			}
-			
 		}
 		this->add_l(std::make_shared<BfCircle>(c[index]));
 	}
@@ -225,15 +252,21 @@ void BfBladeSection::__generate_blade_geometry() {
 			__info.outlet_radius
 		);
 
-		float min_distance = FLT_MAX;
+		float min_distance_to_intersection = FLT_MAX;
+		float min_distance_to_center_line = FLT_MAX;
 		size_t index = -1;
 		for (size_t i = 0; i < c.size(); i++) {
-			float distance = glm::distance(potencial_io_intersection, c[i].get_center().pos);
-			if (distance < min_distance) {
-				index = i;
-				min_distance = distance;
-			}
+			float distance_to_intersection = glm::distance(potencial_io_intersection, c[i].get_center().pos);
+			float distance_to_center_line = bfMathGetDistanceToLine(*center_line, c[i].get_center().pos);
 
+			if (distance_to_center_line <= min_distance_to_center_line &&
+				distance_to_intersection < min_distance_to_intersection)
+			{
+				index = i;
+
+				min_distance_to_center_line = distance_to_center_line;
+				min_distance_to_intersection = distance_to_intersection;
+			}
 		}
 		this->add_l(std::make_shared<BfCircle>(c[index]));
 	}
@@ -308,145 +341,145 @@ void BfBladeSection::__generate_blade_geometry() {
 		ave_curve->set_color({ .0f, 1.0f, 1.0f });
 		this->add_l(ave_curve);
 
-		auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
+		/*auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
 			this->get_ave_curve(),
 			__info.layer_create_info.allocator,
 			__info.l_pipeline,
 			__info.t_pipeline
 		);
 		ave_curve_frame->update_buffer();
-		this->add(ave_curve_frame);
+		this->add(ave_curve_frame);*/
 	}
 
 	
 
-	{ // BACK
-		glm::vec3 back_intersection = io_intersection + this->get_top_border()->get_direction_from_start() * 0.4f;
-		// INLET
-		
-		auto back_inlet_tangents = this->get_inlet_edge()->get_tangent_vert(back_intersection);
-		auto back_inlet_io_1 = std::make_shared<BfSingleLine>(back_inlet_tangents[0],
-															  back_intersection);
-		
+	//{ // BACK
+	//	glm::vec3 back_intersection = io_intersection + this->get_top_border()->get_direction_from_start() * 0.4f;
+	//	// INLET
+	//	
+	//	auto back_inlet_tangents = this->get_inlet_edge()->get_tangent_vert(back_intersection);
+	//	auto back_inlet_io_1 = std::make_shared<BfSingleLine>(back_inlet_tangents[0],
+	//														  back_intersection);
+	//	
 
-		auto back_inlet_io_2 = std::make_shared<BfSingleLine>(back_inlet_tangents[1],
-															  back_intersection);
-		
-
-
-		BfVertex3 back_inlet_tangent;
-		if (bfMathGetDistanceToLine(*get_top_border().get(), back_inlet_tangents[0]) <
-			bfMathGetDistanceToLine(*get_top_border().get(), back_inlet_tangents[1]))
-		{
-			back_inlet_tangent = back_inlet_tangents[0];
-			this->add_l(back_inlet_io_1);
-		}
-		else
-		{
-			back_inlet_tangent = back_inlet_tangents[1];
-			this->add_l(back_inlet_io_2);
-		}
-
-		// OUTLET
-
-		auto back_outlet_tangents = this->get_outlet_edge()->get_tangent_vert(back_intersection);
-		auto back_outlet_io_1 = std::make_shared<BfSingleLine>(back_outlet_tangents[0],
-															   back_intersection);
-		
-		auto back_outlet_io_2 = std::make_shared<BfSingleLine>(back_outlet_tangents[1],
-															   back_intersection);
-		
+	//	auto back_inlet_io_2 = std::make_shared<BfSingleLine>(back_inlet_tangents[1],
+	//														  back_intersection);
+	//	
 
 
-		BfVertex3 back_outlet_tangent;
-		if (bfMathGetDistanceToLine(*get_bot_border().get(), back_outlet_tangents[0]) <
-			bfMathGetDistanceToLine(*get_bot_border().get(), back_outlet_tangents[1]))
-		{
-			back_outlet_tangent = back_outlet_tangents[0];
-			this->add_l(back_outlet_io_1);
-		}
-		else
-		{
-			back_outlet_tangent = back_outlet_tangents[1];
-			this->add_l(back_outlet_io_2);
-		}
+	//	BfVertex3 back_inlet_tangent;
+	//	if (bfMathGetDistanceToLine(*get_top_border().get(), back_inlet_tangents[0]) <
+	//		bfMathGetDistanceToLine(*get_top_border().get(), back_inlet_tangents[1]))
+	//	{
+	//		back_inlet_tangent = back_inlet_tangents[0];
+	//		this->add_l(back_inlet_io_1);
+	//	}
+	//	else
+	//	{
+	//		back_inlet_tangent = back_inlet_tangents[1];
+	//		this->add_l(back_inlet_io_2);
+	//	}
 
-		auto back_curve = std::make_shared<BfBezierCurve>(
-			2,
-			100,
-			std::vector<BfVertex3>{
-				back_inlet_tangent,
-				BfVertex3(back_intersection, { 1.0f, 1.0f, 1.0f }, this->get_inlet_center().normals),
-				back_outlet_tangent
-			}
-		);
-		back_curve->set_color({ .0f, 1.0f, 1.0f });
-		this->add_l(back_curve);
-	}
+	//	// OUTLET
 
-	{ // FACE
-		glm::vec3 face_intersection = io_intersection - this->get_top_border()->get_direction_from_start() * 0.4f;
-		// INLET
-
-		auto face_inlet_tangents = this->get_inlet_edge()->get_tangent_vert(face_intersection);
-		auto face_inlet_io_1 = std::make_shared<BfSingleLine>(face_inlet_tangents[0],
-															  face_intersection);
+	//	auto back_outlet_tangents = this->get_outlet_edge()->get_tangent_vert(back_intersection);
+	//	auto back_outlet_io_1 = std::make_shared<BfSingleLine>(back_outlet_tangents[0],
+	//														   back_intersection);
+	//	
+	//	auto back_outlet_io_2 = std::make_shared<BfSingleLine>(back_outlet_tangents[1],
+	//														   back_intersection);
+	//	
 
 
-		auto face_inlet_io_2 = std::make_shared<BfSingleLine>(face_inlet_tangents[1],
-															  face_intersection);
+	//	BfVertex3 back_outlet_tangent;
+	//	if (bfMathGetDistanceToLine(*get_bot_border().get(), back_outlet_tangents[0]) <
+	//		bfMathGetDistanceToLine(*get_bot_border().get(), back_outlet_tangents[1]))
+	//	{
+	//		back_outlet_tangent = back_outlet_tangents[0];
+	//		this->add_l(back_outlet_io_1);
+	//	}
+	//	else
+	//	{
+	//		back_outlet_tangent = back_outlet_tangents[1];
+	//		this->add_l(back_outlet_io_2);
+	//	}
+
+	//	auto back_curve = std::make_shared<BfBezierCurve>(
+	//		2,
+	//		100,
+	//		std::vector<BfVertex3>{
+	//			back_inlet_tangent,
+	//			BfVertex3(back_intersection, { 1.0f, 1.0f, 1.0f }, this->get_inlet_center().normals),
+	//			back_outlet_tangent
+	//		}
+	//	);
+	//	back_curve->set_color({ .0f, 1.0f, 1.0f });
+	//	this->add_l(back_curve);
+	//}
+
+	//{ // FACE
+	//	glm::vec3 face_intersection = io_intersection - this->get_top_border()->get_direction_from_start() * 0.4f;
+	//	// INLET
+
+	//	auto face_inlet_tangents = this->get_inlet_edge()->get_tangent_vert(face_intersection);
+	//	auto face_inlet_io_1 = std::make_shared<BfSingleLine>(face_inlet_tangents[0],
+	//														  face_intersection);
 
 
-
-		BfVertex3 face_inlet_tangent;
-		if (bfMathGetDistanceToLine(*get_top_border().get(), face_inlet_tangents[0]) >
-			bfMathGetDistanceToLine(*get_top_border().get(), face_inlet_tangents[1]))
-		{
-			face_inlet_tangent = face_inlet_tangents[0];
-			this->add_l(face_inlet_io_1);
-		}
-		else
-		{
-			face_inlet_tangent = face_inlet_tangents[1];
-			this->add_l(face_inlet_io_2);
-		}
-
-		// OUTLET
-
-		auto face_outlet_tangents = this->get_outlet_edge()->get_tangent_vert(face_intersection);
-		auto face_outlet_io_1 = std::make_shared<BfSingleLine>(face_outlet_tangents[0],
-															   face_intersection);
-
-		auto face_outlet_io_2 = std::make_shared<BfSingleLine>(face_outlet_tangents[1],
-															   face_intersection);
+	//	auto face_inlet_io_2 = std::make_shared<BfSingleLine>(face_inlet_tangents[1],
+	//														  face_intersection);
 
 
 
-		BfVertex3 face_outlet_tangent;
-		if (bfMathGetDistanceToLine(*get_bot_border().get(), face_outlet_tangents[0]) >
-			bfMathGetDistanceToLine(*get_bot_border().get(), face_outlet_tangents[1]))
-		{
-			face_outlet_tangent = face_outlet_tangents[0];
-			this->add_l(face_outlet_io_1);
-		}
-		else
-		{
-			face_outlet_tangent = face_outlet_tangents[1];
-			this->add_l(face_outlet_io_2);
-		}
+	//	BfVertex3 face_inlet_tangent;
+	//	if (bfMathGetDistanceToLine(*get_top_border().get(), face_inlet_tangents[0]) >
+	//		bfMathGetDistanceToLine(*get_top_border().get(), face_inlet_tangents[1]))
+	//	{
+	//		face_inlet_tangent = face_inlet_tangents[0];
+	//		this->add_l(face_inlet_io_1);
+	//	}
+	//	else
+	//	{
+	//		face_inlet_tangent = face_inlet_tangents[1];
+	//		this->add_l(face_inlet_io_2);
+	//	}
 
-		auto face_curve = std::make_shared<BfBezierCurve>(
-			2,
-			100,
-			std::vector<BfVertex3>{
-			face_inlet_tangent,
-				BfVertex3(face_intersection, { 1.0f, 1.0f, 1.0f }, this->get_inlet_center().normals),
-			face_outlet_tangent
-		}
-		);
-		face_curve->set_color({ .0f, 1.0f, 1.0f });
-		this->add_l(face_curve);
-	}
+	//	// OUTLET
+
+	//	auto face_outlet_tangents = this->get_outlet_edge()->get_tangent_vert(face_intersection);
+	//	auto face_outlet_io_1 = std::make_shared<BfSingleLine>(face_outlet_tangents[0],
+	//														   face_intersection);
+
+	//	auto face_outlet_io_2 = std::make_shared<BfSingleLine>(face_outlet_tangents[1],
+	//														   face_intersection);
+
+
+
+	//	BfVertex3 face_outlet_tangent;
+	//	if (bfMathGetDistanceToLine(*get_bot_border().get(), face_outlet_tangents[0]) >
+	//		bfMathGetDistanceToLine(*get_bot_border().get(), face_outlet_tangents[1]))
+	//	{
+	//		face_outlet_tangent = face_outlet_tangents[0];
+	//		this->add_l(face_outlet_io_1);
+	//	}
+	//	else
+	//	{
+	//		face_outlet_tangent = face_outlet_tangents[1];
+	//		this->add_l(face_outlet_io_2);
+	//	}
+
+	//	auto face_curve = std::make_shared<BfBezierCurve>(
+	//		2,
+	//		100,
+	//		std::vector<BfVertex3>{
+	//		face_inlet_tangent,
+	//			BfVertex3(face_intersection, { 1.0f, 1.0f, 1.0f }, this->get_inlet_center().normals),
+	//		face_outlet_tangent
+	//	}
+	//	);
+	//	face_curve->set_color({ .0f, 1.0f, 1.0f });
+	//	this->add_l(face_curve);
+	//}
 
 
 

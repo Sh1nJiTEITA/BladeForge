@@ -661,7 +661,14 @@ void BfMain::__present_event_log()
 
 void BfMain::__present_blade_section_create_window() {
     
-    auto make_row = [](std::string n, std::string d, std::string dim, float* value) {
+    static int inputFloatMode = 0;
+    auto make_row = [](std::string n, 
+                       std::string d, 
+                       std::string dim, 
+                       float* value, 
+                       float left, 
+                       float right) 
+    {
         static int count = 0;
         
         ImGui::TableNextRow();
@@ -671,7 +678,16 @@ void BfMain::__present_blade_section_create_window() {
         ImGui::Text(d.c_str());
         ImGui::TableSetColumnIndex(2);
         std::string dsadasd = dim + "##float" + (char)(count);
-        ImGui::InputFloat(dim.c_str(), value);
+        
+        switch (inputFloatMode) {
+        case 0:
+            ImGui::InputFloat(dim.c_str(), value);
+            break;
+        case 1:
+            ImGui::SliderFloat(dim.c_str(), value, left, right);
+            break;
+        }
+        
 
         count++;
     };
@@ -699,7 +715,7 @@ void BfMain::__present_blade_section_create_window() {
 
         .border_length = 2.0f,
         
-        .l_pipeline = __base.tline_pipeline,
+        .l_pipeline = __base.line_pipeline,
         .t_pipeline = __base.triangle_pipeline,
         
     };
@@ -712,9 +728,24 @@ void BfMain::__present_blade_section_create_window() {
         ImGuiWindowFlags_NoNavFocus |
         ImGuiWindowFlags_AlwaysAutoResize;
 
+    
+
+
     ImGui::Begin("Create blade section", nullptr, window_flags);
     {
         
+        ImGui::BeginGroup();
+        {
+            ImGui::Text("Input parameters mode");
+            
+            ImGui::RadioButton("Input float", &inputFloatMode, 0);
+            ImGui::SameLine();
+            ImGui::RadioButton("Slider", &inputFloatMode, 1);
+
+        }
+        ImGui::EndGroup();
+
+
         
         int flags = ImGuiTableFlags_NoHostExtendX | 
                     //ImGuiTableFlags_RowBg | 
@@ -727,12 +758,12 @@ void BfMain::__present_blade_section_create_window() {
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
             
-            make_row("Width",           "B",        "[m]##0",   &info.width);
-            make_row("Install angle",   "alpha_y",  "[deg]##1", &info.install_angle);
-            make_row("Inlet angle",     "beta_1",   "[deg]##2", &info.inlet_angle);
-            make_row("Outlet angle",    "beta_2",   "[deg]##3", &info.outlet_angle);
-            make_row("Inlet radius",    "r_1",      "[m]##4",   &info.inlet_radius);
-            make_row("Outlet radius",   "r_2",      "[m]##5",   &info.outlet_radius);
+            make_row("Width",           "B",        "[m]##0",   &info.width, 0.0f, 10.0f);
+            make_row("Install angle",   "alpha_y",  "[deg]##1", &info.install_angle, -180.0f, 180.0f);
+            make_row("Inlet angle",     "beta_1",   "[deg]##2", &info.inlet_angle, -180.0f, 180.0f);
+            make_row("Outlet angle",    "beta_2",   "[deg]##3", &info.outlet_angle, -180.0f, 180.0f);
+            make_row("Inlet radius",    "r_1",      "[m]##4",   &info.inlet_radius, 0.00001, 0.05);
+            make_row("Outlet radius",   "r_2",      "[m]##5",   &info.outlet_radius, 0.00001, 0.05);
     
         }
         ImGui::EndTable();
