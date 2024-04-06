@@ -30,9 +30,7 @@ private:
 	
 	BfBase __base;
 	BfHolder __holder;
-	BfGeometryHolder __geometry_holder;
 	BfGUI __gui;
-
 
 	void __process_keys();
 	void __poll_events();

@@ -51,7 +51,6 @@ void BfMain::__poll_events() {
 void BfMain::__init()
 {
     bfBindHolder(&__holder);
-    bfBindGeometryHolder(&__geometry_holder);
 
     bfHoldWindow(__base.window);
     bfHoldPhysicalDevice(__base.physical_device);
@@ -88,7 +87,7 @@ void BfMain::__init()
     bfCreateSyncObjects(__base);
     bfInitImGUI(__base);
     
-    bfBindGeometryHolderOutsideAllocator(__base.allocator);
+    
 }
 
 void BfMain::__kill()
@@ -479,7 +478,7 @@ void BfMain::__present_camera()
 
             __base.window->proj_mode = 0;
 
-            std::cout << "pers active" << "\n";
+            //std::cout << "pers active" << "\n";
         }
         if (ImGui::RadioButton("Ortho", is_ort)) {
             is_ort = true;
@@ -487,7 +486,7 @@ void BfMain::__present_camera()
 
             __base.window->proj_mode = 1;
 
-            std::cout << "Ortho active" << "\n";
+            //std::cout << "Ortho active" << "\n";
         }
 
         ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);

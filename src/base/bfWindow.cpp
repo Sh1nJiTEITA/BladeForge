@@ -178,7 +178,7 @@ void bfCalculateViewPartsS(BfWindow* window)
 			/*if (window->ortho_scale - 0.1 < 1e-4) {
 				window->scroll_yoffset = 0;
 			}*/
-			std::cout << st << "\n";
+			//std::cout << st << "\n";
 			last_yoffset = window->scroll_yoffset;
 			z_dir = glm::vec3(0.0f);
 		}

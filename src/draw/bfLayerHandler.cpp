@@ -14,6 +14,14 @@ BfLayerHandler::BfLayerHandler()
 	
 }
 
+BfLayerHandler::~BfLayerHandler() {
+	auto killer = BfLayerKiller::get_root();
+	for (auto& l : __layers) {
+		killer->add(l);
+	}
+}
+
+
 BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
 	BfSingleEvent event{};

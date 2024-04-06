@@ -14,6 +14,8 @@ public:
 
 	BfLayerHandler(size_t reserved_layer_count);
 	BfLayerHandler();
+	~BfLayerHandler();
+
 
 	BfEvent bind_descriptor(BfDescriptor* desc);
 	BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
