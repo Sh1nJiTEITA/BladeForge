@@ -481,5 +481,5 @@ void BfBladeSection::__clear_draw_data() {
 	//	obj->clear_indices();
 	//	obj->bind_pipeline(nullptr);
 	//}
-	this->clear_buffer();
+	//this->clear_buffer();
 }

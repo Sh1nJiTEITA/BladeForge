@@ -5,7 +5,7 @@
 
 #include "bfCurves3.h"
 #include "bfDrawObject.h"
-
+#include "bfLayerKiller.h"
 
 
 struct BfBladeSectionCreateInfo {

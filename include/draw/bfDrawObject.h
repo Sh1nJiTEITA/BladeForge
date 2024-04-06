@@ -97,6 +97,23 @@ public:
 	friend BfLayerHandler;
 };
 
+
+class BfLayerKiller {
+	std::vector<std::shared_ptr<BfDrawLayer>> __layers;
+
+	static BfLayerKiller* __p;
+public:
+	BfLayerKiller();
+	~BfLayerKiller();
+
+	static BfLayerKiller* get_root();
+	static void set_root(BfLayerKiller* k);
+
+	void add(std::shared_ptr<BfDrawLayer> layer);
+	void kill();
+
+};
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

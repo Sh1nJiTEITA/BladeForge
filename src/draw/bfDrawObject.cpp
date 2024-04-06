@@ -293,16 +293,34 @@ void BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj) {
 }
 
 void BfDrawLayer::del(uint32_t id) {
+	std::shared_ptr<BfDrawLayer> out_layer;
+	
 	__objects.erase(
 		std::remove_if(__objects.begin(), __objects.end(),
 			[id](const auto& obj) { return obj->id.get() == id; }),
 		__objects.end()
 	);
-	__layers.erase(
-		std::remove_if(__layers.begin(), __layers.end(),
-			[id](const auto& layer) { return layer->id.get() == id; }),
-		__layers.end()
-	);
+
+	for (auto l = __layers.begin(); l != __layers.end(); l++) {
+		if (l->get()->id.get() == id) {
+			out_layer = std::move(*l);
+			__layers.erase(l);
+		}
+	}
+
+	if (out_layer.get() == nullptr) {
+		abort();
+	}
+	else {
+		auto root = BfLayerKiller::get_root();
+		root->add(out_layer);
+	}
+
+	//__layers.erase(
+	//	std::remove_if(__layers.begin(), __layers.end(),
+	//		[id](const auto& layer) { return layer->id.get() == id; }),
+	//	__layers.end()
+	//);
 
 	this->update_buffer();
 }
@@ -320,10 +338,13 @@ void BfDrawLayer::del(const std::vector<uint32_t>& id) {
 			return false;
 	};
 
-	auto con_l = [&id](std::shared_ptr<BfDrawLayer> obj) {
+	std::vector<std::shared_ptr<BfDrawLayer>> out_layers;
+
+	auto con_l = [&id, &out_layers](std::shared_ptr<BfDrawLayer> obj) {
 		auto it = std::find(id.begin(), id.end(), obj->id.get());
 
 		if (it != id.end()) {
+			out_layers.push_back(std::move(obj));
 			return true;
 		}
 		else
@@ -332,15 +353,29 @@ void BfDrawLayer::del(const std::vector<uint32_t>& id) {
 
 	auto rem_o = std::remove_if(__objects.begin(), __objects.end(), con_o);
 	__objects.erase(rem_o, __objects.end());
+	
 	auto rem_l = std::remove_if(__layers.begin(), __layers.end(), con_l);
+	
+	for (auto& l : out_layers) {
+		auto root = BfLayerKiller::get_root();
+		root->add(l);
+	}
+	
 	__layers.erase(rem_l, __layers.end());
 
 	this->update_buffer();
 }
 
 void BfDrawLayer::del_all() {
-	__objects.clear();
-	__layers.clear();
+	std::vector<uint32_t> ids;
+	ids.reserve(__objects.size() + __layers.size());
+	for (auto& o : __objects) {
+		ids.push_back(o->id.get());
+	}
+	for (auto& l : __layers) {
+		ids.push_back(l->id.get());
+	}
+	this->del(ids);
 }
 
 void BfDrawLayer::generate_draw_data() {
@@ -478,4 +513,33 @@ std::shared_ptr<BfDrawObj> BfDrawLayer::get_object_by_index(size_t index)
 bool* BfGuiIntegration::get_pSelection()
 {
 	return &__is_selected;
+}
+
+BfLayerKiller* BfLayerKiller::__p = nullptr;
+
+
+BfLayerKiller::BfLayerKiller()
+{
+	__layers.reserve(10000);
+	BfLayerKiller::set_root(this);
+}
+
+BfLayerKiller::~BfLayerKiller() {
+	__p == nullptr;
+}
+
+
+void BfLayerKiller::add(std::shared_ptr<BfDrawLayer> layer) {
+	__layers.push_back(std::move(layer));
+}
+
+void BfLayerKiller::kill() {
+	__layers.clear();
+}
+
+BfLayerKiller* BfLayerKiller::get_root() {
+	return __p;
+}
+void BfLayerKiller::set_root(BfLayerKiller* k) {
+	__p = k;
 }

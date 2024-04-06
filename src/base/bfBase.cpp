@@ -2655,8 +2655,9 @@ void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 
 void bfDrawFrame(BfBase& base)
 {
+	
 	// VK_TRUE - wait all fences
-	vkWaitForFences(base.device, 1, base.frame_pack[base.current_frame].frame_in_flight_fence, VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(base.device, 1, base.frame_pack[base.current_frame].frame_in_flight_fence, VK_TRUE, UINT64_MAX);
 
 	VkSemaphore		local_available_image_semaphore		= *base.frame_pack[base.current_frame].available_image_semaphore;
 	VkSemaphore		local_finish_render_image_semaphore = *base.frame_pack[base.current_frame].finish_render_image_semaphore;
@@ -2693,7 +2694,6 @@ void bfDrawFrame(BfBase& base)
 
 	vkResetCommandBuffer(local_standart_command_bufffer, 0);
 
-	base.layer_killer.kill();
 
 	bfMainRecordCommandBuffer(base);
 
@@ -2722,6 +2722,7 @@ void bfDrawFrame(BfBase& base)
 		throw std::runtime_error("Failed to submit draw command buffer");
 	}
 
+
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
@@ -2744,6 +2745,9 @@ void bfDrawFrame(BfBase& base)
 	else if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
+
+	vkWaitForFences(base.device, 1, &local_fence_in_flight, VK_TRUE, UINT64_MAX);
+	base.layer_killer.kill();
 
 
 	base.current_frame = (base.current_frame + 1) % MAX_FRAMES_IN_FLIGHT;

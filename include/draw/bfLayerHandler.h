@@ -11,8 +11,6 @@ class BfLayerHandler {
 
 public:
 	
-	static void set_root(BfLayerHandler* h);
-	static BfLayerHandler* get_root();
 
 	BfLayerHandler(size_t reserved_layer_count);
 	BfLayerHandler();

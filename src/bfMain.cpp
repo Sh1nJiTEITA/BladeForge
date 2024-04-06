@@ -107,10 +107,13 @@ void BfMain::__kill()
     bfDestroyStandartRenderPass(__base);
     bfDestroyImageViews(__base);
     bfDestroySwapchain(__base);
+
     //bfDestroyAllocator(__base);
     //bfDestroyLogicalDevice(__base);
     //bfDestroySurface(__base);
     //bfDestroyInstance(__base);
+
+    __base.layer_killer.kill();
 }
 
 void BfMain::__start_loop()
