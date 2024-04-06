@@ -150,6 +150,14 @@ void BfDrawObj::create_vertices()
 {
 }
 
+void BfDrawObj::clear_vetices() { 
+	__vertices.clear();
+}
+void BfDrawObj::clear_indices() {
+	__indices.clear();
+}
+
+
 std::unordered_set<unsigned int> BfObjID::__existing_values;
 std::map<uint32_t, uint32_t> BfObjID::__existing_pairs;
 
@@ -222,6 +230,10 @@ BfDrawLayer::BfDrawLayer(const BfDrawLayerCreateInfo& info)
 		info.max_reserved_count
 	)
 {}
+
+BfDrawLayer::~BfDrawLayer() {
+}
+
 
 std::vector<std::shared_ptr<BfDrawObj>>::iterator BfDrawLayer::begin() {
 	return __objects.begin();
@@ -326,6 +338,11 @@ void BfDrawLayer::del(const std::vector<uint32_t>& id) {
 	this->update_buffer();
 }
 
+void BfDrawLayer::del_all() {
+	__objects.clear();
+	__layers.clear();
+}
+
 void BfDrawLayer::generate_draw_data() {
 	for (size_t i = 0; i < this->get_obj_count(); ++i) {
 		auto obj = this->get_object_by_index(i);
@@ -390,6 +407,12 @@ void BfDrawLayer::update_buffer()
 	}
 	__buffer.unmap_index_memory();
 }
+
+void BfDrawLayer::clear_buffer() {
+	__buffer.clear_index_buffer();
+	__buffer.clear_vertex_buffer();
+}
+
 
 void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
 {

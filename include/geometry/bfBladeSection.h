@@ -7,6 +7,7 @@
 #include "bfDrawObject.h"
 
 
+
 struct BfBladeSectionCreateInfo {
 	BfDrawLayerCreateInfo layer_create_info;
 
@@ -30,6 +31,11 @@ struct BfBladeSectionCreateInfo {
 	VkPipeline t_pipeline;
 };
 
+bool bfCheckBladeSectionCreateInfoEquality(
+	const BfBladeSectionCreateInfo& i_1,
+	const BfBladeSectionCreateInfo& i_2
+);
+
 class BfBladeSection : public BfDrawLayer {
 protected:
 	BfBladeSectionCreateInfo __info;
@@ -37,11 +43,10 @@ protected:
 	BfVertex3 __chord_inlet_center;
 	BfVertex3 __chord_outlet_center;
 
-	std::vector<std::shared_ptr<BfDrawLayer>> inside_layers;
 
 public:
-
 	BfBladeSection(const BfBladeSectionCreateInfo& info);
+	void remake(const BfBladeSectionCreateInfo& info);
 
 	/*
 		__objects[..]
@@ -59,6 +64,7 @@ public:
 	const BfVertex3& get_inlet_center() const noexcept;
 	const BfVertex3& get_outlet_center() const noexcept;
 
+	// 
 	std::shared_ptr<BfSingleLine> get_top_border();
 	std::shared_ptr<BfSingleLine> get_bot_border();
 	std::shared_ptr<BfSingleLine> get_chord();
@@ -89,6 +95,7 @@ private:
 	void __generate_blade_geometry();
 
 	void __generate_draw_data();
+	void __clear_draw_data();
 };
 
 

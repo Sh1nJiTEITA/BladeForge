@@ -1,4 +1,4 @@
-#include "BfMain.h"
+п»ї#include "BfMain.h"
 
 
 
@@ -275,7 +275,7 @@ void BfMain::__start_loop()
 
     __base.layer_handler.add(layer_1);
     __base.layer_handler.add(layer_2);
-    __base.layer_handler.add(blade_section_1);
+    //__base.layer_handler.add(blade_section_1);
 
     bfSetOrthoLeft(__base.window);
     while (!glfwWindowShouldClose(__base.window->pWindow))
@@ -294,13 +294,13 @@ void BfMain::__start_loop()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        //ImGui::ShowDemoWindow();
+        ImGui::ShowDemoWindow();
         __present_menu_bar();
         __present_camera();
         __present_info();
         __present_event_log();
         __present_tooltype();
-      
+        __present_blade_section_create_window();
 
         bfPresentLayerHandler(__base.layer_handler);
         //ShowTestPlot();
@@ -333,23 +333,23 @@ void BfMain::__start_loop()
 
 void BfMain::__present_tooltype() {
     /*
-        Пастельные оттенки:
-        Светло-розовый: ImVec4(1.0f, 0.8f, 0.8f, 1.0f)
-        Светло-голубой: ImVec4(0.8f, 0.8f, 1.0f, 1.0f)
-        Светло-зеленый: ImVec4(0.8f, 1.0f, 0.8f, 1.0f)
-        Светло-желтый: ImVec4(1.0f, 1.0f, 0.8f, 1.0f)
+        РџР°СЃС‚РµР»СЊРЅС‹Рµ РѕС‚С‚РµРЅРєРё:
+        РЎРІРµС‚Р»Рѕ-СЂРѕР·РѕРІС‹Р№: ImVec4(1.0f, 0.8f, 0.8f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-РіРѕР»СѓР±РѕР№: ImVec4(0.8f, 0.8f, 1.0f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-Р·РµР»РµРЅС‹Р№: ImVec4(0.8f, 1.0f, 0.8f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-Р¶РµР»С‚С‹Р№: ImVec4(1.0f, 1.0f, 0.8f, 1.0f)
         
-        Приглушенные оттенки:
-        Серый: ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
-        Светло-коричневый: ImVec4(0.7f, 0.6f, 0.5f, 1.0f)
-        Светло-фиолетовый: ImVec4(0.7f, 0.6f, 0.8f, 1.0f)
-        Светло-оранжевый: ImVec4(0.8f, 0.7f, 0.6f, 1.0f)
+        РџСЂРёРіР»СѓС€РµРЅРЅС‹Рµ РѕС‚С‚РµРЅРєРё:
+        РЎРµСЂС‹Р№: ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-РєРѕСЂРёС‡РЅРµРІС‹Р№: ImVec4(0.7f, 0.6f, 0.5f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-С„РёРѕР»РµС‚РѕРІС‹Р№: ImVec4(0.7f, 0.6f, 0.8f, 1.0f)
+        РЎРІРµС‚Р»Рѕ-РѕСЂР°РЅР¶РµРІС‹Р№: ImVec4(0.8f, 0.7f, 0.6f, 1.0f)
         
-        Яркие оттенки:
-        Красный: ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-        Синий: ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
-        Зеленый: ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
-        Желтый: ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
+        РЇСЂРєРёРµ РѕС‚С‚РµРЅРєРё:
+        РљСЂР°СЃРЅС‹Р№: ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+        РЎРёРЅРёР№: ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
+        Р—РµР»РµРЅС‹Р№: ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
+        Р–РµР»С‚С‹Р№: ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
     */
     if (__base.pos_id != 0) {
         ImGui::BeginTooltip();
@@ -553,11 +553,11 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
 
             }
             
-            outFile << "Пример текста для записи в файл." << std::endl;
-            outFile << "Это вторая строка." << std::endl;
-            outFile << "И еще одна строка." << std::endl;
+            outFile << "РџСЂРёРјРµСЂ С‚РµРєСЃС‚Р° РґР»СЏ Р·Р°РїРёСЃРё РІ С„Р°Р№Р»." << std::endl;
+            outFile << "Р­С‚Рѕ РІС‚РѕСЂР°СЏ СЃС‚СЂРѕРєР°." << std::endl;
+            outFile << "Р РµС‰Рµ РѕРґРЅР° СЃС‚СЂРѕРєР°." << std::endl;
 
-            // Закрываем файл
+            // Р—Р°РєСЂС‹РІР°РµРј С„Р°Р№Р»
             outFile.close();
             
             std::random_device rd;
@@ -594,8 +594,8 @@ void BfMain::__present_id_map(BfBase& base, std::vector<uint32_t> data)
             }
 
             if (!stbi_write_png("output.png", base.swap_chain_extent.width, base.swap_chain_extent.height, 3, rgba_data.data(), base.swap_chain_extent.width * 3)) {
-                // Обработайте ошибку сохранения изображения
-                //std::cerr << "Ошибка сохранения изображения." << std::endl;
+                // РћР±СЂР°Р±РѕС‚Р°Р№С‚Рµ РѕС€РёР±РєСѓ СЃРѕС…СЂР°РЅРµРЅРёСЏ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+                //std::cerr << "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ." << std::endl;
             }
         }
 
@@ -627,7 +627,7 @@ void BfMain::__present_event_log()
        
      
 
-        // Устанавливаем скролл внизу
+        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРєСЂРѕР»Р» РІРЅРёР·Сѓ
 
         ImGui::Begin("Console", nullptr, windowFlags);
         {
@@ -638,7 +638,7 @@ void BfMain::__present_event_log()
             auto it_time = BfEventHandler::single_event_time.rbegin();
             auto it_message = BfEventHandler::single_event_message.rbegin();
 
-            // Перебираем оба списка одновременно в обратном порядке
+            // РџРµСЂРµР±РёСЂР°РµРј РѕР±Р° СЃРїРёСЃРєР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ РІ РѕР±СЂР°С‚РЅРѕРј РїРѕСЂСЏРґРєРµ
             while (it_event != BfEventHandler::single_events.rend() &&
                 it_time != BfEventHandler::single_event_time.rend() &&
                 it_message != BfEventHandler::single_event_message.rend()) {
@@ -657,7 +657,131 @@ void BfMain::__present_event_log()
     }
 }
 
+void BfMain::__present_blade_section_create_window() {
+    
+    auto make_row = [](std::string n, std::string d, std::string dim, float* value) {
+        static int count = 0;
+        
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text(n.c_str());
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text(d.c_str());
+        ImGui::TableSetColumnIndex(2);
+        std::string dsadasd = dim + "##float" + (char)(count);
+        ImGui::InputFloat(dim.c_str(), value);
 
+        count++;
+    };
+    
+    static BfBladeSectionCreateInfo old{};
+
+    BfDrawLayerCreateInfo linfo{
+        .allocator = __base.allocator,
+        .vertex_size = sizeof(BfVertex3),
+        .max_vertex_count = 1000,
+        .max_reserved_count = 100,
+    };
+
+    static BfBladeSectionCreateInfo info{
+        .layer_create_info = linfo,
+        
+        .width = 1.0f,
+        .install_angle = 102.0f,
+
+        .inlet_angle = 25.0f,
+        .outlet_angle = 42.0f,
+
+        .inlet_radius = 0.025f,
+        .outlet_radius = 0.005f,
+
+        .border_length = 2.0f,
+        
+        .l_pipeline = __base.tline_pipeline,
+        .t_pipeline = __base.triangle_pipeline,
+        
+    };
+
+    ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize |
+        //ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_AlwaysAutoResize;
+
+    ImGui::Begin("Create blade section", nullptr, window_flags);
+    {
+        
+        
+        int flags = ImGuiTableFlags_NoHostExtendX | 
+                    //ImGuiTableFlags_RowBg | 
+                    ImGuiTableFlags_SizingFixedFit;
+
+        ImGui::BeginTable("FloatTable", 3, flags);
+        {
+            ImGui::TableSetupColumn("Parameter name");
+            ImGui::TableSetupColumn("Description");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableHeadersRow();
+            
+            make_row("Width",           "B",        "[m]##0",   &info.width);
+            make_row("Install angle",   "alpha_y",  "[deg]##1", &info.install_angle);
+            make_row("Inlet angle",     "beta_1",   "[deg]##2", &info.inlet_angle);
+            make_row("Outlet angle",    "beta_2",   "[deg]##3", &info.outlet_angle);
+            make_row("Inlet radius",    "r_1",      "[m]##4",   &info.inlet_radius);
+            make_row("Outlet radius",   "r_2",      "[m]##5",   &info.outlet_radius);
+    
+        }
+        ImGui::EndTable();
+        
+        
+    }
+    
+    static int sec_id = -1;
+
+    ImGui::End();
+    if (!bfCheckBladeSectionCreateInfoEquality(info, old)) {
+        std::cout << "other\n";
+        
+
+
+        if (sec_id > 0) {
+            //__base.layer_handler.del(sec_id);
+            auto section = std::dynamic_pointer_cast<BfBladeSection>(
+                __base.layer_handler.get_layer_by_id(sec_id)
+            );
+            section->remake(info);
+        }
+        else {
+            auto blade_section_1 = std::make_shared<BfBladeSection>(
+                info
+            );
+            __base.layer_handler.add(blade_section_1);
+
+            sec_id = blade_section_1->id.get();
+        }
+
+    }
+    /*info.layer_create_info = linfo;
+    info.width = 1.0f;
+    info.install_angle = 102.0f;
+    info.inlet_angle = 25.0f;
+    info.outlet_angle = 42.0f;
+    info.inlet_radius = 0.025f;
+    info.outlet_radius = 0.005f;
+
+    info.border_length = 2.0f;
+    info.l_pipeline = __base.tline_pipeline;
+    info.t_pipeline = __base.triangle_pipeline;*/
+
+    /*auto blade_section_1 = std::make_shared<BfBladeSection>(
+        info
+    );*/
+
+    
+    old = info;
+}
 
 BfMain::BfMain() :
     __base{},

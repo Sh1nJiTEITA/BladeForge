@@ -2692,6 +2692,9 @@ void bfDrawFrame(BfBase& base)
 	vkResetFences(base.device, 1, &local_fence_in_flight);
 
 	vkResetCommandBuffer(local_standart_command_bufffer, 0);
+
+	base.layer_killer.kill();
+
 	bfMainRecordCommandBuffer(base);
 
 

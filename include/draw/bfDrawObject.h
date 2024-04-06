@@ -9,6 +9,8 @@
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
 
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class BfObjID {
 	uint32_t __value;
@@ -31,6 +33,7 @@ public:
 class BfDrawObj;
 class BfLayerHandler;
 
+
 struct BfDrawLayerCreateInfo {
 	VmaAllocator allocator;
 	size_t vertex_size;
@@ -49,17 +52,18 @@ class BfDrawLayer {
 	std::vector<int32_t> __vertex_offsets; // offset of index of vertex in vertex buffer
 	std::vector<int32_t> __index_offsets; // offset of index of index in index buffer
 
+	BfLayerBuffer __buffer;
 public:
 
 	BfObjID id;
 
-	BfLayerBuffer __buffer;
 	BfDrawLayer(VmaAllocator allocator, 
 				size_t vertex_size, 
 				size_t max_vertex_count, 
 				size_t max_reserved_count);
 	
 	BfDrawLayer(const BfDrawLayerCreateInfo& info);
+	virtual ~BfDrawLayer();
 
 	std::vector<std::shared_ptr<BfDrawObj>>::iterator begin();
 	std::vector<std::shared_ptr<BfDrawObj>>::iterator end();
@@ -76,12 +80,14 @@ public:
 
 	void del(uint32_t id);
 	void del(const std::vector<uint32_t>& id);
+	void del_all();
 
 	void generate_draw_data();
 
 	void update_vertex_offset();
 	void update_index_offset();
 	void update_buffer();
+	void clear_buffer();
 	// TODO: global model-matrix descriptor
 	void draw(VkCommandBuffer combuffer, size_t& offset);
 	void map_model_matrices(size_t frame_index, size_t& offset, void* data);
@@ -149,6 +155,9 @@ public:
 	virtual bool is_ok();
 	virtual void create_indices();
 	virtual void create_vertices();
+
+	void clear_vetices();
+	void clear_indices();
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

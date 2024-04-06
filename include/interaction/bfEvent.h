@@ -182,6 +182,8 @@ enum BfEnActionType {
 	BF_ACTION_TYPE_ADD_LAYER_TO_LAYER_HANDLER_FAILURE		 = -0x50,
 	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS=  0x50A,
 	BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE= -0x50A,
+	BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_SUCCESS		 =  0x50B,
+	BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_FAILURE		 = -0x50B,
 
 	BF_ACTION_TYPE_CREATE_IMAGE_SUCCESS						 =	0x51,
 	BF_ACTION_TYPE_CREATE_IMAGE_FAILURE						 = -0x51,
@@ -316,6 +318,7 @@ const std::map<int, std::string> bfSetActionsStr{
 
 	{ 0x29,  "VkBuffer was created succesfully"},
 	{-0x29,  "VkBuffer wasn't created"},
+	{ 0x29A, "VkBuffer was destroyed"},
 
 	{ 0x30,  "Whole descriptors stuff was made successfully:"},
 	{-0x30,  "Not whole descriptors stuff was made successfully:"},
@@ -367,6 +370,8 @@ const std::map<int, std::string> bfSetActionsStr{
 	{-0x50,  "BfLayer wasn't added to BfLayerHandler:" },
 	{ 0x50A, "BfDescriptor was bound to BfLayerHandler"},
 	{-0x50A, "BfDescriptor wasn't bound to BfLayerHandler: pointer is nullptr"},
+	{ 0x50B, "BfLayer was deleted from BfLayerHandler"},
+	{-0x50B, "BfLayer wasn't deleted from BfLayerHandler"},
 
 	{ 0x51,  "VkImage was created"},
 	{-0x51,  "VkImage wasn't created"},

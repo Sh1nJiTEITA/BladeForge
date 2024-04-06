@@ -20,6 +20,9 @@
 //	return BfEvent();
 //}
 
+
+
+
 BfEvent bfCreateBuffer(BfAllocatedBuffer*		allocatedBuffer,
 					   VmaAllocator				allocator,
 					   size_t					allocSize,
@@ -189,6 +192,12 @@ BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator,
 
 }
 
+BfLayerBuffer::~BfLayerBuffer()
+{
+	BfEvent v_event = bfDestroyBuffer(&__vertex_buffer);
+	BfEvent i_event = bfDestroyBuffer(&__index_buffer);
+}
+
 const size_t BfLayerBuffer::get_vertex_capacity() const
 {
 	return __vertex_buffer.size;
@@ -198,6 +207,19 @@ const size_t BfLayerBuffer::get_index_capacity() const
 {
 	return __index_buffer.size;
 }
+
+void BfLayerBuffer::clear_vertex_buffer() {
+	void* p_vertex_data = this->map_vertex_memory();
+	std::memset(p_vertex_data, 0, 0);
+	this->unmap_vertex_memory();
+}
+
+void BfLayerBuffer::clear_index_buffer() {
+	void* p_index_data = this->map_index_memory();
+	std::memset(p_index_data, 0, 0);
+	this->unmap_index_memory();
+}
+
 
 void* BfLayerBuffer::map_vertex_memory()
 {

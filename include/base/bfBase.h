@@ -11,6 +11,7 @@
 #include "bfExecutionTime.hpp"
 #include "bfDescriptor.h"
 #include "bfLayerHandler.h"
+#include "bfLayerKiller.h"
 
 #include <filesystem>
 
@@ -82,7 +83,7 @@ struct BfBase {
 	VkDescriptorPool		 gui_descriptor_pool;
 
 	BfLayerHandler			 layer_handler;
-
+	BfLayerKiller			 layer_killer;
 
 	VmaAllocator			 allocator;
 	bool is_resized;

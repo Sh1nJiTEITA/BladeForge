@@ -10,6 +10,7 @@
 //#include "implot_internal.h"
 
 #include "bfLayerHandler.h"
+#include "bfBladeSection.h"
 #include "bfCurves3.h"
 
 struct BfGUI {
@@ -18,6 +19,9 @@ struct BfGUI {
 	bool is_camera_info = false;
 
 	uint32_t current_id;
+
+
+	BfBladeSectionCreateInfo blade_section_info;
 };
 
 

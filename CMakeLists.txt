@@ -162,6 +162,7 @@ set(BF_DRAW
 	"include/draw/bfDrawObject.h"   "src/draw/bfDrawObject.cpp"
 	"include/draw/bfLayerHandler.h" "src/draw/bfLayerHandler.cpp"
 	"include/draw/bfDrawObjectDefineType.h"
+	"include/draw/bfLayerKiller.h" "src/draw/bfLayerKiller.cpp"
 )
 
 

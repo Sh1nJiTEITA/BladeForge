@@ -43,9 +43,13 @@ public:
 				  size_t max_vertex_count, 
 				  size_t max_obj_count);
 
+	~BfLayerBuffer();
+
 	const size_t get_vertex_capacity() const;
 	const size_t get_index_capacity() const;
 	
+	void clear_vertex_buffer();
+	void clear_index_buffer();
 	void* map_vertex_memory();
 	void* map_index_memory();
 	void unmap_vertex_memory();
@@ -62,8 +66,6 @@ struct BfAllocatedUniformBuffer : BfAllocatedBuffer {
 	void* data;
 	VkDescriptorSet* descriptor_set;
 };
-
-
 
 
 

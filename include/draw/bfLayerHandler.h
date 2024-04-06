@@ -10,12 +10,17 @@ class BfLayerHandler {
 	BfDescriptor* __pDescriptor;
 
 public:
+	
+	static void set_root(BfLayerHandler* h);
+	static BfLayerHandler* get_root();
+
 	BfLayerHandler(size_t reserved_layer_count);
 	BfLayerHandler();
 
 	BfEvent bind_descriptor(BfDescriptor* desc);
 	BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
-	
+
+
 	const size_t get_whole_obj_count() const noexcept;
 	const size_t get_layer_count() const noexcept;
 	
@@ -23,12 +28,12 @@ public:
 	void draw(VkCommandBuffer command_buffer, VkPipeline);
 
 	std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
+	std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t id);
 
 private:
 
 	bool __is_space_for_new_layer();
+	bool __is_layer_exists(uint32_t id);
 };
-
-
 
 #endif

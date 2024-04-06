@@ -1,10 +1,55 @@
 #include "bfBladeSection.h"
 
+bool bfCheckBladeSectionCreateInfoEquality(
+	const BfBladeSectionCreateInfo& i_1,
+	const BfBladeSectionCreateInfo& i_2
+) {
+	if (i_1.width == 0 or i_2.width == 0) return true;
+	if (i_1.install_angle	== 0 or i_2.install_angle == 0) return true;
+	if (i_1.inlet_angle		== 0 or i_2.inlet_angle == 0) return true;
+	if (i_1.outlet_angle	== 0 or i_2.outlet_angle == 0) return true;
+	if (i_1.inlet_radius	== 0 or i_2.inlet_radius == 0) return true;
+	if (i_1.outlet_radius	== 0 or i_2.outlet_radius == 0) return true;
+	if (i_1.border_length	== 0 or i_2.border_length == 0) return true;
+		
+	return {
+		i_1.width == i_2.width &&
+		i_1.install_angle == i_2.install_angle &&
+
+		i_1.inlet_angle == i_2.inlet_angle &&
+		i_1.outlet_angle == i_2.outlet_angle &&
+
+		i_1.inlet_radius == i_2.inlet_radius &&
+		i_1.outlet_radius == i_2.outlet_radius &&
+
+		i_1.border_length == i_2.border_length &&
+
+		i_1.start_vertex == i_2.start_vertex &&
+		i_1.grow_direction == i_2.grow_direction &&
+		i_1.up_direction == i_2.up_direction &&
+
+		i_1.l_pipeline == i_2.l_pipeline &&
+		i_1.t_pipeline == i_2.t_pipeline
+	};
+}
+
+
 
 BfBladeSection::BfBladeSection(const BfBladeSectionCreateInfo& info) 
 	: BfDrawLayer(info.layer_create_info)
 	, __info{info}
 {
+	__generate_outer_elements();
+	__generate_blade_geometry();
+
+	__generate_draw_data();
+}
+
+void BfBladeSection::remake(const BfBladeSectionCreateInfo& info) {
+	__clear_draw_data();
+	
+	__info = info;
+
 	__generate_outer_elements();
 	__generate_blade_geometry();
 
@@ -415,23 +460,6 @@ void BfBladeSection::__generate_blade_geometry() {
 
 void BfBladeSection::__generate_draw_data() {
 	
-	/*for (size_t i = 0; i < this->get_obj_count(); ++i) {
-		auto obj = this->get_object_by_index(i);
-		for (size_t j = 0; j < obj->get_dvertices_count(); ++j) {
-			if (obj->get_rdVertices().at(j).normals != __info.up_direction ||
-				obj->get_rdVertices().at(j).normals != -__info.up_direction
-				
-				
-				) 
-			
-			
-			{
-				std::cout << obj->id.get() << "\n";
-				break;
-			}
-		}
-	}*/
-
 
 	for (size_t i = 0; i < this->get_obj_count(); ++i) {
 		auto obj = this->get_object_by_index(i);
@@ -441,4 +469,17 @@ void BfBladeSection::__generate_draw_data() {
 		obj->bind_pipeline(&__info.l_pipeline);
 	}
 	this->update_buffer();
+}
+
+void BfBladeSection::__clear_draw_data() {
+	this->del_all();
+	
+	//for (size_t i = 0; i < this->get_obj_count(); ++i) {
+	//	auto obj = this->get_object_by_index(i);
+	//	//obj->set_color({ 1.0f, 1.0f, 1.0f });
+	//	obj->clear_vetices();
+	//	obj->clear_indices();
+	//	obj->bind_pipeline(nullptr);
+	//}
+	this->clear_buffer();
 }

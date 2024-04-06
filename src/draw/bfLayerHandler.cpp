@@ -1,5 +1,7 @@
 #include "bfLayerHandler.h"
 
+
+
 BfLayerHandler::BfLayerHandler(size_t reserved_layer_count)
 	: __pDescriptor{ nullptr }
 {
@@ -45,6 +47,30 @@ BfEvent BfLayerHandler::add(std::shared_ptr<BfDrawLayer> pLayer)
 		return event;
 	}
 }
+
+//BfEvent BfLayerHandler::del(uint32_t id) {
+//	BfSingleEvent event{};
+//	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_LAYER_EVENT;
+//	if (!__is_layer_exists(id)) {
+//		event.action = BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_FAILURE;
+//		event.success = false;
+//		return event;
+//	}
+//	else {
+//		event.action = BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_SUCCESS;
+//		
+//		for (auto it = __layers.begin(); it != __layers.end(); it++) { 
+//			if (id == it->get()->id.get()) {
+//				__layers_to_destroy.push_back(std::move(*it));
+//				__layers.erase(it);
+//				return event;
+//			}
+//		}
+//	}
+//}
+
+
+
 
 void BfLayerHandler::map_model_matrices(size_t frame_index)
 {
@@ -161,7 +187,25 @@ std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_index(size_t index)
 	return __layers.at(index);
 }
 
+std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id) {
+	for (auto& it : __layers) {
+		if (it->id.get() == id) {
+			return it;
+		}
+	}
+	abort();
+}
+
 bool BfLayerHandler::__is_space_for_new_layer()
 {
 	return __layers.size() < __layers.capacity();
+}
+
+bool BfLayerHandler::__is_layer_exists(uint32_t id) {
+	for (const auto& it : __layers) {
+		if (it->id.get() == id) {
+			return true;
+		}
+	}
+	return false;
 }
