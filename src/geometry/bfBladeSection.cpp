@@ -225,23 +225,38 @@ void BfBladeSection::__generate_blade_geometry() {
 			__info.inlet_radius
 		);
 
-		float min_distance_to_intersection = FLT_MAX;
-		float min_distance_to_center_line = FLT_MAX;
-		size_t index = -1;
+		std::vector<std::pair<BfCircle*, float>> distances_to_center_line;
 		for (size_t i = 0; i < c.size(); i++) {
-			float distance_to_intersection = glm::distance(potencial_io_intersection, c[i].get_center().pos);
-			float distance_to_center_line = bfMathGetDistanceToLine(*center_line, c[i].get_center().pos);
-
-			if (distance_to_center_line <= min_distance_to_center_line &&
-				distance_to_intersection < min_distance_to_intersection)
-			{
-				index = i;
-
-				min_distance_to_center_line = distance_to_center_line;
-				min_distance_to_intersection = distance_to_intersection;
-			}
+			distances_to_center_line.push_back(std::make_pair(&c[i], bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)));
 		}
-		this->add_l(std::make_shared<BfCircle>(c[index]));
+		
+		std::sort(
+			distances_to_center_line.begin(),
+			distances_to_center_line.end(),
+			[](const auto& a, const auto& b) { return a.second < b.second; }
+		);
+
+		distances_to_center_line.pop_back();
+		distances_to_center_line.pop_back();
+
+
+		float min_distance_to_intersection = FLT_MAX;
+		BfCircle* circle = nullptr;
+
+		for (auto& pair : distances_to_center_line) {
+			float distance_to_intersection = glm::distance(potencial_io_intersection, pair.first->get_center().pos);
+
+			if (distance_to_intersection < min_distance_to_intersection)
+			{
+				min_distance_to_intersection = distance_to_intersection;
+				circle = pair.first;
+			}
+			//std::cout << std::setprecision(10) << distance_to_center_line << " ";//<< c[i].get_center().pos.x << " " << c[i].get_center().pos.y << " " << c[i].get_center().pos.z << "|";
+		}
+
+		if (circle != nullptr)
+			this->add_l(std::make_shared<BfCircle>(*circle));
+		else abort();
 	}
 
 	{ // OUTLET EDGE
@@ -252,30 +267,46 @@ void BfBladeSection::__generate_blade_geometry() {
 			__info.outlet_radius
 		);
 
-		float min_distance_to_intersection = FLT_MAX;
-		float min_distance_to_center_line = FLT_MAX;
-		size_t index = -1;
+		
+		std::vector<std::pair<BfCircle*, float>> distances_to_center_line;
 		for (size_t i = 0; i < c.size(); i++) {
-			float distance_to_intersection = glm::distance(potencial_io_intersection, c[i].get_center().pos);
-			float distance_to_center_line = bfMathGetDistanceToLine(*center_line, c[i].get_center().pos);
-
-			if (distance_to_center_line <= min_distance_to_center_line &&
-				distance_to_intersection < min_distance_to_intersection)
-			{
-				index = i;
-
-				min_distance_to_center_line = distance_to_center_line;
-				min_distance_to_intersection = distance_to_intersection;
-			}
+			distances_to_center_line.push_back(std::make_pair(&c[i], bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)));
 		}
-		this->add_l(std::make_shared<BfCircle>(c[index]));
+
+		std::sort(
+			distances_to_center_line.begin(),
+			distances_to_center_line.end(),
+			[](const auto& a, const auto& b) { return a.second < b.second; }
+		);
+
+		distances_to_center_line.pop_back();
+		distances_to_center_line.pop_back();
+
+
+		float min_distance_to_intersection = FLT_MAX;
+		BfCircle* circle = nullptr;
+
+		for (auto& pair : distances_to_center_line) {
+			float distance_to_intersection = glm::distance(potencial_io_intersection, pair.first->get_center().pos);
+
+			if (distance_to_intersection < min_distance_to_intersection)
+			{
+				min_distance_to_intersection = distance_to_intersection;
+				circle = pair.first;
+			}
+			//std::cout << std::setprecision(10) << distance_to_center_line << " ";//<< c[i].get_center().pos.x << " " << c[i].get_center().pos.y << " " << c[i].get_center().pos.z << "|";
+		}
+
+		if (circle != nullptr)
+			this->add_l(std::make_shared<BfCircle>(*circle));
+		else abort();
 	}
 
 
 	{ // INLET VECTOR
 		glm::vec3 inlet_dir = (
 			glm::rotate(glm::mat4(1.0f), glm::radians(90.0f + __info.inlet_angle), __info.up_direction)
-			*glm::vec4(this->get_inlet_edge()->get_center().pos + __info.grow_direction, 1.0f)
+			*glm::vec4(__info.grow_direction, 1.0f)
 		);
 		auto inlet_vector = std::make_shared<BfSingleLine>(
 			this->get_inlet_edge()->get_center(),
@@ -288,7 +319,8 @@ void BfBladeSection::__generate_blade_geometry() {
 	{ // OUTLET VECTOR
 		glm::vec3 outlet_dir = (
 			glm::rotate(glm::mat4(1.0f), glm::radians(90.0f - __info.outlet_angle), __info.up_direction)
-			*glm::vec4(this->get_outlet_edge()->get_center().pos + __info.grow_direction, 1.0f)
+			//*glm::vec4(this->get_outlet_edge()->get_center().pos + __info.grow_direction, 1.0f)
+			*glm::vec4(__info.grow_direction, 1.0f)
 		);
 		auto outlet_vector = std::make_shared<BfSingleLine>(
 			this->get_outlet_edge()->get_center(),
@@ -304,29 +336,29 @@ void BfBladeSection::__generate_blade_geometry() {
 		BF_MATH_FIND_LINES_INTERSECTION_ANY
 	);
 
-	{ // INLET IO-LINE
-		auto inlet_io = std::make_shared<BfSingleLine>(
-			this->get_inlet_edge()->get_center(),
-			BfVertex3{
-				io_intersection,
-				{1.0f, 1.0f, 1.0f},
-				this->get_inlet_edge()->get_center().normals
-			}
-		);
-		this->add_l(inlet_io);
-	}
+	//{ // INLET IO-LINE
+	//	auto inlet_io = std::make_shared<BfSingleLine>(
+	//		this->get_inlet_edge()->get_center(),
+	//		BfVertex3{
+	//			io_intersection,
+	//			{1.0f, 1.0f, 1.0f},
+	//			this->get_inlet_edge()->get_center().normals
+	//		}
+	//	);
+	//	this->add_l(inlet_io);
+	//}
 
-	{ // OUTLET IO-LINE
-		auto outlet_io = std::make_shared<BfSingleLine>(
-			BfVertex3{
-				io_intersection,
-				{1.0f, 1.0f, 1.0f},
-				this->get_outlet_edge()->get_center().normals
-			},
-			this->get_outlet_edge()->get_center()
-		);
-		this->add_l(outlet_io);
-	}
+	//{ // OUTLET IO-LINE
+	//	auto outlet_io = std::make_shared<BfSingleLine>(
+	//		BfVertex3{
+	//			io_intersection,
+	//			{1.0f, 1.0f, 1.0f},
+	//			this->get_outlet_edge()->get_center().normals
+	//		},
+	//		this->get_outlet_edge()->get_center()
+	//	);
+	//	this->add_l(outlet_io);
+	//}
 
 	{ // AVE_CURVE
 		auto ave_curve = std::make_shared<BfBezierCurve>(
@@ -350,6 +382,9 @@ void BfBladeSection::__generate_blade_geometry() {
 		ave_curve_frame->update_buffer();
 		this->add(ave_curve_frame);*/
 	}
+
+	this->add_l(center_line);
+
 
 	
 

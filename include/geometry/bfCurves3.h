@@ -6,6 +6,7 @@
 
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
+#include <iomanip>
 
 #include "bfDrawObjectDefineType.h"
 

@@ -571,18 +571,35 @@ std::vector<BfCircle> bfMathGetInscribedCircles(size_t m,
 }
 
 float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P) {
-	// Ќаходим вектор, который соедин€ет две точки на пр€мой
-	glm::vec3 lineVector = L.get_second().pos - L.get_first().pos;
-	// Ќаходим вектор, который соедин€ет одну из точек пр€мой с данной точкой
+	
+	/*glm::vec3 lineVector = L.get_second().pos - L.get_first().pos;
+	
 	glm::vec3 pointToLinePointVector = L.get_first().pos - P.pos;
-	// Ќаходим проекцию вектора pointToLinePointVector на вектор lineVector
+	
 	float projectionLength = glm::dot(pointToLinePointVector, lineVector) / glm::dot(lineVector, lineVector);
 	glm::vec3 projection = projectionLength * lineVector;
-	// Ќаходим вектор, который соедин€ет проекцию с данной точкой
+	
 	glm::vec3 distanceVector = pointToLinePointVector - projection;
-	// Ќаходим длину этого вектора, котора€ и будет рассто€нием до пр€мой
-	return glm::length(distanceVector);
+	
+	return glm::length(distanceVector);*/
 
+	/*glm::vec3 lineVector = L.get_second().pos - L.get_first().pos;
+	glm::vec3 pointToLineVector = P.pos - L.get_first().pos;
+
+	float t = glm::dot(pointToLineVector, lineVector) / glm::dot(lineVector, lineVector);
+
+	glm::vec3 projectionPoint = L.get_first().pos + t * lineVector;
+
+	return glm::distance(projectionPoint, P.pos);*/
+
+	glm::vec3 normal = bfMathGetNormal(L.get_first().pos, L.get_second().pos, P.pos);
+	glm::vec3 dir_to_line = glm::normalize(glm::cross(L.get_direction_from_start(), normal));
+	
+	BfSingleLine line(P, P.pos + dir_to_line);
+
+	glm::vec3 intersection = bfMathFindLinesIntersection(L, line, BF_MATH_FIND_LINES_INTERSECTION_ANY);
+
+	return glm::distance(intersection, P.pos);
 }
 
 

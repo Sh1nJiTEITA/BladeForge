@@ -713,7 +713,7 @@ void BfMain::__present_blade_section_create_window() {
         .inlet_radius = 0.025f,
         .outlet_radius = 0.005f,
 
-        .border_length = 2.0f,
+        .border_length = 20.0f,
         
         .l_pipeline = __base.line_pipeline,
         .t_pipeline = __base.triangle_pipeline,
