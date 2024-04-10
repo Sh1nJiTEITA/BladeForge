@@ -80,20 +80,25 @@ public:
 
 	void del(uint32_t id);
 	void del(const std::vector<uint32_t>& id);
-	void del_all();
+
+	virtual void del_all();
+	virtual void remake();
 
 	void generate_draw_data();
-
 	void update_vertex_offset();
 	void update_index_offset();
 	void update_buffer();
 	void clear_buffer();
+
+	void set_color(glm::vec3 c);
+
 	// TODO: global model-matrix descriptor
 	void draw(VkCommandBuffer combuffer, size_t& offset);
 	void map_model_matrices(size_t frame_index, size_t& offset, void* data);
 
 
 	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
+	std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
 	friend BfLayerHandler;
 };
 
@@ -124,6 +129,7 @@ protected:
 
 public:
 	bool* get_pSelection();
+	bool is_draw = true;
 };
 
 class BfDrawObj : public BfGuiIntegration {
@@ -136,7 +142,7 @@ protected:
 	VkPipeline* __pPipeline = nullptr;
 	glm::mat4 __model_matrix = glm::mat4(1.0f);
 	glm::vec3 __main_color = glm::vec3(1.0f);
-	float __line_thickness = 0.005;
+	float __line_thickness = 0.00025;
 
 public:
 

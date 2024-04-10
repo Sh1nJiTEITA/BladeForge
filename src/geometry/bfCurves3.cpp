@@ -170,6 +170,48 @@ void BfSingleLine::create_vertices()
 	
 }
 
+BfTriangle::BfTriangle(const BfVertex3& P_1,
+					   const BfVertex3& P_2,
+					   const BfVertex3& P_3) 
+	: BfDrawObj({ {P_1, P_2, P_3} }, BF_DRAW_OBJ_TYPE_TRIANGLE)
+{ 
+	__vertices.reserve(4);
+
+}
+
+const BfVertex3& BfTriangle::get_first() const {
+	return __dvertices[0];
+}
+const BfVertex3& BfTriangle::get_second() const {
+	return __dvertices[1];
+}
+const BfVertex3& BfTriangle::get_third() const {
+	return __dvertices[2];
+}
+
+float BfTriangle::get_area() const {
+	glm::vec3 u = get_second().pos - get_first().pos;
+	glm::vec3 v = get_third().pos - get_first().pos;
+	return glm::length(glm::cross(u, v)) / 2.0f;
+}
+
+BfVertex3 BfTriangle::get_center() const {
+	return {
+		(get_first().pos + get_second().pos + get_third().pos) / 3.0f,
+		get_first().color,
+		bfMathGetNormal(get_first().pos, get_second().pos, get_third().pos)
+	};
+}
+
+void BfTriangle::create_vertices() {
+	for (auto& it : __dvertices) {
+		__vertices.emplace_back(it);
+	}
+	__vertices.emplace_back(__dvertices[0]);
+}
+
+
+
 glm::vec3 bfMathFindLinesIntersection(
 	const BfSingleLine& line1, 
 	const BfSingleLine& line2,
@@ -602,6 +644,106 @@ float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P) {
 	return glm::distance(intersection, P.pos);
 }
 
+std::vector<BfVertex3> bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs) {
+	size_t total_size = 0;
+	for (auto& obj : objs) {
+		if (obj->get_vertices_count() == 0) abort();
+		total_size += obj->get_vertices_count();
+	}
+	std::vector<BfVertex3> out;
+	out.reserve(total_size);
+
+	for (auto& obj : objs) {
+		out.insert(out.end(), obj->get_rVertices().begin(), obj-> get_rVertices().end());
+	}
+
+	return out;
+}
+
+std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(std::vector<BfVertex3> v) {
+	
+	//auto get_triangle_count = [](size_t current) {
+	//	/*if (current <= 5)
+	//		return (size_t)0;*/
+	//	// even
+	//	if (current % 2 == 0) 
+	//		return (size_t)(current / 2.0f);
+	//	// odd 
+	//	else 
+	//		return (size_t)((current) / 2.0f) - 1;
+	//};
+
+	//std::vector<std::shared_ptr<BfTriangle>> out;
+	//out.reserve(get_triangle_count(v.size()) * 2);
+
+	//for (size_t i = 0; i < get_triangle_count(v.size()) -1; i++) {
+	//	auto t = std::make_shared<BfTriangle>(
+	//		v[0 + i * 2],
+	//		v[1 + i * 2],
+	//		v[2 + i * 2]
+	//	);
+	//	out.emplace_back(t);
+	//	if (i == get_triangle_count(v.size()) - 2) {
+	//		int a = 10;
+	//	}
+	//}
+
+	//return out;
+
+	//// Подготовка входных данных для библиотеки Triangle
+	//std::vector<double> points;
+	//std::vector<int> segments;
+
+	//for (const auto& vertex : v) {
+	//	points.push_back(static_cast<double>(vertex.pos.x));
+	//	points.push_back(static_cast<double>(vertex.pos.y));
+	//	points.push_back(static_cast<double>(vertex.pos.z));
+	//}
+
+	//// Опции для триангуляции
+	//char options[] = "p";
+
+	//// Создаем структуру triangulateio для входных данных и результатов
+	//struct triangulateio in, out;
+
+	//// Инициализируем структуры triangulateio
+	//memset(&in, 0, sizeof(struct triangulateio));
+	//memset(&out, 0, sizeof(struct triangulateio));
+
+	//// Заполняем структуру in данными
+	//in.numberofpoints = points.size() / 3;
+	//in.pointlist = &points[0];
+
+	//// Выполняем триангуляцию
+	//triangulate(options, &in, &out, NULL);
+
+	//// Результаты триангуляции хранятся в структуре out
+	//std::vector<std::array<glm::vec3, 3>> triangles;
+	//for (int i = 0; i < out.numberoftriangles; ++i) {
+	//	std::array<glm::vec3, 3> triangle;
+	//	for (int j = 0; j < 3; ++j) {
+	//		int vertexIndex = out.trianglelist[i * 3 + j];
+	//		triangle[j] = glm::vec3(
+	//			static_cast<float>(out.pointlist[vertexIndex * 2]),
+	//			static_cast<float>(out.pointlist[vertexIndex * 2 + 1]),
+	//			0.0f // Здесь предполагается, что треугольники находятся в плоскости XY
+	//		);
+	//	}
+	//	triangles.push_back(triangle);
+	//}
+
+	//// Освобождаем память, выделенную для результатов
+	//free(out.pointlist);
+	//free(out.trianglelist);
+
+	return std::vector<std::shared_ptr<BfTriangle>>();
+}
+
+glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v) {
+
+
+	return glm::vec3(0.0f);
+}
 
 
 BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert)
@@ -808,9 +950,43 @@ BfCircle::BfCircle(size_t m,
 		per_l_23,
 		BF_MATH_FIND_LINES_INTERSECTION_ANY
 	);
-	
+	// TODO
 	if (glm::isnan(center.pos.x) || glm::isnan(center.pos.y) || glm::isnan(center.pos.z)) {
-		throw std::runtime_error("Circle define points are invalid");
+		//throw std::runtime_error("Circle define points are invalid");
+		if (P_1.equal(P_2)) {
+			center = BfVertex3(
+				{ P_1.pos.x + P_2.pos.x / 2.0f,
+				  P_1.pos.y + P_2.pos.y / 2.0f,
+				  P_1.pos.z + P_2.pos.z / 2.0f },
+
+				P_1.color,
+				P_1.normals);
+			__radius = glm::distance(P_1.pos, P_2.pos) / 2.0f;
+			__dvertices = { center, P_1, P_2, P_3 };
+		}
+		else if (P_2.equal(P_3)) {
+			center = BfVertex3(
+				{ P_3.pos.x + P_2.pos.x / 2.0f,
+				  P_3.pos.y + P_2.pos.y / 2.0f,
+				  P_3.pos.z + P_2.pos.z / 2.0f },
+
+				P_3.color,
+				P_3.normals);
+			__radius = glm::distance(P_2.pos, P_3.pos) / 2.0f;
+			__dvertices = { center, P_1, P_2, P_3 };
+		}
+		else if (P_3.equal(P_1)) {
+			center = BfVertex3(
+				{ P_1.pos.x + P_3.pos.x / 2.0f,
+				  P_1.pos.y + P_3.pos.y / 2.0f,
+				  P_1.pos.z + P_3.pos.z / 2.0f },
+
+				P_1.color,
+				P_1.normals);
+			__radius = glm::distance(P_3.pos, P_1.pos) / 2.0f;
+			__dvertices = { center, P_1, P_2, P_3 };
+		}
+		return;
 	}
 
 	float rad_1 = glm::distance(center.pos, P_1.pos);
@@ -821,6 +997,8 @@ BfCircle::BfCircle(size_t m,
 		!CHECK_FLOAT_EQUALITY(rad_2, rad_3) ||
 		!CHECK_FLOAT_EQUALITY(rad_3, rad_1)) 
 	{
+		
+		
 		throw std::runtime_error("Circle was'n made -> different radious");
 	}
 	
@@ -980,6 +1158,27 @@ BfBezierCurveFrame::BfBezierCurveFrame(
 			BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
 		);
 		handle->bind_pipeline(&__lines_pipeline);
+		this->add_l(handle);
+	}
+
+	this->generate_draw_data();
+	this->update_buffer();
+}
+
+void BfBezierCurveFrame::remake(
+	std::shared_ptr<BfBezierCurve> curve,
+	glm::vec3 c
+) {
+	this->del_all();
+	__curve = curve;
+	for (size_t i = 0; i < curve->get_dvertices_count(); i++) {
+		auto handle = std::make_shared<BfCircle>(
+			20,
+			curve->get_rdVertices()[i],
+			BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+		);
+		handle->bind_pipeline(&__lines_pipeline);
+		handle->set_color(c);
 		this->add_l(handle);
 	}
 

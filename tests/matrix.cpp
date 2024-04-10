@@ -325,8 +325,53 @@ TEST_CASE("BfMath", "[BfMath]") {
 
 		glm::vec3 inter = bfMathFindLinesIntersection(l1, l2, BF_MATH_FIND_LINES_INTERSECTION_ANY);
 		
-		REQUIRE(inter.x == 8.0f);
-		REQUIRE(inter.y == -8.0f);
-		REQUIRE(inter.z == -8.0f);
+		REQUIRE(CHECK_FLOAT_EQUALITY(inter.x, 8.0f));
+		REQUIRE(CHECK_FLOAT_EQUALITY(inter.y, -8.0f));
+		REQUIRE(CHECK_FLOAT_EQUALITY(inter.z, -8.0f));
+	}
+}
+
+TEST_CASE("BfCurves3-Triangle", "[BfTriangle]") {
+
+	SECTION("1") {
+		auto triangle = std::make_shared<BfTriangle>(
+			BfVertex3({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f })
+		);
+ 		REQUIRE(CHECK_FLOAT_EQUALITY(0.866025f, triangle->get_square()));
+		
+		glm::vec3 center = { 0.3333333, 0.3333333, 1.0f / 3.0f};
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.x, triangle->get_center().pos.x));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.y, triangle->get_center().pos.y));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.z, triangle->get_center().pos.z));
+	}
+
+	SECTION("2") {
+		auto triangle = std::make_shared<BfTriangle>(
+			BfVertex3({ 1.0f, 2.0f, 3.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 4.0f, 5.0f, 6.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 7.0f, 8.0f, 9.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f })
+		);
+		REQUIRE(CHECK_FLOAT_EQUALITY_TO_NULL(0.0f, triangle->get_square()));
+		
+		glm::vec3 center = { 4.0f, 5.0f,(3 + 6 + 9) / 3.0f};
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.x, triangle->get_center().pos.x));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.y, triangle->get_center().pos.y));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.z, triangle->get_center().pos.z));
+	}
+	
+	SECTION("3") {
+		auto triangle = std::make_shared<BfTriangle>(
+			BfVertex3({ 10.0f, 0.0f, 20.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 30.0f, 3.0f, 35.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+			BfVertex3({ 1.0f, -2.0f, 5.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f })
+		);
+		REQUIRE(CHECK_FLOAT_EQUALITY_TO_NULL(83.094825f, triangle->get_square()));
+		
+		glm::vec3 center = { 13.6666667, 0.3333333, (20.0f + 35.0f + 5.0f)/3 };
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.x, triangle->get_center().pos.x));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.y, triangle->get_center().pos.y));
+		REQUIRE(CHECK_FLOAT_EQUALITY(center.z, triangle->get_center().pos.z));
 	}
 }

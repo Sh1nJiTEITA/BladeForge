@@ -156,9 +156,9 @@ void BfMain::__start_loop()
 
 
 
-    auto blade_section_1 = std::make_shared<BfBladeSection>(
+   /* auto blade_section_1 = std::make_shared<BfBladeSection>(
         section_info_1
-    );
+    );*/
 
     std::vector<BfVertex3> plane_vertices = {
         {{0.0f, 10.0f, 0},  {0.91f,0.91f,0.91f},{0.81f,0.81f,0.81f}},
@@ -263,6 +263,17 @@ void BfMain::__start_loop()
     layer_1->add(o_line_x);
     layer_1->add(o_line_y);
     layer_1->add(o_line_z);
+
+    /*auto triangle = std::make_shared<BfTriangle>(
+        BfVertex3({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+        BfVertex3({ 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
+        BfVertex3({ 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f })
+    );
+    triangle->create_vertices();
+    triangle->create_indices();
+    triangle->bind_pipeline(&__base.line_pipeline);
+    layer_2->add(triangle);*/
+
 
     //layer_2->add(obj_1);
     //layer_2->add(obj_2);
@@ -697,8 +708,8 @@ void BfMain::__present_blade_section_create_window() {
     BfDrawLayerCreateInfo linfo{
         .allocator = __base.allocator,
         .vertex_size = sizeof(BfVertex3),
-        .max_vertex_count = 1000,
-        .max_reserved_count = 100,
+        .max_vertex_count = 10000,
+        .max_reserved_count = 1000,
     };
 
     static BfBladeSectionCreateInfo info{
@@ -710,11 +721,17 @@ void BfMain::__present_blade_section_create_window() {
         .inlet_angle = 25.0f,
         .outlet_angle = 42.0f,
 
+        .inlet_surface_angle = 15.0f,
+        .outlet_surface_angle = 15.0f,
+
         .inlet_radius = 0.025f,
         .outlet_radius = 0.005f,
 
         .border_length = 20.0f,
         
+        .is_triangulate = false,
+        .is_center = true,
+
         .l_pipeline = __base.line_pipeline,
         .t_pipeline = __base.triangle_pipeline,
         
@@ -729,11 +746,15 @@ void BfMain::__present_blade_section_create_window() {
         ImGuiWindowFlags_AlwaysAutoResize;
 
     
-
+    static bool is_center_changed;
+    static bool is_triangulate;
 
     ImGui::Begin("Create blade section", nullptr, window_flags);
     {
         
+        
+
+
         ImGui::BeginGroup();
         {
             ImGui::Text("Input parameters mode");
@@ -758,24 +779,41 @@ void BfMain::__present_blade_section_create_window() {
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
             
-            make_row("Width",           "B",        "[m]##0",   &info.width, 0.0f, 10.0f);
-            make_row("Install angle",   "alpha_y",  "[deg]##1", &info.install_angle, -180.0f, 180.0f);
-            make_row("Inlet angle",     "beta_1",   "[deg]##2", &info.inlet_angle, -180.0f, 180.0f);
-            make_row("Outlet angle",    "beta_2",   "[deg]##3", &info.outlet_angle, -180.0f, 180.0f);
-            make_row("Inlet radius",    "r_1",      "[m]##4",   &info.inlet_radius, 0.00001, 0.05);
-            make_row("Outlet radius",   "r_2",      "[m]##5",   &info.outlet_radius, 0.00001, 0.05);
-    
+            make_row("Width",               "B",        "[m]##0",   &info.width, 0.0f, 10.0f);
+            make_row("Install angle",       "alpha_y",  "[deg]##1", &info.install_angle, -180.0f, 180.0f);
+            make_row("Inlet angle",         "beta_1",   "[deg]##2", &info.inlet_angle, -180.0f, 180.0f);
+            make_row("Outlet angle",        "beta_2",   "[deg]##3", &info.outlet_angle, -180.0f, 180.0f);
+            make_row("Inlet surface angle", "omega_1",  "[deg]##4", &info.inlet_surface_angle, -45.0f, 45.0f);
+            make_row("Outlet surface angle","omega_2", "[deg]##5", &info.outlet_surface_angle, -45.0f, 45.0f);
+            make_row("Inlet radius",        "r_1",      "[m]##6",   &info.inlet_radius, 0.00001, 0.05);
+            make_row("Outlet radius",       "r_2",      "[m]##7",   &info.outlet_radius, 0.00001, 0.05);
+        
         }
         ImGui::EndTable();
         
-        
+        ImGui::BeginGroup();
+        {
+
+
+            if (ImGui::Checkbox("Calculate center", &info.is_center))
+                is_center_changed = true;
+            else
+                is_center_changed = false;
+
+            if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
+                is_triangulate = true;
+            else
+                is_triangulate = false;
+
+        }
+        ImGui::EndGroup();
     }
     
     static int sec_id = -1;
 
     ImGui::End();
-    if (!bfCheckBladeSectionCreateInfoEquality(info, old)) {
-        std::cout << "other\n";
+    if (!bfCheckBladeSectionCreateInfoEquality(info, old) || is_center_changed || is_triangulate) {
+        
         
 
 

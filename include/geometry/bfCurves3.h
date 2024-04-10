@@ -3,6 +3,7 @@
 
 #include "bfDrawObject.h"
 #include "bfMatrix2.h"
+#include "triangle.h"
 
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
@@ -14,7 +15,7 @@ class BfPlane;
 class BfSingleLine;
 class BfBezierCurve;
 class BfCircle;
-
+class BfTriangle;
 
 
 #define BF_PI glm::pi<float>()
@@ -77,6 +78,11 @@ std::vector<BfCircle> bfMathGetInscribedCircles(size_t m,
 
 float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P);
 
+std::vector<BfVertex3> bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs);
+
+std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(std::vector<BfVertex3> v);
+glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 class BfPlane : public BfDrawObj {
@@ -92,6 +98,15 @@ private:
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+
+
+
+
+
+
+
+
+
 #define BF_SINGLE_LINE_PROJ_XY 0x1
 #define BF_SINGLE_LINE_PROJ_XZ 0x2
 #define BF_SINGLE_LINE_PROJ_YZ 0x3
@@ -101,6 +116,7 @@ private:
 #define BF_SINGLE_LINE_PROJ_YX 0x4
 #define BF_SINGLE_LINE_PROJ_ZX 0x5
 #define BF_SINGLE_LINE_PROJ_ZY 0x6
+
 
 
 class BfSingleLine : public  BfDrawObj {
@@ -132,6 +148,31 @@ public:
 
 	virtual void create_vertices() override;
 };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+class BfTriangle : public BfDrawObj {
+
+public:
+	BfTriangle(const BfVertex3& P_1,
+			   const BfVertex3& P_2,
+			   const BfVertex3& P_3);
+
+	const BfVertex3& get_first() const;
+	const BfVertex3& get_second() const;
+	const BfVertex3& get_third() const;
+
+
+
+	float get_area() const;
+	BfVertex3 get_center() const;
+
+	virtual void create_vertices() override;
+
+};
+
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
@@ -175,6 +216,8 @@ public:
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+#define BF_BEZIER_CURVE_VERT_COUNT 70
+
 class BfBezierCurve : public BfDrawObj {
 	const size_t __n;
 	size_t __out_vertices_count;
@@ -224,7 +267,8 @@ public:
 		VkPipeline lines_pipeline,
 		VkPipeline triangle_pipeline
 	);
-
+	
+	void remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 c = { 1.0f, 1.0f, 1.0f });
 
 };
 

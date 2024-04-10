@@ -5,7 +5,8 @@
 #include "bfEvent.h"
 
 
-
+#define ZOOM_SENSITIVITY 0.1f
+#define SCROLL_SENSITIVITY 0.1f
 
 #ifndef BF_CLASS_BFWINDOW
 #define BF_CLASS_BFSINDOW

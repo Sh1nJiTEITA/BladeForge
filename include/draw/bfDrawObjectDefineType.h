@@ -10,6 +10,7 @@
 #define BF_DRAW_OBJ_TYPE_SINGLE_LINE 0x02
 #define BF_DRAW_OBJ_TYPE_BEZIER_CURVE 0x03
 #define BF_DRAW_OBJ_TYPE_CIRCLE 0x04
+#define BF_DRAW_OBJ_TYPE_TRIANGLE 0x05
 
 static std::string bfGetStrNameDrawObjType(uint32_t type) {
 	switch (type) {
@@ -23,6 +24,9 @@ static std::string bfGetStrNameDrawObjType(uint32_t type) {
 			return "BezierCurve";
 		case BF_DRAW_OBJ_TYPE_CIRCLE:
 			return "Circle";
+		case BF_DRAW_OBJ_TYPE_TRIANGLE:
+			return "Triangle";
+
 		default:
 			throw std::runtime_error("Invalid BfDrawObject type");
 	}

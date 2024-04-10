@@ -156,6 +156,7 @@ set(BF_OTHER
 	"include/other/bfMatrix2.h" "src/other/bfMatrix2.cpp"
 	"include/other/stb_image.h"
 	"include/other/stb_image_write.h"
+	"include/other/bfMath.hpp"
 )
 
 set(BF_DRAW 
@@ -261,6 +262,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 
 # CATCH 2
 add_subdirectory(external/catch2)
+
+include_directories(external/triangle-master)
+
+add_subdirectory(external/triangle-master)
+target_link_libraries(${PROJECT_NAME} PUBLIC triangle)
+
 
 #add_subdirectory(external/simple_matrix)
 #target_link_libraries(${PROJECT_NAME} PUBLIC SimpleMatrix)

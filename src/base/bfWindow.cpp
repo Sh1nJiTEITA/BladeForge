@@ -81,10 +81,10 @@ void bfCalculateViewPartsFree(BfWindow* window)
 
 	double sensitivity;
 	if (window->proj_mode == 0) {
-		sensitivity = 0.1f;
+		sensitivity = ZOOM_SENSITIVITY;
 	}
 	else {
-		sensitivity = 0.01f;
+		sensitivity = ZOOM_SENSITIVITY;
 	}
 
 	xoffset *= sensitivity;
@@ -147,7 +147,7 @@ void bfCalculateViewPartsS(BfWindow* window)
 	if (window->is_scroll) {
 		if (window->proj_mode == 0)
 		{
-			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+			z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) * SCROLL_SENSITIVITY;
 			window->scroll_yoffset = 0;
 		}
 		else if (window->proj_mode == 1)
@@ -178,7 +178,7 @@ void bfCalculateViewPartsS(BfWindow* window)
 			/*if (window->ortho_scale - 0.1 < 1e-4) {
 				window->scroll_yoffset = 0;
 			}*/
-			//std::cout << st << "\n";
+			std::cout << st << "\n";
 			last_yoffset = window->scroll_yoffset;
 			z_dir = glm::vec3(0.0f);
 		}
@@ -229,10 +229,10 @@ void bfCalculateRotateView(BfWindow* window)
 
 	double sensitivity;
 	if (window->proj_mode == 0) {
-		sensitivity = 0.1f;
+		sensitivity = ZOOM_SENSITIVITY;
 	}
 	else {
-		sensitivity = 0.01f;
+		sensitivity = ZOOM_SENSITIVITY;
 	}
 
 	xoffset *= sensitivity;

@@ -234,6 +234,14 @@ BfDrawLayer::BfDrawLayer(const BfDrawLayerCreateInfo& info)
 BfDrawLayer::~BfDrawLayer() {
 }
 
+void BfDrawLayer::remake() {
+	for (auto& it : __layers) {
+		it->remake();
+	}
+
+	this->del_all();
+}
+
 
 std::vector<std::shared_ptr<BfDrawObj>>::iterator BfDrawLayer::begin() {
 	return __objects.begin();
@@ -372,9 +380,9 @@ void BfDrawLayer::del_all() {
 	for (auto& o : __objects) {
 		ids.push_back(o->id.get());
 	}
-	for (auto& l : __layers) {
+	/*for (auto& l : __layers) {
 		ids.push_back(l->id.get());
-	}
+	}*/
 	this->del(ids);
 }
 
@@ -448,6 +456,15 @@ void BfDrawLayer::clear_buffer() {
 	__buffer.clear_vertex_buffer();
 }
 
+void BfDrawLayer::set_color(glm::vec3 c) {
+	for (auto& l : __layers) {
+		l->set_color(c);
+	}
+	for (auto& o : __objects) {
+		o->set_color(c);
+	}
+}
+
 
 void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
 {
@@ -471,6 +488,7 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
 		if (__objects[i]->get_bound_pPipeline() == nullptr) {
 			throw std::runtime_error("Object pipeline pointer is nullptr");
 		}
+		if (!__objects[i]->is_draw) continue;
 		vkCmdBindPipeline(combuffer,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
 						  *__objects[i]->get_bound_pPipeline());
@@ -504,9 +522,19 @@ void BfDrawLayer::map_model_matrices(size_t frame_index,
 
 std::shared_ptr<BfDrawObj> BfDrawLayer::get_object_by_index(size_t index)
 {
-	if (index > __objects.size())
-		throw std::runtime_error("input object index > objects in layer");
-	return __objects.at(index);
+	if (index >= __objects.size())
+		return nullptr;
+	else 
+		//throw std::runtime_error("input object index > objects in layer");
+		return __objects.at(index);
+}
+
+std::shared_ptr<BfDrawLayer> BfDrawLayer::get_layer_by_index(size_t index) {
+	if (index >= __layers.size())
+		return nullptr;
+	else
+		//throw std::runtime_error("input object index > objects in layer");
+		return __layers.at(index);
 }
 
 

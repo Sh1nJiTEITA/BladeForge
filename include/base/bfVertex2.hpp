@@ -16,7 +16,7 @@
 // External
 //#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 //#include <glm/glm.hpp>
-
+#include "bfMath.hpp"
 #include "bfBuffer.h"
 #include "bfUniforms.h"
 #include "bfExecutionTime.hpp"
@@ -92,7 +92,11 @@ struct BfVertex3 {
 //		, normals{ 0.0f,0.0f,0.0f } 
 //	{}
 //#endif // BF_MATRIX2_H
-
+	inline bool equal(const BfVertex3& o) const {
+		return CHECK_FLOAT_EQUALITY(o.pos.x, pos.x) &&
+			   CHECK_FLOAT_EQUALITY(o.pos.y, pos.y) &&
+			   CHECK_FLOAT_EQUALITY(o.pos.z, pos.z);
+	}
 
 	static inline VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
