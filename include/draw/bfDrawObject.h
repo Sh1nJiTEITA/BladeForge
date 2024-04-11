@@ -39,6 +39,7 @@ struct BfDrawLayerCreateInfo {
 	size_t vertex_size;
 	size_t max_vertex_count;
 	size_t max_reserved_count;
+	bool is_nested;
 };
 
 
@@ -57,13 +58,16 @@ public:
 
 	BfObjID id;
 
-	BfDrawLayer(VmaAllocator allocator, 
-				size_t vertex_size, 
-				size_t max_vertex_count, 
-				size_t max_reserved_count);
+	BfDrawLayer(VmaAllocator allocator = nullptr, 
+				size_t vertex_size = 0, 
+				size_t max_vertex_count = 0, 
+				size_t max_reserved_count = 0,
+				bool is_nested = true);
 	
 	BfDrawLayer(const BfDrawLayerCreateInfo& info);
 	virtual ~BfDrawLayer();
+
+	bool is_nested() const noexcept;
 
 	std::vector<std::shared_ptr<BfDrawObj>>::iterator begin();
 	std::vector<std::shared_ptr<BfDrawObj>>::iterator end();
@@ -71,6 +75,8 @@ public:
 	const size_t get_whole_vertex_count() const noexcept;
 	const size_t get_whole_index_count() const noexcept;
 	const size_t get_obj_count() const noexcept;
+	const size_t get_obj_count_downside() const noexcept;
+
 	const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
 	void add(std::shared_ptr<BfDrawObj> obj);
@@ -85,15 +91,18 @@ public:
 	virtual void remake();
 
 	void generate_draw_data();
-	void update_vertex_offset();
-	void update_index_offset();
+	std::vector<int32_t>& update_vertex_offset();
+	std::vector<int32_t>& update_index_offset();
+	
 	void update_buffer();
+	void update_nested(void* v, void* i, size_t& off_v, size_t& off_i);
+	
 	void clear_buffer();
 
 	void set_color(glm::vec3 c);
 
 	// TODO: global model-matrix descriptor
-	void draw(VkCommandBuffer combuffer, size_t& offset);
+	void draw(VkCommandBuffer combuffer, size_t& offset, size_t& index_offset, size_t& vertex_offset);
 	void map_model_matrices(size_t frame_index, size_t& offset, void* data);
 
 

@@ -127,12 +127,13 @@ void BfMain::__start_loop()
     auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator, 
                                                  sizeof(BfVertex3), 
                                                  1000, 
-                                                 100);
+                                                 100, false);
 
     auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
         sizeof(BfVertex3),
         1000,
-        100);
+        100,
+        false);
 
     BfDrawLayerCreateInfo layer_info_1{};
     layer_info_1.allocator = __base.allocator;
@@ -155,28 +156,7 @@ void BfMain::__start_loop()
 
 
 
-
-   /* auto blade_section_1 = std::make_shared<BfBladeSection>(
-        section_info_1
-    );*/
-
-    std::vector<BfVertex3> plane_vertices = {
-        {{0.0f, 10.0f, 0},  {0.91f,0.91f,0.91f},{0.81f,0.81f,0.81f}},
-        {{-10.0f, -10.0f, 0}, {0.92f,0.92f,0.92f},{0.82f,0.82f,0.82f}},
-        {{-10.0f, 0.0f, 0},{0.93f,0.93f,0.93f},{0.83f,0.83f,0.83f}},
-    };
-
-    auto obj_1 = std::make_shared<BfPlane>(plane_vertices);
-    obj_1->create_vertices();
-    obj_1->create_indices();
-    obj_1->bind_pipeline(&__base.triangle_pipeline);
     
-
-    auto obj_2 = std::make_shared<BfPlane>(plane_vertices);
-    obj_2->get_model_matrix() = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    obj_2->create_vertices();
-    obj_2->create_indices();
-    obj_2->bind_pipeline(&__base.triangle_pipeline);
 
     auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(1.0f,0.0f,0.0f));
     o_line_x->set_color({ 1.0f, 0.0f, 0.0f });
@@ -196,73 +176,34 @@ void BfMain::__start_loop()
     o_line_z->create_indices();
     o_line_z->bind_pipeline(&__base.line_pipeline);
 
-    auto circle_1 = std::make_shared<BfArc>(
-        100, 
-        BfVertex3({1.0f, 0.0f, 0.0f}),
-        BfVertex3({0.0f, 1.0f, 0.0f}),
-        BfVertex3({0.0f, 0.0f, 1.0f})
+    auto layer_1_n = std::make_shared<BfDrawLayer>();
+    layer_1_n->add(o_line_x);
+    layer_1_n->add(o_line_y);
+    layer_1_n->add(o_line_z);
+    
+    auto circle_1 = std::make_shared<BfCircle>(
+        50,
+        BfVertex3({ 0.0f,0.0f,0.0f }, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
+        0.5f
     );
-    circle_1->set_color({ 1.0f,1.0f,1.0f });
+
+    circle_1->set_color({ 0.0f, 0.0f, 1.0f });
     circle_1->create_vertices();
     circle_1->create_indices();
     circle_1->bind_pipeline(&__base.line_pipeline);
-    
-    auto circle_2 = std::make_shared<BfCircle>(
-        100,
-        BfVertex3({1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}),
-        0.2f
+
+
+    auto section_layer = std::make_shared<BfDrawLayer>(
+        __base.allocator,
+        sizeof(BfVertex3),
+        1000,
+        1000,
+        false
     );
 
-    circle_2->set_color({ 1.0f,1.0f,1.0f });
-    circle_2->create_vertices();
-    circle_2->create_indices();
-    circle_2->bind_pipeline(&__base.line_pipeline);
+    __base.section_layer = section_layer.get();
 
-   
-    glm::vec4 pl = bfMathGetPlaneCoeffs({ 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
-
-
-    glm::vec3 ta = { 1.5f, 1.5f, (-1.5 * pl.x - 1.5 * pl.y - pl.w) / pl.z };
-    
-
-    
-    auto tangent_1 = std::make_shared<BfSingleLine>(
-        ta,
-        circle_1->get_tangent_vert(ta)[0]
-    );
-    tangent_1->set_color({ 1.0f,1.0f,1.0f });
-    tangent_1->create_vertices();
-    tangent_1->create_indices();
-    tangent_1->bind_pipeline(&__base.line_pipeline);
-
-    auto tangent_2 = std::make_shared<BfSingleLine>(
-        ta,
-        circle_1->get_tangent_vert(ta)[1]
-    );
-    tangent_2->set_color({ 1.0f,1.0f,1.0f });
-    tangent_2->create_vertices();
-    tangent_2->create_indices();
-    tangent_2->bind_pipeline(&__base.line_pipeline);
-
-
-    auto add_circle = std::make_shared<BfCircle>(
-        100,
-        BfVertex3(
-            { (ta + circle_1->get_center().pos) / 2.0f },
-            {1.0f, 1.0f, 1.0f},
-            {circle_1->get_center().normals}
-        ),
-        glm::distance(ta, circle_1->get_center().pos)/2
-    );
-
-    add_circle->set_color({ 1.0f,1.0f,1.0f });
-    add_circle->create_vertices();
-    add_circle->create_indices();
-    add_circle->bind_pipeline(&__base.line_pipeline);
-
-    layer_1->add(o_line_x);
-    layer_1->add(o_line_y);
-    layer_1->add(o_line_z);
+    //layer_1_n->add(circle_1);
 
     /*auto triangle = std::make_shared<BfTriangle>(
         BfVertex3({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }),
@@ -282,12 +223,17 @@ void BfMain::__start_loop()
     //layer_2->add(tangent_1);
     //layer_2->add(tangent_2);
     //layer_2->add(add_circle);
+    layer_1->add(layer_1_n);
+    //layer_1->add(circle_1);
+    //layer_1->add(section_layer);
+
 
     layer_1->update_buffer();
-    layer_2->update_buffer();
+    //layer_2->update_buffer();
 
     __base.layer_handler.add(layer_1);
-    __base.layer_handler.add(layer_2);
+    __base.layer_handler.add(section_layer);
+    //__base.layer_handler.add(layer_2);
     //__base.layer_handler.add(blade_section_1);
 
     bfSetOrthoLeft(__base.window);
@@ -706,11 +652,13 @@ void BfMain::__present_blade_section_create_window() {
     static BfBladeSectionCreateInfo old{};
 
     BfDrawLayerCreateInfo linfo{
-        .allocator = __base.allocator,
+        /*.allocator = __base.allocator,
         .vertex_size = sizeof(BfVertex3),
         .max_vertex_count = 10000,
         .max_reserved_count = 1000,
+        .is_nested = false*/
     };
+    linfo.is_nested = true;
 
     static BfBladeSectionCreateInfo info{
         .layer_create_info = linfo,
@@ -819,17 +767,31 @@ void BfMain::__present_blade_section_create_window() {
 
         if (sec_id > 0) {
             //__base.layer_handler.del(sec_id);
-            auto section = std::dynamic_pointer_cast<BfBladeSection>(
+            /*auto section = std::dynamic_pointer_cast<BfBladeSection>(
                 __base.layer_handler.get_layer_by_id(sec_id)
             );
-            section->remake(info);
+            section->remake(info);*/
+
+            __base.section_layer->del(sec_id);
+
+            auto blade_section_1 = std::make_shared<BfBladeSection>(
+                info
+            );
+            sec_id = blade_section_1->id.get();
+            
+            //__base.layer_handler.add(blade_section_1);
+            __base.section_layer->add(blade_section_1);
+            __base.section_layer->update_buffer();
+
+
         }
         else {
             auto blade_section_1 = std::make_shared<BfBladeSection>(
                 info
             );
-            __base.layer_handler.add(blade_section_1);
-
+            //__base.layer_handler.add(blade_section_1);
+            __base.section_layer->add(blade_section_1);
+            __base.section_layer->update_buffer();
             sec_id = blade_section_1->id.get();
         }
 

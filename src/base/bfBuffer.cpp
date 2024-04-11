@@ -158,44 +158,54 @@ BfEvent bfDestroyImageView(BfAllocatedImage* allocatedImage, VkDevice device)
 BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator, 
 							 size_t single_vertex_size,
 							 size_t max_vertex_count, 
-							 size_t max_obj_count)
+							 size_t max_obj_count,
+							 bool is_nested)
 	: __max_obj_size{ single_vertex_size * max_vertex_count }
 	, __max_obj_count{ max_obj_count }
+	, __is_nested {is_nested}
 {
-	size_t vertex_size = __max_obj_size * __max_obj_count;
-	BfEvent v_event = bfCreateBuffer(
-		&__vertex_buffer,
-		allocator,
-		vertex_size,
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		//VMA_MEMORY_USAGE_CPU_TO_GPU 
-		VMA_MEMORY_USAGE_AUTO,
-		VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
-	);
-	if (!v_event.single_event.success) {
-		throw std::runtime_error("vertex buffer wasn't created");
-	}
+	if (!__is_nested) {
+		size_t vertex_size = __max_obj_size * __max_obj_count;
+		BfEvent v_event = bfCreateBuffer(
+			&__vertex_buffer,
+			allocator,
+			vertex_size,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			//VMA_MEMORY_USAGE_CPU_TO_GPU 
+			VMA_MEMORY_USAGE_AUTO,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+		);
+		if (!v_event.single_event.success) {
+			throw std::runtime_error("vertex buffer wasn't created");
+		}
 
-	size_t index_size = sizeof(uint16_t) * max_vertex_count * max_obj_count;
-	BfEvent i_event = bfCreateBuffer(
-		&__index_buffer,
-		allocator,
-		index_size,
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-		//VMA_MEMORY_USAGE_CPU_TO_GPU);
-		VMA_MEMORY_USAGE_AUTO,
-		VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
-	);
-	if (!i_event.single_event.success) {
-		throw std::runtime_error("index buffer wasn't created");
+		size_t index_size = sizeof(uint16_t) * max_vertex_count * max_obj_count;
+		BfEvent i_event = bfCreateBuffer(
+			&__index_buffer,
+			allocator,
+			index_size,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+			//VMA_MEMORY_USAGE_CPU_TO_GPU);
+			VMA_MEMORY_USAGE_AUTO,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+		);
+		if (!i_event.single_event.success) {
+			throw std::runtime_error("index buffer wasn't created");
+		}
 	}
 
 }
 
 BfLayerBuffer::~BfLayerBuffer()
 {
-	BfEvent v_event = bfDestroyBuffer(&__vertex_buffer);
-	BfEvent i_event = bfDestroyBuffer(&__index_buffer);
+	if (!__is_nested) {
+		BfEvent v_event = bfDestroyBuffer(&__vertex_buffer);
+		BfEvent i_event = bfDestroyBuffer(&__index_buffer);
+	}
+}
+
+bool BfLayerBuffer::is_nested() const noexcept {
+	return __is_nested;
 }
 
 const size_t BfLayerBuffer::get_vertex_capacity() const

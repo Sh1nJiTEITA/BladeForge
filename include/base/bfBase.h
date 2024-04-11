@@ -85,6 +85,8 @@ struct BfBase {
 	BfLayerHandler			 layer_handler;
 	BfLayerKiller			 layer_killer;
 
+	BfDrawLayer*			 section_layer = nullptr;
+
 	VmaAllocator			 allocator;
 	bool is_resized;
 	uint32_t pos_id;

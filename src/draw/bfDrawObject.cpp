@@ -210,10 +210,11 @@ uint32_t BfObjID::find_type(uint32_t type) {
 BfDrawLayer::BfDrawLayer(VmaAllocator allocator, 
 						 size_t vertex_size, 
 						 size_t max_vertex_count, 
-						 size_t max_reserved_count)
+						 size_t max_reserved_count,
+						 bool is_nested)
 
 	: __reserved_n{ static_cast<uint32_t>(max_reserved_count) }
-	, __buffer{ allocator, vertex_size, max_vertex_count, max_reserved_count }
+	, __buffer{ allocator, vertex_size, max_vertex_count, max_reserved_count, is_nested }
 	, id {}
 
 {
@@ -227,11 +228,16 @@ BfDrawLayer::BfDrawLayer(const BfDrawLayerCreateInfo& info)
 		info.allocator,
 		info.vertex_size,
 		info.max_vertex_count,
-		info.max_reserved_count
+		info.max_reserved_count,
+		info.is_nested
 	)
 {}
 
 BfDrawLayer::~BfDrawLayer() {
+}
+
+bool BfDrawLayer::is_nested() const noexcept {
+	return __buffer.is_nested();
 }
 
 void BfDrawLayer::remake() {
@@ -273,6 +279,17 @@ const size_t BfDrawLayer::get_obj_count() const noexcept
 	return __objects.size();
 }
 
+const size_t BfDrawLayer::get_obj_count_downside() const noexcept {
+	if (__layers.empty())
+		return __objects.size();
+	size_t size = 0;
+	for (auto& l : __layers) {
+		size += l->get_obj_count_downside();
+	}
+	return size + __objects.size();
+}
+
+
 const std::vector<BfObjectData> BfDrawLayer::get_obj_model_matrices() const noexcept
 {
 	std::vector<BfObjectData> obj_data;
@@ -293,6 +310,8 @@ void BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
 }
 
 void BfDrawLayer::add(std::shared_ptr<BfDrawLayer> layer) {
+	if (!layer->is_nested())
+		throw std::runtime_error("Import layer is not nested, can't add to over layer");
 	__layers.emplace_back(layer);
 }
 
@@ -313,6 +332,7 @@ void BfDrawLayer::del(uint32_t id) {
 		if (l->get()->id.get() == id) {
 			out_layer = std::move(*l);
 			__layers.erase(l);
+			break;
 		}
 	}
 
@@ -399,61 +419,107 @@ void BfDrawLayer::generate_draw_data() {
 
 
 
-void BfDrawLayer::update_vertex_offset()
+std::vector<int32_t>& BfDrawLayer::update_vertex_offset()
 {
+	__vertex_offsets.clear();
+	if (__vertex_offsets.empty()) {
+		__vertex_offsets.resize(__objects.size());
+	}
+	
 	size_t growing_offset = 0;
 	for (size_t i = 0; i < __objects.size(); i++) {
 		__vertex_offsets[i] = growing_offset;
 		growing_offset += __objects[i]->get_vertices_count();
 	}
+	return __vertex_offsets;
 }
 
-void BfDrawLayer::update_index_offset()
+std::vector<int32_t>& BfDrawLayer::update_index_offset()
 {
+	__index_offsets.clear();
+	if (__index_offsets.empty()) {
+		__index_offsets.resize(__objects.size());
+	}
+
 	size_t growing_offset = 0;
 	for (size_t i = 0; i < __objects.size(); i++) {
 		__index_offsets[i] = growing_offset;
 		growing_offset += __objects[i]->get_indices_count();
 	}
+	return __index_offsets;
+}
+
+void BfDrawLayer::update_nested(void* v, void* i, size_t& off_v, size_t& off_i) {
+	if (!is_nested()) throw std::runtime_error("layer is not nested");
+	if (v == nullptr) throw std::runtime_error("vertex* = nullptr");
+	if (i == nullptr) throw std::runtime_error("index* = nullptr");
+
+	for (const auto& obj : __objects) {
+		size_t size = sizeof(BfVertex3) * obj->get_vertices_count();
+
+		memcpy(reinterpret_cast<char*>(v) + off_v,
+			   obj->get_pVertices(),
+			   size);
+		off_v += size;
+	}
+
+	for (const auto& obj : __objects) {
+		size_t size = sizeof(uint16_t) * obj->get_indices_count();
+
+		memcpy(reinterpret_cast<char*>(i) + off_i,
+			   obj->get_pIndices(),
+			   size);
+
+		off_i += size;
+	}
+
+	for (const auto& layer : __layers) {
+		layer->update_nested(v, i, off_v, off_i);
+	}
 }
 
 void BfDrawLayer::update_buffer()
 {
-	void* vertex_data = __buffer.map_vertex_memory();
-	{
-		size_t offset = 0;
+	if (!is_nested()) {
+		void* vertex_data = __buffer.map_vertex_memory();
+		void* index_data = __buffer.map_index_memory();
+
+		size_t offset_v = 0;
 		for (const auto& obj : __objects) {
 			size_t size = sizeof(BfVertex3) * obj->get_vertices_count();
 
-			memcpy(reinterpret_cast<char*>(vertex_data) + offset, 
+			memcpy(reinterpret_cast<char*>(vertex_data) + offset_v, 
 				   obj->get_pVertices(), 
 				   size);
 
-			offset += size;
+			offset_v += size;
 		}
-	}
-	__buffer.unmap_vertex_memory();
 
-
-	void* index_data = __buffer.map_index_memory();
-	{
-		size_t offset = 0;
+		size_t offset_i = 0;
 		for (const auto& obj : __objects) {
 			size_t size = sizeof(uint16_t) * obj->get_indices_count();
 
-			memcpy(reinterpret_cast<char*>(index_data) + offset,
+			memcpy(reinterpret_cast<char*>(index_data) + offset_i,
 				   obj->get_pIndices(),
 				   size);
 
-			offset += size;
+			offset_i += size;
 		}
+		
+		for (const auto& layer : __layers) {
+			layer->update_nested(vertex_data, index_data, offset_v, offset_i);
+		}
+
+		__buffer.unmap_vertex_memory();
+		__buffer.unmap_index_memory();
 	}
-	__buffer.unmap_index_memory();
 }
 
 void BfDrawLayer::clear_buffer() {
-	__buffer.clear_index_buffer();
-	__buffer.clear_vertex_buffer();
+	if (!is_nested()) {
+		__buffer.clear_index_buffer();
+		__buffer.clear_vertex_buffer();
+	}
 }
 
 void BfDrawLayer::set_color(glm::vec3 c) {
@@ -466,22 +532,27 @@ void BfDrawLayer::set_color(glm::vec3 c) {
 }
 
 
-void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
-{
-	for (size_t i = 0; i < __layers.size(); i++) {
-		__layers[i]->draw(combuffer, offset);
+void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset, size_t& index_offset, size_t& vertex_offset)
+{	
+ 	if (!is_nested()) {
+		std::vector<VkDeviceSize> vert_offset = { 0 };
+		// Local elements
+		vkCmdBindVertexBuffers(combuffer, 
+							   0, 
+							   1, 
+							   __buffer.get_p_vertex_buffer(), 
+							   vert_offset.data());
+		vkCmdBindIndexBuffer(combuffer, 
+							 *__buffer.get_p_index_buffer(), 
+							 0, 
+							 VK_INDEX_TYPE_UINT16);
 	}
-	std::vector<VkDeviceSize> vert_offset = { 0 };
-	// Local elements
-	vkCmdBindVertexBuffers(combuffer, 
-						   0, 
-						   1, 
-						   __buffer.get_p_vertex_buffer(), 
-						   vert_offset.data());
-	vkCmdBindIndexBuffer(combuffer, 
-						 *__buffer.get_p_index_buffer(), 
-						 0, 
-						 VK_INDEX_TYPE_UINT16);
+
+	/*for (size_t i = 0; i < __layers.size(); i++) {
+		__layers[i]->draw(combuffer, offset);
+	}*/
+	this->update_vertex_offset();
+	this->update_index_offset();
 	
 	for (size_t i = 0; i < __objects.size(); i++) {
 		if (__objects[i] == nullptr) continue;
@@ -492,31 +563,39 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset)
 		vkCmdBindPipeline(combuffer,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
 						  *__objects[i]->get_bound_pPipeline());
-		this->update_vertex_offset();
-		this->update_index_offset();
 		vkCmdDrawIndexed(
 			combuffer,
 			__objects[i]->get_indices_count(),
 			1,
-			__index_offsets[i],
-			__vertex_offsets[i],
+			__index_offsets[i] + index_offset,
+			__vertex_offsets[i] + vertex_offset,
 			i + offset
 		);
+
 	}
-	offset += __objects.size();
+	if (!__objects.empty()) {
+		vertex_offset += this->get_whole_vertex_count();//*__vertex_offsets.rbegin();// + //(*__objects.rbegin())->get_vertices_count();
+		index_offset += this->get_whole_index_count();//*__index_offsets.rbegin();// +(*__objects.rbegin())->get_indices_count();
+		offset += __objects.size();
+	}
+
+	for (const auto& layer : __layers) {
+		layer->draw(combuffer, offset, index_offset, vertex_offset);
+	}
 }
 
 void BfDrawLayer::map_model_matrices(size_t frame_index, 
 									 size_t& offset, 
 									 void* data) 
 {
-	for (size_t i = 0; i < __layers.size(); i++) {
-		__layers[i]->map_model_matrices(frame_index, offset, data);
-	}
 	for (size_t i = 0; i < __objects.size(); i++) {
+		if (!__objects[i]->is_draw) continue;
 		BfObjectData obj_data = __objects[i]->get_obj_data();
 		memcpy(reinterpret_cast<char*>(data) + offset, &obj_data, sizeof(BfObjectData));
 		offset += sizeof(BfObjectData);
+	}
+	for (size_t i = 0; i < __layers.size(); i++) {
+		__layers[i]->map_model_matrices(frame_index, offset, data);
 	}
 }
 

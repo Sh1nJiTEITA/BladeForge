@@ -49,6 +49,7 @@ struct BfHolder {
 
 	static BfHolder* __bfpHolder;
 
+
 	BfHolder();
 };
 

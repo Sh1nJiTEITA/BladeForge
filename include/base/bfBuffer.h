@@ -36,14 +36,18 @@ private:
 	void* __p_vertex_data = nullptr;
 	void* __p_index_data = nullptr;
 
+	bool __is_nested;
 public:
 
 	BfLayerBuffer(VmaAllocator allocator, 
 				  size_t single_vertex_size,
 				  size_t max_vertex_count, 
-				  size_t max_obj_count);
+				  size_t max_obj_count,
+				  bool is_nested);
 
 	~BfLayerBuffer();
+
+	bool is_nested() const noexcept;
 
 	const size_t get_vertex_capacity() const;
 	const size_t get_index_capacity() const;
