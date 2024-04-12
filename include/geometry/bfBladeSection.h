@@ -51,7 +51,7 @@ bool bfCheckBladeSectionCreateInfoEquality(
 
 class BfBladeSection : public BfDrawLayer {
 protected:
-	BfBladeSectionCreateInfo __info;
+	BfBladeSectionCreateInfo* __info;
 
 	BfVertex3 __chord_inlet_center;
 	BfVertex3 __chord_outlet_center;
@@ -61,7 +61,7 @@ public:
 	
 
 
-	BfBladeSection(const BfBladeSectionCreateInfo& info);
+	BfBladeSection(BfBladeSectionCreateInfo* info);
 
 	/*
 		__objects[..]
@@ -102,12 +102,15 @@ public:
 	std::vector<std::shared_ptr<BfTriangle>> get_triangulated_shape();
 	BfVertex3 get_center();
 
-	virtual void remake(const BfBladeSectionCreateInfo& info);
+	virtual void remake(BfBladeSectionCreateInfo* info);
 	virtual void del_all() override;
 
 	std::vector<BfVertex3> get_contour();
 
 	void generate_draw_data() override;
+
+	/*const BfBladeSectionCreateInfo& get_info();
+	BfBladeSectionCreateInfo* get_pInfo();*/
 
 private:
 	void __generate_outer_elements();
@@ -126,15 +129,25 @@ struct BfBladeBaseCreateInfo {
 	BfDrawLayerCreateInfo layer_create_info;
 
 	std::vector<BfBladeSectionCreateInfo> section_infos;
-	
 };
 
 
 class BfBladeBase : public BfDrawLayer {
 
 	BfBladeBaseCreateInfo __info;
+
 public:
 	BfBladeBase(const BfBladeBaseCreateInfo& info);
+
+	//size_t add_section(const BfBladeSectionCreateInfo& info);
+	//void del_section(size_t id);
+	
+
+	//std::vector<BfBladeSectionCreateInfo*> get_pInfos();
+
+
+private:
+
 
 };
 

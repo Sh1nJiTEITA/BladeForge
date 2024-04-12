@@ -132,7 +132,7 @@ void BfMain::__start_loop()
     auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
         sizeof(BfVertex3),
         1000,
-        100,
+        1000,
         false);
 
     BfDrawLayerCreateInfo layer_info_1{};
@@ -203,6 +203,18 @@ void BfMain::__start_loop()
 
     __base.section_layer = section_layer.get();
 
+    /*BfBladeBaseCreateInfo blade_base_info{};
+    blade_base_info.layer_create_info.allocator = __base.allocator;
+    blade_base_info.layer_create_info.is_nested = true;
+    blade_base_info.layer_create_info.max_vertex_count = 1000;
+    blade_base_info.layer_create_info.max_reserved_count = 1000;
+    blade_base_info.layer_create_info.vertex_size = sizeof(BfVertex3);
+    
+    auto base_section_layer = std::make_shared<BfBladeBase>(
+        blade_base_info
+    );*/
+
+
     //layer_1_n->add(circle_1);
 
     /*auto triangle = std::make_shared<BfTriangle>(
@@ -216,7 +228,8 @@ void BfMain::__start_loop()
     layer_2->add(triangle);*/
 
 
-    //layer_2->add(obj_1);
+    //layer_2->add(base_section_layer);
+    __blade_bases = layer_2.get();
     //layer_2->add(obj_2);
     //layer_2->add(circle_1);
     //layer_2->add(circle_2);
@@ -232,8 +245,8 @@ void BfMain::__start_loop()
     //layer_2->update_buffer();
 
     __base.layer_handler.add(layer_1);
-    __base.layer_handler.add(section_layer);
-    //__base.layer_handler.add(layer_2);
+    //__base.layer_handler.add(section_layer);
+    __base.layer_handler.add(layer_2);
     //__base.layer_handler.add(blade_section_1);
 
     bfSetOrthoLeft(__base.window);
@@ -253,13 +266,16 @@ void BfMain::__start_loop()
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
+
         __present_menu_bar();
         __present_camera();
         __present_info();
         __present_event_log();
         __present_tooltype();
-        __present_blade_section_create_window();
+        //__present_blade_section_create_window();
+        __present_blade_base_create_window();
+
 
         bfPresentLayerHandler(__base.layer_handler);
         //ShowTestPlot();
@@ -616,221 +632,308 @@ void BfMain::__present_event_log()
     }
 }
 
-void BfMain::__present_blade_section_create_window() {
-    
-    static int inputFloatMode = 0;
-    auto make_row = [](std::string n, 
-                       std::string d, 
-                       std::string dim, 
-                       float* value, 
-                       float left, 
-                       float right) 
+//void BfMain::__present_blade_section_create_window() {
+//    
+//    static int inputFloatMode = 0;
+//    auto make_row = [](std::string n, 
+//                       std::string d, 
+//                       std::string dim, 
+//                       float* value, 
+//                       float left, 
+//                       float right) 
+//    {
+//        static int count = 0;
+//        
+//        ImGui::TableNextRow();
+//        ImGui::TableSetColumnIndex(0);
+//        ImGui::Text(n.c_str());
+//        ImGui::TableSetColumnIndex(1);
+//        ImGui::Text(d.c_str());
+//        ImGui::TableSetColumnIndex(2);
+//        std::string dsadasd = dim + "##float" + (char)(count);
+//        
+//        switch (inputFloatMode) {
+//        case 0:
+//            ImGui::InputFloat(dim.c_str(), value);
+//            break;
+//        case 1:
+//            ImGui::SliderFloat(dim.c_str(), value, left, right);
+//            break;
+//        }
+//        
+//
+//        count++;
+//    };
+//    
+//    static BfBladeSectionCreateInfo old{};
+//
+//    BfDrawLayerCreateInfo linfo{
+//        /*.allocator = __base.allocator,
+//        .vertex_size = sizeof(BfVertex3),
+//        .max_vertex_count = 10000,
+//        .max_reserved_count = 1000,
+//        .is_nested = false*/
+//    };
+//    linfo.is_nested = true;
+//
+//    static BfBladeSectionCreateInfo info{
+//        .layer_create_info = linfo,
+//        
+//        .width = 1.0f,
+//        .install_angle = 102.0f,
+//
+//        .inlet_angle = 25.0f,
+//        .outlet_angle = 42.0f,
+//
+//        .inlet_surface_angle = 15.0f,
+//        .outlet_surface_angle = 15.0f,
+//
+//        .inlet_radius = 0.025f,
+//        .outlet_radius = 0.005f,
+//
+//        .border_length = 20.0f,
+//        
+//        .is_triangulate = false,
+//        .is_center = true,
+//
+//        .l_pipeline = __base.line_pipeline,
+//        .t_pipeline = __base.triangle_pipeline,
+//        
+//    };
+//
+//    ImGuiWindowFlags window_flags =
+//        ImGuiWindowFlags_NoCollapse |
+//        ImGuiWindowFlags_NoResize |
+//        //ImGuiWindowFlags_NoMove |
+//        ImGuiWindowFlags_NoBringToFrontOnFocus |
+//        ImGuiWindowFlags_NoNavFocus |
+//        ImGuiWindowFlags_AlwaysAutoResize;
+//
+//    
+//    static bool is_center_changed;
+//    static bool is_triangulate;
+//
+//    ImGui::Begin("Create blade section", nullptr, window_flags);
+//    {
+//       
+//        ImGui::BeginGroup();
+//        {
+//            ImGui::Text("Input parameters mode");
+//            
+//            ImGui::RadioButton("Input float", &inputFloatMode, 0);
+//            ImGui::SameLine();
+//            ImGui::RadioButton("Slider", &inputFloatMode, 1);
+//
+//        }
+//        ImGui::EndGroup();
+//
+//        int flags = ImGuiTableFlags_NoHostExtendX | 
+//                    ImGuiTableFlags_SizingFixedFit;
+//
+//        ImGui::BeginTable("FloatTable", 3, flags);
+//        {
+//            ImGui::TableSetupColumn("Parameter name");
+//            ImGui::TableSetupColumn("Description");
+//            ImGui::TableSetupColumn("Value");
+//            ImGui::TableHeadersRow();
+//            
+//            make_row("Width",               "B",        "[m]##0",   &info.width, 0.0f, 10.0f);
+//            make_row("Install angle",       "alpha_y",  "[deg]##1", &info.install_angle, -180.0f, 180.0f);
+//            make_row("Inlet angle",         "beta_1",   "[deg]##2", &info.inlet_angle, -180.0f, 180.0f);
+//            make_row("Outlet angle",        "beta_2",   "[deg]##3", &info.outlet_angle, -180.0f, 180.0f);
+//            make_row("Inlet surface angle", "omega_1",  "[deg]##4", &info.inlet_surface_angle, -45.0f, 45.0f);
+//            make_row("Outlet surface angle","omega_2", "[deg]##5", &info.outlet_surface_angle, -45.0f, 45.0f);
+//            make_row("Inlet radius",        "r_1",      "[m]##6",   &info.inlet_radius, 0.00001, 0.05);
+//            make_row("Outlet radius",       "r_2",      "[m]##7",   &info.outlet_radius, 0.00001, 0.05);
+//        }
+//        ImGui::EndTable();
+//        
+//        ImGui::BeginGroup();
+//        {
+//            ImGui::Text("Start point");
+//            ImGui::SliderFloat("X", &info.start_vertex.x, -10.0f, 10.0f);
+//            ImGui::SliderFloat("Y", &info.start_vertex.y, -10.0f, 10.0f);
+//            ImGui::SliderFloat("Z", &info.start_vertex.z, -10.0f, 10.0f);
+//        }
+//        ImGui::EndGroup();
+//
+//
+//        ImGui::BeginGroup();
+//        {
+//            ImGui::Text("Options");
+//
+//            if (ImGui::Checkbox("Calculate center", &info.is_center))
+//                is_center_changed = true;
+//            else
+//                is_center_changed = false;
+//
+//            if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
+//                is_triangulate = true;
+//            else
+//                is_triangulate = false;
+//
+//        }
+//        ImGui::EndGroup();
+//    }
+//    
+//    static int sec_id = -1;
+//
+//    ImGui::End();
+//    if (!bfCheckBladeSectionCreateInfoEquality(info, old) || is_center_changed || is_triangulate) {
+//        
+//        if (sec_id > 0) __base.section_layer->del(sec_id);
+//
+//        auto blade_section_1 = std::make_shared<BfBladeSection>(
+//            info
+//        );
+//        sec_id = blade_section_1->id.get();
+//
+//        __base.section_layer->add(blade_section_1);
+//        __base.section_layer->update_buffer();
+//        
+//    }   
+//    old = info;
+//}
+
+void BfMain::__present_blade_base_create_window() {
+    static int sec_count = 0;
+    static int new_sec_count = 0;
+
+    static std::shared_ptr<BfBladeBase> base_section_layer = nullptr;
+    static int base_id = -1;
+
+    static bool is_first_frame = true;
+    if (is_first_frame) {
+        BfBladeBaseCreateInfo blade_base_info{};
+        blade_base_info.layer_create_info.allocator = __base.allocator;
+        blade_base_info.layer_create_info.is_nested = true;
+        blade_base_info.layer_create_info.max_vertex_count = 1000;
+        blade_base_info.layer_create_info.max_reserved_count = 1000;
+        blade_base_info.layer_create_info.vertex_size = sizeof(BfVertex3);
+
+        base_section_layer = std::make_shared<BfBladeBase>(
+            blade_base_info
+        );
+
+        __blade_bases->add(base_section_layer);
+
+        base_id = base_section_layer->id.get();
+        is_first_frame = false;
+    }
+
+    static std::vector<BfBladeSectionCreateInfo> old_infos;
+    static std::vector<BfBladeSectionCreateInfo> infos;
+
+    ImGui::Begin("Create blade base");
     {
-        static int count = 0;
-        
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::Text(n.c_str());
-        ImGui::TableSetColumnIndex(1);
-        ImGui::Text(d.c_str());
-        ImGui::TableSetColumnIndex(2);
-        std::string dsadasd = dim + "##float" + (char)(count);
-        
-        switch (inputFloatMode) {
-        case 0:
-            ImGui::InputFloat(dim.c_str(), value);
-            break;
-        case 1:
-            ImGui::SliderFloat(dim.c_str(), value, left, right);
-            break;
-        }
-        
+        if (ImGui::InputInt("Section count", &new_sec_count)) {
+            // -
+            if (new_sec_count - sec_count < 0) {
+                infos.pop_back();
+            }
+            // + 
+            else if (new_sec_count - sec_count > 0) {
+                BfBladeSectionCreateInfo ns;
+                ns.layer_create_info.is_nested = true;
+                ns.width = 1.0f,
+                ns.install_angle = 102.0f,
+                
+                ns.inlet_angle = 25.0f,
+                ns.outlet_angle = 42.0f,
+                
+                ns.inlet_surface_angle = 15.0f,
+                ns.outlet_surface_angle = 15.0f,
+                
+                ns.inlet_radius = 0.025f,
+                ns.outlet_radius = 0.005f,
+                
+                ns.border_length = 20.0f,
+                
+                ns.is_triangulate = false,
+                ns.is_center = true,
+                
+                ns.l_pipeline = __base.line_pipeline,
+                ns.t_pipeline = __base.triangle_pipeline,
 
-        count++;
-    };
-    
-    static BfBladeSectionCreateInfo old{};
+                infos.push_back(ns);
+                
 
-    BfDrawLayerCreateInfo linfo{
-        /*.allocator = __base.allocator,
-        .vertex_size = sizeof(BfVertex3),
-        .max_vertex_count = 10000,
-        .max_reserved_count = 1000,
-        .is_nested = false*/
-    };
-    linfo.is_nested = true;
+                //infos = __blade_bases->get_pInfos();
 
-    static BfBladeSectionCreateInfo info{
-        .layer_create_info = linfo,
-        
-        .width = 1.0f,
-        .install_angle = 102.0f,
-
-        .inlet_angle = 25.0f,
-        .outlet_angle = 42.0f,
-
-        .inlet_surface_angle = 15.0f,
-        .outlet_surface_angle = 15.0f,
-
-        .inlet_radius = 0.025f,
-        .outlet_radius = 0.005f,
-
-        .border_length = 20.0f,
-        
-        .is_triangulate = false,
-        .is_center = true,
-
-        .l_pipeline = __base.line_pipeline,
-        .t_pipeline = __base.triangle_pipeline,
-        
-    };
-
-    ImGuiWindowFlags window_flags =
-        ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoResize |
-        //ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus |
-        ImGuiWindowFlags_AlwaysAutoResize;
-
-    
-    static bool is_center_changed;
-    static bool is_triangulate;
-
-    ImGui::Begin("Create blade section", nullptr, window_flags);
-    {
-        
-        
-
-
-        ImGui::BeginGroup();
-        {
-            ImGui::Text("Input parameters mode");
+            }
             
-            ImGui::RadioButton("Input float", &inputFloatMode, 0);
-            ImGui::SameLine();
-            ImGui::RadioButton("Slider", &inputFloatMode, 1);
-
-        }
-        ImGui::EndGroup();
 
 
-        
-        int flags = ImGuiTableFlags_NoHostExtendX | 
-                    //ImGuiTableFlags_RowBg | 
-                    ImGuiTableFlags_SizingFixedFit;
-
-        ImGui::BeginTable("FloatTable", 3, flags);
-        {
-            ImGui::TableSetupColumn("Parameter name");
-            ImGui::TableSetupColumn("Description");
-            ImGui::TableSetupColumn("Value");
-            ImGui::TableHeadersRow();
+            //for (auto& it : ids) if (it == 0) it = -1;
+                
             
-            make_row("Width",               "B",        "[m]##0",   &info.width, 0.0f, 10.0f);
-            make_row("Install angle",       "alpha_y",  "[deg]##1", &info.install_angle, -180.0f, 180.0f);
-            make_row("Inlet angle",         "beta_1",   "[deg]##2", &info.inlet_angle, -180.0f, 180.0f);
-            make_row("Outlet angle",        "beta_2",   "[deg]##3", &info.outlet_angle, -180.0f, 180.0f);
-            make_row("Inlet surface angle", "omega_1",  "[deg]##4", &info.inlet_surface_angle, -45.0f, 45.0f);
-            make_row("Outlet surface angle","omega_2", "[deg]##5", &info.outlet_surface_angle, -45.0f, 45.0f);
-            make_row("Inlet radius",        "r_1",      "[m]##6",   &info.inlet_radius, 0.00001, 0.05);
-            make_row("Outlet radius",       "r_2",      "[m]##7",   &info.outlet_radius, 0.00001, 0.05);
-            
+            sec_count = new_sec_count;
         }
-        ImGui::EndTable();
-        
-        ImGui::BeginGroup();
-        {
-            ImGui::Text("Start point");
-            ImGui::SliderFloat("X", &info.start_vertex.x, -10.0f, 10.0f);
-            ImGui::SliderFloat("Y", &info.start_vertex.y, -10.0f, 10.0f);
-            ImGui::SliderFloat("Z", &info.start_vertex.z, -10.0f, 10.0f);
+
+       
+
+
+        if (ImGui::BeginTabBar("MyTabBar")) {
+            for (size_t i = 0; i < sec_count; i++) {
+                std::string tab_name = "Section " + std::to_string(i + 1);
+
+                if (ImGui::BeginTabItem(tab_name.c_str())) {
+                    
+                    
+                    bfPresentBladeSectionInside(base_section_layer.get(), &infos[i], &old_infos[i]);
+
+
+                    ImGui::EndTabItem();
+                }
+            }
+            
+
             
             
-            //info.grow_direction.z = info.start_vertex.z;
+            ImGui::EndTabBar();
         }
-        ImGui::EndGroup();
-
-
-        ImGui::BeginGroup();
-        {
-            ImGui::Text("Options");
-
-            if (ImGui::Checkbox("Calculate center", &info.is_center))
-                is_center_changed = true;
-            else
-                is_center_changed = false;
-
-            if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
-                is_triangulate = true;
-            else
-                is_triangulate = false;
-
-        }
-        ImGui::EndGroup();
-
-
 
     }
-    
-    static int sec_id = -1;
-
     ImGui::End();
-    if (!bfCheckBladeSectionCreateInfoEquality(info, old) || is_center_changed || is_triangulate) {
+
+
+    bool is_changed = false;
+    for (size_t i = 0; i < infos.size(); i++) {
+        if (infos.size() != old_infos.size())
+        {
+            is_changed = true;
+            break;
+        }
         
-        
+        if (!bfCheckBladeSectionCreateInfoEquality(infos[i], old_infos[i])) {
+            is_changed = true;
+            break;
+        }
+    }
 
-
-        if (sec_id > 0) {
-            //__base.layer_handler.del(sec_id);
-            /*auto section = std::dynamic_pointer_cast<BfBladeSection>(
-                __base.layer_handler.get_layer_by_id(sec_id)
-            );
-            section->remake(info);*/
-
-            __base.section_layer->del(sec_id);
-
-            auto blade_section_1 = std::make_shared<BfBladeSection>(
-                info
-            );
-            sec_id = blade_section_1->id.get();
+    if (is_changed) {
+        __blade_bases->del(base_id);
             
-            //__base.layer_handler.add(blade_section_1);
-            __base.section_layer->add(blade_section_1);
-            __base.section_layer->update_buffer();
+        BfBladeBaseCreateInfo blade_base_info{};
+        blade_base_info.layer_create_info.is_nested = true;
+        blade_base_info.section_infos = infos;
 
+        base_section_layer = std::make_shared<BfBladeBase>(
+            blade_base_info
+        );
 
-        }
-        else {
-            auto blade_section_1 = std::make_shared<BfBladeSection>(
-                info
-            );
-            //__base.layer_handler.add(blade_section_1);
-            __base.section_layer->add(blade_section_1);
-            __base.section_layer->update_buffer();
-            sec_id = blade_section_1->id.get();
-        }
+        base_id = base_section_layer->id.get();
+        __blade_bases->add(base_section_layer);
+        
+        __blade_bases->update_buffer();
+
+        old_infos = infos;
+
 
     }
-    /*info.layer_create_info = linfo;
-    info.width = 1.0f;
-    info.install_angle = 102.0f;
-    info.inlet_angle = 25.0f;
-    info.outlet_angle = 42.0f;
-    info.inlet_radius = 0.025f;
-    info.outlet_radius = 0.005f;
 
-    info.border_length = 2.0f;
-    info.l_pipeline = __base.tline_pipeline;
-    info.t_pipeline = __base.triangle_pipeline;*/
-
-    /*auto blade_section_1 = std::make_shared<BfBladeSection>(
-        info
-    );*/
-
-    
-    old = info;
 }
+
 
 BfMain::BfMain() :
     __base{},

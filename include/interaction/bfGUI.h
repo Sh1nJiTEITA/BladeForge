@@ -53,6 +53,9 @@ std::string bfGetMenueEventLogStr(BfGUI gui);
 std::string bfGetMenueCameraInfoStr(BfGUI gui);
 
 void bfPresentLayerHandler(BfLayerHandler&);
+void bfPresentBladeSectionInside(BfBladeBase* layer, BfBladeSectionCreateInfo* info, BfBladeSectionCreateInfo* old);
+
+
 
 
 struct Variable {

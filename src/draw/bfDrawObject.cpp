@@ -279,6 +279,10 @@ const size_t BfDrawLayer::get_obj_count() const noexcept
 	return __objects.size();
 }
 
+const size_t BfDrawLayer::get_layer_count() const noexcept {
+	return __layers.size();
+}
+
 const size_t BfDrawLayer::get_obj_count_downside() const noexcept {
 	if (__layers.empty())
 		return __objects.size();

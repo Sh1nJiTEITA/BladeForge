@@ -32,6 +32,8 @@ private:
 	BfHolder __holder;
 	BfGUI __gui;
 
+	BfDrawLayer* __blade_bases = nullptr;
+	
 	void __process_keys();
 	void __poll_events();
 
@@ -46,7 +48,9 @@ private:
 	void __present_menu_bar();
 	void __present_id_map(BfBase& base, std::vector<uint32_t> image_data_);
 	void __present_event_log();
-	void __present_blade_section_create_window();
+	//void __present_blade_section_create_window();
+	void __present_blade_base_create_window();
+
 
 public:
 	BfMain();

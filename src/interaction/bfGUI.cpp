@@ -82,6 +82,134 @@ void bfPresentLayerHandler(BfLayerHandler& layer_handler)
 
     ImGui::End();
 
+}
+
+void bfPresentBladeSectionInside(BfBladeBase* layer, BfBladeSectionCreateInfo* info, BfBladeSectionCreateInfo* old)
+{
+    static int inputFloatMode = 0;
+    auto make_row = [](std::string n,
+        std::string d,
+        std::string dim,
+        float* value,
+        float left,
+        float right)
+        {
+            static int count = 0;
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text(n.c_str());
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text(d.c_str());
+            ImGui::TableSetColumnIndex(2);
+            std::string dsadasd = dim + "##float" + (char)(count);
+
+            switch (inputFloatMode) {
+            case 0:
+                ImGui::InputFloat(dim.c_str(), value);
+                break;
+            case 1:
+                ImGui::SliderFloat(dim.c_str(), value, left, right);
+                break;
+            }
+
+
+            count++;
+        };
+
+
+
+
+    ImGuiWindowFlags window_flags =
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize |
+        //ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_AlwaysAutoResize;  
+    {
+
+        ImGui::BeginGroup();
+        {
+            ImGui::Text("Input parameters mode");
+
+            ImGui::RadioButton("Input float", &inputFloatMode, 0);
+            ImGui::SameLine();
+            ImGui::RadioButton("Slider", &inputFloatMode, 1);
+
+        }
+        ImGui::EndGroup();
+
+        int flags = ImGuiTableFlags_NoHostExtendX |
+            ImGuiTableFlags_SizingFixedFit;
+
+        ImGui::BeginTable("FloatTable", 3, flags);
+        {
+            ImGui::TableSetupColumn("Parameter name");
+            ImGui::TableSetupColumn("Description");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableHeadersRow();
+
+            make_row("Width", "B", "[m]##0", &info->width, 0.0f, 10.0f);
+            make_row("Install angle", "alpha_y", "[deg]##1", &info->install_angle, -180.0f, 180.0f);
+            make_row("Inlet angle", "beta_1", "[deg]##2", &info->inlet_angle, -180.0f, 180.0f);
+            make_row("Outlet angle", "beta_2", "[deg]##3", &info->outlet_angle, -180.0f, 180.0f);
+            make_row("Inlet surface angle", "omega_1", "[deg]##4", &info->inlet_surface_angle, -45.0f, 45.0f);
+            make_row("Outlet surface angle", "omega_2", "[deg]##5", &info->outlet_surface_angle, -45.0f, 45.0f);
+            make_row("Inlet radius", "r_1", "[m]##6", &info->inlet_radius, 0.00001, 0.05);
+            make_row("Outlet radius", "r_2", "[m]##7", &info->outlet_radius, 0.00001, 0.05);
+        }
+        ImGui::EndTable();
+
+        ImGui::BeginGroup();
+        {
+            ImGui::Text("Start point");
+            ImGui::SliderFloat("X", &info->start_vertex.x, -10.0f, 10.0f);
+            ImGui::SliderFloat("Y", &info->start_vertex.y, -10.0f, 10.0f);
+            ImGui::SliderFloat("Z", &info->start_vertex.z, -10.0f, 10.0f);
+        }
+        ImGui::EndGroup();
+
+
+        /*ImGui::BeginGroup();
+        {
+            ImGui::Text("Options");
+
+            if (ImGui::Checkbox("Calculate center", &info.is_center))
+                is_center_changed = true;
+            else
+                is_center_changed = false;
+
+            if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
+                is_triangulate = true;
+            else
+                is_triangulate = false;
+
+        }
+        ImGui::EndGroup();*/
+    }
+
+    
+
+    
+    //if (!bfCheckBladeSectionCreateInfoEquality(*info, *old)) {
+
+    //    if (id > 0) layer->del(id);
+
+    //    /*auto blade_section_1 = std::make_shared<BfBladeSection>(
+    //        info
+    //    );*/
+
+    //    //id = layer->add_section(*info);
+
+
+    //    //id = blade_section_1->id.get();
+
+    //    //layer->add(blade_section_1);
+    //    layer->update_buffer();
+
+    //}
+    //*old = *info;
 };
 
 void ShowVariableContents(const Variable& var)

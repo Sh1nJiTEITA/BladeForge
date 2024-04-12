@@ -86,6 +86,7 @@ struct BfBase {
 	BfLayerKiller			 layer_killer;
 
 	BfDrawLayer*			 section_layer = nullptr;
+	
 
 	VmaAllocator			 allocator;
 	bool is_resized;

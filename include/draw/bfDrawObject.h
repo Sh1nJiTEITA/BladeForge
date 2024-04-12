@@ -75,7 +75,10 @@ public:
 	const size_t get_whole_vertex_count() const noexcept;
 	const size_t get_whole_index_count() const noexcept;
 	const size_t get_obj_count() const noexcept;
+	const size_t get_layer_count() const noexcept;
+	
 	const size_t get_obj_count_downside() const noexcept;
+
 
 	const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
@@ -109,6 +112,7 @@ public:
 
 	std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
 	std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
+
 	friend BfLayerHandler;
 };
 
