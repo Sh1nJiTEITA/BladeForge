@@ -63,7 +63,7 @@ BfBladeSection::BfBladeSection(const BfBladeSectionCreateInfo& info)
 	if (info.is_center) __generate_center_circle();
 	if (info.is_triangulate) __generate_triangular_shape();
 
-	__generate_draw_data();
+	this->generate_draw_data();
 }
 
 void BfBladeSection::remake(const BfBladeSectionCreateInfo& info) {
@@ -79,7 +79,7 @@ void BfBladeSection::remake(const BfBladeSectionCreateInfo& info) {
 	if (info.is_center) __generate_center_circle();
 	if (info.is_triangulate) __generate_triangular_shape();
 
-	__generate_draw_data();
+	this->generate_draw_data();
 }
 
 const BfVertex3& BfBladeSection::get_inlet_center() const noexcept {
@@ -313,6 +313,17 @@ std::vector<BfVertex3> BfBladeSection::get_contour() {
 	return vert;
 }
 
+void BfBladeSection::generate_draw_data()  {
+	for (size_t i = 0; i < this->get_obj_count(); ++i) {
+		auto obj = this->get_object_by_index(i);
+		//obj->set_color({ 1.0f, 1.0f, 1.0f });
+		obj->create_vertices();
+		obj->create_indices();
+		obj->bind_pipeline(&__info.l_pipeline);
+	}
+	this->update_buffer();
+}
+
 void BfBladeSection::__generate_outer_elements() {
 
 	__chord_inlet_center = {
@@ -362,7 +373,7 @@ void BfBladeSection::__generate_outer_elements() {
 	
 	glm::vec4 chord_dir = (
 		glm::rotate(glm::mat4(1.0f), glm::radians(90.0f - __info.install_angle), __info.up_direction)
-		* glm::vec4(__info.start_vertex + __info.grow_direction, 1.0f)
+		* glm::vec4(__info.grow_direction, 1.0f)
 	);
 
 	__chord_outlet_center = BfVertex3{
@@ -388,20 +399,20 @@ void BfBladeSection::__generate_average_line_geometry() {
 	// INLET-OUTLET potencial intersection
 	glm::vec3 _inlet_dir = (
 		glm::rotate(glm::mat4(1.0f), glm::radians(90.0f + __info.inlet_angle), __info.up_direction)
-		* glm::vec4(__info.start_vertex + __info.grow_direction, 1.0f)
+		* glm::vec4(__info.grow_direction, 1.0f)
 	);
 	auto _inlet_vector = std::make_shared<BfSingleLine>(
 		__chord_inlet_center,
-		__chord_inlet_center.pos + glm::normalize(_inlet_dir)
+		__chord_inlet_center.pos + _inlet_dir
 	);
 
 	glm::vec3 _outlet_dir = (
 		glm::rotate(glm::mat4(1.0f), glm::radians(90.0f - __info.outlet_angle), __info.up_direction)
-		* glm::vec4(__chord_outlet_center.pos + __info.grow_direction, 1.0f)
+		* glm::vec4(__info.grow_direction, 1.0f)
 	);
 	auto _outlet_vector = std::make_shared<BfSingleLine>(
 		__chord_outlet_center,
-		__chord_outlet_center.pos + glm::normalize(_outlet_dir)
+		__chord_outlet_center.pos + _outlet_dir
 	);
 
 	glm::vec3 potencial_io_intersection = bfMathFindLinesIntersection(
@@ -917,18 +928,6 @@ void BfBladeSection::__generate_center_circle() {
 }
 
 
-void BfBladeSection::__generate_draw_data() {
-	
-
-	for (size_t i = 0; i < this->get_obj_count(); ++i) {
-		auto obj = this->get_object_by_index(i);
-		//obj->set_color({ 1.0f, 1.0f, 1.0f });
-		obj->create_vertices();
-		obj->create_indices();
-		obj->bind_pipeline(&__info.l_pipeline);
-	}
-	this->update_buffer();
-}
 
 void BfBladeSection::__generate_triangular_shape() {
 	auto t = this->get_triangulated_shape();
@@ -940,13 +939,24 @@ void BfBladeSection::__generate_triangular_shape() {
 
 void BfBladeSection::__clear_draw_data() {
 	this->del_all();
-	
-	//for (size_t i = 0; i < this->get_obj_count(); ++i) {
-	//	auto obj = this->get_object_by_index(i);
-	//	//obj->set_color({ 1.0f, 1.0f, 1.0f });
-	//	obj->clear_vetices();
-	//	obj->clear_indices();
-	//	obj->bind_pipeline(nullptr);
-	//}
-	//this->clear_buffer();
+
+}
+
+
+BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo& info)
+	: BfDrawLayer(info.layer_create_info)
+	, __info{info}
+{	
+	BfDrawLayerCreateInfo sec_layer_info{
+		.is_nested = true,
+	};
+
+	for (auto& it : __info.section_infos) {
+		it.layer_create_info = sec_layer_info;
+
+		auto sec = std::make_shared<BfBladeSection>(
+			it
+		);
+		this->add(sec);
+	}
 }

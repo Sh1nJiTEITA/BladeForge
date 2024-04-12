@@ -735,13 +735,26 @@ void BfMain::__present_blade_section_create_window() {
             make_row("Outlet surface angle","omega_2", "[deg]##5", &info.outlet_surface_angle, -45.0f, 45.0f);
             make_row("Inlet radius",        "r_1",      "[m]##6",   &info.inlet_radius, 0.00001, 0.05);
             make_row("Outlet radius",       "r_2",      "[m]##7",   &info.outlet_radius, 0.00001, 0.05);
-        
+            
         }
         ImGui::EndTable();
         
         ImGui::BeginGroup();
         {
+            ImGui::Text("Start point");
+            ImGui::SliderFloat("X", &info.start_vertex.x, -10.0f, 10.0f);
+            ImGui::SliderFloat("Y", &info.start_vertex.y, -10.0f, 10.0f);
+            ImGui::SliderFloat("Z", &info.start_vertex.z, -10.0f, 10.0f);
+            
+            
+            //info.grow_direction.z = info.start_vertex.z;
+        }
+        ImGui::EndGroup();
 
+
+        ImGui::BeginGroup();
+        {
+            ImGui::Text("Options");
 
             if (ImGui::Checkbox("Calculate center", &info.is_center))
                 is_center_changed = true;
@@ -755,6 +768,9 @@ void BfMain::__present_blade_section_create_window() {
 
         }
         ImGui::EndGroup();
+
+
+
     }
     
     static int sec_id = -1;

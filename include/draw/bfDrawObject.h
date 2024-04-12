@@ -83,6 +83,8 @@ public:
 	void add(std::shared_ptr<BfDrawLayer> layer);
 	void add_l(std::shared_ptr<BfDrawObj> obj);
 
+	virtual void generate_draw_data();
+
 
 	void del(uint32_t id);
 	void del(const std::vector<uint32_t>& id);
@@ -90,7 +92,6 @@ public:
 	virtual void del_all();
 	virtual void remake();
 
-	void generate_draw_data();
 	std::vector<int32_t>& update_vertex_offset();
 	std::vector<int32_t>& update_index_offset();
 	

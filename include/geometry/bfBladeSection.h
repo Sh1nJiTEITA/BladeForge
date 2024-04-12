@@ -9,7 +9,7 @@
 
 
 struct BfBladeSectionCreateInfo {
-	BfDrawLayerCreateInfo layer_create_info;
+	BfDrawLayerCreateInfo layer_create_info{};
 
 	float width;
 
@@ -34,8 +34,8 @@ struct BfBladeSectionCreateInfo {
 	glm::vec3 grow_direction{ 0.0f, 1.0f, 0.0f };
 	glm::vec3 up_direction{ 0.0f, 0.0f, 1.0f };	
 
-	VkPipeline l_pipeline;
-	VkPipeline t_pipeline;
+	VkPipeline l_pipeline = nullptr;
+	VkPipeline t_pipeline = nullptr;
 };
 
 bool bfCheckBladeSectionCreateInfoEquality(
@@ -107,6 +107,8 @@ public:
 
 	std::vector<BfVertex3> get_contour();
 
+	void generate_draw_data() override;
+
 private:
 	void __generate_outer_elements();
 	void __generate_average_line_geometry();
@@ -116,11 +118,25 @@ private:
 	void __generate_center_circle();
 	void __generate_triangular_shape();
 
-	void __generate_draw_data();
-
 	void __clear_draw_data();
 };
 
+
+struct BfBladeBaseCreateInfo {
+	BfDrawLayerCreateInfo layer_create_info;
+
+	std::vector<BfBladeSectionCreateInfo> section_infos;
+	
+};
+
+
+class BfBladeBase : public BfDrawLayer {
+
+	BfBladeBaseCreateInfo __info;
+public:
+	BfBladeBase(const BfBladeBaseCreateInfo& info);
+
+};
 
 
 

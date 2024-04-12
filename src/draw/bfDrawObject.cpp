@@ -319,6 +319,9 @@ void BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj) {
 	__objects.emplace_back(obj);
 }
 
+void generate_draw_data() {}
+
+
 void BfDrawLayer::del(uint32_t id) {
 	std::shared_ptr<BfDrawLayer> out_layer;
 	
