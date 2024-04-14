@@ -480,6 +480,7 @@ public:
 			D += sign * (*this)[0][i] * cof.det();
 			sign = -sign;
 		}
+		std::cout << "computing det\n";
 		return D;
 	}
 

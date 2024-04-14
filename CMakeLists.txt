@@ -3,6 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
+add_compile_options(-std=c++20) #optional to use c++11
 
 file(GLOB SUBDIRECTORIES RELATIVE 
 	${CMAKE_CURRENT_SOURCE_DIR}/include 
@@ -21,6 +22,8 @@ endforeach()
 
 link_directories(include)
 include_directories(include)
+
+#link_directories(external/eigen3)
 
 #include_directories(external/implot/)
 #add_subdirectory(external/implot)
@@ -269,14 +272,23 @@ add_subdirectory(external/triangle-master)
 target_link_libraries(${PROJECT_NAME} PUBLIC triangle)
 
 
+
+
 #add_subdirectory(external/simple_matrix)
 #target_link_libraries(${PROJECT_NAME} PUBLIC SimpleMatrix)
 #target_link_libraries(${PROJECT_NAME} PUBLIC armadillo)
 
-#add_subdirectory(external/eigen-3.4.0)
+#add_library(Eigen INTERFACE)
+#target_include_directories(${PROJECT_NAME} PUBLIC "external/eigen3")
+#target_link_libraries(${PROJECT_NAME} PUBLIC Eigen)
+
+#add_subdirectory(external/eigen3)
+#target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
+
+#add_compile_options(-std=c++11)
+#add_subdirectory(external/eigen3)
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
  
-#target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 
 #target_link_libraries(${PROJECT_NAME} PUBLIC Eigen)
 

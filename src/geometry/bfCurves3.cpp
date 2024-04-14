@@ -1,6 +1,7 @@
 #include "bfCurves3.h"
 
 
+
 BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
 	: BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
 {
@@ -745,6 +746,90 @@ glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v) {
 	return glm::vec3(0.0f);
 }
 
+std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v) {
+	size_t n = v.size() - 1;
+	
+	std::vector<float> t;
+	t.reserve(v.size());
+	t.emplace_back(0.0f);
+
+	float total = 0.0f;
+	for (size_t i = 0; i < n; i++) {
+		float chord = glm::distance(v[i], v[i + 1]);
+		total += chord;
+	}
+
+	float acc_len = 0.0f;
+	for (size_t i = 0; i < n; i++) {
+		float chord = glm::distance(v[i], v[i + 1]);
+		acc_len += chord;
+		t.emplace_back(acc_len / total);
+	}
+
+	return t;
+}
+
+
+std::vector<float> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y) {
+	if (x.size() != y.size()) abort();
+	
+	size_t n = x.size() - 1;
+
+	std::vector<float> a(n);
+	std::vector<float> b(n);
+	std::vector<float> c(n);
+	std::vector<float> d(n);
+
+	BfMatrix M(4 * n, 4 * n, 0.0f);
+	BfMatrix B(4 * n, 1);
+
+	for (size_t i = 0; i < n; ++i) {
+		float h = x[i + 1] - x[i];
+		M[i * 4][i * 4] = 1;
+		M[i * 4][i * 4 + 1] = h;
+		M[i * 4][i * 4 + 2] = h * h;
+		M[i * 4][i * 4 + 3] = h * h * h;
+		M[i * 4 + 1][i * 4] = 1;
+		M[i * 4 + 1][i * 4 + 1] = h;
+		M[i * 4 + 1][i * 4 + 2] = h * h;
+		M[i * 4 + 1][i * 4 + 3] = h * h * h;
+		M[i * 4 + 2][i * 4] = 0;
+		M[i * 4 + 2][i * 4 + 1] = 1;
+		M[i * 4 + 2][i * 4 + 2] = 2 * h;
+		M[i * 4 + 2][i * 4 + 3] = 3 * h * h;
+		M[i * 4 + 3][i * 4] = 0;
+		M[i * 4 + 3][i * 4 + 1] = 0;
+		M[i * 4 + 3][i * 4 + 2] = 2;
+		M[i * 4 + 3][i * 4 + 3] = 6 * h;
+
+		B[i * 4][0] = y[i];
+		B[i * 4 + 1][0] = y[i + 1];
+		B[i * 4 + 2][0] = 0;
+		B[i * 4 + 3][0] = 0;
+	}
+	
+	BfVector sol = solve_linear_mtx(M, B);
+
+	return std::vector<float>();
+}
+
+
+//std::vector<glm::vec3> BfMathSplineFit(const std::vector<glm::vec3>& controlPoints, int numPoints) {
+//	std::vector<glm::vec3> splinePoints;
+//	for (float t = 0.0f; t <= inputPoints.size() - 3; t += 0.1f) {
+//		glm::vec3 splinePoint = glm::catmullRom(
+//			inputPoints[static_cast<int>(t)],
+//			inputPoints[static_cast<int>(t) + 1],
+//			inputPoints[static_cast<int>(t) + 2],
+//			inputPoints[static_cast<int>(t) + 3],
+//			t - static_cast<int>(t)
+//		);
+//		splinePoints.push_back(splinePoint);
+//	}
+//
+//	return splinePoints;
+//}
+
 
 BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert)
 	: BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
@@ -1186,33 +1271,133 @@ void BfBezierCurveFrame::remake(
 	this->update_buffer();
 }
 
+BfCubicSplineCurve::BfCubicSplineCurve(size_t out_vertices_count, std::vector<BfVertex3>& dp)
+	: BfDrawObj{ dp }
+	, __out_vertices_count{ out_vertices_count }
+{
+	
+}
 
-//BfArc::BfArc(size_t vertices_count,  
-//			 const BfVertex3& l,		//1
-//			 const BfVertex3& m,	//2
-//			 const BfVertex3& r)	//3
-//	: __out_vertices_count{vertices_count}
-//	, left(__dvertices[0])
-//	, mid(__dvertices[1])
-//	, right(__dvertices[2])
-//	, center(__dvertices[3])
-//
-//{
-//	auto p_12 = BfLineProp(l, m).get_perpendicular((l.pos + r.pos) / 2.0f);
-//	auto p_23 = BfLineProp(m, r).get_perpendicular((m.pos + r.pos) / 2.0f);
-//	auto p_31 = BfLineProp(r, l).get_perpendicular((r.pos + l.pos) / 2.0f);
-//
-//	BfMatrix A{
-//		{-p_12.get_k(), 1},
-//		{-p_23.get_k(), 1}
-//	};
-//	BfMatrix B{
-//		{-p_12.get_b()},
-//		{-p_23.get_b()}
-//	};
-//	BfVec2 center = solve_linear_mtx(A, B);
-//	this->__dvertices.emplace_back(center.x, center.y, 0.0f);
-//	
-//
-//
-//}
+BfCubicSplineCurve::BfCubicSplineCurve(size_t out_vertices_count, std::vector<glm::vec3>& dp)
+	: __out_vertices_count{ out_vertices_count }
+{
+	__dvertices.reserve(dp.size());
+	for (auto& it : dp) {
+		__dvertices.emplace_back(
+			BfVertex3{ it, {1.0, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} }
+		);
+	}
+}
+
+
+void BfCubicSplineCurve::create_vertices() {
+	
+	auto calculateSplinePoint = [](
+		const std::vector<glm::vec3>&a, 
+		const std::vector<glm::vec3>&b,
+		const std::vector<glm::vec3>&c, 
+		const std::vector<glm::vec3>&d, 
+		float t) 
+	{
+		size_t n = a.size();
+		size_t segment = 0;
+
+		// Найдите индекс сегмента сплайна, в который попадает значение t
+		for (size_t i = 1; i < n; ++i) {
+			if (t < static_cast<float>(i) / static_cast<float>(n - 1)) {
+				segment = i - 1;
+				break;
+			}
+		}
+
+		// Нормализуйте t для текущего сегмента
+		float tSegment = (t - static_cast<float>(segment) / static_cast<float>(n - 1)) * (n - 1);
+
+		// Вычислите точку сплайна с использованием коэффициентов сегмента
+		glm::vec3 splinePoint = a[segment] + b[segment] * tSegment + c[segment] * tSegment * tSegment + d[segment] * tSegment * tSegment * tSegment;
+
+		return splinePoint;
+	};
+	
+	
+	size_t n = __dvertices.size() - 1;
+	
+	/*float total = 0.0f;
+	for (size_t i = 0; i < n - 1; i++) {
+		float chord = glm::distance(__dvertices[i].pos, __dvertices[i + 1].pos);
+		total += chord;
+	}
+
+	
+	float acc_len = 0.0f;
+	for (size_t i = 0; i < n - 1; i++) {
+		float chord = glm::distance(__dvertices[i].pos, __dvertices[i + 1].pos);
+		acc_len += chord;
+		t.emplace_back(acc_len / total);
+	}*/
+
+	std::vector<glm::vec3> a;
+	a.reserve(n + 1);
+	std::vector<glm::vec3> t;
+	t.reserve(n + 1);
+
+	for (auto& it : __dvertices) {
+		a.emplace_back(it.pos);
+		t.emplace_back(it.pos);
+	}
+
+
+	std::vector<glm::vec3> b(n);
+	std::vector<glm::vec3> d(n);
+	std::vector<glm::vec3> h(n);
+
+	for (size_t i = 0; i <= n - 1; i++) {
+		h[i] = t[i + 1] - t[i];
+	}
+
+	std::vector<glm::vec3> alpha(n);
+	for (size_t i = 1; i <= n - 1; i++) {
+		alpha[i] = 3.0f / h[i] * (a[i + 1] - a[i]) - 3.0f / h[i - 1] * (a[i] - a[i - 1]);
+	}
+
+	std::vector<glm::vec3> c(n + 1);
+	std::vector<glm::vec3> l(n + 1);
+	std::vector<glm::vec3> mu(n + 1);
+	std::vector<glm::vec3> z(n + 1);
+
+	l[0] = glm::vec3(1.0f);
+	
+	for (size_t i = 1; i <= n - 1; i++) {
+		l[i] = 2.0f * (t[i + 1] - t[i - 1]) - h[i - 1] * mu[i - 1];
+		mu[i] = h[i] / l[i];
+		z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+	}
+
+	l[n] = glm::vec3(1.0f);
+
+	for (size_t j = n - 1; j > 0; j--) {
+		c[j] = z[j] - mu[j] * c[j + 1];
+		b[j] = (a[j + 1] - a[j]) / h[j] - (h[j] * (c[j + 1] + 2.0f * c[j])) / 3.0f;
+		d[j] = (c[j + 1] - c[j]) / 3.0f / h[j];
+	}
+
+	if (!__vertices.empty()) {
+		__vertices.clear();
+	}
+	__vertices.reserve(__out_vertices_count);
+	
+	for (size_t i = 0; i < __out_vertices_count - 1; i++) {
+		float t = static_cast<float>(i) / static_cast<float>(__out_vertices_count - 1);
+		// Вычислить точку сплайна для текущего значения параметра t
+		glm::vec3 splinePoint = calculateSplinePoint(a, b, c, d, t);
+		// Добавить точку в вектор __vertices
+		__vertices.emplace_back(BfVertex3{ splinePoint, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f} });
+	}
+
+		
+		
+
+
+	
+
+}

@@ -1,9 +1,11 @@
 #ifndef BF_CURVES3_H
 #define BF_CURVES3_H
 
+
 #include "bfDrawObject.h"
 #include "bfMatrix2.h"
 #include "triangle.h"
+
 
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
@@ -82,6 +84,13 @@ std::vector<BfVertex3> bfMathStickObjVertices(std::initializer_list<std::shared_
 
 std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(std::vector<BfVertex3> v);
 glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
+
+
+std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v);
+std::vector<float> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y);
+	
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
@@ -272,32 +281,19 @@ public:
 
 };
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+class BfCubicSplineCurve : public BfDrawObj {
+
+	size_t __out_vertices_count;
+
+public:
+	BfCubicSplineCurve(size_t out_vertices_count, std::vector<BfVertex3>& dp);
+	BfCubicSplineCurve(size_t out_vertices_count, std::vector<glm::vec3>& dp);
 
 
-
-//class BfArc : public BfDrawObj {
-//	float __radius;
-//	
-//	size_t __out_vertices_count;
-//
-//	
-//public:
-//
-//	BfVertex3& left;	// __dvertices[0]
-//	BfVertex3& mid;		// __dvertices[1]
-//	BfVertex3& right;	// __dvertices[2]
-//	BfVertex3& center;	// __dvertices[3]
-//
-//	BfArc(size_t vertices_count,
-//		  const BfVertex3& l,		//1
-//		  const BfVertex3& m,	//2
-//		  const BfVertex3& r);
-//};
-
-
-
-
-//class BfArc : public BfDrawObj {};
+	virtual void create_vertices();
+};
 
 
 
