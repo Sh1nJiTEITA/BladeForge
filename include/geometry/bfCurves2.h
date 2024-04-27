@@ -2,7 +2,7 @@
 #define BF_CURVES_2_H
 
 #include <array>
-
+#include <memory>
 #include "bfVariative.hpp"
 #include "bfVertex2.hpp"
 

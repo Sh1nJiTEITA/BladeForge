@@ -1,9 +1,10 @@
 #ifndef BF_BUFFER_H
 #define BF_BUFFER_H
 
+
 #include "bfVariative.hpp"
 #include "bfEvent.h"
-
+#include <cstring>
 
 struct BfAllocatedBuffer {
 	VkBuffer buffer;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_set>
 #include <memory>
+#include <algorithm>
 
 #include "bfBuffer.h"
 #include "bfVertex2.hpp"

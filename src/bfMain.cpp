@@ -292,14 +292,6 @@ void BfMain::__start_loop()
 
     }
 
-    std::cout << BfExecutionTime::GetStr("uniform") << "\n";
-    std::cout << BfExecutionTime::GetStr("draw_indexed") << "\n";
-    std::cout << BfExecutionTime::GetStr("filter_mesh") << "\n";
-    std::cout << BfExecutionTime::GetStr("draw_mesh") << "\n";
-    std::cout << BfExecutionTime::GetStr("VkBind") << "\n";
-    std::cout << BfExecutionTime::GetStr("VkDraw") << "\n";
-    std::cout << BfExecutionTime::GetStr("GeometryPtr") << "\n";
-    std::cout << BfExecutionTime::GetStr("FullDraw") << "\n";
     
     vkDeviceWaitIdle(__base.device);
 

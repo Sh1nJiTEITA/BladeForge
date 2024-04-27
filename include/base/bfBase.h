@@ -8,7 +8,6 @@
 #include "bfHolder.h"
 #include "bfVertex2.hpp"
 #include "bfUniforms.h"
-#include "bfExecutionTime.hpp"
 #include "bfDescriptor.h"
 #include "bfLayerHandler.h"
 #include "bfLayerKiller.h"

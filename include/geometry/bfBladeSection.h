@@ -2,7 +2,7 @@
 #define BF_BLADE_SECTION_H
 
 #include <memory>
-
+#include <algorithm>
 #include "bfCurves3.h"
 #include "bfDrawObject.h"
 #include "bfLayerKiller.h"

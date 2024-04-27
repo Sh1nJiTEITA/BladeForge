@@ -1,8 +1,14 @@
 ﻿#include "main.h"
 
+#include <iostream>
+#include "bfVariative.hpp"
+#include "include/other/bfVariative.hpp"
+
+
 
 
 int main() {
+	
 	BfMain main;
 	try {
 		BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
@@ -14,4 +20,6 @@ int main() {
 	{
 		std::cerr << e.what() << std::endl;
 	}
+	std::cout << "FSDFSFSDDF" << std::endl;
+	return 0;
 }

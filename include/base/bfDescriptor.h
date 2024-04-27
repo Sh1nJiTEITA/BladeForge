@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <algorithm>
+
 
 #include "bfVariative.hpp"
 #include "bfBuffer.h"

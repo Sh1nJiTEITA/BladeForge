@@ -387,7 +387,7 @@ void BfBladeSection::__generate_outer_elements() {
 
 	__chord_outlet_center = BfVertex3{
 		__chord_inlet_center.pos +
-		chord_dir.xyz * __info->width / glm::sin(glm::radians(__info->install_angle)),
+		glm::vec3(chord_dir) * __info->width / glm::sin(glm::radians(__info->install_angle)),
 		{0.5f, 0.5f, 1.0f},
 		__info->up_direction
 	};

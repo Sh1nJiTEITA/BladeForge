@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <algorithm>
-
+#include <math.h>
 
 #define BF_ALLIGN_BEZIER_X 0
 #define BF_ALLIGN_BEZIER_Y 1
@@ -156,7 +156,7 @@ public:
 	static inline float get_line_length(const BfLine& l) {
 		
 		glm::vec3 delta = l.finish_point.pos - l.start_point.pos;
-		return std::sqrtf(
+		return glm::sqrt(
 			delta.x * delta.x
 			+ 
 			delta.y * delta.y
@@ -251,7 +251,7 @@ public:
 	glm::vec3 get_single_vertex(float t) const {
 		glm::vec3 _v{ 0.0f,0.0f,0.0f };
 		for (int i = 0; i <= n; i++) {
-			_v += static_cast<float>(bfGetBinomialCoefficient(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)) * vertices[i];
+			_v += static_cast<float>(bfGetBinomialCoefficient(n, i) * glm::pow(1 - t, n - i) * glm::pow(t, i)) * vertices[i];
 		}
 		return _v;
 	}
@@ -380,7 +380,7 @@ public:
 		int k = n - 1;
 		glm::vec3 out(0.0f);
 		for (int i = 0; i <= k; i++) {
-			out += (float)(bfGetBinomialCoefficient(k, i) * std::pow(1 - t, k - i) * std::pow(t, i) * n) * (vertices[i + 1] - vertices[i]);
+			out += (float)(bfGetBinomialCoefficient(k, i) * glm::pow(1 - t, k - i) * glm::pow(t, i) * n) * (vertices[i + 1] - vertices[i]);
 		}
 		return out;
 	}
@@ -396,7 +396,7 @@ public:
 	glm::vec3 get_single_derivative_1_e(float t) {
 		glm::vec3 out(0.0f);
 		for (int i = 0; i <= n; i++) {
-			out += (float)((i - n*t)/(t*(1-t))*bfGetBinomialCoefficient(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)) * vertices[i];
+			out += (float)((i - n*t)/(t*(1-t))*bfGetBinomialCoefficient(n, i) * glm::pow(1 - t, n - i) * glm::pow(t, i)) * vertices[i];
 		}
 		return out;
 	}
@@ -416,8 +416,8 @@ public:
 			out += (float)(
 				(
 					bfGetBinomialCoefficient(k, i) * 
-					std::pow(1 - t, k - i) * 
-					std::pow(t, i) * n
+					glm::pow(1 - t, k - i) * 
+					glm::pow(t, i) * n
 				) 
 				* 
 				((n - 1))
@@ -459,7 +459,7 @@ public:
 					/ 
 					(t * t * (1 - t) * (1 - t))
 				) * 
-				bfGetBinomialCoefficient(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)) * vertices[i];
+				bfGetBinomialCoefficient(n, i) * glm::pow(1 - t, n - i) * glm::pow(t, i)) * vertices[i];
 		}
 		return out;
 	}
@@ -964,9 +964,9 @@ public:
 
 				for (size_t i = 0; i < this->vertices.size(); i++) {
 					float basis_i = bfGetBinomialCoefficient(this->n, i) * (
-						std::powf(t_jpp, i) * std::powf(1 - t_jpp, this->n - i)
+						glm::pow(t_jpp, i) * glm::pow(1 - t_jpp, this->n - i)
 						-
-						std::powf(t_j, i) * std::powf(1 - t_j, this->n - i)
+						glm::pow(t_j, i) * glm::pow(1 - t_j, this->n - i)
 					);
 
 					d_j += basis_i * this->vertices[i];
@@ -977,9 +977,9 @@ public:
 				}
 				
 				glm::vec3 dl = {
-					(d_j.x * dd_j.x) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
-					(d_j.y * dd_j.y) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
-					(d_j.z * dd_j.z) / (std::sqrtf(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+					(d_j.x * dd_j.x) / (glm::sqrt(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+					(d_j.y * dd_j.y) / (glm::sqrt(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
+					(d_j.z * dd_j.z) / (glm::sqrt(d_j.x * d_j.x + d_j.y * d_j.y + d_j.z * d_j.z)),
 				};
 
 				grad_part += dl;

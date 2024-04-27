@@ -2682,13 +2682,8 @@ void bfDrawFrame(BfBase& base)
 		throw std::runtime_error("Failed to acquire swap chain image");
 	}
 
-	BfExecutionTime::BeginTimeCut("uniform");
-		bfUpdateUniformBuffer(base);
-	BfExecutionTime::EndTimeCut("uniform");
+	bfUpdateUniformBuffer(base);
 
-	/*BfExecutionTime::BeginTimeCut("dynamic-mesh");
-		bfUploadDynamicMesh(base, mesh);
-	BfExecutionTime::EndTimeCut("dynamic-mesh");*/
 
 	vkResetFences(base.device, 1, &local_fence_in_flight);
 

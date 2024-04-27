@@ -72,7 +72,7 @@ cmake_policy(SET CMP0077 NEW)
 ###############################################################################
 # Supported build parameters
 ###############################################################################
-option(IMGUI_EXAMPLES "Build ImGui examples" ON)
+option(IMGUI_EXAMPLES "Build ImGui examples" OFF)
 option(IMGUI_DEMO "Include the ImGui demo window implementation in library" ON)
 
 option(IMGUI_DISABLE_OBSOLETE_FUNCTIONS "Disable deprecated functions" ON)
@@ -86,15 +86,15 @@ option(IMGUI_ENABLE_FREETYPE "Enable FreeType font rasterizer" ON)
 option(IMGUI_IMPL_SDL "Build the SDL implementation (only if supported)" OFF)
 option(IMGUI_IMPL_METAL "Build the Metal implementation (only if supported)" ${APPLE})
 option(IMGUI_IMPL_OSX "Build the OSX implementation (only if supported)" ${APPLE})
-option(IMGUI_IMPL_WIN32 "Build the Win32 (native winapi) implementation (only if supported)" ${WIN32})
+option(IMGUI_IMPL_WIN32 "Build the Win32 (native winapi) implementation (only if supported)" OFF)
 option(IMGUI_IMPL_GLFW "Build the GLFW implementation (only if supported)" ON)
 option(IMGUI_IMPL_GLUT "Build the GLUT implementation (only if supported)" OFF)
-option(IMGUI_IMPL_OPENGL3 "Build the OpenGL 3 implementation (only if supported)" ON)
-option(IMGUI_IMPL_OPENGL2 "Build the OpenGL 2 (legacy) implementation (only if supported)" ${IMGUI_IMPL_OPENGL3})
-option(IMGUI_IMPL_DX9 "Build the DirectX 9 implementation (only if supported)" ${WIN32})
-option(IMGUI_IMPL_DX10 "Build the DirectX 10 implementation (only if supported)" ${WIN32})
-option(IMGUI_IMPL_DX11 "Build the DirectX 11 implementation (only if supported)" ${WIN32})
-option(IMGUI_IMPL_DX12 "Build the DirectX 12 implementation (only if supported)" ${WIN32})
+option(IMGUI_IMPL_OPENGL3 "Build the OpenGL 3 implementation (only if supported)" OFF)
+option(IMGUI_IMPL_OPENGL2 "Build the OpenGL 2 (legacy) implementation (only if supported)" OFF)
+option(IMGUI_IMPL_DX9 "Build the DirectX 9 implementation (only if supported)" OFF)
+option(IMGUI_IMPL_DX10 "Build the DirectX 10 implementation (only if supported)" OFF)
+option(IMGUI_IMPL_DX11 "Build the DirectX 11 implementation (only if supported)" OFF)
+option(IMGUI_IMPL_DX12 "Build the DirectX 12 implementation (only if supported)" OFF)
 option(IMGUI_IMPL_VULKAN "Build the Vulkan implementation (only if supported)" ON)
 
 set(IMGUI_SDL_TARGET "" CACHE STRING "A custom SDL target name that will be used for linking to examples.")
@@ -530,102 +530,102 @@ endif ()
 ###############################################################################
 # Examples
 ###############################################################################
-if (IMGUI_EXAMPLES)
-    function (IMGUI_EXAMPLE)
-        cmake_parse_arguments(IMGUI_EXAMPLE "" "TARGET;SOURCE" "LINKS" ${ARGN})
-        if (NOT IMGUI_EXAMPLE_SOURCE)
-            set (IMGUI_EXAMPLE_SOURCE main.cpp)
-        endif ()
-        # Check whether dependency libraries are available.
-        foreach (dep ${IMGUI_EXAMPLE_LINKS})
-            if (NOT TARGET ${dep})
-                return ()
-            endif ()
-        endforeach ()
-        # Resize a target.
-        add_executable(${IMGUI_EXAMPLE_TARGET} ${IMGUI_EXAMPLES_DIR}/${IMGUI_EXAMPLE_TARGET}/${IMGUI_EXAMPLE_SOURCE})
-        target_link_libraries(${IMGUI_EXAMPLE_TARGET} PRIVATE imgui ${IMGUI_EXAMPLE_LINKS})
-        list(FIND IMGUI_EXAMPLE_LINKS imgui-sdl2 LINKS_SDL)
-        if (NOT LINKS_SDL EQUAL -1 AND WIN32)
-            get_target_property(SDL_IS_IMPORTED ${IMGUI_SDL_TARGET} IMPORTED)
-            if (SDL_IS_IMPORTED)
-                # When program links to imgui-sdl2 and imported target ${IMGUI_SDL_TARGET} exists - copy SDL dll.
-                add_custom_command(TARGET ${IMGUI_EXAMPLE_TARGET} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                            $<TARGET_FILE:${IMGUI_SDL_TARGET}> $<TARGET_FILE_DIR:${IMGUI_EXAMPLE_TARGET}>)
-            endif ()
-        endif ()
-    endfunction()
-    IMGUI_EXAMPLE(TARGET example_null LINKS imgui-null)
-    if (APPLE)
-        # MacOS Metal example
-        # FIXME: This sample is still broken.
-        add_executable(example_apple_metal MACOSX_BUNDLE
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/main.m
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/AppDelegate.h
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/AppDelegate.m
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/Renderer.h
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/Renderer.mm
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/ViewController.h
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/ViewController.mm
-            ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Base.lproj/Main.storyboard
-        )
-        target_link_libraries(example_apple_metal imgui imgui-osx imgui-metal)
-        # Generate new plist
-        file(READ ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Info-macOS.plist INFO_PLIST)
-        string(REPLACE "$(EXECUTABLE_NAME)" example_apple_metal INFO_PLIST "${INFO_PLIST}")
-        string(REPLACE "$(PRODUCT_BUNDLE_IDENTIFIER)" org.imgui.example.apple-metal-macos INFO_PLIST "${INFO_PLIST}")
-        string(REPLACE "$(MACOSX_DEPLOYMENT_TARGET)" 10.12 INFO_PLIST "${INFO_PLIST}")
-        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/example_apple_metal-info.plist "${INFO_PLIST}")
-        # Consume new plist
-        set_property(TARGET example_apple_metal PROPERTY
-            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/example_apple_metal-info.plist)
-        # Compile storyboard
-        if(NOT "${CMAKE_GENERATOR}" MATCHES "^Xcode.*")
-            # Xcode compiles storyboard automatically. We must do it manually when using other build systems.
-            find_program(IBTOOL ibtool HINTS /usr/bin ${OSX_DEVELOPER_ROOT}/usr/bin)
-            add_custom_command(TARGET example_apple_metal POST_BUILD COMMAND ${IBTOOL} --errors --warnings --notices
-                --output-format human-readable-text --compile
-                ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/example_apple_metal.app/Contents/Resources/Base.lproj/Main.storyboardc
-                ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Base.lproj/Main.storyboard
-                COMMENT "Compiling storyboard"
-            )
-        endif()
-        IMGUI_EXAMPLE(TARGET example_apple_opengl2 LINKS imgui-osx imgui-opengl2 SOURCE main.mm)
-        IMGUI_EXAMPLE(TARGET example_glfw_metal LINKS imgui-glfw imgui-metal SOURCE main.mm)
-        IMGUI_EXAMPLE(TARGET example_sdl2_metal LINKS imgui-sdl2 imgui-metal SOURCE main.mm)
-    endif ()
-    if (WIN32)
-        IMGUI_EXAMPLE(TARGET example_sdl2_directx11 LINKS imgui-sdl2 imgui-dx11)
-        IMGUI_EXAMPLE(TARGET example_win32_directx9 LINKS imgui-win32 imgui-dx9)
-        IMGUI_EXAMPLE(TARGET example_win32_directx10 LINKS imgui-win32 imgui-dx10)
-        IMGUI_EXAMPLE(TARGET example_win32_directx11 LINKS imgui-win32 imgui-dx11)
-        IMGUI_EXAMPLE(TARGET example_win32_directx12 LINKS imgui-win32 imgui-dx12)
-    endif ()
-    if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
-        IMGUI_EXAMPLE(TARGET example_emscripten_opengl3 LINKS imgui-sdl2 imgui-opengl3)
-        set_target_properties(example_emscripten_opengl3 PROPERTIES SUFFIX .html)
-        target_compile_options(example_emscripten_opengl3 PUBLIC -sUSE_SDL=2)
-        target_link_options(example_emscripten_opengl3 PUBLIC -sWASM=1 -sALLOW_MEMORY_GROWTH=1 -sDISABLE_EXCEPTION_CATCHING=1 -sNO_EXIT_RUNTIME=0)
-        target_link_options(example_emscripten_opengl3 PUBLIC -sASSERTIONS=1 -sMAIN_MODULE=1)
-        target_link_options(example_emscripten_opengl3 PUBLIC "--shell-file=${IMGUI_EXAMPLES_DIR}/example_emscripten_opengl3/shell_minimal.html")
-        if (IMGUI_DISABLE_FILE_FUNCTIONS)
-            target_link_options(example_emscripten_opengl3 PUBLIC -sNO_FILESYSTEM=1)
-        else ()
-            target_link_options(example_emscripten_opengl3 PUBLIC --no-heap-copy "--preload-file=${IMGUI_ROOT_DIR}/misc/fonts@/fonts")
-        endif ()
-        # Uncomment next line to fix possible rendering bugs with Emscripten version older then 1.39.0 (https://github.com/ocornut/imgui/issues/2877)
-        #target_link_options(example_emscripten_opengl3 PUBLIC -sBINARYEN_TRAP_MODE=clamp)
-        #target_link_options(example_emscripten_opengl3 PUBLIC -sSAFE_HEAP=1)    ## Adds overhead
-        # TODO: Add example_emscripten_wgpu example
-    else ()
-        IMGUI_EXAMPLE(TARGET example_glfw_opengl2 LINKS imgui-glfw imgui-opengl2)
-        IMGUI_EXAMPLE(TARGET example_glfw_opengl3 LINKS imgui-glfw imgui-opengl3)
-        IMGUI_EXAMPLE(TARGET example_glfw_vulkan LINKS imgui-glfw imgui-vulkan)
-        IMGUI_EXAMPLE(TARGET example_glut_opengl2 LINKS imgui-glut imgui-opengl2)
-        IMGUI_EXAMPLE(TARGET example_sdl2_opengl2 LINKS imgui-sdl2 imgui-opengl2)
-        IMGUI_EXAMPLE(TARGET example_sdl2_opengl3 LINKS imgui-sdl2 imgui-opengl3)
-        IMGUI_EXAMPLE(TARGET example_sdl2_vulkan LINKS imgui-sdl2 imgui-vulkan)
-        IMGUI_EXAMPLE(TARGET example_sdl2_sdlrenderer LINKS imgui-sdl2 imgui-sdlrenderer)
-    endif ()
-endif ()
+# if (IMGUI_EXAMPLES)
+#     function (IMGUI_EXAMPLE)
+#         cmake_parse_arguments(IMGUI_EXAMPLE "" "TARGET;SOURCE" "LINKS" ${ARGN})
+#         if (NOT IMGUI_EXAMPLE_SOURCE)
+#             set (IMGUI_EXAMPLE_SOURCE main.cpp)
+#         endif ()
+#         # Check whether dependency libraries are available.
+#         foreach (dep ${IMGUI_EXAMPLE_LINKS})
+#             if (NOT TARGET ${dep})
+#                 return ()
+#             endif ()
+#         endforeach ()
+#         # Resize a target.
+#         add_executable(${IMGUI_EXAMPLE_TARGET} ${IMGUI_EXAMPLES_DIR}/${IMGUI_EXAMPLE_TARGET}/${IMGUI_EXAMPLE_SOURCE})
+#         target_link_libraries(${IMGUI_EXAMPLE_TARGET} PRIVATE imgui ${IMGUI_EXAMPLE_LINKS})
+#         list(FIND IMGUI_EXAMPLE_LINKS imgui-sdl2 LINKS_SDL)
+#         if (NOT LINKS_SDL EQUAL -1 AND WIN32)
+#             get_target_property(SDL_IS_IMPORTED ${IMGUI_SDL_TARGET} IMPORTED)
+#             if (SDL_IS_IMPORTED)
+#                 # When program links to imgui-sdl2 and imported target ${IMGUI_SDL_TARGET} exists - copy SDL dll.
+#                 add_custom_command(TARGET ${IMGUI_EXAMPLE_TARGET} POST_BUILD
+#                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#                             $<TARGET_FILE:${IMGUI_SDL_TARGET}> $<TARGET_FILE_DIR:${IMGUI_EXAMPLE_TARGET}>)
+#             endif ()
+#         endif ()
+#     endfunction()
+#     IMGUI_EXAMPLE(TARGET example_null LINKS imgui-null)
+#     if (APPLE)
+#         # MacOS Metal example
+#         # FIXME: This sample is still broken.
+#         add_executable(example_apple_metal MACOSX_BUNDLE
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/main.m
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/AppDelegate.h
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/AppDelegate.m
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/Renderer.h
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/Renderer.mm
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/ViewController.h
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/Shared/ViewController.mm
+#             ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Base.lproj/Main.storyboard
+#         )
+#         target_link_libraries(example_apple_metal imgui imgui-osx imgui-metal)
+#         # Generate new plist
+#         file(READ ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Info-macOS.plist INFO_PLIST)
+#         string(REPLACE "$(EXECUTABLE_NAME)" example_apple_metal INFO_PLIST "${INFO_PLIST}")
+#         string(REPLACE "$(PRODUCT_BUNDLE_IDENTIFIER)" org.imgui.example.apple-metal-macos INFO_PLIST "${INFO_PLIST}")
+#         string(REPLACE "$(MACOSX_DEPLOYMENT_TARGET)" 10.12 INFO_PLIST "${INFO_PLIST}")
+#         file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/example_apple_metal-info.plist "${INFO_PLIST}")
+#         # Consume new plist
+#         set_property(TARGET example_apple_metal PROPERTY
+#             MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/example_apple_metal-info.plist)
+#         # Compile storyboard
+#         if(NOT "${CMAKE_GENERATOR}" MATCHES "^Xcode.*")
+#             # Xcode compiles storyboard automatically. We must do it manually when using other build systems.
+#             find_program(IBTOOL ibtool HINTS /usr/bin ${OSX_DEVELOPER_ROOT}/usr/bin)
+#             add_custom_command(TARGET example_apple_metal POST_BUILD COMMAND ${IBTOOL} --errors --warnings --notices
+#                 --output-format human-readable-text --compile
+#                 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/example_apple_metal.app/Contents/Resources/Base.lproj/Main.storyboardc
+#                 ${IMGUI_EXAMPLES_DIR}/example_apple_metal/macOS/Base.lproj/Main.storyboard
+#                 COMMENT "Compiling storyboard"
+#             )
+#         endif()
+#         IMGUI_EXAMPLE(TARGET example_apple_opengl2 LINKS imgui-osx imgui-opengl2 SOURCE main.mm)
+#         IMGUI_EXAMPLE(TARGET example_glfw_metal LINKS imgui-glfw imgui-metal SOURCE main.mm)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_metal LINKS imgui-sdl2 imgui-metal SOURCE main.mm)
+#     endif ()
+#     if (WIN32)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_directx11 LINKS imgui-sdl2 imgui-dx11)
+#         IMGUI_EXAMPLE(TARGET example_win32_directx9 LINKS imgui-win32 imgui-dx9)
+#         IMGUI_EXAMPLE(TARGET example_win32_directx10 LINKS imgui-win32 imgui-dx10)
+#         IMGUI_EXAMPLE(TARGET example_win32_directx11 LINKS imgui-win32 imgui-dx11)
+#         IMGUI_EXAMPLE(TARGET example_win32_directx12 LINKS imgui-win32 imgui-dx12)
+#     endif ()
+#     if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+#         IMGUI_EXAMPLE(TARGET example_emscripten_opengl3 LINKS imgui-sdl2 imgui-opengl3)
+#         set_target_properties(example_emscripten_opengl3 PROPERTIES SUFFIX .html)
+#         target_compile_options(example_emscripten_opengl3 PUBLIC -sUSE_SDL=2)
+#         target_link_options(example_emscripten_opengl3 PUBLIC -sWASM=1 -sALLOW_MEMORY_GROWTH=1 -sDISABLE_EXCEPTION_CATCHING=1 -sNO_EXIT_RUNTIME=0)
+#         target_link_options(example_emscripten_opengl3 PUBLIC -sASSERTIONS=1 -sMAIN_MODULE=1)
+#         target_link_options(example_emscripten_opengl3 PUBLIC "--shell-file=${IMGUI_EXAMPLES_DIR}/example_emscripten_opengl3/shell_minimal.html")
+#         if (IMGUI_DISABLE_FILE_FUNCTIONS)
+#             target_link_options(example_emscripten_opengl3 PUBLIC -sNO_FILESYSTEM=1)
+#         else ()
+#             target_link_options(example_emscripten_opengl3 PUBLIC --no-heap-copy "--preload-file=${IMGUI_ROOT_DIR}/misc/fonts@/fonts")
+#         endif ()
+#         # Uncomment next line to fix possible rendering bugs with Emscripten version older then 1.39.0 (https://github.com/ocornut/imgui/issues/2877)
+#         #target_link_options(example_emscripten_opengl3 PUBLIC -sBINARYEN_TRAP_MODE=clamp)
+#         #target_link_options(example_emscripten_opengl3 PUBLIC -sSAFE_HEAP=1)    ## Adds overhead
+#         # TODO: Add example_emscripten_wgpu example
+#     else ()
+#         IMGUI_EXAMPLE(TARGET example_glfw_opengl2 LINKS imgui-glfw imgui-opengl2)
+#         IMGUI_EXAMPLE(TARGET example_glfw_opengl3 LINKS imgui-glfw imgui-opengl3)
+#         IMGUI_EXAMPLE(TARGET example_glfw_vulkan LINKS imgui-glfw imgui-vulkan)
+#         IMGUI_EXAMPLE(TARGET example_glut_opengl2 LINKS imgui-glut imgui-opengl2)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_opengl2 LINKS imgui-sdl2 imgui-opengl2)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_opengl3 LINKS imgui-sdl2 imgui-opengl3)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_vulkan LINKS imgui-sdl2 imgui-vulkan)
+#         IMGUI_EXAMPLE(TARGET example_sdl2_sdlrenderer LINKS imgui-sdl2 imgui-sdlrenderer)
+#     endif ()
+# endif ()

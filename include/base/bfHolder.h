@@ -10,7 +10,6 @@
 #include "bfBuffer.h"
 #include "bfVertex2.hpp"
 #include "bfCurves.hpp"
-#include "bfExecutionTime.hpp"
 #include "bfDescriptor.h"
 
 

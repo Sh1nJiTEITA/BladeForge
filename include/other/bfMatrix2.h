@@ -8,8 +8,8 @@
 #include <cmath>
 #include <vector>
 #include <cstdlib>
-#include <bfVertex2.hpp>
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
+#include "bfVertex2.hpp"
 
 
 
@@ -37,17 +37,6 @@ public:
 		__data.resize(n, v);
 	}
 
-#ifdef BF_VERTEX2_H
-	BfVector(const BfVertex3& v) : BfVector{ v.pos } {}
-	BfVector(const std::vector<BfVertex3>& v) {
-		__data.reserve(v.capacity());
-		forit(v) {
-			fori(0, 3) {
-				__data.emplace_back(it.pos[i]);
-			}
-		}
-	}
-#endif
 
 
 #ifdef GLM_SETUP_INCLUDED
@@ -95,7 +84,7 @@ public:
 	}
 
 	template<size_t n>
-	BfVector operator==(glm::vec<n, float, glm::highp> v) const {
+	bool operator==(glm::vec<n, float, glm::highp> v) const {
 		CHECK_DIMENSION_NUM(this->size(), n);
 		bool is = true;
 		fori(0, n) {
@@ -108,6 +97,19 @@ public:
 		return true;
 	}
 #endif
+
+
+// #ifdef BF_VERTEX2_H
+	BfVector(const BfVertex3& v) : BfVector{ std::vector<float>({v.pos.x, v.pos.y, v.pos.z}) } {}
+	BfVector(const std::vector<BfVertex3>& v) {
+		__data.reserve(v.capacity());
+		forit(v) {
+			fori(0, 3) {
+				__data.emplace_back(it.pos[i]);
+			}
+		}
+	}
+// #endif
 
 	void fill_v(size_t n, float v) {
 		CHECK_CAPACITY_NUM_LESS(n, __data.capacity());

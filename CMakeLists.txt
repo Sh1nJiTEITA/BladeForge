@@ -5,6 +5,7 @@ cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
 add_compile_options(-std=c++20) #optional to use c++11
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file(GLOB SUBDIRECTORIES RELATIVE 
 	${CMAKE_CURRENT_SOURCE_DIR}/include 
 	${CMAKE_CURRENT_SOURCE_DIR}/include/*
@@ -19,7 +20,7 @@ foreach(subdir ${SUBDIRECTORIES})
     message("Subfolder found: ${subdir}")
 	include_directories(include/${subdir})
 endforeach()
-
+#
 link_directories(include)
 include_directories(include)
 
@@ -153,13 +154,13 @@ set(BF_INTERACTION
 )
 
 set(BF_OTHER 
-	"include/other/BfExecutionTime.hpp"
-	#"include/other/bfMatrix.hpp"
+	# "include/other/BfExecutionTime.hpp"
+	"include/other/bfMatrix.hpp"
 	"include/other/bfVariative.hpp"
 	"include/other/bfMatrix2.h" "src/other/bfMatrix2.cpp"
 	"include/other/stb_image.h"
 	"include/other/stb_image_write.h"
-	"include/other/bfMath.hpp"
+	"include/other/bfmath.hpp"
 )
 
 set(BF_DRAW 
@@ -173,8 +174,8 @@ set(BF_DRAW
 
 # Headers/Sources
 set(SOURCES
-	"src/bfMain.cpp"
-	"include/BfMain.h"
+ 	"src/bfmain.cpp"
+	"include/bfmain.h"
 )
 
 list(APPEND SOURCES
@@ -190,7 +191,7 @@ list(APPEND SOURCES
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} 
-	"main.h"
+	# "main.h"
 	"main.cpp"
 	#${BF_GEOMETRY}
 	${SOURCES}
@@ -241,6 +242,7 @@ add_subdirectory(external/glm)
 #set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui/)
 #include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends)
 #set(imgui-glfw imglfw CACHE STRING "" FORCE)
+
 add_subdirectory(external/VulkanMemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
 
@@ -266,10 +268,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 # CATCH 2
 add_subdirectory(external/catch2)
 
-include_directories(external/triangle-master)
 
-add_subdirectory(external/triangle-master)
-target_link_libraries(${PROJECT_NAME} PUBLIC triangle)
 
 
 
@@ -309,7 +308,7 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/curves.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
-	"${CMAKE_SOURCE_DIR}/tests/matrix.cpp"
+	# "${CMAKE_SOURCE_DIR}/tests/matrix.cpp"
 	#"${CMAKE_SOURCE_DIR}/include/bfBase.h"
 	#"${CMAKE_SOURCE_DIR}/include/BfEvent.h"
 	#"${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"

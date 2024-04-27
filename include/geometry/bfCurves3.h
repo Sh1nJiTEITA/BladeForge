@@ -4,13 +4,12 @@
 
 #include "bfDrawObject.h"
 #include "bfMatrix2.h"
-#include "triangle.h"
 
 
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
 #include <iomanip>
-
+#include <memory>
 #include "bfDrawObjectDefineType.h"
 
 class BfPlane;
