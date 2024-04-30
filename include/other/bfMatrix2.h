@@ -1,4 +1,4 @@
-#ifndef BF_MATRIX2_H
+#ifndef BF_MATRIX1_H
 #define BF_MATRIX2_H
 
 #include "bfMath.hpp"

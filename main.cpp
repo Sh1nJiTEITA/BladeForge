@@ -20,6 +20,4 @@ int main() {
 	{
 		std::cerr << e.what() << std::endl;
 	}
-	std::cout << "FSDFSFSDDF" << std::endl;
-	return 0;
 }

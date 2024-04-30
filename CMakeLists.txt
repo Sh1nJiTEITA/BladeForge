@@ -160,7 +160,7 @@ set(BF_OTHER
 	"include/other/bfMatrix2.h" "src/other/bfMatrix2.cpp"
 	"include/other/stb_image.h"
 	"include/other/stb_image_write.h"
-	"include/other/bfmath.hpp"
+	"include/other/bfmath.hpp" "src/other/bfmath.cpp"
 )
 
 set(BF_DRAW 
@@ -319,12 +319,13 @@ add_executable(tests
 	#"${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
 	#"tests/bez_test.cpp"
 	#"${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
+	"${CMAKE_SOURCE_DIR}/tests/matrix2.cpp"
 
-		
+	"include/other/bfmath.hpp" "src/other/bfmath.cpp"
 	
 
 
-	${SOURCES}
+	# ${SOURCES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PRIVATE VulkanMemoryAllocator)
