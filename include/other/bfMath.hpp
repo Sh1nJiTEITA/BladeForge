@@ -361,12 +361,63 @@ public:
     }
 
     BfMatrixIterator<T> begin_dim_left(int i) { 
-	return BfMatrixIterator<T>(
-	    &(*this)( 
-	)
-
+	if (i == 0) { 
+	    return BfMatrixIterator<T>(
+		&(*__v.begin()), 
+		__n,
+		__m,
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );
+	}
+	else if (i > 0) { 
+	    if (i == __m) abort();
+	    return BfMatrixIterator<T>(
+		&(*__v.begin()) + i, 
+		__n, 
+		__m,
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );	
+	} 
+	else { 
+	    if (-i == __n) abort();
+	    return BfMatrixIterator<T>(
+		&(*__v.begin()) + i * __m, 
+		__n, 
+		__m, 
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );
+	}
     }
     
+    BfMatrixIterator<T> end_dim_left(int i) { 
+	if (i == 0) { 
+	    return BfMatrixIterator<T>(
+		&(*(__v.end()-1 )), 
+		__n, 
+		__m,
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );
+	}
+	else if (i > 0) { 
+	    if (i == __m) abort();
+	    return BfMatrixIterator<T>(
+		&(*(__v.end()-1)) - i * __m, 
+		__n, 
+		__m,
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );	
+	} 
+	else { 
+	    if (-i == __n) abort();
+	    return BfMatrixIterator<T>(
+		&(*(__v.end()-1)) - i, 
+		__n, 
+		__m,
+		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
+	    );
+	}
+    }
+	
 
     // Main math operators 
 	
@@ -512,12 +563,12 @@ public:
 	}
 	return o;
     }
-
-    T det_triangular() { 
-	auto o = this->upper_triangular();
-	float det = 1;
-	for (auto it = BfMatrixIterator<T>()
-    }
+	//
+ //    T det_triangular() { 
+	// auto o = this->upper_triangular();
+	// float det = 1;
+	// for (auto it = BfMatrixIterator<T>()
+ //    }
 	
     bool LU_decomposition(BfMatrix2<T> L, BfMatrix2<T> U) { 
 	if (__n != __m) return false;
