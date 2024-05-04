@@ -1,4 +1,6 @@
 ﻿#include "BfMain.h"
+#include "imgui.h"
+#include <memory>
 
 
 
@@ -202,7 +204,7 @@ void BfMain::__start_loop()
     );
 
     __base.section_layer = section_layer.get();
-
+    
     /*BfBladeBaseCreateInfo blade_base_info{};
     blade_base_info.layer_create_info.allocator = __base.allocator;
     blade_base_info.layer_create_info.is_nested = true;
@@ -237,6 +239,7 @@ void BfMain::__start_loop()
     //layer_2->add(tangent_2);
     //layer_2->add(add_circle);
     layer_1->add(layer_1_n);
+    __other_layer = layer_1.get();
     //layer_1->add(circle_1);
     //layer_1->add(section_layer);
 
@@ -278,7 +281,7 @@ void BfMain::__start_loop()
 
 
         bfPresentLayerHandler(__base.layer_handler);
-        //ShowTestPlot();
+        // ShowTestPlot();
         
        
 
@@ -793,6 +796,8 @@ void BfMain::__present_blade_base_create_window() {
 
     static std::shared_ptr<BfBladeBase> base_section_layer = nullptr;
     static int base_id = -1;
+    
+    static int shape_id = -1;
 
     static bool is_first_frame = true;
     if (is_first_frame) {
@@ -884,6 +889,21 @@ void BfMain::__present_blade_base_create_window() {
             
             ImGui::EndTabBar();
         }
+
+        if (ImGui::Button("Create shape")) { 
+
+            if (shape_id != -1)   
+                __other_layer->del(shape_id);
+            
+            auto base = std::static_pointer_cast<BfBladeBase>(__blade_bases->get_layer_by_index(0));
+        //
+            auto shape = base->create_shape();
+            shape->bind_pipeline(&__base.triangle_pipeline);
+            __other_layer->add(shape);
+            shape_id = shape->id.get();
+
+            __other_layer->update_buffer();
+         }
 
     }
     ImGui::End();

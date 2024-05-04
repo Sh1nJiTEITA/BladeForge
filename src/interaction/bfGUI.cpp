@@ -1,4 +1,5 @@
 #include "bfGUI.h"
+#include "bfCurves3.h"
 
 
 
@@ -224,6 +225,7 @@ void ShowVariableContents(const Variable& var)
 
 void ShowTestPlot()
 {
+
     std::vector<glm::vec3> v{
         {0.0, 0.0, 0.0f},
         {1.0, 1.0f, 0.0f},
@@ -241,7 +243,7 @@ void ShowTestPlot()
 
     }
 
-    std::vector<float> adadad = bfMathSplineFit(v_x, v_y);
+    std::vector<glm::vec2> spl = bfMathSplineFit(v_x, v_y);
 
 
     BfCubicSplineCurve spline(50, v);
@@ -251,21 +253,20 @@ void ShowTestPlot()
         return a.x < b.x;
         };
 
-    // Сортировка списка точек
     //std::sort(v.begin(), v.end(), compareByX);
 
     std::vector<float> x_;
     std::vector<float> y_;
 
     
-    std::vector<glm::vec3> spl;// = catmull_rom_spline(v);
 
-    for (size_t i = 0; i < spl.size(); i++) {
-        
-
+    for (size_t i = 0; i < spl.size();i++) {
         
         x_.push_back(spl[i].x);
         y_.push_back(spl[i].y);
+        
+        // x_.push_back(spl[i].x);
+        // y_.push_back(spl[i].y);
     }
 
 

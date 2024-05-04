@@ -25,10 +25,13 @@
 #ifndef BF_MATH_HPP
 #define BF_MATH_HPP
 
+#include <cstdlib>
+#include <initializer_list>
 #include <iostream>
 #include <iterator>
 #include <stdlib.h>
 #include <vector>
+#include <array>
 #include <cstddef>
 #include <algorithm>
 
@@ -171,8 +174,8 @@ public:
 	    case COL_ITERATOR: __ptr += n * __m; break;
 	    case ROW_ITERATOR_R: __ptr -= n; break;
 	    case COL_ITERATOR_R: __ptr -= __m; break;
-	    case LEFT_DIAGONAL_ITERATOR: __ptr += n * __m - 1 * n; break;
-	    case RIGHT_DIAGONAL_ITERATOR: __ptr += n * __m + 1 * n; break;
+	    case LEFT_DIAGONAL_ITERATOR: __ptr += n * __m + 1 * n; break;
+	    case RIGHT_DIAGONAL_ITERATOR: __ptr += n * __m - 1 * n; break;
 	}
 	return *this;
     }
@@ -182,6 +185,8 @@ public:
 	    case COL_ITERATOR: __ptr -= n * __m; break;
     	    case ROW_ITERATOR_R: __ptr += n; break;
 	    case COL_ITERATOR_R: __ptr += n * __m; break;
+	    case LEFT_DIAGONAL_ITERATOR: __ptr -= n * __m - 1 * n; break;
+	    // case RIGHT_DIAGONAL_ITERATOR: __ptr += ; break;
 	}
 	return *this;
     }
@@ -257,6 +262,19 @@ public:
 	, __n{n}
 	, __m{m}
     {};
+
+    BfMatrix2(std::initializer_list<T> v, size_t n, size_t m) 
+	: __v{v}
+	, __n{n}
+	, __m{m}
+    {
+	// if (v.size() != __n * __m) abort();
+	// __v.reserve(__m * __n);
+	// for (auto it = v.begin(); it != v.end(); ++it) {
+	//     __v.emplace_back(*it);
+	// }
+    };
+
     BfMatrix2(size_t n, size_t m, T value)
 	: __n{n}
 	, __m{m}
@@ -266,6 +284,7 @@ public:
 	    __v.emplace_back(value);
 	}
     }
+    
 
     // Other operations
     void fill(T v) { 
@@ -381,7 +400,7 @@ public:
 	else { 
 	    if (-i == __n) abort();
 	    return BfMatrixIterator<T>(
-		&(*__v.begin()) + i * __m, 
+		&(*__v.begin()) - i * __m, 
 		__n, 
 		__m, 
 		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
@@ -390,31 +409,14 @@ public:
     }
     
     BfMatrixIterator<T> end_dim_left(int i) { 
-	if (i == 0) { 
-	    return BfMatrixIterator<T>(
-		&(*(__v.end()-1 )), 
-		__n, 
-		__m,
-		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
-	    );
-	}
-	else if (i > 0) { 
+	if (__n != __m) abort();
+	if (i >= 0) { 
 	    if (i == __m) abort();
-	    return BfMatrixIterator<T>(
-		&(*(__v.end()-1)) - i * __m, 
-		__n, 
-		__m,
-		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
-	    );	
+	    return this->begin_dim_left(i) + (__n - i);
 	} 
 	else { 
 	    if (-i == __n) abort();
-	    return BfMatrixIterator<T>(
-		&(*(__v.end()-1)) - i, 
-		__n, 
-		__m,
-		BfMatrixIterator<T>::LEFT_DIAGONAL_ITERATOR
-	    );
+	    return this->begin_dim_left(i) + (__n + i);
 	}
     }
 	
@@ -537,44 +539,218 @@ public:
 	std::swap_ranges(b_r1, e_r1, b_c2);	
     }
     
-    BfMatrix2<T> upper_triangular() { 
-	BfMatrix2 o{ *this };
-	fori(0, __n) { 
-	    // std::cout << "i=" << i << ")" << o << "\n";
-	    if (std::abs(o(i,i)) < ABS_ACC) { 
-		bool found = false; 
-		forj(i + 1, __n) { 
-		    if (std::abs(o(j, i)) > ABS_ACC) { 
-			o.swap_rows(i, j);
-			found = true;
+    BfMatrix2<T> upper_triangular_gauss() { 
+	    BfMatrix2<T> o {*this};
+	    int m = o.rows();
+	    int n = o.cols(); 
+
+	    int h = 0;
+	    int k = 0;
+	    
+	    while (h < m && k < n) {
+		int i_max = h;
+		for (int i = h + 1; i < m; ++i) {
+		    if (std::abs(o(i,k)) > std::abs(o(i_max, k))) {
+			i_max = i;
+		    }
+		}
+		if (o(i_max, k) == 0) {
+		    k++;
+		} 
+		else {
+		    o.swap_rows(h, i_max);
+		    for (int i = h + 1; i < m; ++i) {
+			T f = o(i,k) / o(h,k);
+			o(i,k) = 0;
+			for (int j = k + 1; j < n; ++j) {
+			    o(i,j) -= f * o(h,j);
+			}
+		    }
+		    h++;
+		    k++;
+		}
+	    }
+	    return o;
+	}
+	
+    T det_bareiss() { 
+	BfMatrix2<T> o { *this };
+	if (__m != __n) abort();
+	int dim = __n;
+
+	if(dim <= 0) {
+	    return 0;
+	}
+
+	T sign = 1;
+
+	for(int k = 0; k < dim - 1; k++) {
+
+	    //Pivot - row swap needed
+	    if(o(k,k) == 0) {
+		int m = 0;
+		for(m = k + 1; m < dim; m++) {
+		    if(o(m,k) != 0) {       
+			o.swap_rows(m, k);
+			sign = -sign;
 			break;
 		    }
 		}
-		if (!found) return o;
-	    } 
-	    forj(i + 1, __n) { 
-		if (std::abs(o(j, i)) > ABS_ACC) { 
-		    T factor = o(j, i) / o(i, i);
-		    fork(i, __m) { 
-			o(j, k) -= factor * o(i,k);
+
+		//No entries != 0 found in column k -> det = 0
+		if(m == dim) {
+		    return 0;
+		}
+	    }
+
+	    //Apply formula
+	    for (int i = k + 1; i < dim; i++) {
+		for (int j = k + 1; j < dim; j++) {
+		    o(i, j) = o(k, k) * o(i, j) - o(i, k) * o(k, j);
+		    if(k != 0) {
+			o(i, j) /= o(k-1, k-1);
 		    }
 		}
 	    }
 	}
-	return o;
+	return sign * o(dim-1, dim-1);
     }
-	//
- //    T det_triangular() { 
-	// auto o = this->upper_triangular();
-	// float det = 1;
-	// for (auto it = BfMatrixIterator<T>()
- //    }
+
+    float det_triangular_gauss() { 
+	auto o = this->upper_triangular_gauss();
+	float det = 1;
+	for (auto it = o.begin_dim_left(0); it != o.end_dim_left(0); it++) { 
+	   det *= *it; 
+	}
+	return det;
+    }
+   
+    std::pair<BfMatrix2<T>, BfMatrix2<T>> LU_decomposition() { 
+	if (__n != __m) abort();
+	// if (this->det_bareiss() == 0) abort();
+
+	BfMatrix2<T> L(__n, __m, 0);
+	BfMatrix2<T> U(__n, __m, 0);
+
+	int i = 0, j = 0, k = 0;
+	for (i = 0; i < __n; i++)
+	{
+	    for (j = 0; j < __n; j++)
+	    {
+		if (j < i)
+		    L(j, i) = 0;
+		else
+		{
+		    L(j, i) = (*this)(j,i);
+		    for (k = 0; k < i; k++)
+		    {
+			L(j, i) = L(j, i) - L(j, k) * U(k, i);
+		    }
+		}
+	    }
+
+	    for (j = 0; j < __n; j++)
+	    {
+		if (j < i)
+		    U(i,j) = 0;
+		else if (j == i)
+		    U(i, j) = 1;
+		else
+		{
+		    U(i,j) = (*this)(i,j) / L(i,i);
+		    for (k = 0; k < i; k++)
+		    {
+			U(i,j) = U(i,j) - ((L(i,k) * U(k,j)) / L(i,i));
+		    }
+		}
+	    }
+	}
+	return std::make_pair(L,U);
+    }
+    
+    std::array<BfMatrix2<T>, 4> PLU_decomposition() { 
+	int n = (*this).rows();
+	if (n != (*this).cols()) {
+	    throw std::invalid_argument("Matrix must be square for PLU decomposition");
+	}
+
+	BfMatrix2<T> P(n, n, 0); // Матрица перестановок
+	BfMatrix2<T> L(n, n, 0); // Нижняя треугольная матрица
+	BfMatrix2<T> U(n, n, 0); // Верхняя треугольная матрица
+
+	for (int i = 0; i < n; ++i) {
+	    P(i, i) = 1; // Единичная матрица для P
+	}
+
+	BfMatrix2<T> A_copy {*this}; // Копия исходной матрицы
+
+	for (int k = 0; k < n; ++k) {
+	    // Ищем максимальный элемент в столбце k
+	    int max_row = k;
+	    for (int i = k + 1; i < n; ++i) {
+		if (std::abs(A_copy(i, k)) > std::abs(A_copy(max_row, k))) {
+		    max_row = i;
+		}
+	    }
+
+	    // Переставляем строки матрицы A, P и L, если необходимо
+	    if (max_row != k) {
+		A_copy.swap_rows(max_row, k);
+		P.swap_rows(max_row, k);
+		L.swap_rows(max_row, k);
+	    }
+
+	    // Заполняем элементы матрицы L и U
+	    for (int i = k; i < n; ++i) {
+		L(i, k) = A_copy(i, k);
+		U(k, i) = A_copy(k, i) / L(k, k);
+	    }
+
+	    // Обновляем матрицу A_copy
+	    for (int i = k + 1; i < n; ++i) {
+		for (int j = k + 1; j < n; ++j) {
+		    A_copy(i, j) -= L(i, k) * U(k, j);
+		}
+	    }
+	}
+
+	return {A_copy, P, L, U};
+    }
+
+    float det_LU() {
+	std::pair<BfMatrix2<T>, BfMatrix2<T>> LU = this->LU_decomposition();
 	
-    bool LU_decomposition(BfMatrix2<T> L, BfMatrix2<T> U) { 
-	if (__n != __m) return false;
-	BfMatrix2<T> temp = this->upper_triangular();
+	float L_det = 1;
+	for (auto it = LU.first.begin_dim_left(0); it != LU.first.end_dim_left(0); ++it) { 
+	    L_det *= *it;
+	}
+	float U_det = 1;
+	for (auto it = LU.second.begin_dim_left(0); it != LU.second.end_dim_left(0); ++it) { 
+	    U_det *= *it;
+	}
+	return L_det * U_det;
+    }
+
+    float det_PLU() { 
+	std::array<BfMatrix2<T>, 4> PLU = this->PLU_decomposition();
 	
-    } 
+	float L_det = 1;
+	for (auto it = PLU[1].begin_dim_left(0); it != PLU[0].end_dim_left(0); ++it) { 
+	    L_det *= *it;
+	}
+
+	float U_det = 1;
+	for (auto it = PLU[1].begin_dim_left(0); it != PLU[1].end_dim_left(0); ++it) { 
+	    U_det *= *it;
+	}
+
+	float P_det = 1;
+	for (auto it = PLU[2].begin_dim_left(0); it != PLU[2].end_dim_left(0); ++it) { 
+	    P_det *= *it;
+	}
+
+	return L_det * U_det * P_det;
+    }
 };
 
 

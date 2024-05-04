@@ -33,7 +33,8 @@ private:
 	BfGUI __gui;
 
 	BfDrawLayer* __blade_bases = nullptr;
-	
+	BfDrawLayer* __other_layer = nullptr;	
+
 	void __process_keys();
 	void __poll_events();
 

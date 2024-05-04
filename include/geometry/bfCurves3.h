@@ -4,8 +4,8 @@
 
 #include "bfDrawObject.h"
 #include "bfMatrix2.h"
-
-
+#include <unsupported/Eigen/Splines>
+#include <Splines.h>
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>
 #include <iomanip>
@@ -46,8 +46,7 @@ std::array<glm::vec3, 3> bfMathGetPlaneOrths(glm::vec4 plane);
 std::array<glm::vec3, 2> bfMathGetOrthsByNormal(glm::vec3 normal);
 
 
-bool bfMathIsVertexInPlain(const glm::vec4& plane, 
-						   const glm::vec3& p);
+bool bfMathIsVertexInPlain(const glm::vec4& plane, const glm::vec3& p);
 
 bool bfMathIsVertexInPlain(const glm::vec3& np, 
 						   const glm::vec3& f, 
@@ -72,10 +71,12 @@ bool bfMathIsSingleLinesInPlain(const BfSingleLine& L1, const BfSingleLine& L2);
 float bfMathGetBezierCurveLength(BfBezierCurve* curve);
 std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve);
 
-std::vector<BfCircle> bfMathGetInscribedCircles(size_t m,	
-												const BfSingleLine& L1, 
-												const BfSingleLine& L2, 
-												float radius);
+std::vector<BfCircle> bfMathGetInscribedCircles(size_t m, 
+	const BfSingleLine& L1,	
+	const BfSingleLine& L2, 
+	float radius
+);
+
 
 float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P);
 
@@ -86,9 +87,9 @@ glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
 
 
 std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v);
-std::vector<float> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y);
+std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y);
 	
-
+std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v);
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //

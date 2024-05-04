@@ -108,7 +108,16 @@ public:
 	std::vector<BfVertex3> get_contour();
 
 	void generate_draw_data() override;
-
+	
+	/*
+	 * Возвращает набор из:
+	 * 1) Входная кромка 
+	 * 2) Спинка
+	 * 3) Выходная кромка
+	 * 4) Корыто
+	 *
+	 */
+	std::vector<std::shared_ptr<BfDrawObj>> get_shape_parts();
 	/*const BfBladeSectionCreateInfo& get_info();
 	BfBladeSectionCreateInfo* get_pInfo();*/
 
@@ -131,6 +140,7 @@ struct BfBladeBaseCreateInfo {
 	std::vector<BfBladeSectionCreateInfo> section_infos;
 };
 
+class BfBladeBaseSurface;
 
 class BfBladeBase : public BfDrawLayer {
 
@@ -144,10 +154,24 @@ public:
 	
 
 	//std::vector<BfBladeSectionCreateInfo*> get_pInfos();
+	
+	std::shared_ptr<BfBladeBaseSurface> get_shape();
 
-
+	std::shared_ptr<BfBladeBaseSurface> create_shape();
 private:
 
+
+};
+
+class BfBladeBaseSurface : public BfDrawObj { 
+	std::vector<std::shared_ptr<BfBladeSection>> __secs;
+	size_t __slices_count;
+	size_t __skip_vert;
+public:
+
+	BfBladeBaseSurface(const std::vector<std::shared_ptr<BfBladeSection>>& secs, size_t inner_sections_count, size_t skip_vert = 0);
+
+	virtual void create_vertices() override;
 
 };
 

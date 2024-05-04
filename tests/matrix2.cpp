@@ -1,3 +1,6 @@
+#include "catch2/benchmark/catch_benchmark.hpp"
+#include "catch2/matchers/catch_matchers_vector.hpp"
+#define CATCH_CONFIG_MAIN
 #include "catch2/catch_message.hpp"
 #include "catch2/catch_test_macros.hpp"
 #include <iostream>
@@ -159,40 +162,160 @@ TEST_CASE("begin_dim_left") {
             1, 2, 3,
             4, 5, 6,
             7, 8, 9
-        };
+        };    
         const size_t n = 3;
         const size_t m = 3;
         
         BfMatrix2<float> mtx(s_v, n, m);
     
+        // std::cout << "0nd diagonal" << std::endl;
         {
             std::vector<float> r {1, 5, 9};
             int i = 0;
-            // std::cout << *mtx.begin_dim_left(0) << ", " << *mtx.end_dim_left(0) << "\n";
             for (auto it = mtx.begin_dim_left(0); it != mtx.end_dim_left(0); it++) { 
-                UNSCOPED_INFO("Outout: iterator_value="<< *it << ", real=" << r[i]);
-                INFO("FDSFSDFSDFDS");
-                // REQUIRE(*it == r[i]);
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
                 i++;
             }
+            REQUIRE(i == 3);
         }
-        // {
-        //     std::vector<float> r {2, 6};
-        //     int i = 0;
-        //     for (auto it = mtx.begin_dim_left(1); it != mtx.end_dim_left(1); it++) { 
-        //         REQUIRE(*it == r[i]);
-        //         i++;
-        //     }
-        // }
-        // {
-        //     std::vector<float> r {3};
-        //     int i = 0;
-        //     for (auto it = mtx.begin_dim_left(2); it != mtx.end_dim_left(2); it++) { 
-        //         REQUIRE(*it == r[i]);
-        //         i++;
-        //     }
-        // }
+        // std::cout << "1st diagonal" << std::endl;
+        {
+            std::vector<float> r {2, 6};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(1); it != mtx.end_dim_left(1); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 2);
+        }
+        // std::cout << "2nd diagonal" << std::endl;
+        {
+            std::vector<float> r {3};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(2); it != mtx.end_dim_left(2); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 1);
+        }
+        // std::cout << "-1nd diagonal" << std::endl;
+        {
+            std::vector<float> r {4,8};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(-1); it != mtx.end_dim_left(-1); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 2);
+        }
+        // std::cout << "-2st diagonal" << std::endl;
+        {
+            std::vector<float> r {7};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(-2); it != mtx.end_dim_left(-2); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 1);
+        }
 }
+
+TEST_CASE("begin_dim_left_2") { 
+        std::vector<float> s_v {
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16
+        };    
+        const size_t n = 4;
+        const size_t m = 4;
+        
+        BfMatrix2<float> mtx(s_v, n, m);
+    
+        // std::cout << "0nd diagonal" << std::endl;
+        {
+            std::vector<float> r {1,6,11,16};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(0); it != mtx.end_dim_left(0); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 4);
+        }
+        // std::cout << "1st diagonal" << std::endl;
+        {
+            std::vector<float> r {2,7,12};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(1); it != mtx.end_dim_left(1); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 3);
+        }
+        // std::cout << "2nd diagonal" << std::endl;
+        {
+            std::vector<float> r {3,8};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(2); it != mtx.end_dim_left(2); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 2);
+        }
+        // std::cout << "3nd diagonal" << std::endl;
+        {
+            std::vector<float> r {4};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(3); it != mtx.end_dim_left(3); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 1);
+        }
+        // std::cout << "-1nd diagonal" << std::endl;
+        {
+            std::vector<float> r {5,10,15};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(-1); it != mtx.end_dim_left(-1); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 3);
+        }
+        // std::cout << "-2st diagonal" << std::endl;
+        {
+            std::vector<float> r {9,14};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(-2); it != mtx.end_dim_left(-2); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 2);
+        }
+        // std::cout << "-3st diagonal" << std::endl;
+        {
+            std::vector<float> r {13};
+            int i = 0;
+            for (auto it = mtx.begin_dim_left(-3); it != mtx.end_dim_left(-3); it++) { 
+                // std::cout << "Outout: iterator_value="<< *it << "(" << &(*it) << ")" << ", real=" << r[i] << "\n";
+                REQUIRE(*it == r[i]);
+                i++;
+            }
+            REQUIRE(i == 1);
+        }
+}
+
 
 
 TEST_CASE("SWAPS") { 
@@ -285,6 +408,153 @@ TEST_CASE("SWAPS") {
 
 } 
 
+TEST_CASE("det_triangular") { 
+    SECTION("1g") { 
+        BfMatrix2<float> mtx(
+                {1, 2, 3,
+                 4, 5, 6, 
+                 7, 8, 9},
+                3, 3
+            );
+        std::cout << mtx.upper_triangular_gauss() << "\n"; 
+        REQUIRE(mtx.det_triangular_gauss() == 0);
+    }
+    
+    SECTION("2b") { 
+        BfMatrix2<float> mtx(
+                {2,23,-30,
+                 9,4,4, 
+                 5,10,5},
+                3, 3
+            );
+        // std::cout << mtx.upper_triangular_bareiss() << "\n"; 
+        REQUIRE(mtx.det_bareiss() == -2715.0f);
+    }
+
+    SECTION("LU1") { 
+        BfMatrix2<float> mtx(
+                {2, 7, 1,
+                 3, -2, 0,
+                 1, 5, 3},
+                3, 3
+            );
+        auto LU = mtx.LU_decomposition();
+        std::cout << std::endl;
+        std::cout << LU.first << "\n" << LU.second << "\n";
+        std::cout << std::endl;
+        std::cout << LU.first * LU.second << "\n";
+
+    }
+    
+    SECTION("LU_DET") { 
+        BfMatrix2<float> mtx(
+                {2,23,-30,
+                 9,4,4, 
+                 5,10,5},
+                3, 3
+            );
+        // std::cout << mtx.upper_triangular_bareiss() << "\n"; 
+        REQUIRE(Catch::Approx(mtx.det_LU()).margin(0.01) == -2715.0f);
+    }
+    //
+    // SECTION("2g") { 
+    //     BfMatrix2<float> mtx(
+    //             {2,23,-30,
+    //              9,4,4, 
+    //              5,10,5},
+    //             3, 3
+    //         );
+    //     std::cout << mtx.upper_triangular_gauss() << "\n"; 
+    //     REQUIRE(mtx.det_triangular_gauss() == -2715.0f);
+    // }
+
+
+}
+
+TEST_CASE("DET_TIME") { 
+    BfMatrix2<float> f({
+        2, 1, 3, 5, 4,
+        3, 6, 2, 7, 8,
+        9, 4, 5, 1, 2,
+        8, 3, 7, 2, 6,
+        1, 9, 4, 3, 5
+
+
+    }, 5, 5);
+    
+    BfMatrix2<float> f2({
+5, 3, 2, 1, 7, 5, 3, 2, 1, 7, 5, 3,
+1, 2, 3, 4, 8, 6, 7, 8, 2, 1, 9, 4,
+9, 8, 7, 6, 4, 3, 2, 1, 7, 8, 3, 4,
+5, 6, 7, 8, 1, 2, 3, 4, 4, 5, 6, 7,
+1, 3, 5, 7, 9, 2, 4, 6, 8, 1, 3, 5,
+4, 6, 8, 2, 3, 1, 5, 7, 9, 2, 4, 6,
+3, 7, 2, 8, 3, 5, 1, 4, 7, 2, 8, 3,
+9, 1, 8, 6, 4, 2, 5, 3, 7, 9, 1, 8,
+7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 6, 5,
+4, 2, 3, 8, 6, 1, 5, 9, 7, 3, 4, 2,
+6, 7, 2, 1, 3, 8, 9, 5, 4, 6, 7, 2,
+8, 5, 9, 3, 1, 4, 6, 7, 2, 8, 5, 9
+    }, 12, 12);
+    
+   //
+   //  float d_bar;
+   //  float d_gau;
+   //  //
+    BENCHMARK("DET_BAREISS") { 
+    
+    f2.det_bareiss();
+    
+    };
+
+    BENCHMARK("DET_GAUSS") { 
+    
+    f2.det_triangular_gauss();
+    
+    };
+   // 
+   //  REQUIRE(d_bar == d_gau);
+   //
+   //  BENCHMARK("DET_LU") { 
+   //  auto PLU = f2.PLU_decomposition();
+    // std::cout <<     f2.det_LU();
+    // std::cout << "P=" <<  PLU[1] << "\n" << "L=" << PLU[2]<< "\n" << "U=" << PLU[3] << "\n";
+    // 
+    // BfMatrix2<float> res = PLU[2] * PLU[3];
+    //
+    // REQUIRE( PLU[1] * f2 == res );
+    //
+    // };
+}
+#include <Eigen/Dense>
+#include <unsupported/Eigen/Splines>
+
+
+    
+
+TEST_CASE("EIGEN") { 
+    Eigen::MatrixXf matrix(12, 12);
+
+    // Заполнение матрицы значениями
+    matrix << 5, 3, 2, 1, 7, 5, 3, 2, 1, 7, 5, 3,
+              1, 2, 3, 4, 8, 6, 7, 8, 2, 1, 9, 4,
+              9, 8, 7, 6, 4, 3, 2, 1, 7, 8, 3, 4,
+              5, 6, 7, 8, 1, 2, 3, 4, 4, 5, 6, 7,
+              1, 3, 5, 7, 9, 2, 4, 6, 8, 1, 3, 5,
+              4, 6, 8, 2, 3, 1, 5, 7, 9, 2, 4, 6,
+              3, 7, 2, 8, 3, 5, 1, 4, 7, 2, 8, 3,
+              9, 1, 8, 6, 4, 2, 5, 3, 7, 9, 1, 8,
+              7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 6, 5,
+              4, 2, 3, 8, 6, 1, 5, 9, 7, 3, 4, 2,
+              6, 7, 2, 1, 3, 8, 9, 5, 4, 6, 7, 2,
+              8, 5, 9, 3, 1, 4, 6, 7, 2, 8, 5, 9;
+    // 
+    // BENCHMARK("EIGEN_DET") { 
+    //     matrix.determinant();
+    //
+    // };
+    
+}
 
 // TEST_CASE("UPPER-TRIANGULAR FORM") { 
 //     // SECTION("SIMPLE") { 

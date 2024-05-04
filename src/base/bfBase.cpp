@@ -1632,6 +1632,7 @@ BfEvent bfCreateGraphicsPipelines(BfBase& base)
 BfEvent bfDestroyGraphicsPipelines(BfBase& base)
 {
 	vkDestroyPipeline(base.device, base.line_pipeline, nullptr);
+	vkDestroyPipeline(base.device, base.tline_pipeline, nullptr);
 	vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
 	
 	BfSingleEvent event{};

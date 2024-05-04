@@ -1,4 +1,7 @@
 #include "bfCurves3.h"
+#include "Eigen/Core"
+#include "Splines.h"
+#include "unsupported/Eigen/Splines"
 
 
 
@@ -770,49 +773,74 @@ std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>&
 }
 
 
-std::vector<float> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y) {
+std::vector<glm::vec2> bfMathSplineFit(
+	const std::vector<float>& x, 
+	const std::vector<float>& y
+) {
 	if (x.size() != y.size()) abort();
-	
-	size_t n = x.size() - 1;
-
-	std::vector<float> a(n);
-	std::vector<float> b(n);
-	std::vector<float> c(n);
-	std::vector<float> d(n);
-
-	BfMatrix M(4 * n, 4 * n, 0.0f);
-	BfMatrix B(4 * n, 1);
-
-	for (size_t i = 0; i < n; ++i) {
-		float h = x[i + 1] - x[i];
-		M[i * 4][i * 4] = 1;
-		M[i * 4][i * 4 + 1] = h;
-		M[i * 4][i * 4 + 2] = h * h;
-		M[i * 4][i * 4 + 3] = h * h * h;
-		M[i * 4 + 1][i * 4] = 1;
-		M[i * 4 + 1][i * 4 + 1] = h;
-		M[i * 4 + 1][i * 4 + 2] = h * h;
-		M[i * 4 + 1][i * 4 + 3] = h * h * h;
-		M[i * 4 + 2][i * 4] = 0;
-		M[i * 4 + 2][i * 4 + 1] = 1;
-		M[i * 4 + 2][i * 4 + 2] = 2 * h;
-		M[i * 4 + 2][i * 4 + 3] = 3 * h * h;
-		M[i * 4 + 3][i * 4] = 0;
-		M[i * 4 + 3][i * 4 + 1] = 0;
-		M[i * 4 + 3][i * 4 + 2] = 2;
-		M[i * 4 + 3][i * 4 + 3] = 6 * h;
-
-		B[i * 4][0] = y[i];
-		B[i * 4 + 1][0] = y[i + 1];
-		B[i * 4 + 2][0] = 0;
-		B[i * 4 + 3][0] = 0;
+	std::vector<SplineLib::Vec2f> p;
+	std::vector<glm::vec2> p2;
+	p.reserve(x.size());
+	p2.reserve(x.size());	
+	for (size_t i = 0; i < x.size(); i++) {
+	    p.emplace_back(SplineLib::Vec2f(x[i], y[i]));
+	    p2.emplace_back(glm::vec2{x[i], y[i]});
 	}
-	
-	BfVector sol = solve_linear_mtx(M, B);
 
-	return std::vector<float>();
+	SplineLib::cSpline2 splines[x.size()];
+	
+	// int numSplines = SplineLib::SplinesFromPoints(p.size(), p.data(), p.size() + 1, splines);
+
+	int numSplines = SplineLib::SplinesFromPoints(p.size(), p.data(), p.size() + 1, splines);
+	
+	std::vector<glm::vec2> out;
+
+	for (int i = 0; i < numSplines; i++) {
+	     for (float t = 0.0f; t <= 1.0f; t+=0.01) { 
+	          SplineLib::Vec2f p = SplineLib::Position(splines[i], t);
+		  out.emplace_back(glm::vec2{p.x, p.y});
+	     }
+	}	
+	return out;
 }
 
+
+std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v) { 
+	std::vector<SplineLib::Vec3f> spl_df_v;	
+	spl_df_v.reserve(v.size());	
+		
+	for (auto vert = v.begin(); vert != v.end(); ++vert) { 
+		spl_df_v.emplace_back(
+			SplineLib::Vec3f(vert->pos.x, vert->pos.y, vert->pos.z)
+		);
+	}
+	
+	SplineLib::cSpline3 splines[v.size()];
+
+	size_t splines_count = SplineLib::SplinesFromPoints(
+		v.size(), 
+		spl_df_v.data(), 
+		v.size() + 1, 
+		splines
+	);
+	
+	std::vector<SplineLib::cSpline3> o;
+	o.reserve(splines_count);
+
+	for (size_t i = 0; i < splines_count; ++i) { 
+		o.emplace_back(splines[i]);
+	}
+	return o;	
+}
+
+//
+// std::vector<BfVertex3> bfMathSplineFitExternal3D(
+// 	const std::vector<BfVertex3>& v
+// ) { 
+//        	
+//
+//
+// }
 
 //std::vector<glm::vec3> BfMathSplineFit(const std::vector<glm::vec3>& controlPoints, int numPoints) {
 //	std::vector<glm::vec3> splinePoints;

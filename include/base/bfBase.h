@@ -43,36 +43,36 @@ struct BfFramePack {
 
 
 struct BfBase {				 
-	BfWindow*				 window;
+	BfWindow*			 window;
 	BfPhysicalDevice*		 physical_device;
 							 
-	VkInstance				 instance;
+	VkInstance			 instance;
 	VkSurfaceKHR			 surface;
-	VkDevice				 device;
+	VkDevice			 device;
 	VkDebugUtilsMessengerEXT debug_messenger;
 							 
 	VkSwapchainKHR			 swap_chain;
-	VkFormat				 swap_chain_format;
-	VkExtent2D				 swap_chain_extent;
+	VkFormat			 swap_chain_format;
+	VkExtent2D			 swap_chain_extent;
 
 	BfAllocatedBuffer		 id_image_buffer;
 	BfAllocatedImage		 depth_image;
-	VkFormat				 depth_format;
+	VkFormat			 depth_format;
 
 	std::vector<BfImagePack> image_packs;
 	std::vector<BfFramePack> frame_pack;
-	uint32_t				 image_pack_count;
-	uint32_t				 current_image;
-	uint32_t				 current_frame;
+	uint32_t			 image_pack_count;
+	uint32_t			 current_image;
+	uint32_t			 current_frame;
 
 	VkRenderPass			 standart_render_pass;
 	VkRenderPass			 gui_render_pass;
 
-	VkPipeline				 tline_pipeline;
+	VkPipeline			 tline_pipeline;
 	VkPipelineLayout		 tline_pipeline_layout;
-	VkPipeline				 triangle_pipeline;
+	VkPipeline			 triangle_pipeline;
 	VkPipelineLayout		 triangle_pipeline_layout;
-	VkPipeline				 line_pipeline;
+	VkPipeline			 line_pipeline;
 	VkPipelineLayout		 line_pipeline_layout;
 
 	BfDescriptor			 descriptor;

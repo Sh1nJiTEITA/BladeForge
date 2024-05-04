@@ -1,6 +1,4 @@
-﻿# CMakeList.txt : CMake project for ${PROJECT_NAME}, include source and define
-# project specific logic here.
-#
+﻿
 cmake_minimum_required (VERSION 3.13 FATAL_ERROR)
 set (CMAKE_CXX_STANDARD 20)
 add_compile_options(-std=c++20) #optional to use c++11
@@ -246,6 +244,8 @@ add_subdirectory(external/glm)
 add_subdirectory(external/VulkanMemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanMemoryAllocator)
 
+add_subdirectory(external/splines-lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE splines-lib) 
 
 #add_subdirectory(external/FreeImage)
 
@@ -336,9 +336,11 @@ target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
 target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
 #target_link_libraries(tests PUBLIC SimpleMatrix)
 
+target_link_libraries(tests PRIVATE splines-lib) 
 #target_link_libraries(tests PUBLIC Eigen3::Eigen)
 #target_link_libraries(tests PUBLIC armadillo)
-
+include_directories(external/eigen)
+include_directories(external/splines-lib)
 target_link_libraries(tests PRIVATE glm)
 #target_link_libraries(tests PRIVATE glfw)
 #target_link_libraries(tests PRIVATE imgui)

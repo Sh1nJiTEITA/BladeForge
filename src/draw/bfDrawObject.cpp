@@ -343,8 +343,9 @@ void BfDrawLayer::del(uint32_t id) {
 		}
 	}
 
+	// TODO: BE CAREFULL ABORT WAS NOT COMMENTED
 	if (out_layer.get() == nullptr) {
-		abort();
+		// abort();
 	}
 	else {
 		auto root = BfLayerKiller::get_root();

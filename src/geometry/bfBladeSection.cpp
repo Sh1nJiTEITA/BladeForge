@@ -1,4 +1,7 @@
 #include "bfBladeSection.h"
+#include "Splines.h"
+#include "bfCurves3.h"
+#include <memory>
 
 bool bfCheckBladeSectionCreateInfoEquality(
 	const BfBladeSectionCreateInfo& i_1,
@@ -323,6 +326,16 @@ void BfBladeSection::generate_draw_data()  {
 	}
 	this->update_buffer();
 }
+
+std::vector<std::shared_ptr<BfDrawObj>> BfBladeSection::get_shape_parts() { 
+	return {
+		this->get_inlet_edge_a(), 
+		this->get_back_curve(), 
+		this->get_outlet_edge_a(),
+		this->get_face_curve()
+	};
+}
+
 //
 //const BfBladeSectionCreateInfo& BfBladeSection::get_info() {
 //	return this->__info;
@@ -971,6 +984,9 @@ BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo& info)
 }
 
 
+std::shared_ptr<BfBladeBaseSurface> BfBladeBase::get_shape() { 
+	return std::static_pointer_cast<BfBladeBaseSurface>(this->get_object_by_index(0));
+}
 //size_t BfBladeBase::add_section(const BfBladeSectionCreateInfo& info) {
 //	if (!info.layer_create_info.is_nested)
 //		throw std::runtime_error("Input blade section is not nested");
@@ -1002,3 +1018,145 @@ BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo& info)
 //
 //	return infos;
 //}
+
+BfBladeBaseSurface::BfBladeBaseSurface(const std::vector<std::shared_ptr<BfBladeSection>>& secs, size_t inner_sections_count,  size_t skip_vert)
+	: __secs {secs} 
+	, __slices_count {inner_sections_count}
+	, __skip_vert {skip_vert}
+{ 
+	this->create_vertices();
+	this->create_indices();
+
+	std::cout << "Vertices count: " << __vertices.size() << "\n";
+	std::cout << "Indices count: " << __indices.size() << "\n";
+}
+
+
+void BfBladeBaseSurface::create_vertices() { 
+	using T_parts = std::vector<std::shared_ptr<BfDrawObj>>;
+
+	std::vector<size_t> total_vertices;
+	std::vector<T_parts> parts;
+
+	total_vertices.reserve(__secs.size());
+	parts.reserve(__secs.size());
+
+	/*
+	 * Возвращает набор из:
+	 * 1) Входная кромка 
+	 * 2) Спинка
+	 * 3) Выходная кромка
+	 * 4) Корыто
+	 *
+	 */
+	for (auto sec = __secs.begin(); sec != __secs.end(); ++sec) { 
+		T_parts p = sec->get()->get_shape_parts();
+		parts.emplace_back(p);
+		size_t total_part_vert_count = 0;
+		for (auto part = p.begin(); part != p.end(); ++part) { 
+			total_part_vert_count += part->get()->get_vertices_count();
+		}
+		total_vertices.emplace_back(total_part_vert_count);
+	}
+	
+	// Проверяем, одинаковое ли количество точек во всех сечениях 
+	for (auto count = total_vertices.begin() + 1; count != total_vertices.end(); ++count) { 
+		if (*count != *(count-1)) { 
+			std::cout << "count are not the same" << "\n";
+		}
+	}
+
+	size_t parts_count = parts[0].size();	
+	// Идем по каждый части сечения по очереди
+	for (int p_index = 0; p_index < parts_count; ++p_index) {
+		// Идем по каждой точке во всех сечениях	
+		size_t vert_count = parts[0][p_index]->get_vertices_count();
+		
+		std::vector<std::vector<BfVertex3>> v_part;
+		v_part.resize((__slices_count) * (__secs.size() - 1));			
+		
+		for (auto it = v_part.begin(); it != v_part.end(); ++it) {
+			it->resize(vert_count);
+		}
+
+		for (size_t v_index = 0; v_index < vert_count; ++v_index) { 
+			std::vector<BfVertex3> spl_v;
+			spl_v.reserve(parts.size());
+
+			for (auto part = parts.begin(); part != parts.end(); ++part) { 
+				// Получаем все точки для составляющей сечения с индексом p_index	
+				spl_v.emplace_back((*part)[p_index]->get_rVertices()[v_index]);
+			}
+			
+			std::vector<SplineLib::cSpline3> spls = bfMathSplineFitExternal3D(spl_v);
+			size_t spl_index = 0;
+			for (auto spl = spls.begin(); spl != spls.end(); ++spl) { 
+				// std::cout << "Spline index:" << spl_index << "\n";
+				std::vector<BfVertex3> local_part_v;
+				local_part_v.reserve(__slices_count);
+				for (size_t i = 0; i < __slices_count; ++i) {
+					float t = (float)i / (__slices_count - 1);
+					SplineLib::Vec3f __fff = SplineLib::Position(*spl, t); 
+					v_part[spl_index+i][v_index] = BfVertex3({__fff.x, __fff.y, __fff.z}, {t,t,t},{0.0f,0.0f,0.0f});
+					// local_part_v.emplace_back(BfVertex3({__fff.x, __fff.y, __fff.z}));
+					// __vertices.push_back(BfVertex3({__fff.x, __fff.y, __fff.z}));
+					// std::sort(__vertices.begin(), __vertices.end(), [](const BfVertex3& a, const BfVertex3& b) {
+        // return a.pos.z < b.pos.z; });
+				}
+				spl_index += __slices_count;
+			}
+			// Triangulate across part
+					
+			
+		}
+		// std::cout << "Slices: " << v_part.size() << "\n";
+		// for (size_t i = 0; i < v_part.size(); ++i) {
+		// 	std::cout << "V:" << v_part[i].size() << "\n";
+		// 	for (size_t j = 0; j < v_part[j].size(); ++j) { 
+		// 		__vertices.push_back(v_part[i][j]);
+		// 	}
+		// }
+		for (size_t slice_index = 0; slice_index < v_part.size() - 1; ++slice_index) { 
+			for (size_t v_index = 0; v_index < v_part[slice_index].size() - 1; ++v_index) { 
+				// if (v_index == v_part[slice_index].size() - 2 && slice_index == v_part.size() - 2) { 
+				// 	continue;
+				// }
+				__vertices.emplace_back(v_part[slice_index][v_index]);
+				__vertices.emplace_back(v_part[slice_index][v_index+1]);
+				__vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				__vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				__vertices.emplace_back(v_part[slice_index + 1][v_index+1]);
+				__vertices.emplace_back(v_part[slice_index][v_index+1]);
+
+				// if (v_index == v_part[slice_index].size() - 2 && slice_index == v_part.size() - 2) { 
+				// 	con
+				// }
+				// 	__vertices.emplace_back(v_part[slice_index][v_index]);
+				// 	__vertices.emplace_back(v_part[slice_index][v_index+1]);
+				// 	__vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				// 	__vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				// 	__vertices.emplace_back(v_part[slice_index + 1][v_index+1]);
+				// 	__vertices.emplace_back(v_part[slice_index][v_index+1]);
+				// }
+			}
+		}
+		// __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1]);
+		// __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1+1]);
+		// __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1]);
+	}
+}
+
+std::shared_ptr<BfBladeBaseSurface> BfBladeBase::create_shape() { 
+	std::vector<std::shared_ptr<BfBladeSection>> secs;
+	secs.reserve(this->get_layer_count());
+
+	for (size_t i = 0; i < this->get_layer_count(); ++i) { 
+		secs.emplace_back(
+			std::dynamic_pointer_cast<BfBladeSection>(this->get_layer_by_index(i))
+		);
+	}
+
+
+	auto surface = std::make_shared<BfBladeBaseSurface>(secs, 20, 10);
+	return surface;
+}
