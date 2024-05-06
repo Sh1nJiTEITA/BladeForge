@@ -64,7 +64,7 @@ public:
 		return this->get_vertices();
 	}
 
-	std::array<uint16_t, 4> get_indices() {
+	std::array<uint32_t, 4> get_indices() {
 		return { 0, 1, 2, 3 };
 	}
 };
@@ -893,23 +893,23 @@ public:
 	}
 
 	/*
-	* Returns array of uint16_t indices of calculated handles for index-drawing.
+	* Returns array of uint32_t indices of calculated handles for index-drawing.
 	*
 	* Needed:	1. float length -> length of rectangle side
 	*			2. glm::vec3 color -> general color of whole handle
 	*
 	*/
-	std::vector<uint16_t> get_handles_indices() const {
-		std::vector<uint16_t> indices(vertices.size() * 6);
+	std::vector<uint32_t> get_handles_indices() const {
+		std::vector<uint32_t> indices(vertices.size() * 6);
 
 		size_t offset = 0;
 		for (size_t i = 0; i < indices.size(); i+=6) {
-			indices[i + 0] = static_cast<uint16_t>(offset+0);
-			indices[i + 1] = static_cast<uint16_t>(offset+1);
-			indices[i + 2] = static_cast<uint16_t>(offset+2);
-			indices[i + 3] = static_cast<uint16_t>(offset+2);
-			indices[i + 4] = static_cast<uint16_t>(offset+3);
-			indices[i + 5] = static_cast<uint16_t>(offset+0);
+			indices[i + 0] = static_cast<uint32_t>(offset+0);
+			indices[i + 1] = static_cast<uint32_t>(offset+1);
+			indices[i + 2] = static_cast<uint32_t>(offset+2);
+			indices[i + 3] = static_cast<uint32_t>(offset+2);
+			indices[i + 4] = static_cast<uint32_t>(offset+3);
+			indices[i + 5] = static_cast<uint32_t>(offset+0);
 			offset += 4;
 		}
 		return indices;
@@ -927,11 +927,11 @@ public:
 		return vertices;
 	}
 
-	std::vector<uint16_t> get_carcass_indices() const {
-		std::vector<uint16_t> indices(this->vertices.size());
+	std::vector<uint32_t> get_carcass_indices() const {
+		std::vector<uint32_t> indices(this->vertices.size());
 
 		for (size_t i = 0; i < indices.size(); i++) {
-			indices[i] = static_cast<uint16_t>(i);
+			indices[i] = static_cast<uint32_t>(i);
 		}
 		return indices;
 	}

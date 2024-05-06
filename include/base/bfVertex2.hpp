@@ -216,7 +216,7 @@ struct BfMesh : BfObjectData {
 	bool					is_fully_allocated;
 
 	std::vector<bfVertex>	vertices;
-	std::vector<uint16_t>	indices;
+	std::vector<uint32_t>	indices;
 
 	BfAllocatedBuffer		vertex_buffer;
 	BfAllocatedBuffer		index_buffer;
@@ -289,7 +289,7 @@ public:
 		bfCreateBuffer(&pMesh->vertex_buffer, allocator, vertex_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 		// Create index buffer
-		size_t index_size = bfGetMeshMaxSize(mesh_type, sizeof(uint16_t)); // ? 
+		size_t index_size = bfGetMeshMaxSize(mesh_type, sizeof(uint32_t)); // ? 
 
 		bfCreateBuffer(&pMesh->index_buffer, allocator, index_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
@@ -353,7 +353,7 @@ public:
 		void* index_data;
 		vmaMapMemory(allocator, pMesh->index_buffer.allocation, &index_data); 
 		{
-			memcpy(index_data, pMesh->indices.data(), sizeof(uint16_t) * pMesh->indices.size());
+			memcpy(index_data, pMesh->indices.data(), sizeof(uint32_t) * pMesh->indices.size());
 		}
 		vmaUnmapMemory(allocator, pMesh->index_buffer.allocation);
 	}
@@ -431,7 +431,7 @@ struct BfGeometrySet {
 
 	std::vector<BfGeometryData>  datas;
 	std::vector<BfVertex3>	  vertices;
-	std::vector<uint16_t>	  indices;
+	std::vector<uint32_t>	  indices;
 
 	BfAllocatedBuffer vertices_buffer;
 	BfAllocatedBuffer indices_buffer;
@@ -484,7 +484,7 @@ struct BfGeometrySet {
 		void* index_data;
 		vmaMapMemory(outside_allocator, indices_buffer.allocation, &index_data);
 		{
-			memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+			memcpy(index_data, indices.data(), sizeof(uint32_t) * indices.size());
 		}
 		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
 	}
@@ -534,7 +534,7 @@ struct BfGeometrySet {
 		vmaUnmapMemory(outside_allocator, allocation);
 	}
 
-	BfEvent add_data(const std::vector<BfVertex3>& _vertices, const std::vector<uint16_t>& _indices, const BfObjectData& obj_data) {
+	BfEvent add_data(const std::vector<BfVertex3>& _vertices, const std::vector<uint32_t>& _indices, const BfObjectData& obj_data) {
 		return add_data(_vertices.data(), _vertices.size(), _indices.data(), _indices.size(), &obj_data);
 
 		/*BfSingleEvent event{};
@@ -599,7 +599,7 @@ struct BfGeometrySet {
 		return event;*/
 	}
 
-	BfEvent add_data(const BfVertex3* pVertices, size_t countVertices, const uint16_t* pIndices, size_t countIndices, const BfObjectData* obj_data) {
+	BfEvent add_data(const BfVertex3* pVertices, size_t countVertices, const uint32_t* pIndices, size_t countIndices, const BfObjectData* obj_data) {
 		BfSingleEvent event{};
 		if (++ready_elements_count > allocated_elements_count) {
 			event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_GEOMETRY_SET_EVENT;
@@ -689,7 +689,7 @@ struct BfGeometrySet {
 
 		// Size for vertex buffer
 		size_t max_indices_size =						// Sizes:
-			sizeof(uint16_t) *							// Of 1 index
+			sizeof(uint32_t) *							// Of 1 index
 			BfmGeometrySetTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
 			elements_count;
 		//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves
@@ -778,7 +778,7 @@ struct BfGeometrySet {
 //	std::vector<BfCurveData> curve_datas;
 //
 //	std::vector<BfVertex3>	  vertices;
-//	std::vector<uint16_t>	  indices;
+//	std::vector<uint32_t>	  indices;
 //
 //	BfAllocatedBuffer vertices_buffer;
 //	BfAllocatedBuffer indices_buffer;
@@ -825,7 +825,7 @@ struct BfGeometrySet {
 //	}
 //	
 //
-//	void add_curve(std::vector<BfVertex3>& _vertices, std::vector<uint16_t>& _indices, BfObjectData obj_data) {
+//	void add_curve(std::vector<BfVertex3>& _vertices, std::vector<uint32_t>& _indices, BfObjectData obj_data) {
 //		if (++ready_elements_count > allocated_elements_count) {
 //			throw std::runtime_error("All curves in curve set with type = " + std::to_string(type) + "are ready, memory for additional curve wasn't allocated");
 //		}
@@ -890,7 +890,7 @@ struct BfGeometrySet {
 //		void* index_data;
 //		vmaMapMemory(outside_allocator, indices_buffer.allocation, &index_data);
 //		{
-//			memcpy(index_data, indices.data(), sizeof(uint16_t) * indices.size());
+//			memcpy(index_data, indices.data(), sizeof(uint32_t) * indices.size());
 //		}
 //		vmaUnmapMemory(outside_allocator, indices_buffer.allocation);
 //	}
@@ -941,7 +941,7 @@ struct BfGeometrySet {
 //
 //		// Size for vertex buffer
 //		size_t max_indices_size =						// Sizes:
-//			sizeof(uint16_t) *							// Of 1 index
+//			sizeof(uint32_t) *							// Of 1 index
 //			BfmCurveTypeMaxNumberOfVertices.at(type) *  // * max number of vertices in 1 curve
 //			elements_count;
 //			//BfmCurveTypeMaxElementsCount.at(type);		// * max number of curves

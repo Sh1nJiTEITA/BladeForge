@@ -35,7 +35,7 @@ struct BfUniformBezierProperties {
 };
 
 struct BfStorageBezierPoints {
-	uint16_t coo;
+	uint32_t coo;
 };
 
 

@@ -1026,6 +1026,9 @@ BfBladeBaseSurface::BfBladeBaseSurface(const std::vector<std::shared_ptr<BfBlade
 { 
 	this->create_vertices();
 	this->create_indices();
+	
+	for (auto it = __indices.end() - 1; it != __indices.end() - 400; --it) 
+		std::cout << *it << "\n";
 
 	std::cout << "Vertices count: " << __vertices.size() << "\n";
 	std::cout << "Indices count: " << __indices.size() << "\n";

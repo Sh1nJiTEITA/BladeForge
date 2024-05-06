@@ -179,7 +179,7 @@ BfLayerBuffer::BfLayerBuffer(VmaAllocator allocator,
 			throw std::runtime_error("vertex buffer wasn't created");
 		}
 
-		size_t index_size = sizeof(uint16_t) * max_vertex_count * max_obj_count;
+		size_t index_size = (size_t)(sizeof(uint32_t) * max_vertex_count * max_obj_count * 1.2);
 		BfEvent i_event = bfCreateBuffer(
 			&__index_buffer,
 			allocator,

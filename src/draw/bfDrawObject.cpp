@@ -49,7 +49,7 @@ const std::vector<BfVertex3>& BfDrawObj::get_rdVertices() const
 	return __dvertices;
 }
 
-const std::vector<uint16_t>& BfDrawObj::get_rIndices() const
+const std::vector<uint32_t>& BfDrawObj::get_rIndices() const
 {
 	return __indices;
 }
@@ -64,7 +64,7 @@ BfVertex3* BfDrawObj::get_pdVertices()
 	return __dvertices.data();
 }
 
-uint16_t* BfDrawObj::get_pIndices()
+uint32_t* BfDrawObj::get_pIndices()
 {
 	return __indices.data();
 }
@@ -105,7 +105,7 @@ size_t BfDrawObj::get_vertex_data_size()
 
 size_t BfDrawObj::get_index_data_size()
 {
-	return sizeof(uint16_t) * __indices.size();
+	return sizeof(uint32_t) * __indices.size();
 }
 
 VkPipeline* BfDrawObj::get_bound_pPipeline()
@@ -141,7 +141,7 @@ void BfDrawObj::create_indices()
 	if (!__indices.empty())
 		__indices.clear();
 
-	for (int i = 0; i < __vertices.size(); ++i) {
+	for (size_t i = 0; i < __vertices.size(); ++i) {
 		__indices.emplace_back(i);
 	}
 }
@@ -472,7 +472,7 @@ void BfDrawLayer::update_nested(void* v, void* i, size_t& off_v, size_t& off_i) 
 	}
 
 	for (const auto& obj : __objects) {
-		size_t size = sizeof(uint16_t) * obj->get_indices_count();
+		size_t size = sizeof(uint32_t) * obj->get_indices_count();
 
 		memcpy(reinterpret_cast<char*>(i) + off_i,
 			   obj->get_pIndices(),
@@ -505,7 +505,7 @@ void BfDrawLayer::update_buffer()
 
 		size_t offset_i = 0;
 		for (const auto& obj : __objects) {
-			size_t size = sizeof(uint16_t) * obj->get_indices_count();
+			size_t size = sizeof(uint32_t) * obj->get_indices_count();
 
 			memcpy(reinterpret_cast<char*>(index_data) + offset_i,
 				   obj->get_pIndices(),
@@ -553,7 +553,7 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer, size_t& offset, size_t& index_
 		vkCmdBindIndexBuffer(combuffer, 
 							 *__buffer.get_p_index_buffer(), 
 							 0, 
-							 VK_INDEX_TYPE_UINT16);
+							 VK_INDEX_TYPE_UINT32);
 	}
 
 	/*for (size_t i = 0; i < __layers.size(); i++) {

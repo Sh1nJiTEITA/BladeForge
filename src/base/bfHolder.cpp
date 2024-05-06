@@ -319,7 +319,7 @@ void bfAddToHolder(const BfLine& o, const BfObjectData& obj_data)
 		o.get_finish_point()
 	};
 
-	std::vector<uint16_t> line_indices{
+	std::vector<uint32_t> line_indices{
 		0,
 		1
 	};
@@ -337,7 +337,7 @@ void bfAddToHolder(const BfBezier& o, const BfObjectData& obj_data)
 
 	// --- Curve -----------------------------------------------------------------------//
 	const size_t cvert_count = o.get_cvertices().size();
-	std::vector<uint16_t> line_indices(cvert_count);
+	std::vector<uint32_t> line_indices(cvert_count);
 
 	for (size_t i = 0; i < cvert_count; i++) {
 		line_indices[i] = i;
@@ -346,13 +346,13 @@ void bfAddToHolder(const BfBezier& o, const BfObjectData& obj_data)
 
 	// --- Handle ----------------------------------------------------------------------//
 	std::vector<BfVertex3> handle_vertices = o.get_handles_vertices(0.05f, {0.0f, 1.0f, 0.0f});
-	std::vector<uint16_t> handle_indices = o.get_handles_indices();
+	std::vector<uint32_t> handle_indices = o.get_handles_indices();
 	pHandleSet->add_data(handle_vertices, handle_indices, obj_data);
 
 
 	// --- Carcass ---------------------------------------------------------------------//
 	std::vector<BfVertex3> carcass_vertices = o.get_carcass_vertices();
-	std::vector<uint16_t> carcass_indices = o.get_carcass_indices();
+	std::vector<uint32_t> carcass_indices = o.get_carcass_indices();
 	pCarcassSet->add_data(carcass_vertices, carcass_indices, obj_data);
 }
 

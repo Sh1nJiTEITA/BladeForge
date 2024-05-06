@@ -128,8 +128,8 @@ void BfMain::__start_loop()
 // BfLayerHandler
     auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator, 
                                                  sizeof(BfVertex3), 
-                                                 1000, 
-                                                 100, false);
+                                                 100000, 
+                                                 10, false);
 
     auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
         sizeof(BfVertex3),

@@ -152,7 +152,7 @@ class BfDrawObj : public BfGuiIntegration {
 protected:
 	std::vector<BfVertex3> __vertices;
 	std::vector<BfVertex3> __dvertices;
-	std::vector<uint16_t> __indices;
+	std::vector<uint32_t> __indices;
 
 	VkPipeline* __pPipeline = nullptr;
 	glm::mat4 __model_matrix = glm::mat4(1.0f);
@@ -169,11 +169,11 @@ public:
 
 	const std::vector<BfVertex3>& get_rVertices() const ;
 	const std::vector<BfVertex3>& get_rdVertices() const ;
-	const std::vector<uint16_t>& get_rIndices() const ;
+	const std::vector<uint32_t>& get_rIndices() const ;
 
 	BfVertex3* get_pVertices();
 	BfVertex3* get_pdVertices();
-	uint16_t* get_pIndices();
+	uint32_t* get_pIndices();
 
 	BfObjectData get_obj_data();
 
