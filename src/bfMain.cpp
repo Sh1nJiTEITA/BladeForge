@@ -820,7 +820,8 @@ void BfMain::__present_blade_base_create_window() {
 
     static std::vector<BfBladeSectionCreateInfo> old_infos;
     static std::vector<BfBladeSectionCreateInfo> infos;
-
+    
+    bool is_new_tab_item = false;
     ImGui::Begin("Create blade base");
     {
         if (ImGui::InputInt("Section count", &new_sec_count)) {
@@ -853,17 +854,10 @@ void BfMain::__present_blade_base_create_window() {
                 ns.t_pipeline = __base.triangle_pipeline,
 
                 infos.push_back(ns);
-                
-
-                //infos = __blade_bases->get_pInfos();
-
+                    
+                is_new_tab_item = true;
             }
-            
-
-
-            //for (auto& it : ids) if (it == 0) it = -1;
-                
-            
+           
             sec_count = new_sec_count;
         }
 
@@ -873,14 +867,17 @@ void BfMain::__present_blade_base_create_window() {
         if (ImGui::BeginTabBar("MyTabBar")) {
             for (size_t i = 0; i < sec_count; i++) {
                 std::string tab_name = "Section " + std::to_string(i + 1);
-
-                if (ImGui::BeginTabItem(tab_name.c_str())) {
-                    
-                    
-                    bfPresentBladeSectionInside(base_section_layer.get(), &infos[i], &old_infos[i]);
-
-
-                    ImGui::EndTabItem();
+                if ((i == sec_count - 1) and is_new_tab_item) {
+                    if (ImGui::BeginTabItem(tab_name.c_str(), nullptr, ImGuiTabItemFlags_SetSelected)) {
+                        bfPresentBladeSectionInside(base_section_layer.get(), &infos[i], &old_infos[i]);
+                        ImGui::EndTabItem();
+                    }
+                }
+                else {
+                    if (ImGui::BeginTabItem(tab_name.c_str())) {
+                        bfPresentBladeSectionInside(base_section_layer.get(), &infos[i], &old_infos[i]);
+                        ImGui::EndTabItem();
+                    }
                 }
             }
             
@@ -896,7 +893,6 @@ void BfMain::__present_blade_base_create_window() {
                 __other_layer->del(shape_id);
             
             auto base = std::static_pointer_cast<BfBladeBase>(__blade_bases->get_layer_by_index(0));
-        //
             auto shape = base->create_shape();
             shape->bind_pipeline(&__base.triangle_pipeline);
             __other_layer->add(shape);

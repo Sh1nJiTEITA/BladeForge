@@ -1075,7 +1075,7 @@ void BfBladeBaseSurface::create_vertices() {
 		// Идем по каждой точке во всех сечениях	
 		size_t vert_count = parts[0][p_index]->get_vertices_count();
 		
-		std::vector<std::vector<BfVertex3>> v_part;
+		std::vector<std::vector<glm::vec3>> v_part;
 		v_part.resize((__slices_count) * (__secs.size() - 1));			
 		
 		for (auto it = v_part.begin(); it != v_part.end(); ++it) {
@@ -1100,7 +1100,7 @@ void BfBladeBaseSurface::create_vertices() {
 				for (size_t i = 0; i < __slices_count; ++i) {
 					float t = (float)i / (__slices_count - 1);
 					SplineLib::Vec3f __fff = SplineLib::Position(*spl, t); 
-					v_part[spl_index+i][v_index] = BfVertex3({__fff.x, __fff.y, __fff.z}, {t,t,t},{0.0f,0.0f,0.0f});
+					v_part[spl_index+i][v_index] = {__fff.x, __fff.y, __fff.z}; 
 					// local_part_v.emplace_back(BfVertex3({__fff.x, __fff.y, __fff.z}));
 					// __vertices.push_back(BfVertex3({__fff.x, __fff.y, __fff.z}));
 					// std::sort(__vertices.begin(), __vertices.end(), [](const BfVertex3& a, const BfVertex3& b) {
@@ -1119,17 +1119,58 @@ void BfBladeBaseSurface::create_vertices() {
 		// 		__vertices.push_back(v_part[i][j]);
 		// 	}
 		// }
+
+		glm::vec3 color {1.0f, 1.0f, 1.0f};
+
 		for (size_t slice_index = 0; slice_index < v_part.size() - 1; ++slice_index) { 
 			for (size_t v_index = 0; v_index < v_part[slice_index].size() - 1; ++v_index) { 
-				// if (v_index == v_part[slice_index].size() - 2 && slice_index == v_part.size() - 2) { 
-				// 	continue;
-				// }
-				__vertices.emplace_back(v_part[slice_index][v_index]);
-				__vertices.emplace_back(v_part[slice_index][v_index+1]);
-				__vertices.emplace_back(v_part[slice_index + 1][v_index]);
-				__vertices.emplace_back(v_part[slice_index + 1][v_index]);
-				__vertices.emplace_back(v_part[slice_index + 1][v_index+1]);
-				__vertices.emplace_back(v_part[slice_index][v_index+1]);
+				
+				glm::vec3 n_1 = bfMathGetNormal(
+					v_part[slice_index][v_index], 
+					v_part[slice_index][v_index+1], 
+					v_part[slice_index + 1][v_index]
+				);
+				glm::vec3 n_2 = bfMathGetNormal(
+					v_part[slice_index + 1][v_index], 
+					v_part[slice_index + 1][v_index+1], 
+					v_part[slice_index][v_index]
+				);
+				
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index][v_index]},
+					color,
+					n_1	
+				});
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index][v_index + 1]},
+					color,
+					n_1	
+				});
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index + 1][v_index]},
+					color,
+					n_1	
+				});
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index + 1][v_index]},
+					color,
+					n_1	
+				});
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index + 1][v_index + 1]},
+					color,
+					n_1	
+				});
+				__vertices.emplace_back(BfVertex3{
+					{v_part[slice_index][v_index + 1]},
+					color,
+					n_1	
+				});
+				// __vertices.emplace_back(v_part[slice_index][v_index+1]);
+				// __vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				// __vertices.emplace_back(v_part[slice_index + 1][v_index]);
+				// __vertices.emplace_back(v_part[slice_index + 1][v_index+1]);
+				// __vertices.emplace_back(v_part[slice_index][v_index+1]);
 
 				// if (v_index == v_part[slice_index].size() - 2 && slice_index == v_part.size() - 2) { 
 				// 	con

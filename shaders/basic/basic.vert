@@ -47,6 +47,7 @@ layout(location = 2) in vec3 inNormals;
 
 layout(location = 2) out vec3 outNormals;
 layout(location = 0) out vec3 fragColor;
+layout(location = 3) out vec3 fragPos;
 layout(location = 4) flat out uint obj_index;
 
 
@@ -62,7 +63,7 @@ void main() {
     
     vec4 coo = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
     //debugPrintfEXT("%f, %f, %f", inPosition[0], inPosition[1], inPosition[2]);
-    outNormals = inNormals;
+    outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 
     gl_Position = coo;
     obj_index = gl_BaseInstance;
  
