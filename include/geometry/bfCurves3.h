@@ -4,7 +4,7 @@
 
 #include "bfDrawObject.h"
 #include "bfMatrix2.h"
-#include <unsupported/Eigen/Splines>
+// #include <unsupported/Eigen/Splines>
 #include <Splines.h>
 #include <cfloat>
 #include <glm/gtx/vector_angle.hpp>

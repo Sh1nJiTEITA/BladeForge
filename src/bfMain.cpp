@@ -1,8 +1,9 @@
-﻿#include "BfMain.h"
+﻿#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
+
+#include "BfMain.h"
 #include "imgui.h"
 #include <memory>
-
-
 
 
 void BfMain::__process_keys()
