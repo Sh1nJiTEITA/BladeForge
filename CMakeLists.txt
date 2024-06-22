@@ -284,13 +284,16 @@ include_directories(${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 link_directories(${Vulkan_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS})
 target_link_libraries(BladeForge PRIVATE ${Vulkan_LIBRARIES})
 
+find_package(Catch2 REQUIRED)
+
 # GLM
 set(IMGUI_IMPL_VULKAN
     ON
     CACHE BOOL "" FORCE)
 
-add_subdirectory(external/glm)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm)
+# add_subdirectory(external/glm)
+find_package(glm CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
 
 if(WIN32)
@@ -303,11 +306,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE GPUOpen::VulkanMemoryAllocator)
 add_subdirectory(external/splines-lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE splines-lib)
 
-add_subdirectory(external/imgui)
+add_subdirectory(external/imgui_doc)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
 
 # CATCH 2
-add_subdirectory(external/catch2)
+# add_subdirectory(external/catch2)
 
 # Tests
 # ~~~
@@ -340,4 +343,5 @@ target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
 target_link_libraries(tests PRIVATE splines-lib)
 include_directories(external/eigen)
 include_directories(external/splines-lib)
-target_link_libraries(tests PRIVATE glm)
+# target_link_libraries(tests PRIVATE glm)
+target_link_libraries(tests PRIVATE glm::glm)

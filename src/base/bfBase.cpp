@@ -1,4 +1,5 @@
 #include "bfBase.h"
+#include <imgui_impl_vulkan.h>
 
 // Function definitions
 BfEvent bfCreateInstance(BfBase &base) {
@@ -715,7 +716,7 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //// BfEvent recording
 //	BfSingleEvent event{};
 //	event.type =
-//BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+// BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 //
 //	bool is_descriptors_init_successfull = true;
 //	// Additional Infolog for bfSingleEvent
@@ -735,7 +736,8 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //	// pack
 //	if (pHolder->uniform_view_buffers.size() != MAX_FRAMES_IN_FLIGHT) { //
-//UniformBuffer's 		pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
+// UniformBuffer's
+// pHolder->uniform_view_buffers.resize(MAX_FRAMES_IN_FLIGHT);
 //	}
 //	if (pHolder->model_buffers.size() != MAX_FRAMES_IN_FLIGHT) {
 //		pHolder->model_buffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -746,7 +748,8 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //	// sets
 //	if (pHolder->global_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) { //
-//DescriptorSet's 		pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
+// DescriptorSet's
+// pHolder->global_descriptor_sets.resize(MAX_FRAMES_IN_FLIGHT);
 //	}
 //
 //	if (pHolder->main_descriptor_sets.size() != MAX_FRAMES_IN_FLIGHT) {
@@ -756,8 +759,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //// Dynamic uniform buffer preparations
 //	/*const size_t bezier_properties_uniform_buffer_size =
-//MAX_FRAMES_IN_FLIGHT * 		bfPadUniformBufferSize(base.physical_device,
-//sizeof(BfUniformBezierProperties));*/
+// MAX_FRAMES_IN_FLIGHT *
+// bfPadUniformBufferSize(base.physical_device,
+// sizeof(BfUniformBezierProperties));*/
 //
 //	// Test buffer (bezier-properties)
 //	/*bfCreateBuffer(&base.bezier_properties_uniform_buffer,
@@ -774,7 +778,7 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		//bfCreateBuffer(&pHolder->bezier_points_buffers[i],
 //		//			   base.allocator,
 //		//			   sizeof(BfStorageBezierPoints), //*
-//MAX_BEZIER_POINTS,
+// MAX_BEZIER_POINTS,
 //		//			   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 //		//			   VMA_MEMORY_USAGE_CPU_TO_GPU);
 //
@@ -782,7 +786,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		bfCreateBuffer(&pHolder->model_buffers[i],
 //						base.allocator,
 //						sizeof(BfObjectData) *
-//MAX_OBJECTS, 						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 						VMA_MEMORY_USAGE_CPU_TO_GPU);
+// MAX_OBJECTS,
+// VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+// VMA_MEMORY_USAGE_CPU_TO_GPU);
 //
 //		// Create buffer for view uniform
 //		bfCreateBuffer(&pHolder->uniform_view_buffers[i],//*camUniformBuffer,
@@ -795,7 +801,7 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		//bfCreateBuffer(&pHolder->pos_pick_buffers[i],//*camUniformBuffer,
 //		//				base.allocator,
 //		//				sizeof(uint16_t) *
-//MAX_DEPTH_CURSOR_POS_ELEMENTS,
+// MAX_DEPTH_CURSOR_POS_ELEMENTS,
 //		//	VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
 //		//	VMA_ALLOCATION_CREATE_MAPPED_BIT,
 //		//				VMA_MEMORY_USAGE_AUTO,
@@ -803,14 +809,15 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //&base.frame_pack[i].pos_pick_alloc_info);
 //
 //		/*VkBufferCreateInfo bufCreateInfo = {
-//VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO }; 		bufCreateInfo.size = sizeof(uint32_t)
+// VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO }; 		bufCreateInfo.size =
+// sizeof(uint32_t)
 //* MAX_DEPTH_CURSOR_POS_ELEMENTS; 		bufCreateInfo.usage =
-//VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+// VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 //
 //		VmaAllocationCreateInfo allocCreateInfo = {};
 //		allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 //		allocCreateInfo.flags =
-//VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+// VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
 //			VMA_ALLOCATION_CREATE_MAPPED_BIT;
 //
 //
@@ -823,8 +830,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		bfCreateBuffer(&pHolder->pos_pick_buffers[i],
 //						base.allocator,
 //						sizeof(uint32_t) *
-//MAX_DEPTH_CURSOR_POS_ELEMENTS, 						VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-//						VMA_MEMORY_USAGE_AUTO,
+// MAX_DEPTH_CURSOR_POS_ELEMENTS,
+// VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+// VMA_MEMORY_USAGE_AUTO,
 //						VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
 //| VMA_ALLOCATION_CREATE_MAPPED_BIT);
 //	}
@@ -844,11 +852,11 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //
 //	VkDescriptorSetLayoutBinding viewBufferBinding =
-//bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-//VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+// bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+// VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
 //	//VkDescriptorSetLayoutBinding bezierPropertinesBufferbinding =
-//bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-//VK_SHADER_STAGE_VERTEX_BIT, 1);
+// bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+// VK_SHADER_STAGE_VERTEX_BIT, 1);
 //
 //	// Bindings to desctiptor set layout
 //	std::vector<VkDescriptorSetLayoutBinding> global_bindings = {
@@ -860,9 +868,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //	// Descriptor global set layout
 //	VkDescriptorSetLayoutCreateInfo globalDescriptorSetLayoutInfo{};
 //	globalDescriptorSetLayoutInfo.sType		   =
-//VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 //	globalDescriptorSetLayoutInfo.bindingCount =
-//static_cast<uint32_t>(global_bindings.size());
+// static_cast<uint32_t>(global_bindings.size());
 //	globalDescriptorSetLayoutInfo.pNext		   = nullptr;
 //	globalDescriptorSetLayoutInfo.flags		   = 0;
 //	globalDescriptorSetLayoutInfo.pBindings	   = global_bindings.data();
@@ -872,23 +880,24 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //									nullptr,
 //									&base.global_set_layout)
 //== VK_SUCCESS) { 		ss << "Global VkDescriptorSetLayout for " <<
-//global_bindings.size() << "bindings was" 			"created successfully;";
+// global_bindings.size() << "bindings was" 			"created
+// successfully;";
 //	}
 //	else {
 //		is_descriptors_init_successfull = false;
 //		ss << "Global VkDescriptorSetLayout for " <<
-//global_bindings.size() << "bindings wasn't" 			"created;";
+// global_bindings.size() << "bindings wasn't" 			"created;";
 //	}
 //
 //// Main descriptor set layout
 ///------------------------------------------------------------
 //
 //	VkDescriptorSetLayoutBinding modelMatrixBinding =
-//bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+// bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+// VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
 //	VkDescriptorSetLayoutBinding cursorPosBinding =
-//bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-//VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 1);
+// bfGetDescriptorSetLayoutBinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+// VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 1);
 //
 //	// Bindings to main desctiptor set layout
 //	std::vector<VkDescriptorSetLayoutBinding> main_bindings = {
@@ -898,12 +907,12 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //	VkDescriptorSetLayoutCreateInfo mainSetLayourCreateInfo{};
 //	mainSetLayourCreateInfo.sType		 =
-//VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 //	mainSetLayourCreateInfo.pNext		 = nullptr;
 //	mainSetLayourCreateInfo.flags		 = 0;
 //	mainSetLayourCreateInfo.pBindings	 = main_bindings.data();
 //	mainSetLayourCreateInfo.bindingCount =
-//static_cast<uint32_t>(main_bindings.size());
+// static_cast<uint32_t>(main_bindings.size());
 //
 //	if (vkCreateDescriptorSetLayout(base.device,
 //		&mainSetLayourCreateInfo,
@@ -929,9 +938,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //	VkDescriptorPoolCreateInfo poolInfo{};
 //	poolInfo.sType		   =
-//VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO; 	poolInfo.pNext		   =
-//nullptr; 	poolInfo.flags		   = 0; 	poolInfo.maxSets	   = 10;
-//	poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
+// VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO; 	poolInfo.pNext =
+// nullptr; 	poolInfo.flags		   = 0; 	poolInfo.maxSets
+// = 10; 	poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
 //	poolInfo.pPoolSizes	   = sizes.data();
 //
 //	if (vkCreateDescriptorPool(base.device,
@@ -960,22 +969,22 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		base.frame_pack[i].uniform_view_buffer   =
 //&pHolder->uniform_view_buffers[i];
 //		//base.frame_pack[i].bezier_points_buffer  =
-//&pHolder->bezier_points_buffers[i]; 		base.frame_pack[i].model_matrix_buffer   =
-//&pHolder->model_buffers[i]; 		base.frame_pack[i].pos_pick_buffer =
-//&pHolder->pos_pick_buffers[i];
+//&pHolder->bezier_points_buffers[i];
+// base.frame_pack[i].model_matrix_buffer   = &pHolder->model_buffers[i];
+// base.frame_pack[i].pos_pick_buffer = &pHolder->pos_pick_buffers[i];
 //
 //		base.frame_pack[i].global_descriptor_set =
-//&pHolder->global_descriptor_sets[i]; 		base.frame_pack[i].main_descriptor_set =
-//&pHolder->main_descriptor_sets[i];
+//&pHolder->global_descriptor_sets[i];
+// base.frame_pack[i].main_descriptor_set = &pHolder->main_descriptor_sets[i];
 //
 //
 //		// Use needed uniform buffer value
 //		BfAllocatedBuffer* camUniformBuffer    =
-//base.frame_pack[i].uniform_view_buffer;
+// base.frame_pack[i].uniform_view_buffer;
 //		//BfAllocatedBuffer* bezierStorageBuffer =
-//base.frame_pack[i].bezier_points_buffer; 		BfAllocatedBuffer* modelMatrixBuffer
-//= base.frame_pack[i].model_matrix_buffer; 		BfAllocatedBuffer* posPickBuffer
-//= base.frame_pack[i].pos_pick_buffer;
+// base.frame_pack[i].bezier_points_buffer; 		BfAllocatedBuffer*
+// modelMatrixBuffer = base.frame_pack[i].model_matrix_buffer;
+// BfAllocatedBuffer* posPickBuffer = base.frame_pack[i].pos_pick_buffer;
 //
 //
 //	// Allocate global descriptor sets
@@ -983,18 +992,18 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //		VkDescriptorSetAllocateInfo globalDescriptorSetAllocInfo{};
 //		globalDescriptorSetAllocInfo.sType			    =
-//VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 //		globalDescriptorSetAllocInfo.pNext			    =
-//nullptr; 		globalDescriptorSetAllocInfo.descriptorPool	    =
-//base.standart_descriptor_pool; 		globalDescriptorSetAllocInfo.descriptorSetCount
-//= 1; // 1 for each frame 		globalDescriptorSetAllocInfo.pSetLayouts =
-//&base.global_set_layout;
+// nullptr; 		globalDescriptorSetAllocInfo.descriptorPool	    =
+// base.standart_descriptor_pool;
+// globalDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+// globalDescriptorSetAllocInfo.pSetLayouts = &base.global_set_layout;
 //
 //		if (vkAllocateDescriptorSets(base.device,
 //									 &globalDescriptorSetAllocInfo,
 //									 base.frame_pack[i].global_descriptor_set)
-//== VK_SUCCESS) { 			ss << "Global VkDescriptorsSet for frame " << i << "was
-//allocated;";
+//== VK_SUCCESS) { 			ss << "Global VkDescriptorsSet for frame
+//" << i << "was allocated;";
 //		}
 //		else {
 //			is_descriptors_init_successfull = false;
@@ -1007,23 +1016,24 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //
 //		VkDescriptorSetAllocateInfo mainDescriptorSetAllocInfo{};
 //		mainDescriptorSetAllocInfo.sType			  =
-//VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+// VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 //		mainDescriptorSetAllocInfo.pNext			  =
-//nullptr; 		mainDescriptorSetAllocInfo.descriptorPool	  =
-//base.standart_descriptor_pool; 		mainDescriptorSetAllocInfo.descriptorSetCount =
-//1; // 1 for each frame 		mainDescriptorSetAllocInfo.pSetLayouts		  =
+// nullptr; 		mainDescriptorSetAllocInfo.descriptorPool	  =
+// base.standart_descriptor_pool;
+// mainDescriptorSetAllocInfo.descriptorSetCount = 1; // 1 for each frame
+// mainDescriptorSetAllocInfo.pSetLayouts		  =
 //&base.main_set_layout;
 //
 //		if (vkAllocateDescriptorSets(base.device,
 //			&mainDescriptorSetAllocInfo,
 //			base.frame_pack[i].main_descriptor_set) == VK_SUCCESS) {
 //			ss << "Main VkDescriptorsSet for frame " << i << "was
-//allocated;";
+// allocated;";
 //		}
 //		else {
 //			is_descriptors_init_successfull = false;
 //			ss << "Main VkDescriptorsSet for frame " << i << "wasn't
-//allocated;";
+// allocated;";
 //		}
 //
 //// Make descriptors point to uniform buffers (data)
@@ -1033,63 +1043,64 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		VkDescriptorBufferInfo viewUniformbufferInfo{};
 //		viewUniformbufferInfo.buffer = camUniformBuffer->buffer;
 //		viewUniformbufferInfo.offset = 0;
-//// From start 		viewUniformbufferInfo.range  = sizeof(BfUniformView);  // Length
-//in bites of data
+//// From start 		viewUniformbufferInfo.range  =
+/// sizeof(BfUniformView);  // Length
+// in bites of data
 //
 //		//// Bezier properties Uniform buffer
 //		//VkDescriptorBufferInfo bezierPropertiesUniformbufferInfo{};
 //		//bezierPropertiesUniformbufferInfo.buffer =
-//base.bezier_properties_uniform_buffer.buffer;
+// base.bezier_properties_uniform_buffer.buffer;
 //		//bezierPropertiesUniformbufferInfo.offset = 0;
 //		//bezierPropertiesUniformbufferInfo.range =
-//sizeof(BfUniformBezierProperties);  // Length in bites of data
+// sizeof(BfUniformBezierProperties);  // Length in bites of data
 //
 //		//// Bezier points storage buffer
 //		//VkDescriptorBufferInfo bezierPointStoragebufferInfo{};
 //		//bezierPointStoragebufferInfo.buffer =
-//bezierStorageBuffer->buffer;
+// bezierStorageBuffer->buffer;
 //		//bezierPointStoragebufferInfo.offset = 0;
 //		//bezierPointStoragebufferInfo.range =
-//sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
+// sizeof(BfStorageBezierPoints) * MAX_BEZIER_POINTS;
 //
 //		VkDescriptorBufferInfo modelStoragebufferInfo{};
 //		modelStoragebufferInfo.buffer = modelMatrixBuffer->buffer;
 //		modelStoragebufferInfo.offset = 0;
 //		modelStoragebufferInfo.range = sizeof(BfObjectData) *
-//MAX_OBJECTS;
+// MAX_OBJECTS;
 //
 //		VkDescriptorBufferInfo posPickStoragebufferInfo{};
 //		posPickStoragebufferInfo.buffer = posPickBuffer->buffer;
 //		posPickStoragebufferInfo.offset = 0;
 //		posPickStoragebufferInfo.range = sizeof(uint32_t) *
-//MAX_DEPTH_CURSOR_POS_ELEMENTS;
+// MAX_DEPTH_CURSOR_POS_ELEMENTS;
 //
 //		VkWriteDescriptorSet viewWrite =
-//bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+// bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 //																*base.frame_pack[i].global_descriptor_set,
 //																&viewUniformbufferInfo,
 //																 viewBufferBinding.binding);
 //
 //		VkWriteDescriptorSet posPickWrite =
-//bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+// bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 //																   *base.frame_pack[i].main_descriptor_set,
 //																   &posPickStoragebufferInfo,
 //																   cursorPosBinding.binding);
 //
 //		/*VkWriteDescriptorSet bezierPropertiesWrite =
-//bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+// bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
 //																			*base.frame_pack[i].global_descriptor_set,
 //																			&bezierPropertiesUniformbufferInfo,
 //																			 bezierPropertinesBufferbinding.binding);
 //
 //		VkWriteDescriptorSet bezierPointsPropertiesWrite =
-//bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+// bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 //																				  *base.frame_pack[i].main_descriptor_set,
 //																				  &bezierPointStoragebufferInfo,
 //																				   bezierPointsBinding.binding);*/
 //
 //		VkWriteDescriptorSet modelWrite =
-//bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+// bfWriteDescriptorBuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 //																  *base.frame_pack[i].main_descriptor_set,
 //																  &modelStoragebufferInfo,
 //																  modelMatrixBinding.binding);
@@ -1103,46 +1114,46 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base) {
 //		};
 //
 //		vkUpdateDescriptorSets(base.device,
-//static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
+// static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
 //
 //		if (vmaMapMemory(base.allocator,
 //						 base.frame_pack[i].uniform_view_buffer->allocation,
 //						&base.frame_pack[i].uniform_view_data)
-//== VK_SUCCESS) { 			ss << "vmaMapMemory was successful for View-Uniform
-//descriptor of frame " << i;
+//== VK_SUCCESS) { 			ss << "vmaMapMemory was successful for
+// View-Uniform descriptor of frame " << i;
 //		}
 //		else {
 //			is_descriptors_init_successfull = false;
 //			ss << "vmaMapMemory wasn't successful for View-Uniform
-//descriptor of frame " << i;
+// descriptor of frame " << i;
 //		}
 //
 //		/*if (vmaMapMemory(base.allocator,
 //			base.bezier_properties_uniform_buffer.allocation,
 //			(void**)&base.bezier_data) == VK_SUCCESS) {
 //			ss << "vmaMapMemory was successful for View-Uniform
-//descriptor of frame " << i;
+// descriptor of frame " << i;
 //		}
 //		else {
 //			is_descriptors_init_successfull = false;
 //			ss << "vmaMapMemory wasn't successful for View-Uniform
-//descriptor of frame " << i;
+// descriptor of frame " << i;
 //		}*/
 //
 //	}
 //
 //	if (is_descriptors_init_successfull) {
 //		event.action =
-//BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS;
+// BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_SUCCESS;
 //	}
 //	else {
 //		event.action =
-//BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE;
+// BfEnActionType::BF_ACTION_INIT_WHOLE_DISCRIPTORS_FAILURE;
 //	}
 //	event.info = ss.str();
 //
 //	return BfEvent(event);
-//}
+// }
 
 BfEvent bfInitOwnDescriptors(BfBase &base) {
   base.descriptor.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
@@ -1261,8 +1272,9 @@ BfEvent bfInitOwnDescriptors(BfBase &base) {
 
   VkImageViewCreateInfo id_image_info = {};
   id_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  id_image_info.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; // VK_IMAGE_VIEW_TYPE_2D;
-  id_image_info.format = VK_FORMAT_R32_SFLOAT;          // VK_FORMAT_R32_UINT;
+  id_image_info.viewType =
+      VK_IMAGE_VIEW_TYPE_2D_ARRAY;             // VK_IMAGE_VIEW_TYPE_2D;
+  id_image_info.format = VK_FORMAT_R32_SFLOAT; // VK_FORMAT_R32_UINT;
   id_image_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   id_image_info.subresourceRange.baseMipLevel = 0;
   id_image_info.subresourceRange.levelCount = 1;
@@ -1972,8 +1984,12 @@ BfEvent bfInitImGUI(BfBase &base) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImPlot::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
+
+  ImGuiIO& io = ImGui::GetIO(); (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+
+  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport /
+
   ImGui::StyleColorsClassic();
 
   // Setup Platform/Renderer bindings
@@ -1991,6 +2007,7 @@ BfEvent bfInitImGUI(BfBase &base) {
   init_info.PipelineCache = VK_NULL_HANDLE;
   init_info.DescriptorPool = base.gui_descriptor_pool;
   init_info.Allocator = nullptr;
+  init_info.RenderPass = base.gui_render_pass;
 
   BfSwapChainSupport swapChainSupport;
   bfGetSwapChainSupport(base.physical_device->physical_device, base.surface,
@@ -2023,11 +2040,11 @@ BfEvent bfInitImGUI(BfBase &base) {
   init_info.MinImageCount = imageCount;
   init_info.CheckVkResultFn = check_vk_result;
 
-  ImGui_ImplVulkan_Init(&init_info, base.gui_render_pass);
+  ImGui_ImplVulkan_Init(&init_info);
 
   VkCommandBuffer command_buffer;
   bfBeginSingleTimeCommands(base, command_buffer);
-  ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+  ImGui_ImplVulkan_CreateFontsTexture();
   bfEndSingleTimeCommands(base, command_buffer);
   return BfEvent();
 }
@@ -2245,17 +2262,17 @@ BfEvent bfDestroyAllocator(BfBase &base) {
 //	if (base.is_resized) {
 //		void* vertex_data;
 //		vmaMapMemory(base.allocator,
-//base.dynamic_vertex_buffer.allocation, &vertex_data); 			memcpy(vertex_data,
-//mesh.vertices.data(), sizeof(bfVertex) * mesh.vertices.size());
-//		vmaUnmapMemory(base.allocator,
-//base.dynamic_vertex_buffer.allocation);
+// base.dynamic_vertex_buffer.allocation, &vertex_data);
+// memcpy(vertex_data, mesh.vertices.data(), sizeof(bfVertex) *
+// mesh.vertices.size()); 		vmaUnmapMemory(base.allocator,
+// base.dynamic_vertex_buffer.allocation);
 //
 //		void* index_data;
 //		vmaMapMemory(base.allocator,
-//base.dynamic_index_buffer.allocation, &index_data); 			memcpy(index_data,
-//mesh.indices.data(), sizeof(uint32_t) * mesh.indices.size());
-//		vmaUnmapMemory(base.allocator,
-//base.dynamic_index_buffer.allocation);
+// base.dynamic_index_buffer.allocation, &index_data);
+// memcpy(index_data, mesh.indices.data(), sizeof(uint32_t) *
+// mesh.indices.size()); 		vmaUnmapMemory(base.allocator,
+// base.dynamic_index_buffer.allocation);
 //
 //		base.is_resized = false;
 //	}
@@ -2829,12 +2846,13 @@ void bfMainRecordCommandBuffer(BfBase &base) {
 
     region.imageOffset = {x, y, 0};
 
-    vkCmdCopyImageToBuffer(local_buffer,
-                           // base.descriptor.get_image(BfDescriptorPosPickUsage,
-                           // base.current_frame)->image,
-                           *base.image_packs[base.current_image].pImage_id,
-                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                           base.id_image_buffer.buffer, 1, &region);
+    vkCmdCopyImageToBuffer(
+        local_buffer,
+        // base.descriptor.get_image(BfDescriptorPosPickUsage,
+        // base.current_frame)->image,
+        *base.image_packs[base.current_image].pImage_id,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, base.id_image_buffer.buffer, 1,
+        &region);
   }
 
   if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS) {
