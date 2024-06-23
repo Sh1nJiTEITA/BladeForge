@@ -1,285 +1,386 @@
 #include "bfGUI.h"
+
+#include <functional>
+#include <memory>
+
 #include "bfCurves3.h"
-
-
-
+#include "bfDrawObjectDefineType.h"
+#include "imgui.h"
 
 std::string bfGetMenueInfoStr(BfGUI gui)
 {
-	if (gui.is_info) return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_ENABLED);
-	else return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_DISABLED);
+   if (gui.is_info)
+      return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_ENABLED);
+   else
+      return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_DISABLED);
 };
 
-std::string bfGetMenueEventLogStr(BfGUI gui) {
-    if (gui.is_event_log) return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
-    else return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
-}
-
-std::string bfGetMenueCameraInfoStr(BfGUI gui) {
-    if (gui.is_camera_info) return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_ENABLED);
-    else return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_DISABLED);
-}
-
-void bfPresentLayerHandler(BfLayerHandler& layer_handler)
+std::string bfGetMenueEventLogStr(BfGUI gui)
 {
-
-    // ѕример данных (переменные)
-    Variable var1 = { "Variable 1", { 10, 20, 30 } };
-    Variable var2 = { "Variable 2", { 100, 200, 300 } };
-
-    // ќтображаем основное окно
-    ImGui::Begin("Debug Window");
-
-    // ќтображаем переменные и позвол€ем пользователю нажать на них
-    if (ImGui::CollapsingHeader("Variables")) {
-        for (size_t i = 0; i < layer_handler.get_layer_count(); i++) {
-            
-            auto layer = layer_handler.get_layer_by_index(i);
-            std::string layer_name = "Layer " + std::to_string(layer->id.get());
-
-            if (ImGui::TreeNode(layer_name.c_str())) {
-                for (size_t j = 0; j < layer->get_obj_count(); ++j) {
-                    
-                    auto obj = layer->get_object_by_index(j);
-                    std::string obj_name = "Obj " + std::to_string(obj->id.get()) + ", " + bfGetStrNameDrawObjType(obj->id.get_type());
-                    
-                    ImGui::Selectable(obj_name.c_str(),
-                        layer->get_object_by_index(j)->get_pSelection(),
-                        ImGuiSelectableFlags_AllowDoubleClick);
-                   
-                }
-
-                
-                
-                
-                ImGui::TreePop();
-            }
-        }
-        
-        
-        
-    }
-
-    if (ImGui::Button("Delete")) {
-               
-        std::vector<uint32_t> ids;
-        ids.reserve(layer_handler.get_whole_obj_count());
-
-        for (size_t i = 0; i < layer_handler.get_layer_count(); i++) {
-            ids.clear();
-            auto layer = layer_handler.get_layer_by_index(i);
-            for (size_t j = 0; j < layer->get_obj_count(); j++) {
-                if (*layer->get_object_by_index(j)->get_pSelection())
-   
-                    ids.emplace_back(layer->get_object_by_index(j)->id.get());
-     
-            }
-
-            layer->del(ids);
-        }
-     
-    }
-
-
-    ImGui::End();
-
+   if (gui.is_event_log)
+      return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
+   else
+      return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
 }
 
-void bfPresentBladeSectionInside(BfBladeBase* layer, BfBladeSectionCreateInfo* info, BfBladeSectionCreateInfo* old)
+std::string bfGetMenueCameraInfoStr(BfGUI gui)
 {
-    static int inputFloatMode = 0;
-    auto make_row = [](std::string n,
-        std::string d,
-        std::string dim,
-        float* value,
-        float left,
-        float right)
-        {
-            static int count = 0;
+   if (gui.is_camera_info)
+      return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_ENABLED);
+   else
+      return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_DISABLED);
+}
 
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text(n.c_str());
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text(d.c_str());
-            ImGui::TableSetColumnIndex(2);
-            std::string dsadasd = dim + "##float" + (char)(count);
+void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
+{
+   // Sub layer inside info shower
+#define BF_OBJ_NAME_LEN 30
+#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
 
-            switch (inputFloatMode) {
-            case 0:
-                ImGui::InputFloat(dim.c_str(), value);
-                break;
-            case 1:
-                ImGui::SliderFloat(dim.c_str(), value, left, right);
-                break;
-            }
+   auto gen_vert_count = [](std::shared_ptr<BfDrawObj> o) {
+      std::string vert;
+      vert.reserve(BF_OBJ_NAME_LEN);
+      vert.append("\tVertices ");
+      vert.append(std::move(std::to_string(o->get_vertices_count())));
+      return vert;
+   };
 
+   auto gen_ind_count = [](std::shared_ptr<BfDrawObj> o) {
+      std::string vert;
+      vert.reserve(BF_OBJ_NAME_LEN);
+      vert.append("\tIndices ");
+      vert.append(std::move(std::to_string(o->get_indices_count())));
+      return vert;
+   };
 
-            count++;
-        };
+   auto gen_dvert_count = [](std::shared_ptr<BfDrawObj> o) {
+      std::string vert;
+      vert.reserve(BF_OBJ_NAME_LEN);
+      vert.append("\tDVertices ");
+      vert.append(std::move(std::to_string(o->get_dvertices_count())));
+      return vert;
+   };
 
+   size_t obj_count = l->get_obj_count();
+   size_t lay_count = l->get_layer_count();
 
+   std::string lay_name;
+   lay_name.reserve(BF_OBJ_NAME_LEN);
+   lay_name.append("Layer (");
+   lay_name.append(bfGetStrNameDrawObjType(l->id.get_type()));
+   lay_name.append(") ");
+   lay_name.append(std::to_string(l->id.get()));
 
+   ImVec4 layer_color(BF_LAYER_COLOR);
 
-    ImGuiWindowFlags window_flags =
-        ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoResize |
-        //ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus |
-        ImGuiWindowFlags_AlwaysAutoResize;  
-    {
+   if (ImGui::TreeNode(lay_name.c_str()))
+   {
+      for (size_t i = 0; i < lay_count; ++i)
+      {
+         bfShowNestedLayersRecursive(l->get_layer_by_index(i));
+      }
+      for (size_t i = 0; i < obj_count; ++i)
+      {
+         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
 
-        ImGui::BeginGroup();
-        {
-            ImGui::Text("Input parameters mode");
+         std::string obj_name;
+         obj_name.reserve(BF_OBJ_NAME_LEN);
+         obj_name.append("Object (");
+         obj_name.append(bfGetStrNameDrawObjType(obj->id.get_type()));
+         obj_name.append(") ");
+         obj_name.append(std::to_string(obj->id.get()));
 
-            ImGui::RadioButton("Input float", &inputFloatMode, 0);
-            ImGui::SameLine();
-            ImGui::RadioButton("Slider", &inputFloatMode, 1);
+         ImGui::PushStyleColor(ImGuiCol_Text, layer_color);
+         if (ImGui::TreeNode(obj_name.c_str()))
+         {
+            ImGui::Text(gen_dvert_count(obj).c_str());
+            ImGui::Text(gen_vert_count(obj).c_str());
+            ImGui::Text(gen_ind_count(obj).c_str());
+            ImGui::TreePop();
+         }
+         ImGui::PopStyleColor();
+      }
+      ImGui::TreePop();
+   }
+}
 
-        }
-        ImGui::EndGroup();
+void bfPresentLayerHandler(BfLayerHandler &layer_handler)
+{
+   ImGui::Begin("Layer observer");
+   {
+      for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
+      {
+         auto layer = layer_handler.get_layer_by_index(i);
+         bfShowNestedLayersRecursive(layer);
+      }
+   }
 
-        int flags = ImGuiTableFlags_NoHostExtendX |
-            ImGuiTableFlags_SizingFixedFit;
+   // if (ImGui::CollapsingHeader("Variables"))
+   // {
+   //    for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
+   //    {
+   //       auto layer             = layer_handler.get_layer_by_index(i);
+   //       std::string layer_name = "Layer " + std::to_string(layer->id.get());
+   //
+   //       if (ImGui::TreeNode(layer_name.c_str()))
+   //       {
+   //          for (size_t j = 0; j < layer->get_obj_count(); ++j)
+   //          {
+   //             auto obj = layer->get_object_by_index(j);
+   //             std::string obj_name =
+   //                 "Obj " + std::to_string(obj->id.get()) + ", " +
+   //                 bfGetStrNameDrawObjType(obj->id.get_type());
+   //
+   //             ImGui::Selectable(
+   //                 obj_name.c_str(),
+   //                 layer->get_object_by_index(j)->get_pSelection(),
+   //                 ImGuiSelectableFlags_AllowDoubleClick);
+   //          }
+   //
+   //          ImGui::TreePop();
+   //       }
+   //    }
+   // }
+   //
+   // if (ImGui::Button("Delete"))
+   // {
+   //    std::vector<uint32_t> ids;
+   //    ids.reserve(layer_handler.get_whole_obj_count());
+   //
+   //    for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
+   //    {
+   //       ids.clear();
+   //       auto layer = layer_handler.get_layer_by_index(i);
+   //       for (size_t j = 0; j < layer->get_obj_count(); j++)
+   //       {
+   //          if (*layer->get_object_by_index(j)->get_pSelection())
+   //
+   //             ids.emplace_back(layer->get_object_by_index(j)->id.get());
+   //       }
+   //
+   //       layer->del(ids);
+   //    }
+   // }
 
-        ImGui::BeginTable("FloatTable", 3, flags);
-        {
-            ImGui::TableSetupColumn("Parameter name");
-            ImGui::TableSetupColumn("Description");
-            ImGui::TableSetupColumn("Value");
-            ImGui::TableHeadersRow();
+   ImGui::End();
+}
 
-            make_row("Width", "B", "[m]##0", &info->width, 0.0f, 10.0f);
-            make_row("Install angle", "alpha_y", "[deg]##1", &info->install_angle, -180.0f, 180.0f);
-            make_row("Inlet angle", "beta_1", "[deg]##2", &info->inlet_angle, -180.0f, 180.0f);
-            make_row("Outlet angle", "beta_2", "[deg]##3", &info->outlet_angle, -180.0f, 180.0f);
-            make_row("Inlet surface angle", "omega_1", "[deg]##4", &info->inlet_surface_angle, -45.0f, 45.0f);
-            make_row("Outlet surface angle", "omega_2", "[deg]##5", &info->outlet_surface_angle, -45.0f, 45.0f);
-            make_row("Inlet radius", "r_1", "[m]##6", &info->inlet_radius, 0.00001, 0.05);
-            make_row("Outlet radius", "r_2", "[m]##7", &info->outlet_radius, 0.00001, 0.05);
-        }
-        ImGui::EndTable();
+void bfPresentBladeSectionInside(BfBladeBase              *layer,
+                                 BfBladeSectionCreateInfo *info,
+                                 BfBladeSectionCreateInfo *old)
+{
+   static int inputFloatMode = 0;
 
-        ImGui::BeginGroup();
-        {
-            ImGui::Text("Start point");
-            ImGui::SliderFloat("X", &info->start_vertex.x, -10.0f, 10.0f);
-            ImGui::SliderFloat("Y", &info->start_vertex.y, -10.0f, 10.0f);
-            ImGui::SliderFloat("Z", &info->start_vertex.z, -10.0f, 10.0f);
-        }
-        ImGui::EndGroup();
+   auto make_row = [](std::string n,
+                      std::string d,
+                      std::string dim,
+                      float      *value,
+                      float       left,
+                      float       right) {
+      static int count = 0;
 
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::Text(n.c_str());
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text(d.c_str());
+      ImGui::TableSetColumnIndex(2);
 
-        /*ImGui::BeginGroup();
-        {
-            ImGui::Text("Options");
+      switch (inputFloatMode)
+      {
+         case 0:
+            ImGui::InputFloat(dim.c_str(), value);
+            break;
+         case 1:
+            ImGui::SliderFloat(dim.c_str(), value, left, right);
+            break;
+      }
 
-            if (ImGui::Checkbox("Calculate center", &info.is_center))
-                is_center_changed = true;
-            else
-                is_center_changed = false;
+      count++;
+   };
 
-            if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
-                is_triangulate = true;
-            else
-                is_triangulate = false;
+   ImGuiWindowFlags window_flags =
+       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+       // ImGuiWindowFlags_NoMove |
+       ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
+       ImGuiWindowFlags_AlwaysAutoResize;
+   {
+      ImGui::BeginGroup();
+      {
+         ImGui::Text("Input parameters mode");
 
-        }
-        ImGui::EndGroup();*/
-    }
+         ImGui::RadioButton("Input float", &inputFloatMode, 0);
+         ImGui::SameLine();
+         ImGui::RadioButton("Slider", &inputFloatMode, 1);
+      }
+      ImGui::EndGroup();
 
-    
+      int flags =
+          ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
 
-    
-    //if (!bfCheckBladeSectionCreateInfoEquality(*info, *old)) {
+      ImGui::BeginTable("FloatTable", 3, flags);
+      {
+         ImGui::TableSetupColumn("Parameter name");
+         ImGui::TableSetupColumn("Description");
+         ImGui::TableSetupColumn("Value");
+         ImGui::TableHeadersRow();
 
-    //    if (id > 0) layer->del(id);
+         make_row("Width", "B", "[m]##0", &info->width, 0.0f, 10.0f);
+         make_row("Install angle",
+                  "alpha_y",
+                  "[deg]##1",
+                  &info->install_angle,
+                  -180.0f,
+                  180.0f);
+         make_row("Inlet angle",
+                  "beta_1",
+                  "[deg]##2",
+                  &info->inlet_angle,
+                  -180.0f,
+                  180.0f);
+         make_row("Outlet angle",
+                  "beta_2",
+                  "[deg]##3",
+                  &info->outlet_angle,
+                  -180.0f,
+                  180.0f);
+         make_row("Inlet surface angle",
+                  "omega_1",
+                  "[deg]##4",
+                  &info->inlet_surface_angle,
+                  -45.0f,
+                  45.0f);
+         make_row("Outlet surface angle",
+                  "omega_2",
+                  "[deg]##5",
+                  &info->outlet_surface_angle,
+                  -45.0f,
+                  45.0f);
+         make_row("Inlet radius",
+                  "r_1",
+                  "[m]##6",
+                  &info->inlet_radius,
+                  0.00001,
+                  0.05);
+         make_row("Outlet radius",
+                  "r_2",
+                  "[m]##7",
+                  &info->outlet_radius,
+                  0.00001,
+                  0.05);
+      }
+      ImGui::EndTable();
 
-    //    /*auto blade_section_1 = std::make_shared<BfBladeSection>(
-    //        info
-    //    );*/
+      ImGui::BeginGroup();
+      {
+         ImGui::Text("Start point");
+         ImGui::SliderFloat("X", &info->start_vertex.x, -10.0f, 10.0f);
+         ImGui::SliderFloat("Y", &info->start_vertex.y, -10.0f, 10.0f);
+         ImGui::SliderFloat("Z", &info->start_vertex.z, -10.0f, 10.0f);
+      }
+      ImGui::EndGroup();
 
-    //    //id = layer->add_section(*info);
+      /*ImGui::BeginGroup();
+      {
+          ImGui::Text("Options");
 
+          if (ImGui::Checkbox("Calculate center", &info.is_center))
+              is_center_changed = true;
+          else
+              is_center_changed = false;
 
-    //    //id = blade_section_1->id.get();
+          if (ImGui::Checkbox("Triangulate", &info.is_triangulate))
+              is_triangulate = true;
+          else
+              is_triangulate = false;
 
-    //    //layer->add(blade_section_1);
-    //    layer->update_buffer();
+      }
+      ImGui::EndGroup();*/
+   }
 
-    //}
-    //*old = *info;
+   // if (!bfCheckBladeSectionCreateInfoEquality(*info, *old)) {
+
+   //    if (id > 0) layer->del(id);
+
+   //    /*auto blade_section_1 = std::make_shared<BfBladeSection>(
+   //        info
+   //    );*/
+
+   //    //id = layer->add_section(*info);
+
+   //    //id = blade_section_1->id.get();
+
+   //    //layer->add(blade_section_1);
+   //    layer->update_buffer();
+
+   //}
+   //*old = *info;
 };
 
-void ShowVariableContents(const Variable& var)
+void ShowVariableContents(const Variable &var)
 {
-	ImGui::Text("Variable: %s", var.name.c_str());
-	ImGui::Separator();
-	ImGui::Text("Values:");
-	for (size_t i = 0; i < var.values.size(); ++i) {
-		ImGui::Text("- %d", var.values[i]);
-	}
+   ImGui::Text("Variable: %s", var.name.c_str());
+   ImGui::Separator();
+   ImGui::Text("Values:");
+   for (size_t i = 0; i < var.values.size(); ++i)
+   {
+      ImGui::Text("- %d", var.values[i]);
+   }
 }
 
 void ShowTestPlot()
 {
+   std::vector<glm::vec3> v{{0.0, 0.0, 0.0f},
+                            {1.0, 1.0f, 0.0f},
+                            {2.0f, 0.0f, 0.0f},
+                            {4.0f, 2.0f, 0.0f},
+                            {6.0f, -3.0f, 0.0f}};
 
-    std::vector<glm::vec3> v{
-        {0.0, 0.0, 0.0f},
-        {1.0, 1.0f, 0.0f},
-        {2.0f, 0.0f, 0.0f},
-        {4.0f, 2.0f, 0.0f},
-        {6.0f, -3.0f, 0.0f}
-    };
+   std::vector<float> v_x;
+   std::vector<float> v_y;
 
-    std::vector<float> v_x;
-    std::vector<float> v_y;
+   for (size_t i = 0; i < v.size(); i++)
+   {
+      v_x.push_back(v[i].x);
+      v_y.push_back(v[i].y);
+   }
 
-    for (size_t i = 0; i < v.size(); i++) {
-        v_x.push_back(v[i].x);
-        v_y.push_back(v[i].y);
+   std::vector<glm::vec2> spl = bfMathSplineFit(v_x, v_y);
 
-    }
+   BfCubicSplineCurve spline(50, v);
+   spline.create_vertices();
 
-    std::vector<glm::vec2> spl = bfMathSplineFit(v_x, v_y);
+   auto compareByX = [](const glm::vec3 &a, const glm::vec3 &b) {
+      return a.x < b.x;
+   };
 
+   // std::sort(v.begin(), v.end(), compareByX);
 
-    BfCubicSplineCurve spline(50, v);
-    spline.create_vertices();
+   std::vector<float> x_;
+   std::vector<float> y_;
 
-    auto compareByX = [](const glm::vec3& a, const glm::vec3& b) {
-        return a.x < b.x;
-        };
+   for (size_t i = 0; i < spl.size(); i++)
+   {
+      x_.push_back(spl[i].x);
+      y_.push_back(spl[i].y);
 
-    //std::sort(v.begin(), v.end(), compareByX);
+      // x_.push_back(spl[i].x);
+      // y_.push_back(spl[i].y);
+   }
 
-    std::vector<float> x_;
-    std::vector<float> y_;
+   ImGui::Begin("My Window");
+   if (ImPlot::BeginPlot("My Plot"))
+   {
+      ImPlot::SetupAxes("x",
+                        "y",
+                        ImPlotAxisFlags_NoGridLines,
+                        ImPlotAxisFlags_NoGridLines);
 
-    
+      ImPlot::PlotLine("B(x)", x_.data(), y_.data(), spl.size());
+      ImPlot::PlotScatter("fsdf", v_x.data(), v_y.data(), v.size());
 
-    for (size_t i = 0; i < spl.size();i++) {
-        
-        x_.push_back(spl[i].x);
-        y_.push_back(spl[i].y);
-        
-        // x_.push_back(spl[i].x);
-        // y_.push_back(spl[i].y);
-    }
+      ImPlot::EndPlot();
+   }
 
-
-    ImGui::Begin("My Window");
-    if (ImPlot::BeginPlot("My Plot")) {
-        ImPlot::SetupAxes("x", "y", ImPlotAxisFlags_NoGridLines, ImPlotAxisFlags_NoGridLines);
-        
-        ImPlot::PlotLine("B(x)", x_.data(), y_.data(), spl.size());
-        ImPlot::PlotScatter("fsdf", v_x.data(), v_y.data(), v.size());
-
-        ImPlot::EndPlot();
-    }
-
-    ImGui::End();
+   ImGui::End();
 };
-
