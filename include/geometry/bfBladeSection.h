@@ -146,12 +146,12 @@ class BfBladeBase : public BfDrawLayer
 
 public:
    BfBladeBase(const BfBladeBaseCreateInfo& info);
-   
+
    // size_t add_section(const BfBladeSectionCreateInfo& info);
    // void del_section(size_t id);
 
    // std::vector<BfBladeSectionCreateInfo*> get_pInfos();
-   const BfBladeBaseCreateInfo& get_info();
+   const BfBladeBaseCreateInfo&        get_info();
    std::shared_ptr<BfBladeBaseSurface> get_shape();
    std::shared_ptr<BfBladeBaseSurface> create_shape();
 
@@ -166,7 +166,8 @@ class BfBladeBaseSurface : public BfDrawObj
 
 public:
    BfBladeBaseSurface(const std::vector<std::shared_ptr<BfBladeSection>>& secs,
-                      size_t inner_sections_count, size_t skip_vert = 0);
+                      size_t inner_sections_count,
+                      size_t skip_vert = 0);
 
    virtual void create_vertices() override;
 };

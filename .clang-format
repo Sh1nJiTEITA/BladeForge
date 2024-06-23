@@ -33,6 +33,8 @@
 BasedOnStyle: Google 
 IndentWidth: 3
 Language: Cpp
+PointerAlignment: Left 
+ReferenceAlignment: Left 
 AccessModifierOffset: -3
 
 BreakBeforeBraces: Custom
@@ -52,14 +54,21 @@ BraceWrapping:
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: true
 BinPackArguments: false
+BinPackParameters: false
 PackConstructorInitializers: NextLineOnly
 AlignConsecutiveDeclarations: true
-AlignConsecutiveAssignments: true
 AlignAfterOpenBracket: Align
 AllowShortBlocksOnASingleLine: false
 ColumnLimit: 80
 SpaceBeforeParens: ControlStatements
 BreakBeforeConceptDeclarations: Always
-# BreakTemplateDeclarations: Yes
 BreakConstructorInitializers: BeforeComma
 RequiresClausePosition: SingleLine
+BreakBeforeTernaryOperators: true
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+
+

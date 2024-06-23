@@ -5,8 +5,8 @@
 #include "Splines.h"
 #include "bfCurves3.h"
 
-bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo& i_1,
-                                           const BfBladeSectionCreateInfo& i_2)
+bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo &i_1,
+                                           const BfBladeSectionCreateInfo &i_2)
 {
    /*if (i_1.width == 0 or i_2.width == 0) return true;
    if (i_1.install_angle	== 0 or i_2.install_angle == 0) return true;
@@ -65,7 +65,7 @@ bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo& i_1,
            i_1.outlet_surface_angle == i_2.outlet_surface_angle};
 }
 
-BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo* info)
+BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo *info)
     : BfDrawLayer(info->layer_create_info), __info{info}
 {
    __generate_outer_elements();
@@ -79,7 +79,7 @@ BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo* info)
    this->generate_draw_data();
 }
 
-void BfBladeSection::remake(BfBladeSectionCreateInfo* info)
+void BfBladeSection::remake(BfBladeSectionCreateInfo *info)
 {
    __clear_draw_data();
 
@@ -96,11 +96,11 @@ void BfBladeSection::remake(BfBladeSectionCreateInfo* info)
    this->generate_draw_data();
 }
 
-const BfVertex3& BfBladeSection::get_inlet_center() const noexcept
+const BfVertex3 &BfBladeSection::get_inlet_center() const noexcept
 {
    return __chord_inlet_center;
 }
-const BfVertex3& BfBladeSection::get_outlet_center() const noexcept
+const BfVertex3 &BfBladeSection::get_outlet_center() const noexcept
 {
    return __chord_outlet_center;
 }
@@ -243,12 +243,12 @@ BfBladeSection::get_triangulated_shape()
 
 BfVertex3 BfBladeSection::get_center()
 {
-   auto t = this->get_triangulated_shape();
+   auto t               = this->get_triangulated_shape();
 
    float     total_area = 0;
    glm::vec3 center(0.0f);
 
-   for (auto& tr : t)
+   for (auto &tr : t)
    {
       float area = tr->get_area();
       total_area += area;
@@ -294,7 +294,7 @@ std::vector<BfVertex3> BfBladeSection::get_contour()
 
    auto last = std::unique(vert.begin(),
                            vert.end(),
-                           [](const BfVertex3& a, const BfVertex3& b) {
+                           [](const BfVertex3 &a, const BfVertex3 &b) {
                               return CHECK_FLOAT_EQUALITY(a.pos.x, b.pos.x) &&
                                      CHECK_FLOAT_EQUALITY(a.pos.y, b.pos.y) &&
                                      CHECK_FLOAT_EQUALITY(a.pos.z, b.pos.z);
@@ -441,7 +441,7 @@ void BfBladeSection::__generate_average_line_geometry()
                                     *get_chord().get(),
                                     __info->inlet_radius);
 
-      std::vector<std::pair<BfCircle*, float>> distances_to_center_line;
+      std::vector<std::pair<BfCircle *, float>> distances_to_center_line;
       for (size_t i = 0; i < c.size(); i++)
       {
          distances_to_center_line.push_back(std::make_pair(
@@ -452,15 +452,15 @@ void BfBladeSection::__generate_average_line_geometry()
       std::sort(
           distances_to_center_line.begin(),
           distances_to_center_line.end(),
-          [](const auto& a, const auto& b) { return a.second < b.second; });
+          [](const auto &a, const auto &b) { return a.second < b.second; });
 
       distances_to_center_line.pop_back();
       distances_to_center_line.pop_back();
 
       float     min_distance_to_intersection = FLT_MAX;
-      BfCircle* circle                       = nullptr;
+      BfCircle *circle                       = nullptr;
 
-      for (auto& pair : distances_to_center_line)
+      for (auto &pair : distances_to_center_line)
       {
          float distance_to_intersection =
              glm::distance(potencial_io_intersection,
@@ -489,7 +489,7 @@ void BfBladeSection::__generate_average_line_geometry()
                                     *get_chord().get(),
                                     __info->outlet_radius);
 
-      std::vector<std::pair<BfCircle*, float>> distances_to_center_line;
+      std::vector<std::pair<BfCircle *, float>> distances_to_center_line;
       for (size_t i = 0; i < c.size(); i++)
       {
          distances_to_center_line.push_back(std::make_pair(
@@ -500,15 +500,15 @@ void BfBladeSection::__generate_average_line_geometry()
       std::sort(
           distances_to_center_line.begin(),
           distances_to_center_line.end(),
-          [](const auto& a, const auto& b) { return a.second < b.second; });
+          [](const auto &a, const auto &b) { return a.second < b.second; });
 
       distances_to_center_line.pop_back();
       distances_to_center_line.pop_back();
 
       float     min_distance_to_intersection = FLT_MAX;
-      BfCircle* circle                       = nullptr;
+      BfCircle *circle                       = nullptr;
 
-      for (auto& pair : distances_to_center_line)
+      for (auto &pair : distances_to_center_line)
       {
          float distance_to_intersection =
              glm::distance(potencial_io_intersection,
@@ -818,7 +818,7 @@ void BfBladeSection::__generate_surface_elements()
    std::vector<glm::vec3> intersections;
    intersections.reserve(line_com.size());
 
-   for (auto& pair : line_com)
+   for (auto &pair : line_com)
    {
       glm::vec3 inter =
           bfMathFindLinesIntersection(*pair.first,
@@ -842,7 +842,7 @@ void BfBladeSection::__generate_surface_elements()
 
    std::sort(distances.begin(),
              distances.end(),
-             [](const auto& a, const auto& b) {
+             [](const auto &a, const auto &b) {
                 float sum_a = a.second.first + a.second.second;
                 float sum_b = b.second.first + b.second.second;
                 return sum_a < sum_b;
@@ -950,7 +950,7 @@ void BfBladeSection::__generate_center_circle()
 {
    BfVertex3 center = this->get_center();
 
-   auto c_circle = std::make_shared<BfCircle>(20, center, 0.02f);
+   auto c_circle    = std::make_shared<BfCircle>(20, center, 0.02f);
 
    this->add_l(c_circle);
 }
@@ -958,7 +958,7 @@ void BfBladeSection::__generate_center_circle()
 void BfBladeSection::__generate_triangular_shape()
 {
    auto t = this->get_triangulated_shape();
-   for (auto& it : t)
+   for (auto &it : t)
    {
       this->add_l(it);
    }
@@ -966,10 +966,10 @@ void BfBladeSection::__generate_triangular_shape()
 
 void BfBladeSection::__clear_draw_data() { this->del_all(); }
 
-BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo& info)
+BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo &info)
     : BfDrawLayer(info.layer_create_info), __info{info}
 {
-   for (auto& it : __info.section_infos)
+   for (auto &it : __info.section_infos)
    {
       auto sec = std::make_shared<BfBladeSection>(&it);
       this->add(sec);
@@ -982,7 +982,7 @@ std::shared_ptr<BfBladeBaseSurface> BfBladeBase::get_shape()
        this->get_object_by_index(0));
 }
 
-const BfBladeBaseCreateInfo& BfBladeBase::get_info() { return __info; }
+const BfBladeBaseCreateInfo &BfBladeBase::get_info() { return __info; }
 
 // size_t BfBladeBase::add_section(const BfBladeSectionCreateInfo& info) {
 //	if (!info.layer_create_info.is_nested)
@@ -1016,8 +1016,9 @@ const BfBladeBaseCreateInfo& BfBladeBase::get_info() { return __info; }
 // }
 
 BfBladeBaseSurface::BfBladeBaseSurface(
-    const std::vector<std::shared_ptr<BfBladeSection>>& secs,
-    size_t inner_sections_count, size_t skip_vert)
+    const std::vector<std::shared_ptr<BfBladeSection>> &secs,
+    size_t                                              inner_sections_count,
+    size_t                                              skip_vert)
     : __secs{secs}, __slices_count{inner_sections_count}, __skip_vert{skip_vert}
 {
    this->create_vertices();
@@ -1039,7 +1040,6 @@ void BfBladeBaseSurface::create_vertices()
 
    total_vertices.reserve(__secs.size());
    parts.reserve(__secs.size());
-
    /*
     * Возвращает набор из:
     * 1) Входная кромка
