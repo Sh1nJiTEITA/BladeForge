@@ -1,6 +1,10 @@
 #include "bfBase.h"
 
 #include <imgui_impl_vulkan.h>
+#include <vulkan/vulkan_core.h>
+
+#include <memory>
+#include "bfEvent.h"
 
 // Function definitions
 BfEvent bfCreateInstance(BfBase &base)
@@ -1404,6 +1408,20 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    id_image_info.subresourceRange.layerCount     = 2;
    id_image_info.pNext                           = &id_image_usage_info;
 
+   // std::cout << "TEXTURE MAIN\n";
+   // auto t = std::make_shared<BfTexture>("resources/buttons/test.png");
+   // t->open();
+   // t->load(base.allocator, base.device);
+   //
+   // base.descriptor.add_texture({t, t});
+   // auto t1 = std::make_shared<BfTexture>("resources/buttons/test.png");
+   //
+   // t1->open();
+   // t1->load(base.allocator, base.device);
+   //
+   // base.descriptor.add_texture({t1, t1});
+   //
+   std::cout << "TEXTURE MAIN\n";
    BfDescriptorImageCreateInfo binfo_id_map{};
    binfo_id_map.alloc_create_info = allocinfo;
    binfo_id_map.count             = MAX_FRAMES_IN_FLIGHT;
@@ -1435,6 +1453,7 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    base.descriptor.create_desc_set_layouts();
    base.descriptor.allocate_desc_sets();
    base.descriptor.update_desc_sets();
+   base.descriptor.map_textures();
 
    base.layer_handler.bind_descriptor(&base.descriptor);
 
@@ -1458,16 +1477,16 @@ void bfPopulateMessengerCreateInfo(
    createInfo       = {};
    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
    createInfo.messageSeverity = {
-       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |  // Just info (e.g.
-                                                       // creation info)
+       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |     // Just info (e.g.
+                                                          // creation info)
        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |  // Diagnostic info
        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |  // Warning (bug)
        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT      // Warning (potential
                                                           // crush)
    };
    createInfo.messageType = {
-       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |  // Unrelated perfomance
-                                                      // (mb ok)
+       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |     // Unrelated perfomance
+                                                         // (mb ok)
        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |  // Possiable mistake
                                                          // (not ok)
        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT  // Potential non-optimal
@@ -2500,6 +2519,17 @@ BfEvent bfDestroyAllocator(BfBase &base)
    return BfEvent(event);
 }
 
+BfEvent bfCreateTextureLoader(BfBase &base)
+{
+   base.texture_loader = BfTextureLoader(&base.device, &base.allocator);
+
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
+   return event;
+}
+BfEvent bfDestroyTextureLoader(BfBase &base) {}
+
 // void bfAllocateBuffersForDynamicMesh(BfBase& base)
 //{
 //	uint32_t MAX_VERTICES = 10000;
@@ -3458,4 +3488,37 @@ void bfUpdateUniformBuffer(BfBase &base)
 
    base.window->proj = ubo.proj;
    base.window->view = ubo.view;
+}
+
+void bfCreateSampler(BfBase &base)
+{
+   VkSamplerCreateInfo samplerInfo{};
+   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter               = VK_FILTER_LINEAR;
+   samplerInfo.minFilter               = VK_FILTER_LINEAR;
+   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.anisotropyEnable        = VK_FALSE;
+   samplerInfo.maxAnisotropy           = 16;
+   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   samplerInfo.unnormalizedCoordinates = VK_FALSE;
+   samplerInfo.compareEnable           = VK_FALSE;
+   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   samplerInfo.mipLodBias              = 0.0f;
+   samplerInfo.minLod                  = 0.0f;
+   samplerInfo.maxLod                  = 0.0f;
+
+   VkSampler textureSampler;
+   if (vkCreateSampler(base.device, &samplerInfo, nullptr, &base.sampler) !=
+       VK_SUCCESS)
+   {
+      throw std::runtime_error("Failed to create texture sampler!");
+   }
+}
+
+void bfDestorySampler(BfBase &base)
+{
+   vkDestroySampler(base.device, base.sampler, nullptr);
 }

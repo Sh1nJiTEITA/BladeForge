@@ -82,6 +82,9 @@ void BfMain::__init()
    bfCreateGUIRenderPass(__base);
 
    bfCreateIDMapImage(__base);
+   
+   bfCreateTextureLoader(__base);
+
    bfInitOwnDescriptors(__base);
 
    bfCreateGraphicsPipelines(__base);
@@ -94,6 +97,8 @@ void BfMain::__init()
    bfCreateGUICommandBuffers(__base);
    bfCreateSyncObjects(__base);
    bfInitImGUI(__base);
+
+   bfCreateSampler(__base);
 }
 
 void BfMain::__kill()
@@ -112,6 +117,7 @@ void BfMain::__kill()
    bfDestroyStandartRenderPass(__base);
    bfDestroyImageViews(__base);
    bfDestroySwapchain(__base);
+   bfDestorySampler(__base);
    // TODO:
    // bfDestroyAllocator(__base);
    // bfDestroyLogicalDevice(__base);
@@ -126,7 +132,7 @@ void BfMain::__start_loop()
    __base.current_frame = 0;
    __base.is_resized    = true;
 
-   double previousTime = glfwGetTime();
+   double previousTime  = glfwGetTime();
 
    // BfLayerHandler
    auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
@@ -150,15 +156,15 @@ void BfMain::__start_loop()
    BfBladeSectionCreateInfo section_info_1{};
    section_info_1.layer_create_info = layer_info_1;
 
-   section_info_1.width         = 1.0f;
-   section_info_1.install_angle = 102.0f;
-   section_info_1.inlet_angle   = 25.0f;
-   section_info_1.outlet_angle  = 42.0f;
-   section_info_1.inlet_radius  = 0.025f;
-   section_info_1.outlet_radius = 0.005f;
-   section_info_1.border_length = 2.0f;
-   section_info_1.l_pipeline    = __base.tline_pipeline;
-   section_info_1.t_pipeline    = __base.triangle_pipeline;
+   section_info_1.width             = 1.0f;
+   section_info_1.install_angle     = 102.0f;
+   section_info_1.inlet_angle       = 25.0f;
+   section_info_1.outlet_angle      = 42.0f;
+   section_info_1.inlet_radius      = 0.025f;
+   section_info_1.outlet_radius     = 0.005f;
+   section_info_1.border_length     = 2.0f;
+   section_info_1.l_pipeline        = __base.tline_pipeline;
+   section_info_1.t_pipeline        = __base.triangle_pipeline;
 
    auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
                                                   glm::vec3(1.0f, 0.0f, 0.0f));
@@ -196,7 +202,7 @@ void BfMain::__start_loop()
    circle_1->create_indices();
    circle_1->bind_pipeline(&__base.line_pipeline);
 
-   auto section_layer = std::make_shared<BfDrawLayer>(__base.allocator,
+   auto section_layer   = std::make_shared<BfDrawLayer>(__base.allocator,
                                                       sizeof(BfVertex3),
                                                       1000,
                                                       1000,
@@ -204,51 +210,21 @@ void BfMain::__start_loop()
 
    __base.section_layer = section_layer.get();
 
-   /*BfBladeBaseCreateInfo blade_base_info{};
-   blade_base_info.layer_create_info.allocator = __base.allocator;
-   blade_base_info.layer_create_info.is_nested = true;
-   blade_base_info.layer_create_info.max_vertex_count = 1000;
-   blade_base_info.layer_create_info.max_reserved_count = 1000;
-   blade_base_info.layer_create_info.vertex_size = sizeof(BfVertex3);
-
-   auto base_section_layer = std::make_shared<BfBladeBase>(
-       blade_base_info
-   );*/
-
-   // layer_1_n->add(circle_1);
-
-   /*auto triangle = std::make_shared<BfTriangle>(
-       BfVertex3({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f
-   }), BfVertex3({ 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f
-   }), BfVertex3({ 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f
-   })
-   );
-   triangle->create_vertices();
-   triangle->create_indices();
-   triangle->bind_pipeline(&__base.line_pipeline);
-   layer_2->add(triangle);*/
-
-   // layer_2->add(base_section_layer);
    __blade_bases = layer_2.get();
-   // layer_2->add(obj_2);
-   // layer_2->add(circle_1);
-   // layer_2->add(circle_2);
-   // layer_2->add(tangent_1);
-   // layer_2->add(tangent_2);
-   // layer_2->add(add_circle);
    layer_1->add(layer_1_n);
    __other_layer = layer_1.get();
-   // layer_1->add(circle_1);
-   // layer_1->add(section_layer);
 
    layer_1->update_buffer();
-   // layer_2->update_buffer();
 
    __base.layer_handler.add(layer_1);
-   //__base.layer_handler.add(section_layer);
    __base.layer_handler.add(layer_2);
-   //__base.layer_handler.add(blade_section_1);
 
+   std::cout << "BUTTON IMAGE\n";
+
+
+
+
+   std::cout << "BUTTON IMAGE\n";
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -325,15 +301,15 @@ void BfMain::__present_tooltype()
 
 void BfMain::__present_info()
 {
-   double currentTime = glfwGetTime();
+   double currentTime         = glfwGetTime();
 
-   static int counter       = 0;
-   static int print_counter = 0;
+   static int counter         = 0;
+   static int print_counter   = 0;
 
    static double previousTime = currentTime;
    if (__gui.is_info)
    {
-      std::string fps = "Current FPS: ";
+      std::string fps  = "Current FPS: ";
 
       int screenWidth  = ImGui::GetIO().DisplaySize.x;
       int screenHeight = ImGui::GetIO().DisplaySize.y;
@@ -447,8 +423,8 @@ void BfMain::__present_camera()
 
       if (ImGui::RadioButton("Perspective", is_per))
       {
-         is_ort = false;
-         is_per = true;
+         is_ort                   = false;
+         is_per                   = true;
 
          __base.window->proj_mode = 0;
 
@@ -456,8 +432,8 @@ void BfMain::__present_camera()
       }
       if (ImGui::RadioButton("Ortho", is_ort))
       {
-         is_ort = true;
-         is_per = false;
+         is_ort                   = true;
+         is_per                   = false;
 
          __base.window->proj_mode = 1;
 
@@ -555,9 +531,9 @@ void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
          {
             if (!id_color_map.contains((int)data[i]))
             {
-               float red   = (float)(mt() % 255);
-               float green = (float)(mt() % 255);
-               float blue  = (float)(mt() % 255);
+               float red                  = (float)(mt() % 255);
+               float green                = (float)(mt() % 255);
+               float blue                 = (float)(mt() % 255);
 
                id_color_map[(int)data[i]] = glm::vec4(red, green, blue, 1.0f);
 
@@ -813,15 +789,15 @@ void BfMain::__present_event_log()
 
 void BfMain::__present_blade_base_create_window()
 {
-   static int sec_count     = 0;
-   static int new_sec_count = 0;
+   static int sec_count                                   = 0;
+   static int new_sec_count                               = 0;
 
    static std::shared_ptr<BfBladeBase> base_section_layer = nullptr;
    static int                          base_id            = -1;
 
-   static int shape_id = -1;
+   static int shape_id                                    = -1;
 
-   static bool is_first_frame = true;
+   static bool is_first_frame                             = true;
    if (is_first_frame)
    {
       BfBladeBaseCreateInfo blade_base_info{};
@@ -859,14 +835,14 @@ void BfMain::__present_blade_base_create_window()
             BfBladeSectionCreateInfo ns{};
             ns.layer_create_info.is_nested = true;
             // ns.layer_create_info.id_type = 0xA1;
-            ns.width = 1.0f, ns.install_angle = 102.0f,
-            ns.inlet_angle = 25.0f, ns.outlet_angle = 42.0f,
+            ns.width = 1.0f, ns.install_angle = 102.0f, ns.inlet_angle = 25.0f,
+            ns.outlet_angle        = 42.0f,
 
             ns.inlet_surface_angle = 15.0f, ns.outlet_surface_angle = 15.0f,
 
             ns.inlet_radius = 0.025f, ns.outlet_radius = 0.005f,
 
-            ns.border_length = 20.0f,
+            ns.border_length  = 20.0f,
 
             ns.is_triangulate = false, ns.is_center = true,
 
@@ -954,7 +930,7 @@ void BfMain::__present_blade_base_create_window()
       blade_base_info.section_infos               = infos;
       base_section_layer = std::make_shared<BfBladeBase>(blade_base_info);
 
-      base_id = base_section_layer->id.get();
+      base_id            = base_section_layer->id.get();
       __blade_bases->add(base_section_layer);
 
       __blade_bases->update_buffer();

@@ -238,7 +238,9 @@ set(BF_OTHER
     "include/other/stb_image.h"
     "include/other/stb_image_write.h"
     "include/other/bfMath.hpp"
-    "src/other/bfMath.cpp")
+    "src/other/bfMath.cpp"
+    "include/other/bfTextureLoad.h"
+    "src/other/bfTextureLoad.cpp")
 
 set(BF_DRAW
     "include/draw/bfDrawObject.h"
@@ -265,9 +267,12 @@ list(
 # Add source to this project's executable.
 add_executable(
   ${PROJECT_NAME}
-  "main.h" "main.cpp"
-  # ${BF_GEOMETRY}
-  ${SOURCES})
+  "main.h" 
+  "main.cpp"
+  ${SOURCES}
+)
+
+file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
