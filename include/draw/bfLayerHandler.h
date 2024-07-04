@@ -17,6 +17,8 @@ public:
    BfEvent bind_descriptor(BfDescriptor *desc);
    BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
    void del(size_t id);
+   void kill(); 
+
 
    const size_t get_whole_obj_count() const noexcept;
    const size_t get_layer_count() const noexcept;

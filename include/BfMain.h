@@ -17,6 +17,7 @@
 #include "bfEvent.h"
 #include "bfGUI.h"
 #include "bfTextureLoad.h"
+#include "bfBuffer.h"
 
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"

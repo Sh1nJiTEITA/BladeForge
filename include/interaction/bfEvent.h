@@ -119,6 +119,8 @@ enum BfEnActionType
    BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_SUCCESS             = 0x25,
    BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_FAILURE             = -0x25,
 
+   BF_ACTION_TYPE_DESTROY_PIPELINE_LAYOUT                    = 0x25A,
+
    BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_SUCCESS           = 0x26,
    BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE           = -0x26,
 
@@ -204,7 +206,7 @@ enum BfEnActionType
 
    BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_SUCCESS          = 0x58,
    BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE          = -0x58,
-   
+
    BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS              = 0x59,
    BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_FAILURE              = -0x59
 };
@@ -314,6 +316,7 @@ const std::map<int, std::string> bfSetActionsStr{
 
     {0x25, "VkPipelineLayout was created successfully"},
     {-0x25, "VkPipelineLayout wasn't created"},
+    {0x25A, "VkPipelineLayout was destroyed:"},
 
     {0x26, "VkPipeline's was created sucessfully:"},
     {-0x26, "VkPipeline's wasn't created:"},

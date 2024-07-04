@@ -82,8 +82,8 @@ void BfMain::__init()
    bfCreateGUIRenderPass(__base);
 
    bfCreateIDMapImage(__base);
-   
-   bfCreateTextureLoader(__base);
+
+   // bfCreateTextureLoader(__base);
 
    bfInitOwnDescriptors(__base);
 
@@ -103,7 +103,7 @@ void BfMain::__init()
 
 void BfMain::__kill()
 {
-   bfDestoryImGUI(__base);
+   bfDestroyImGUI(__base);
    bfDestorySyncObjects(__base);
    bfDestroyGUICommandBuffers(__base);
    bfDestroyStandartCommandBuffers(__base);
@@ -111,20 +111,33 @@ void BfMain::__kill()
    bfDestroyGUIFrameBuffers(__base);
    bfDestroyStandartFrameBuffers(__base);
    bfDestroyDepthBuffer(__base);
+   bfDestoryGraphicsPipelineLayouts(__base);
    bfDestroyGraphicsPipelines(__base);
+   bfDestroyOwnDescriptors(__base);
    bfDestroyIDMapImage(__base);
    bfDestroyGUIRenderPass(__base);
    bfDestroyStandartRenderPass(__base);
    bfDestroyImageViews(__base);
    bfDestroySwapchain(__base);
    bfDestorySampler(__base);
-   // TODO:
-   // bfDestroyAllocator(__base);
-   // bfDestroyLogicalDevice(__base);
-   // bfDestroySurface(__base);
-   // bfDestroyInstance(__base);
-
+   
+   // id buffer
+   bfDestroyBuffer(&__base.id_image_buffer);
+   __base.layer_handler.kill();
    __base.layer_killer.kill();
+
+
+   std::cout << BfAllocationViewer::print_info();
+
+
+   bfDestroySurface(__base);
+   bfDestroyAllocator(__base);
+   bfDestroyLogicalDevice(__base);
+   bfDestroyInstance(__base);
+
+   // __base.layer_killer.kill();
+   
+   std::cout << BfAllocationViewer::print_info();
 }
 
 void BfMain::__start_loop()
@@ -135,18 +148,20 @@ void BfMain::__start_loop()
    double previousTime  = glfwGetTime();
 
    // BfLayerHandler
-   auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
-                                                sizeof(BfVertex3),
-                                                100000,
-                                                10,
-                                                false);
-
+   // auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
+   //                                              sizeof(BfVertex3),
+   //                                              100000,
+   //                                              10,
+   //                                              false);
+   //
+   std::cout << "5-6\n";
    auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
                                                 sizeof(BfVertex3),
                                                 1000,
                                                 1000,
                                                 false);
 
+   std::cout << "5-6\n";
    BfDrawLayerCreateInfo layer_info_1{};
    layer_info_1.allocator          = __base.allocator;
    layer_info_1.vertex_size        = sizeof(BfVertex3);
@@ -166,42 +181,32 @@ void BfMain::__start_loop()
    section_info_1.l_pipeline        = __base.tline_pipeline;
    section_info_1.t_pipeline        = __base.triangle_pipeline;
 
-   auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-                                                  glm::vec3(1.0f, 0.0f, 0.0f));
-   o_line_x->set_color({1.0f, 0.0f, 0.0f});
-   o_line_x->create_vertices();
-   o_line_x->create_indices();
-   o_line_x->bind_pipeline(&__base.line_pipeline);
-
-   auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-                                                  glm::vec3(0.0f, 1.0f, 0.0f));
-   o_line_y->set_color({0.0f, 1.0f, 0.0f});
-   o_line_y->create_vertices();
-   o_line_y->create_indices();
-   o_line_y->bind_pipeline(&__base.line_pipeline);
-
-   auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-                                                  glm::vec3(0.0f, 0.0f, 1.0f));
-   o_line_z->set_color({0.0f, 0.0f, 1.0f});
-   o_line_z->create_vertices();
-   o_line_z->create_indices();
-   o_line_z->bind_pipeline(&__base.line_pipeline);
-
-   auto layer_1_n = std::make_shared<BfDrawLayer>();
-   layer_1_n->add(o_line_x);
-   layer_1_n->add(o_line_y);
-   layer_1_n->add(o_line_z);
-
-   auto circle_1 = std::make_shared<BfCircle>(
-       50,
-       BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
-       0.5f);
-
-   circle_1->set_color({0.0f, 0.0f, 1.0f});
-   circle_1->create_vertices();
-   circle_1->create_indices();
-   circle_1->bind_pipeline(&__base.line_pipeline);
-
+   // auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
+   //                                                glm::vec3(1.0f, 0.0f, 0.0f));
+   // o_line_x->set_color({1.0f, 0.0f, 0.0f});
+   // o_line_x->create_vertices();
+   // o_line_x->create_indices();
+   // o_line_x->bind_pipeline(&__base.line_pipeline);
+   //
+   // auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
+   //                                                glm::vec3(0.0f, 1.0f, 0.0f));
+   // o_line_y->set_color({0.0f, 1.0f, 0.0f});
+   // o_line_y->create_vertices();
+   // o_line_y->create_indices();
+   // o_line_y->bind_pipeline(&__base.line_pipeline);
+   //
+   // auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
+   //                                                glm::vec3(0.0f, 0.0f, 1.0f));
+   // o_line_z->set_color({0.0f, 0.0f, 1.0f});
+   // o_line_z->create_vertices();
+   // o_line_z->create_indices();
+   // o_line_z->bind_pipeline(&__base.line_pipeline);
+   //
+   // auto layer_1_n = std::make_shared<BfDrawLayer>();
+   // layer_1_n->add(o_line_x);
+   // layer_1_n->add(o_line_y);
+   // layer_1_n->add(o_line_z);
+   //
    auto section_layer   = std::make_shared<BfDrawLayer>(__base.allocator,
                                                       sizeof(BfVertex3),
                                                       1000,
@@ -210,19 +215,17 @@ void BfMain::__start_loop()
 
    __base.section_layer = section_layer.get();
 
-   __blade_bases = layer_2.get();
-   layer_1->add(layer_1_n);
-   __other_layer = layer_1.get();
+   __blade_bases        = layer_2.get();
+   // layer_1->add(layer_1_n);
+   // __other_layer = layer_1.get();
 
-   layer_1->update_buffer();
+   // layer_1->update_buffer();
 
-   __base.layer_handler.add(layer_1);
+   // __base.layer_handler.add(layer_1);
    __base.layer_handler.add(layer_2);
+   // __base.layer_handler.add(section_layer);
 
    std::cout << "BUTTON IMAGE\n";
-
-
-
 
    std::cout << "BUTTON IMAGE\n";
    bfSetOrthoLeft(__base.window);
@@ -260,6 +263,15 @@ void BfMain::__start_loop()
 
       bfDrawFrame(__base);
    }
+
+   auto layer_killer = BfLayerKiller::get_root();
+   for (size_t i = 0; i < __base.layer_handler.get_layer_count(); ++i)
+   {
+      auto buffer = __base.layer_handler.get_layer_by_index(i);
+      std::cout << "Adding buffer to kill " << "\n";
+      layer_killer->add(__base.layer_handler.get_layer_by_index(i));
+   }
+   layer_killer->kill();
 
    vkDeviceWaitIdle(__base.device);
 }

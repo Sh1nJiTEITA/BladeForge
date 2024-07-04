@@ -11,14 +11,17 @@ BfLayerHandler::BfLayerHandler()
 {
 }
 
-BfLayerHandler::~BfLayerHandler()
+void BfLayerHandler::kill()
 {
    auto killer = BfLayerKiller::get_root();
    for (auto& l : __layers)
    {
       killer->add(l);
    }
+   __layers.clear();
 }
+
+BfLayerHandler::~BfLayerHandler() { kill(); }
 
 BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
@@ -81,13 +84,13 @@ void BfLayerHandler::del(size_t id)
 //	event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_LAYER_EVENT;
 //	if (!__is_layer_exists(id)) {
 //		event.action =
-//BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_FAILURE;
+// BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_FAILURE;
 //		event.success = false;
 //		return event;
 //	}
 //	else {
 //		event.action =
-//BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_SUCCESS;
+// BfEnActionType::BF_ACTION_TYPE_DEL_LAYER_FROM_LAYER_HANDLER_SUCCESS;
 //
 //		for (auto it = __layers.begin(); it != __layers.end(); it++) {
 //			if (id == it->get()->id.get()) {

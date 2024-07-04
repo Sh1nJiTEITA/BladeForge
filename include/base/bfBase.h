@@ -99,8 +99,6 @@ struct BfBase
 BfEvent bfCreateInstance(BfBase &base);
 BfEvent bfDestroyInstance(BfBase &base);
 
-BfEvent bfDestroyInstance(BfBase &base);
-
 BfEvent bfCreateDebugMessenger(BfBase &base);
 
 BfEvent bfCreateSurface(BfBase &base);
@@ -124,6 +122,7 @@ BfEvent bfCreateGUIRenderPass(BfBase &base);
 BfEvent bfDestroyGUIRenderPass(BfBase &base);
 
 BfEvent bfInitOwnDescriptors(BfBase &base);
+BfEvent bfDestroyOwnDescriptors(BfBase &base);
 
 BfEvent bfCreateGraphicsPipelines(BfBase &base);
 BfEvent bfDestroyGraphicsPipelines(BfBase &base);
@@ -150,7 +149,7 @@ BfEvent bfCreateSyncObjects(BfBase &base);
 BfEvent bfDestorySyncObjects(BfBase &base);
 
 BfEvent bfInitImGUI(BfBase &base);
-BfEvent bfDestoryImGUI(BfBase &base);
+BfEvent bfDestroyImGUI(BfBase &base);
 
 BfEvent bfCreateDepthBuffer(BfBase &base);
 BfEvent bfDestroyDepthBuffer(BfBase &base);
@@ -177,7 +176,10 @@ BfEvent bfaReadFile(std::vector<char> &data, const std::string &filename);
 BfEvent bfaCreateShaderModule(VkShaderModule          &module,
                               VkDevice                 device,
                               const std::vector<char> &data);
+
 BfEvent bfaCreateGraphicsPipelineLayouts(BfBase &base);
+BfEvent bfDestoryGraphicsPipelineLayouts(BfBase &base);
+// BfEvent
 BfEvent bfaRecreateSwapchain(BfBase &base);
 
 BfEvent bfaCreateShaderCreateInfos(

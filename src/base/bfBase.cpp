@@ -4,7 +4,9 @@
 #include <vulkan/vulkan_core.h>
 
 #include <memory>
+
 #include "bfEvent.h"
+#include "implot.h"
 
 // Function definitions
 BfEvent bfCreateInstance(BfBase &base)
@@ -824,6 +826,7 @@ BfEvent bfCreateGUIRenderPass(BfBase &base)
 
 BfEvent bfDestroyGUIRenderPass(BfBase &base)
 {
+   vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
    vkDestroyRenderPass(base.device, base.gui_render_pass, nullptr);
 
    BfSingleEvent event{};
@@ -1278,6 +1281,12 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base)
 //	return BfEvent(event);
 // }
 
+BfEvent bfDestroyOwnDescriptors(BfBase &base)
+{
+   base.descriptor.kill();
+   return BfEvent();
+}
+
 BfEvent bfInitOwnDescriptors(BfBase &base)
 {
    base.descriptor.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
@@ -1459,7 +1468,8 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
 
    bfCreateBuffer(&base.id_image_buffer,
                   base.allocator,
-                  base.swap_chain_extent.height * base.swap_chain_extent.width *
+                  // base.swap_chain_extent.height * base.swap_chain_extent.width *
+                  3 * 
                       sizeof(uint32_t),
                   VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                   VMA_MEMORY_USAGE_AUTO,
@@ -1774,6 +1784,11 @@ BfEvent bfCreateGraphicsPipelines(BfBase &base)
       vkDestroyShaderModule(base.device, mod, nullptr);
    }
 
+   for (auto &mod : modules_lines)
+   {
+      vkDestroyShaderModule(base.device, mod, nullptr);
+   }
+
    /*vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
    vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
    vkDestroyShaderModule(base.device, geomShaderModule, nullptr);*/
@@ -1802,6 +1817,10 @@ BfEvent bfDestroyGraphicsPipelines(BfBase &base)
    vkDestroyPipeline(base.device, base.tline_pipeline, nullptr);
    vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
 
+   // vkDestroyDescriptorSetLayout(base.device, base.tline_pipeline_layout, nullptr);
+   // vkDestroyDescriptorSetLayout(base.device, base.triangle_pipeline_layout, nullptr);
+   // vkDestroyDescriptorSetLayout(base.device, base.line_pipeline_layout, nullptr);
+   //
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
    event.action = BF_ACTION_TYPE_DESTROY_PIPELINES;
@@ -2042,6 +2061,8 @@ BfEvent bfCreateGUIDescriptorPool(BfBase &base)
 BfEvent bfDestroyGUIDescriptorPool(BfBase &base)
 {
    vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
+   
+   // vkDestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks *pAllocator)
 
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -2299,8 +2320,9 @@ BfEvent bfInitImGUI(BfBase &base)
    return BfEvent();
 }
 
-BfEvent bfDestoryImGUI(BfBase &base)
+BfEvent bfDestroyImGUI(BfBase &base)
 {
+   ImPlot::DestroyContext();
    ImGui_ImplVulkan_Shutdown();
    ImGui_ImplGlfw_Shutdown();
    ImGui::DestroyContext();
@@ -2524,7 +2546,7 @@ BfEvent bfCreateTextureLoader(BfBase &base)
    base.texture_loader = BfTextureLoader(&base.device, &base.allocator);
 
    BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   event.type   = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
    return event;
 }
@@ -2859,6 +2881,18 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase &base)
    event.info = ss.str();
 
    return BfEvent(event);
+}
+
+
+BfEvent bfDestoryGraphicsPipelineLayouts(BfBase &base)  {
+   vkDestroyPipelineLayout(base.device, base.triangle_pipeline_layout, nullptr);
+   vkDestroyPipelineLayout(base.device, base.tline_pipeline_layout, nullptr);
+   vkDestroyPipelineLayout(base.device, base.line_pipeline_layout, nullptr);
+   
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+   event.action = BF_ACTION_TYPE_DESTROY_PIPELINE_LAYOUT;
+   return event;
 }
 
 BfEvent bfaRecreateSwapchain(BfBase &base)

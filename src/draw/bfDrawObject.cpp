@@ -585,7 +585,7 @@ void BfDrawLayer::draw(VkCommandBuffer combuffer,
    {
       vertex_offset += this->get_whole_vertex_count();
       index_offset += this->get_whole_index_count();
-      offset += __objects.size()-1;
+      offset += __objects.size() - 1;
    }
 
    for (const auto &layer : __layers)
@@ -641,14 +641,21 @@ BfLayerKiller::BfLayerKiller()
    BfLayerKiller::set_root(this);
 }
 
-BfLayerKiller::~BfLayerKiller() { __p == nullptr; }
+BfLayerKiller::~BfLayerKiller() { __p = nullptr; }
 
 void BfLayerKiller::add(std::shared_ptr<BfDrawLayer> layer)
 {
    __layers.push_back(std::move(layer));
 }
 
-void BfLayerKiller::kill() { __layers.clear(); }
+void BfLayerKiller::kill()
+{
+   for (auto layer = __layers.begin(); layer != __layers.end(); ++layer)
+   {
+      layer->reset();
+   }
+   __layers.clear();
+}
 
 BfLayerKiller *BfLayerKiller::get_root() { return __p; }
 void           BfLayerKiller::set_root(BfLayerKiller *k) { __p = k; }

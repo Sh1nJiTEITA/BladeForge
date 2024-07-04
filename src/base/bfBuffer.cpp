@@ -7,7 +7,7 @@
 //
 //	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
 //}; 	bufferInfo.size = 65536; 	bufferInfo.usage =
-//VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+// VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 //
 //	VmaAllocationCreateInfo allocInfo = {};
 //	allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -20,6 +20,44 @@
 //
 //	return BfEvent();
 // }
+
+#ifdef BF_ALLOCATION_VIEWER
+
+std::map<uint32_t, BfAllocationViewer::BfQuickAllocInfo>
+    BfAllocationViewer::__map = {};
+
+void BfAllocationViewer::add(BfAllocatedBuffer* buffer)
+{
+   static uint32_t id = 0;
+   __map[id]          = {buffer, true};
+   buffer->id         = id;
+#ifdef BF_ALLOCATION_VIEWER
+   std::cout << "\nBuffer " << id << " created\n";
+#endif
+   id++;
+}
+
+void BfAllocationViewer::remove(BfAllocatedBuffer* buffer)
+{
+   __map[buffer->id].is_alive = false;
+#ifdef BF_ALLOCATION_VIEWER
+   std::cout << "\nBuffer " << buffer->id << " removed\n";
+#endif
+}
+
+std::string BfAllocationViewer::print_info()
+{
+   std::stringstream ss;
+   ss << "BfAllocationViewer handles:\n";
+   ss << "---------------------------\n";
+   for (auto it = __map.begin(); it != __map.end(); ++it)
+   {
+      ss << "Buffer " << it->first << " -> "
+         << (it->second.is_alive ? "Alive" : "Dead") << "\n";
+   }
+   return ss.str();
+}
+#endif
 
 BfEvent bfCreateBuffer(BfAllocatedBuffer*       allocatedBuffer,
                        VmaAllocator             allocator,
@@ -55,6 +93,13 @@ BfEvent bfCreateBuffer(BfAllocatedBuffer*       allocatedBuffer,
           BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
       event.action  = BfEnActionType::BF_ACTION_TYPE_ALLOC_BUFFER_SUCCESS;
       event.success = true;
+
+// #define BF_ALLOCATION_VIEWER
+#ifdef BF_ALLOCATION_VIEWER
+      BfAllocationViewer::add(allocatedBuffer);
+      event.info =
+          std::string(": id = ").append(std::to_string(allocatedBuffer->id));
+#endif
    }
    else
    {
@@ -73,9 +118,14 @@ BfEvent bfDestroyBuffer(BfAllocatedBuffer* allocatedBuffer)
    vmaDestroyBuffer(allocatedBuffer->allocator,
                     allocatedBuffer->buffer,
                     allocatedBuffer->allocation);
+   allocatedBuffer->is_allocated = false;
    BfSingleEvent event{};
    event.type   = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
    event.action = BfEnActionType::BF_ACTION_TYPE_DESTROY_BUFFER;
+
+#ifdef BF_ALLOCATION_VIEWER
+   BfAllocationViewer::remove(allocatedBuffer);
+#endif
 
    return event;
 }
@@ -205,6 +255,7 @@ BfLayerBuffer::~BfLayerBuffer()
 {
    if (!__is_nested)
    {
+      std::cout << "BUFFER DEAD\n";
       BfEvent v_event = bfDestroyBuffer(&__vertex_buffer);
       BfEvent i_event = bfDestroyBuffer(&__index_buffer);
    }

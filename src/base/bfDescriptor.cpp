@@ -77,7 +77,7 @@ void BfDescriptor::map_textures()
       }
       else
       {
-         memcpy(data, it->second.data(),  it->second.size());
+         memcpy(data, it->second.data(), it->second.size());
       }
       vmaUnmapMemory(it->second[0]->image()->allocator,
                      it->second[0]->image()->allocation);
@@ -247,12 +247,17 @@ BfEvent BfDescriptor::create_desc_set_layouts()
 
 BfDescriptor::BfDescriptor() {}
 
-BfDescriptor::~BfDescriptor()
+void BfDescriptor::kill()
 {
    this->destroy_desc_set_layouts();
    this->destroy_desc_pool();
    this->deallocate_desc_images();
    this->deallocate_desc_buffers();
+}
+
+BfDescriptor::~BfDescriptor()
+{
+   // this->kill();
 }
 
 BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
@@ -574,7 +579,8 @@ BfEvent BfDescriptor::deallocate_desc_buffers()
    {
       for (size_t index = 0; index < it->second.size(); index++)
       {
-         event = bfDestroyBuffer(&it->second.at(index));
+         if (it->second.at(index).is_allocated)
+            event = bfDestroyBuffer(&it->second.at(index));
       }
    }
    return event;
