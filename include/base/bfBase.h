@@ -100,6 +100,7 @@ BfEvent bfCreateInstance(BfBase &base);
 BfEvent bfDestroyInstance(BfBase &base);
 
 BfEvent bfCreateDebugMessenger(BfBase &base);
+BfEvent bfDestroyDebufMessenger(BfBase &base);
 
 BfEvent bfCreateSurface(BfBase &base);
 BfEvent bfDestroySurface(BfBase &base);

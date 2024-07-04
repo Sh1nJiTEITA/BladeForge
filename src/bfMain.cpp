@@ -133,6 +133,7 @@ void BfMain::__kill()
    bfDestroySurface(__base);
    bfDestroyAllocator(__base);
    bfDestroyLogicalDevice(__base);
+   bfDestroyDebufMessenger(__base);
    bfDestroyInstance(__base);
 
    // __base.layer_killer.kill();

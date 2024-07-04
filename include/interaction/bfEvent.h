@@ -44,6 +44,9 @@ enum BfEnActionType
    BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_SUCCESS               = 0x3,
    BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_FAILURE               = -0x3,
    BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_NO_INIT               = 0x3A,
+   BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_SUCCESS            = 0x3B,
+   BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_FAILURE            =-0x3B,
+   BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_NO_INIT            = 0x3BA,
 
    BF_ACTION_TYPE_INIT_SURFACE_SUCCESS                       = 0x4,
    BF_ACTION_TYPE_INIT_SURFACE_FAILURE                       = -0x4,
@@ -242,6 +245,9 @@ const std::map<int, std::string> bfSetActionsStr{
     {-0x3, "Vulkan Debug messenger wasn't created"},
     {0x3A,
      "Vulkan Debug messenger wasn't created due to disabled validation layers"},
+   {0x3B, "Vulkan Debug messenger was destroyed"},
+   {-0x3B, "Vulkan Debug messenger was not destroyed"},
+   {0x3BA, "Vulkan Debut messenger was not destroyed -> was not created before"},
 
     {0x4, "Vulkan Surface was created successfully"},
     {-0x4, "Vulkan Surface wasn't created"},

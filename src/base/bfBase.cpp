@@ -154,6 +154,31 @@ BfEvent bfDestroyInstance(BfBase &base)
    return BfEvent(event);
 }
 
+BfEvent bfDestroyDebufMessenger(BfBase &base)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+
+   if (!enableValidationLayers)
+   {
+      event.action = BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_NO_INIT;
+      return event;
+   }
+   auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+       base.instance,
+       "vkDestroyDebugUtilsMessengerEXT");
+   if (func != nullptr) {
+      func(base.instance, base.debug_messenger, nullptr);
+      event.action = BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_SUCCESS;
+      return event;
+   }
+   else {
+      event.action = BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_FAILURE;
+      return event;
+   }
+
+}
+
 BfEvent bfCreateDebugMessenger(BfBase &base)
 {
    // If layer is disabled, то DebugMessenger is not neccesery
@@ -1466,15 +1491,15 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
 
    base.layer_handler.bind_descriptor(&base.descriptor);
 
-   bfCreateBuffer(&base.id_image_buffer,
-                  base.allocator,
-                  // base.swap_chain_extent.height * base.swap_chain_extent.width *
-                  3 * 
-                      sizeof(uint32_t),
-                  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                  VMA_MEMORY_USAGE_AUTO,
-                  VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
-                      VMA_ALLOCATION_CREATE_MAPPED_BIT);
+   bfCreateBuffer(
+       &base.id_image_buffer,
+       base.allocator,
+       // base.swap_chain_extent.height * base.swap_chain_extent.width *
+       3 * sizeof(uint32_t),
+       VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+       VMA_MEMORY_USAGE_AUTO,
+       VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+           VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
    return BfEvent();
 }
@@ -1817,9 +1842,11 @@ BfEvent bfDestroyGraphicsPipelines(BfBase &base)
    vkDestroyPipeline(base.device, base.tline_pipeline, nullptr);
    vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
 
-   // vkDestroyDescriptorSetLayout(base.device, base.tline_pipeline_layout, nullptr);
-   // vkDestroyDescriptorSetLayout(base.device, base.triangle_pipeline_layout, nullptr);
-   // vkDestroyDescriptorSetLayout(base.device, base.line_pipeline_layout, nullptr);
+   // vkDestroyDescriptorSetLayout(base.device, base.tline_pipeline_layout,
+   // nullptr); vkDestroyDescriptorSetLayout(base.device,
+   // base.triangle_pipeline_layout, nullptr);
+   // vkDestroyDescriptorSetLayout(base.device, base.line_pipeline_layout,
+   // nullptr);
    //
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -2061,8 +2088,9 @@ BfEvent bfCreateGUIDescriptorPool(BfBase &base)
 BfEvent bfDestroyGUIDescriptorPool(BfBase &base)
 {
    vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
-   
-   // vkDestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks *pAllocator)
+
+   // vkDestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout
+   // descriptorSetLayout, const VkAllocationCallbacks *pAllocator)
 
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -2883,14 +2911,14 @@ BfEvent bfaCreateGraphicsPipelineLayouts(BfBase &base)
    return BfEvent(event);
 }
 
-
-BfEvent bfDestoryGraphicsPipelineLayouts(BfBase &base)  {
+BfEvent bfDestoryGraphicsPipelineLayouts(BfBase &base)
+{
    vkDestroyPipelineLayout(base.device, base.triangle_pipeline_layout, nullptr);
    vkDestroyPipelineLayout(base.device, base.tline_pipeline_layout, nullptr);
    vkDestroyPipelineLayout(base.device, base.line_pipeline_layout, nullptr);
-   
+
    BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+   event.type   = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
    event.action = BF_ACTION_TYPE_DESTROY_PIPELINE_LAYOUT;
    return event;
 }
