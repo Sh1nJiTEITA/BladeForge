@@ -62,7 +62,7 @@ void BfDescriptor::unmap_descriptor(BfEnDescriptorUsage usage,
    BfAllocatedBuffer* buffer = &__desc_buffers_map[usage][frame_index];
    vmaUnmapMemory(buffer->allocator, buffer->allocation);
 }
-
+//
 void BfDescriptor::map_textures()
 {
    for (auto it = __desc_texture_map.begin(); it != __desc_texture_map.end();
@@ -303,7 +303,7 @@ BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
 
    return event;
 }
-
+//
 BfEvent BfDescriptor::add_texture(
     std::vector<std::shared_ptr<BfTexture>> textures)
 {
@@ -363,7 +363,7 @@ BfEvent BfDescriptor::add_texture(
       return event;
    }
 }
-
+//
 BfEvent BfDescriptor::add_descriptor_create_info(
     std::vector<BfDescriptorCreateInfo> info)
 {
@@ -595,60 +595,67 @@ BfEvent BfDescriptor::allocate_desc_images()
    // For each pImage in create_info
    for (auto& create_info : __desc_create_info_list)
    {
-      if (create_info.pImage_info == nullptr) continue;
-
-      // Create storage for images
-      __desc_image_map.emplace(create_info.usage,
-                               std::vector<BfAllocatedImage>());
-      // Reserve vector for buffers by number of frames in flight
-      __desc_image_map[create_info.usage].reserve(
-          create_info.pImage_info->count * 2);
-
-      // For each frame in flight create buffer for current usage
-      for (size_t frame_index = 0; frame_index < create_info.pImage_info->count;
-           frame_index++)
+      if (!create_info.pImage_info && !create_info.pImage)
       {
-         // Add empty buffer to storage
-         __desc_image_map[create_info.usage].emplace_back();
+         continue;
+      }
+      else if (!create_info.pImage)
+      {
+         __desc_image_map.emplace(create_info.usage,
+                                  std::vector<BfAllocatedImage>());
+         __desc_image_map[create_info.usage].reserve(1);
 
-         // Create image
-         BfEvent res_image =
-             bfCreateImage(&__desc_image_map[create_info.usage][frame_index],
-                           create_info.vma_allocator,
-                           &create_info.pImage_info->image_create_info,
-                           &create_info.pImage_info->alloc_create_info);
+         __desc_image_map[create_info.usage].push_back(*create_info.pImage);
+         continue;
+      }
+      else if (!create_info.pImage_info)
+      {
+         // Create storage for images
+         __desc_image_map.emplace(create_info.usage,
+                                  std::vector<BfAllocatedImage>());
+         // Reserve vector for buffers by number of frames in flight
+         __desc_image_map[create_info.usage].reserve(
+             create_info.pImage_info->count * 2);
 
-         /*VkResult res_image = vmaCreateImage(
-                  create_info.vma_allocator,
-                 &create_info.pImage_info->image_create_info,
-                 &create_info.pImage_info->alloc_create_info,
-                 &__desc_image_map[create_info.usage][frame_index].image,
-                 &__desc_image_map[create_info.usage][frame_index].allocation,
-                 &__desc_image_map[create_info.usage][frame_index].allocation_info
-         );*/
-
-         BfEvent res_view{};
-         res_view.single_event.success = true;
-         if (create_info.pImage_info->is_image_view)
+         // For each frame in flight create buffer for current usage
+         for (size_t frame_index = 0;
+              frame_index < create_info.pImage_info->count;
+              frame_index++)
          {
-            create_info.pImage_info->view_create_info.image =
-                __desc_image_map[create_info.usage][frame_index].image;
-            res_view = bfCreateImageView(
-                &__desc_image_map[create_info.usage][frame_index],
-                __device,
-                &create_info.pImage_info->view_create_info);
-         }
+            // Add empty buffer to storage
+            __desc_image_map[create_info.usage].emplace_back();
 
-         if (!res_image.single_event.success || !res_view.single_event.success)
-         {
-            std::stringstream ss;
-            ss << "Image for type " << (int)create_info.usage
-               << " (use: " << BfEnDescriptorUsageStr[create_info.usage]
-               << ") wasn't created";
-            whole_event.action = BfEnActionType::
-                BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_FAILURE;
-            whole_event.success = false;
-            return whole_event;
+            // Create image
+            BfEvent res_image =
+                bfCreateImage(&__desc_image_map[create_info.usage][frame_index],
+                              create_info.vma_allocator,
+                              &create_info.pImage_info->image_create_info,
+                              &create_info.pImage_info->alloc_create_info);
+
+            BfEvent res_view{};
+            res_view.single_event.success = true;
+            if (create_info.pImage_info->is_image_view)
+            {
+               create_info.pImage_info->view_create_info.image =
+                   __desc_image_map[create_info.usage][frame_index].image;
+               res_view = bfCreateImageView(
+                   &__desc_image_map[create_info.usage][frame_index],
+                   __device,
+                   &create_info.pImage_info->view_create_info);
+            }
+
+            if (!res_image.single_event.success ||
+                !res_view.single_event.success)
+            {
+               std::stringstream ss;
+               ss << "Image for type " << (int)create_info.usage
+                  << " (use: " << BfEnDescriptorUsageStr[create_info.usage]
+                  << ") wasn't created";
+               whole_event.action = BfEnActionType::
+                   BF_ACTION_TYPE_ALLOCATE_DESCRIPTOR_BUFFERS_FAILURE;
+               whole_event.success = false;
+               return whole_event;
+            }
          }
       }
    }

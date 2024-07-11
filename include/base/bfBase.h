@@ -164,6 +164,8 @@ BfEvent bfDestroyAllocator(BfBase &base);
 BfEvent bfCreateTextureLoader(BfBase &base);
 BfEvent bfDestroyTextureLoader(BfBase &base);
 
+BfEvent bfLoadTextures(BfBase &base);
+
 void bfUploadMesh(BfBase &base, BfMesh &mesh);
 void bfUploadVertices(BfBase &base, BfMesh &mesh);
 void bfUploadIndices(BfBase &base, BfMesh &mesh);

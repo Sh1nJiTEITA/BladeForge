@@ -5,6 +5,7 @@
 
 #include <memory>
 
+#include "bfDescriptor.h"
 #include "bfEvent.h"
 #include "implot.h"
 
@@ -167,16 +168,17 @@ BfEvent bfDestroyDebufMessenger(BfBase &base)
    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
        base.instance,
        "vkDestroyDebugUtilsMessengerEXT");
-   if (func != nullptr) {
+   if (func != nullptr)
+   {
       func(base.instance, base.debug_messenger, nullptr);
       event.action = BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_SUCCESS;
       return event;
    }
-   else {
+   else
+   {
       event.action = BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_FAILURE;
       return event;
    }
-
 }
 
 BfEvent bfCreateDebugMessenger(BfBase &base)
@@ -1322,7 +1324,7 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10},
        {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10},
-   };
+       {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10}};
 
    base.descriptor.create_desc_pool(sizes);
 
@@ -1455,7 +1457,8 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    //
    // base.descriptor.add_texture({t1, t1});
    //
-   std::cout << "TEXTURE MAIN\n";
+   // std::cout << "TEXTURE MAIN\n";
+   //
    BfDescriptorImageCreateInfo binfo_id_map{};
    binfo_id_map.alloc_create_info = allocinfo;
    binfo_id_map.count             = MAX_FRAMES_IN_FLIGHT;
@@ -1473,6 +1476,24 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
                                VK_SHADER_STAGE_GEOMETRY_BIT;
    info_id_map.binding        = 1;
    info_id_map.layout_binding = BfDescriptorSetGlobal;
+
+
+   static BfTexture texture = base.texture_loader.load("./resources/buttons/test.png");
+ //   
+ //   BfDescriptorImageCreateInfo info_image_texture{};
+ //
+ //
+ //   BfDescriptorCreateInfo info_texture{};
+ //   info_texture.layout_binding = BfEnDescriptorSetLayoutType::BfDescriptorSetTexture;
+ //   info_texture.binding = 0;
+ //   info_texture.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+ //   info_texture.usage = BfEnDescriptorUsage::BfDescriptorTexture;
+ //   info_texture.shader_stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+ // //
+ // 
+
+
+   
 
    std::vector<BfDescriptorCreateInfo> infos{
        info_model_mtx,
@@ -2571,14 +2592,27 @@ BfEvent bfDestroyAllocator(BfBase &base)
 
 BfEvent bfCreateTextureLoader(BfBase &base)
 {
-   base.texture_loader = BfTextureLoader(&base.device, &base.allocator);
+   base.texture_loader = BfTextureLoader(base.physical_device,
+                                         &base.device,
+                                         &base.allocator,
+                                         &base.command_pool);
 
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
    return event;
 }
-BfEvent bfDestroyTextureLoader(BfBase &base) {}
+
+BfEvent bfDestroyTextureLoader(BfBase &base) {
+   base.texture_loader.kill();
+   return BfSingleEvent();
+}
+
+BfEvent bfLoadTextures(BfBase &base)
+{
+   BfTexture button = base.texture_loader.load("./resources/buttons/test.png");
+   return BfEvent();
+}
 
 // void bfAllocateBuffersForDynamicMesh(BfBase& base)
 //{

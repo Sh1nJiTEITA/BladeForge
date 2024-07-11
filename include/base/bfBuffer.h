@@ -128,4 +128,6 @@ BfEvent bfCreateImageView(BfAllocatedImage      *allocatedImage,
 
 BfEvent bfDestroyImageView(BfAllocatedImage *allocatedImage, VkDevice device);
 
+
+
 #endif  // !BF_BUFFER_H

@@ -1,4 +1,5 @@
-﻿#define VMA_IMPLEMENTATION
+﻿#include "bfBase.h"
+#define VMA_IMPLEMENTATION
 #include "BfMain.h"
 
 #include <memory>
@@ -83,7 +84,7 @@ void BfMain::__init()
 
    bfCreateIDMapImage(__base);
 
-   // bfCreateTextureLoader(__base);
+   bfCreateTextureLoader(__base);
 
    bfInitOwnDescriptors(__base);
 
@@ -120,14 +121,14 @@ void BfMain::__kill()
    bfDestroyImageViews(__base);
    bfDestroySwapchain(__base);
    bfDestorySampler(__base);
-   
+   bfDestroyTextureLoader(__base);
    // id buffer
    bfDestroyBuffer(&__base.id_image_buffer);
    __base.layer_handler.kill();
    __base.layer_killer.kill();
 
 
-   std::cout << BfAllocationViewer::print_info();
+   // std::cout << BfAllocationViewer::print_info();
 
 
    bfDestroySurface(__base);
@@ -137,8 +138,7 @@ void BfMain::__kill()
    bfDestroyInstance(__base);
 
    // __base.layer_killer.kill();
-   
-   std::cout << BfAllocationViewer::print_info();
+   // std::cout << BfAllocationViewer::print_info();
 }
 
 void BfMain::__start_loop()

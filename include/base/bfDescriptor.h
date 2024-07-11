@@ -60,6 +60,7 @@ struct BfDescriptorCreateInfo
 
    BfAllocatedImage             *pImage       = nullptr;
    BfAllocatedBuffer            *pBuffer      = nullptr;
+
    BfDescriptorImageCreateInfo  *pImage_info  = nullptr;
    BfDescriptorBufferCreateInfo *pBuffer_info = nullptr;
 
