@@ -63,26 +63,26 @@ void BfDescriptor::unmap_descriptor(BfEnDescriptorUsage usage,
    vmaUnmapMemory(buffer->allocator, buffer->allocation);
 }
 //
-void BfDescriptor::map_textures()
-{
-   for (auto it = __desc_texture_map.begin(); it != __desc_texture_map.end();
-        ++it)
-   {
-      void** data;
-      if (vmaMapMemory(it->second[0]->image()->allocator,
-                       it->second[0]->image()->allocation,
-                       data) != VK_SUCCESS)
-      {
-         throw std::runtime_error("Couldn't map texture");
-      }
-      else
-      {
-         memcpy(data, it->second.data(), it->second.size());
-      }
-      vmaUnmapMemory(it->second[0]->image()->allocator,
-                     it->second[0]->image()->allocation);
-   }
-}
+// void BfDescriptor::map_textures()
+// {
+//    for (auto it = __desc_texture_map.begin(); it != __desc_texture_map.end();
+//         ++it)
+//    {
+//       void** data;
+//       if (vmaMapMemory(it->second[0]->image()->allocator,
+//                        it->second[0]->image()->allocation,
+//                        data) != VK_SUCCESS)
+//       {
+//          throw std::runtime_error("Couldn't map texture");
+//       }
+//       else
+//       {
+//          memcpy(data, it->second.data(), it->second.size());
+//       }
+//       vmaUnmapMemory(it->second[0]->image()->allocator,
+//                      it->second[0]->image()->allocation);
+//    }
+// }
 
 void BfDescriptor::map_descriptor(BfEnDescriptorUsage usage,
                                   unsigned int        frame_index,
@@ -245,6 +245,36 @@ BfEvent BfDescriptor::create_desc_set_layouts()
    return event;
 }
 
+BfEvent BfDescriptor::create_texture_desc_set_layout()
+{
+   VkDescriptorSetLayoutBinding textureLayoutBinding{};
+   // Номер привязки в шейдере
+   textureLayoutBinding.binding = 0;
+   // Количество дескрипторов (текстур)
+   textureLayoutBinding.descriptorCount = __textures.size();
+   textureLayoutBinding.descriptorType =
+       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   textureLayoutBinding.pImmutableSamplers = nullptr;
+   // Доступно в фрагментном шейдере
+   textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   VkDescriptorSetLayoutCreateInfo layoutInfo{};
+   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   layoutInfo.bindingCount = 1;
+   layoutInfo.pBindings    = &textureLayoutBinding;
+
+   auto layout             = __desc_layout_packs_map
+                     [BfEnDescriptorSetLayoutType::BfDescriptorSetTexture]
+                         .desc_set_layout;
+
+   if (vkCreateDescriptorSetLayout(__device, &layoutInfo, nullptr, &layout) !=
+       VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create descriptor set layout!");
+   }
+   return BfEvent();
+}
+
 BfDescriptor::BfDescriptor() {}
 
 void BfDescriptor::kill()
@@ -304,65 +334,67 @@ BfEvent BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
    return event;
 }
 //
-BfEvent BfDescriptor::add_texture(
-    std::vector<std::shared_ptr<BfTexture>> textures)
-{
-   static uint32_t last_texture_id = 0;
-   BfSingleEvent   event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-
-   if (__is_descriptor_mutable)
-   {
-      __desc_texture_map[last_texture_id++] = textures;
-      {
-         event.action = BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_SUCCESS;
-         std::stringstream ss;
-         for (auto it = textures.begin(); it != textures.end(); ++it)
-         {
-            if (!(*it)->is_ok())
-            {
-               std::stringstream sse;
-               sse << "unloaded texture sources: __data == nullptr or smt in "
-                      "BfAllocatedImage for texture with path "
-                   << (*it)->path();
-               event.action = BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE;
-               event.info   = sse.str();
-
-               return event;
-            }
-
-            ss << "\ntexture with path " << (*it)->path() << " with id "
-               << last_texture_id - 1;
-            if (it != textures.end())
-            {
-               ss << "\n";
-            }
-         }
-
-         BfDescriptorCreateInfo info{};
-         info.vma_allocator  = textures[0]->allocator();
-         info.usage          = BfDescriptorTexture;
-         info.type           = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-         info.shader_stages  = VK_SHADER_STAGE_ALL;
-         info.binding        = last_texture_id - 1;
-         info.layout_binding = BfDescriptorSetTexture;
-         info.pImage         = textures[0]->image();
-
-         BfDescriptorImageCreateInfo i_info{};
-
-         __desc_create_info_list.push_front(std::move(info));
-
-         event.info = ss.str();
-         return event;
-      }
-   }
-   else
-   {
-      event.action = BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE;
-      event.info   = "BfDescriptor was not mutable during this call";
-      return event;
-   }
-}
+// BfEvent BfDescriptor::add_texture(
+//     std::vector<std::shared_ptr<BfTexture>> textures)
+// {
+//    static uint32_t last_texture_id = 0;
+//    BfSingleEvent   event{};
+//    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+//
+//    if (__is_descriptor_mutable)
+//    {
+//       __desc_texture_map[last_texture_id++] = textures;
+//       {
+//          event.action = BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_SUCCESS;
+//          std::stringstream ss;
+//          for (auto it = textures.begin(); it != textures.end(); ++it)
+//          {
+//             if (!(*it)->is_ok())
+//             {
+//                std::stringstream sse;
+//                sse << "unloaded texture sources: __data == nullptr or smt in
+//                "
+//                       "BfAllocatedImage for texture with path "
+//                    << (*it)->path();
+//                event.action =
+//                BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE; event.info
+//                = sse.str();
+//
+//                return event;
+//             }
+//
+//             ss << "\ntexture with path " << (*it)->path() << " with id "
+//                << last_texture_id - 1;
+//             if (it != textures.end())
+//             {
+//                ss << "\n";
+//             }
+//          }
+//
+//          // BfDescriptorCreateInfo info{};
+//          // info.vma_allocator  = textures[0]->allocator();
+//          // info.usage          = BfDescriptorTexture;
+//          // info.type           = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+//          // info.shader_stages  = VK_SHADER_STAGE_ALL;
+//          // info.binding        = last_texture_id - 1;
+//          // info.layout_binding = BfDescriptorSetTexture;
+//          // info.pImage         = textures[0]->image();
+//          //
+//          BfDescriptorImageCreateInfo i_info{};
+//
+//          // __desc_create_info_list.push_front(std::move(info));
+//
+//          event.info = ss.str();
+//          return event;
+//       }
+//    }
+//    else
+//    {
+//       event.action = BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE;
+//       event.info   = "BfDescriptor was not mutable during this call";
+//       return event;
+//    }
+// }
 //
 BfEvent BfDescriptor::add_descriptor_create_info(
     std::vector<BfDescriptorCreateInfo> info)
@@ -397,6 +429,11 @@ BfEvent BfDescriptor::allocate_desc_sets()
    {
       for (auto& __desc_layout_pack : __desc_layout_packs_map)
       {
+         if (__desc_layout_pack.first == BfDescriptorSetTexture)
+         {
+            continue;
+         }
+
          __desc_layout_pack.second.desc_sets.push_back(VkDescriptorSet());
 
          VkDescriptorSetAllocateInfo desc_set_alloc_info{};
@@ -438,6 +475,11 @@ BfEvent BfDescriptor::allocate_desc_sets()
    return event;
 }
 
+
+BfEvent BfDescriptor::allocate_texture_desc_sets() { 
+   
+}
+
 BfEvent BfDescriptor::destroy_desc_set_layouts()
 {
    for (auto& pack : this->__desc_layout_packs_map)
@@ -448,6 +490,8 @@ BfEvent BfDescriptor::destroy_desc_set_layouts()
    }
    return BfEvent();
 }
+
+BfEvent destroy_texture_desc_set_layouts() {}
 
 // TODO: UPDATE FUNCTION FOR IMAGE FUNCTIONALITY
 BfEvent BfDescriptor::update_desc_sets()
@@ -516,6 +560,12 @@ BfEvent BfDescriptor::update_desc_sets()
    event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    event.action = BfEnActionType::BF_ACTION_TYPE_UPDATE_DESCRIPTOR_SETS;
    return event;
+}
+
+BfEvent BfDescriptor::add_texture(BfTexture* texture)
+{
+   __textures.push_back(texture);
+   return BfEvent();
 }
 
 BfEvent BfDescriptor::allocate_desc_buffers()
@@ -685,16 +735,6 @@ BfEvent BfDescriptor::deallocate_desc_images()
 
    return event;
 }
-
-BfEvent BfDescriptor::allocate_desc_texture()
-{
-   for (auto it = __desc_texture_map.begin(); it != __desc_texture_map.end();
-        ++it)
-   {
-   }
-}
-
-// BfEvent BfDescriptor::deallocate_desc_texture() {}
 
 void BfDescriptor::set_frames_in_flight(unsigned int in)
 {

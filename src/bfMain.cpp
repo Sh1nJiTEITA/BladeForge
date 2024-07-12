@@ -85,13 +85,12 @@ void BfMain::__init()
    bfCreateIDMapImage(__base);
 
    bfCreateTextureLoader(__base);
-
+   bfCreateCommandPool(__base);
    bfInitOwnDescriptors(__base);
 
    bfCreateGraphicsPipelines(__base);
    bfCreateStandartFrameBuffers(__base);
    bfCreateGUIFrameBuffers(__base);
-   bfCreateCommandPool(__base);
 
    bfCreateGUIDescriptorPool(__base);
    bfCreateStandartCommandBuffers(__base);
@@ -155,14 +154,12 @@ void BfMain::__start_loop()
    //                                              10,
    //                                              false);
    //
-   std::cout << "5-6\n";
    auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
                                                 sizeof(BfVertex3),
                                                 1000,
                                                 1000,
                                                 false);
 
-   std::cout << "5-6\n";
    BfDrawLayerCreateInfo layer_info_1{};
    layer_info_1.allocator          = __base.allocator;
    layer_info_1.vertex_size        = sizeof(BfVertex3);
@@ -226,9 +223,7 @@ void BfMain::__start_loop()
    __base.layer_handler.add(layer_2);
    // __base.layer_handler.add(section_layer);
 
-   std::cout << "BUTTON IMAGE\n";
 
-   std::cout << "BUTTON IMAGE\n";
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -269,7 +264,7 @@ void BfMain::__start_loop()
    for (size_t i = 0; i < __base.layer_handler.get_layer_count(); ++i)
    {
       auto buffer = __base.layer_handler.get_layer_by_index(i);
-      std::cout << "Adding buffer to kill " << "\n";
+      // std::cout << "Adding buffer to kill " << "\n";
       layer_killer->add(__base.layer_handler.get_layer_by_index(i));
    }
    layer_killer->kill();

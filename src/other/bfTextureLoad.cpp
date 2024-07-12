@@ -3,6 +3,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "bfBuffer.h"
+#include "bfVariative.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -207,8 +208,16 @@ BfTexture::~BfTexture()
 }
 
 // TODO: ADD BUFFER CREATION!!!!
-void BfTextureLoader::__create_temp_buffer(BfAllocatedBuffer* buffer) {
-   
+void BfTextureLoader::__create_temp_buffer(BfAllocatedBuffer* buffer,
+                                           BfTexture*         texture)
+{
+   bfCreateBuffer(buffer,
+                  buffer->allocator,
+                  texture->size() * 2,
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VMA_MEMORY_USAGE_AUTO,
+                  VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+                      VMA_ALLOCATION_CREATE_MAPPED_BIT);
 }
 
 void BfTextureLoader::__map_temp_buffer(BfAllocatedBuffer* buffer,
@@ -224,67 +233,129 @@ void BfTextureLoader::__map_temp_buffer(BfAllocatedBuffer* buffer,
 
 void BfTextureLoader::__create_texture_image(BfTexture* texture)
 {
-   VkImageCreateInfo imageInfo{};
-   imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-   imageInfo.imageType     = VK_IMAGE_TYPE_2D;
-   imageInfo.extent.width  = texture->width();
-   imageInfo.extent.height = texture->height();
-   imageInfo.extent.depth  = 1;
-   imageInfo.mipLevels     = 1;
-   imageInfo.arrayLayers   = 1;
-   imageInfo.format        = VK_FORMAT_R8G8B8A8_SRGB;
-   imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
-   imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   imageInfo.usage =
-       VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-   imageInfo.samples     = VK_SAMPLE_COUNT_1_BIT;
-   imageInfo.flags       = 0;
+   VkImageCreateInfo image_info{
+       .sType       = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+       .pNext       = nullptr,
+       .flags       = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+       .imageType   = VK_IMAGE_TYPE_2D,
+       .format      = VK_FORMAT_R8G8B8A8_SRGB,
+       .extent      = VkExtent3D{(uint32_t)texture->width(),
+                            (uint32_t)texture->height(),
+                            1},
+       .mipLevels   = 1,
+       .arrayLayers = 1,
+       .samples     = VK_SAMPLE_COUNT_1_BIT,
+       .tiling      = VK_IMAGE_TILING_OPTIMAL,
+       .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+       .sharingMode   = VK_SHARING_MODE_EXCLUSIVE,
+       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
 
-   VmaAllocationCreateInfo alloc_info;
+   VmaAllocationCreateInfo alloc_info{};
    alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
+   // alloc_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
+   // VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
 
-   bfCreateImage(&texture->__image, *__pAllocator, &imageInfo, &alloc_info);
+   bfCreateImage(texture->image(), *__pAllocator, &image_info, &alloc_info);
 }
 
-BfTexture BfTextureLoader::load(const std::string& path)
+uint32_t BfTextureLoader::load(const std::string& path)
 {
    // Create output textre
-   BfTexture texture(path);
+   // BfTexture texture(path);
    // Create temp buffer
+
+   __textures.emplace_back(path);
+
+   BfTexture* texture = &(*__textures.rbegin());
+
    BfAllocatedBuffer buffer;
-   
-   std::cout << "opening texture\n";
+   buffer.allocator = *__pAllocator;
+
    // Load image-info inside buffer
-   texture.open();
+   texture->open();
    {
-      __create_temp_buffer(&buffer);
-      __map_temp_buffer(&buffer, &texture);
+      __create_temp_buffer(&buffer, texture);
+      __map_temp_buffer(&buffer, texture);
    }
-   texture.close();  // free memory
-   std::cout << "closing texture\n";
-   
-   std::cout << "creating texture_image\n";
-   __create_texture_image(&texture);
-   __transition_image(&texture,
+   texture->close();  // free memory
+
+   __create_texture_image(texture);
+   __transition_image(texture,
                       VK_IMAGE_LAYOUT_UNDEFINED,
                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-   
-   std::cout << "copying\n";
-   __copy_buffer_to_image(&buffer,
-                          &texture.__image,
-                          texture.__width,
-                          texture.__height);
 
-   __transition_image(&texture,
+   __copy_buffer_to_image(&buffer,
+                          &texture->__image,
+                          texture->__width,
+                          texture->__height);
+
+   __transition_image(texture,
                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-   __create_texture_image_view(&texture);
+   __create_texture_image_view(texture);
 
    bfDestroyBuffer(&buffer);
 
-   return texture;
+   return texture->id();
+}
+
+BfTexture* BfTextureLoader::get(uint32_t id)
+{
+   for (auto it = __textures.begin(); it != __textures.end(); ++it)
+   {
+      if (it->id() == id)
+      {
+         return &(*it);
+      }
+   }
+   return nullptr;
+}
+
+void BfTextureLoader::create_descriptor() {}
+
+void BfTextureLoader::__create_descriptor_pool()
+{
+   VkDescriptorPoolSize poolSize{};
+   poolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   poolSize.descriptorCount = static_cast<uint32_t>(__textures.size());
+
+   VkDescriptorPoolCreateInfo poolInfo{};
+   poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+   poolInfo.poolSizeCount = 1;
+   poolInfo.pPoolSizes    = &poolSize;
+   poolInfo.maxSets       = 1;
+
+   VkDescriptorPool descriptorPool;
+   if (vkCreateDescriptorPool(*__pDevice,
+                              &poolInfo,
+                              nullptr,
+                              &descriptorPool) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create descriptor pool!");
+   }
+}
+
+void BfTextureLoader::__create_descriptor_set_layout()
+{
+   VkDescriptorSetLayoutBinding slb{};
+   slb.binding            = 0;
+   slb.descriptorCount    = static_cast<uint32_t>(__textures.size());
+   slb.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   slb.pImmutableSamplers = nullptr;
+   slb.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   VkDescriptorSetLayoutCreateInfo ci{};
+   ci.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   ci.bindingCount = 1;
+   ci.pBindings    = &slb;
+
+   if (vkCreateDescriptorSetLayout(*__pDevice,
+                                   &ci,
+                                   nullptr,
+                                   &__desc_sey_layout) != VK_SUCCESS)
+   {
+   }
 }
 
 BfAllocatedImage* BfTexture::image() { return &__image; }

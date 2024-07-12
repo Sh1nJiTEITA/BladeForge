@@ -255,7 +255,7 @@ BfLayerBuffer::~BfLayerBuffer()
 {
    if (!__is_nested)
    {
-      std::cout << "BUFFER DEAD\n";
+      // std::cout << "BUFFER DEAD\n";
       BfEvent v_event = bfDestroyBuffer(&__vertex_buffer);
       BfEvent i_event = bfDestroyBuffer(&__index_buffer);
    }

@@ -1477,39 +1477,50 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    info_id_map.binding        = 1;
    info_id_map.layout_binding = BfDescriptorSetGlobal;
 
-
-   static BfTexture texture = base.texture_loader.load("./resources/buttons/test.png");
- //   
- //   BfDescriptorImageCreateInfo info_image_texture{};
- //
- //
- //   BfDescriptorCreateInfo info_texture{};
- //   info_texture.layout_binding = BfEnDescriptorSetLayoutType::BfDescriptorSetTexture;
- //   info_texture.binding = 0;
- //   info_texture.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
- //   info_texture.usage = BfEnDescriptorUsage::BfDescriptorTexture;
- //   info_texture.shader_stages = VK_SHADER_STAGE_FRAGMENT_BIT;
- // //
- // 
+   auto id = base.texture_loader.load("./resources/buttons/test.png");
+   base.descriptor.add_texture(base.texture_loader.get(id));
 
 
-   
+   // std::cout << "Loading texture 1\n";
+   // BfTexture texture2("./resources/buttons/test.png");
+   // std::cout << "Loading texture 2\n";
+   // texture2.open();
+   // std::cout << "Loading texture 3\n";
+   // texture2.load(base.allocator, base.device);
+   // std::cout << "Loading texture 4\n";
+   //
+   //   BfDescriptorImageCreateInfo info_image_texture{};
+   //
+   //
+   // BfDescriptorCreateInfo info_texture{};
+   // info_texture.layout_binding =
+   //     BfEnDescriptorSetLayoutType::BfDescriptorSetTexture;
+   // info_texture.binding       = 0;
+   // info_texture.type          = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   // info_texture.usage         = BfEnDescriptorUsage::BfDescriptorTexture;
+   // info_texture.shader_stages = VK_SHADER_STAGE_FRAGMENT_BIT;
+   // info_texture.pImage        = texture.image();
+   //
+   //
 
    std::vector<BfDescriptorCreateInfo> infos{
        info_model_mtx,
        // info_pos_pick,
        info_view,
        // info_id_map
+       // info_texture,
    };
-
+   std::cout << "1\n";
    base.descriptor.add_descriptor_create_info(infos);
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
    base.descriptor.create_desc_set_layouts();
+   base.descriptor.create_texture_desc_set_layout();
    base.descriptor.allocate_desc_sets();
    base.descriptor.update_desc_sets();
-   base.descriptor.map_textures();
+   // base.descriptor.map_textures();
 
+   std::cout << "\\1\n";
    base.layer_handler.bind_descriptor(&base.descriptor);
 
    bfCreateBuffer(
@@ -2603,14 +2614,16 @@ BfEvent bfCreateTextureLoader(BfBase &base)
    return event;
 }
 
-BfEvent bfDestroyTextureLoader(BfBase &base) {
+BfEvent bfDestroyTextureLoader(BfBase &base)
+{
    base.texture_loader.kill();
    return BfSingleEvent();
 }
 
 BfEvent bfLoadTextures(BfBase &base)
 {
-   BfTexture button = base.texture_loader.load("./resources/buttons/test.png");
+   // BfTexture button =
+   // base.texture_loader.load("./resources/buttons/test.png");
    return BfEvent();
 }
 

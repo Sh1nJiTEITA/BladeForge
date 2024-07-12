@@ -40,7 +40,7 @@ public:
    const std::string& path() const;
    VmaAllocator       allocator() const;
    uint32_t           size() const;
-   
+
    BfAllocatedImage* image();
 
    int width() const;
@@ -60,23 +60,9 @@ class BfTextureLoader
    VkSampler       __sampler;
    VkCommandBuffer __commandBuffer;
 
-   void __create_temp_buffer(BfAllocatedBuffer* buffer);
-   void __map_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture
+   VkDescriptorSetLayout __desc_sey_layout;
 
-   );
-   void __create_sampler();
-   void __create_texture_image(BfTexture* texture);
-
-   void __transition_image(BfTexture* image,
-                           VkImageLayout     o,
-                           VkImageLayout     n);
-
-   void __copy_buffer_to_image(BfAllocatedBuffer* buffer,
-                               BfAllocatedImage*  image,
-                               uint32_t           w,
-                               uint32_t           h);
-
-   void __create_texture_image_view(BfTexture* texture);
+   std::vector<BfTexture> __textures;
 
 public:
    BfTextureLoader();
@@ -87,9 +73,35 @@ public:
    void kill();
    ~BfTextureLoader();
 
+   uint32_t load(const std::string& path);
+
+   BfTexture* get(uint32_t id);
+
+   void create_descriptor();
+
+private:
+   // CREATING DESCRIPTOR 
+   void __create_descriptor_pool();
+   void __create_descriptor_set_layout();
+
+   // LOADING TEXTURES
+   void __create_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture);
+   void __map_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture
+
+   );
+   void __create_sampler();
+   void __create_texture_image(BfTexture* texture);
+
+   void __transition_image(BfTexture* image, VkImageLayout o, VkImageLayout n);
+
+   void __copy_buffer_to_image(BfAllocatedBuffer* buffer,
+                               BfAllocatedImage*  image,
+                               uint32_t           w,
+                               uint32_t           h);
+
+   void __create_texture_image_view(BfTexture* texture);
+
    void __begin_single_time_command();
    void __end_single_time_command();
-
-   BfTexture load(const std::string& path);
 };
 #endif

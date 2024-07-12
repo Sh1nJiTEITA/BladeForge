@@ -6,7 +6,7 @@
 #include "bfEvent.h"
 #include "bfVariative.hpp"
 
-#define BF_ALLOCATION_VIEWER
+// #define BF_ALLOCATION_VIEWER
 #ifdef BF_ALLOCATION_VIEWER
 #include <sstream>
 #endif 
