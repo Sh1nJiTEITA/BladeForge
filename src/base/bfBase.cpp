@@ -1477,9 +1477,10 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    info_id_map.binding        = 1;
    info_id_map.layout_binding = BfDescriptorSetGlobal;
 
-   auto id = base.texture_loader.load("./resources/buttons/test.png");
-   base.descriptor.add_texture(base.texture_loader.get(id));
+   // auto id = base.texture_loader.load("./resources/buttons/test.png");
 
+   // base.t_texture = base.texture_loader.get(id);
+   // base.descriptor.add_texture(base.texture_loader.get(id));
 
    // std::cout << "Loading texture 1\n";
    // BfTexture texture2("./resources/buttons/test.png");
@@ -2317,8 +2318,7 @@ BfEvent bfInitImGUI(BfBase &base)
    (void)io;
    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
 
-   io.ConfigFlags |=
-       ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport /
+   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
    ImGui::StyleColorsClassic();
 
@@ -2607,6 +2607,9 @@ BfEvent bfCreateTextureLoader(BfBase &base)
                                          &base.device,
                                          &base.allocator,
                                          &base.command_pool);
+
+   base.texture_loader.create_imgui_descriptor_pool();
+   base.texture_loader.create_imgui_descriptor_set_layout();
 
    BfSingleEvent event{};
    event.type   = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;

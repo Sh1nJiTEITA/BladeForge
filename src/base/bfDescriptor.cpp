@@ -1,8 +1,11 @@
 #include "bfDescriptor.h"
 
+#include <vulkan/vulkan_core.h>
+
 #include <sstream>
 
 #include "bfEvent.h"
+#include "bfVariative.hpp"
 
 std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr = {
     {BfDescriptorViewDataUsage, "Descriptor for view data usage"},
@@ -263,14 +266,24 @@ BfEvent BfDescriptor::create_texture_desc_set_layout()
    layoutInfo.bindingCount = 1;
    layoutInfo.pBindings    = &textureLayoutBinding;
 
-   auto layout             = __desc_layout_packs_map
-                     [BfEnDescriptorSetLayoutType::BfDescriptorSetTexture]
-                         .desc_set_layout;
+   auto layout             = &__desc_layout_packs_map
+                      [BfEnDescriptorSetLayoutType::BfDescriptorSetTexture]
+                          .desc_set_layout;
 
-   if (vkCreateDescriptorSetLayout(__device, &layoutInfo, nullptr, &layout) !=
+   if (vkCreateDescriptorSetLayout(__device, &layoutInfo, nullptr, layout) !=
        VK_SUCCESS)
    {
       throw std::runtime_error("failed to create descriptor set layout!");
+   }
+
+   {  // TODO: ERASE THIS PART
+      for (auto pack = __desc_layout_packs_map.begin();
+           pack != __desc_layout_packs_map.end();
+           ++pack)
+      {
+         std::cout << "Pack for descriptor pack " << pack->first
+                   << " was created\n";
+      }
    }
    return BfEvent();
 }
@@ -431,7 +444,7 @@ BfEvent BfDescriptor::allocate_desc_sets()
       {
          if (__desc_layout_pack.first == BfDescriptorSetTexture)
          {
-            continue;
+            // continue;
          }
 
          __desc_layout_pack.second.desc_sets.push_back(VkDescriptorSet());
@@ -475,10 +488,7 @@ BfEvent BfDescriptor::allocate_desc_sets()
    return event;
 }
 
-
-BfEvent BfDescriptor::allocate_texture_desc_sets() { 
-   
-}
+BfEvent BfDescriptor::allocate_texture_desc_sets() {}
 
 BfEvent BfDescriptor::destroy_desc_set_layouts()
 {
@@ -510,8 +520,9 @@ BfEvent BfDescriptor::update_desc_sets()
       image_infos.reserve(std::distance(__desc_create_info_list.begin(),
                                         __desc_create_info_list.end()));
 
-      size_t buffer_j = 0;
-      size_t image_j  = 0;
+      size_t buffer_j        = 0;
+      size_t image_j         = 0;
+      size_t texture_binding = 0;
       for (auto& create_info : __desc_create_info_list)
       {
          VkDescriptorSet desc_set =
@@ -548,6 +559,30 @@ BfEvent BfDescriptor::update_desc_sets()
                                                    &image_infos[image_j]));
             image_j++;
          }
+      }
+
+      for (auto texture = __textures.begin(); texture != __textures.end();
+           ++texture)
+      {
+         VkWriteDescriptorSet write{};
+         write.sType          = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+         write.pNext          = nullptr;
+         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+         write.dstSet =
+             __desc_layout_packs_map[BfDescriptorSetTexture].desc_sets[i];
+         write.dstBinding      = 0;
+         write.descriptorCount = 1;
+
+         image_infos.emplace_back();
+         auto img_info         = &(*image_infos.rbegin());
+         img_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+         img_info->sampler     = *(*texture)->sampler();
+         img_info->imageView   = (*texture)->image()->view;
+
+         write.pImageInfo      = img_info;
+         writes.push_back(write);
+         std::cout << "Write for texture with id " << (*texture)->id()
+                   << " done\n";
       }
 
       vkUpdateDescriptorSets(__device,

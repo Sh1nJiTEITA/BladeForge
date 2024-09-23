@@ -1,9 +1,10 @@
-﻿#include "bfBase.h"
-#define VMA_IMPLEMENTATION
-#include "BfMain.h"
+﻿#include <imgui_impl_vulkan.h>
 
+#include "bfBase.h"
+#define VMA_IMPLEMENTATION
 #include <memory>
 
+#include "BfMain.h"
 #include "imgui.h"
 #include "vk_mem_alloc.h"
 
@@ -126,9 +127,7 @@ void BfMain::__kill()
    __base.layer_handler.kill();
    __base.layer_killer.kill();
 
-
    // std::cout << BfAllocationViewer::print_info();
-
 
    bfDestroySurface(__base);
    bfDestroyAllocator(__base);
@@ -148,11 +147,11 @@ void BfMain::__start_loop()
    double previousTime  = glfwGetTime();
 
    // BfLayerHandler
-   // auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
-   //                                              sizeof(BfVertex3),
-   //                                              100000,
-   //                                              10,
-   //                                              false);
+   auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
+                                                sizeof(BfVertex3),
+                                                100000,
+                                                10,
+                                                false);
    //
    auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
                                                 sizeof(BfVertex3),
@@ -179,22 +178,28 @@ void BfMain::__start_loop()
    section_info_1.l_pipeline        = __base.tline_pipeline;
    section_info_1.t_pipeline        = __base.triangle_pipeline;
 
-   // auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-   //                                                glm::vec3(1.0f, 0.0f, 0.0f));
+   // auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
+   // 0.0f),
+   //                                                glm::vec3(1.0f, 0.0f,
+   //                                                0.0f));
    // o_line_x->set_color({1.0f, 0.0f, 0.0f});
    // o_line_x->create_vertices();
    // o_line_x->create_indices();
    // o_line_x->bind_pipeline(&__base.line_pipeline);
    //
-   // auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-   //                                                glm::vec3(0.0f, 1.0f, 0.0f));
+   // auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
+   // 0.0f),
+   //                                                glm::vec3(0.0f, 1.0f,
+   //                                                0.0f));
    // o_line_y->set_color({0.0f, 1.0f, 0.0f});
    // o_line_y->create_vertices();
    // o_line_y->create_indices();
    // o_line_y->bind_pipeline(&__base.line_pipeline);
    //
-   // auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f, 0.0f),
-   //                                                glm::vec3(0.0f, 0.0f, 1.0f));
+   // auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
+   // 0.0f),
+   //                                                glm::vec3(0.0f,
+   //                                                0.0f, 1.0f));
    // o_line_z->set_color({0.0f, 0.0f, 1.0f});
    // o_line_z->create_vertices();
    // o_line_z->create_indices();
@@ -215,15 +220,26 @@ void BfMain::__start_loop()
 
    __blade_bases        = layer_2.get();
    // layer_1->add(layer_1_n);
-   // __other_layer = layer_1.get();
+   __other_layer = layer_1.get();
 
    // layer_1->update_buffer();
 
-   // __base.layer_handler.add(layer_1);
+   __base.layer_handler.add(layer_1);
    __base.layer_handler.add(layer_2);
    // __base.layer_handler.add(section_layer);
 
+   // return;
+   uint32_t local_tId =
+       __base.texture_loader.load("./resources/buttons/test.png");
+   // BfTexture *t = __base.texture_loader.get(local_tId);
+   // __base.texture_loader.create_imgui_descriptor_set(t);
 
+   //
+   // std::cout << "Creating ImGui texture\n";
+   // ImTextureID tId =
+   //     ImGui_ImplVulkan_AddTexture(*__base.t_texture->sampler(),
+   //                                 __base.t_texture->image()->view,
+   //                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {

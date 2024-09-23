@@ -93,6 +93,8 @@ struct BfBase
    VmaAllocator allocator;
    bool         is_resized;
    uint32_t     pos_id;
+
+   BfTexture* t_texture;
 };
 
 // Main functions

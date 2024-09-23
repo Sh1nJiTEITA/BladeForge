@@ -42,6 +42,8 @@
 #elif defined(__unix__) || defined(__linux__)
 // #ifndef VMA_LOCAL_
 // #define VMA_LOCAL_
+//
+// #define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
 #include "vk_mem_alloc.h"
 // #endif
 #endif

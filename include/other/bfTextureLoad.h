@@ -9,7 +9,9 @@
 #include "bfVariative.hpp"
 #include "vk_mem_alloc.h"
 
+
 class BfTextureLoader;
+
 
 class BfTexture
 {
@@ -20,11 +22,15 @@ class BfTexture
    int      __channels;
    uint8_t* __data;
 
+   VkDescriptorSet  __desc_set;
+   VkSampler*       __sampler;
    BfAllocatedImage __image;
 
    uint32_t __id;
 
 public:
+   ImTextureID imgui_id;
+
    BfTexture(std::string path);
    ~BfTexture();
 
@@ -40,6 +46,9 @@ public:
    const std::string& path() const;
    VmaAllocator       allocator() const;
    uint32_t           size() const;
+
+   VkSampler*       sampler() const;
+   VkDescriptorSet* set();
 
    BfAllocatedImage* image();
 
@@ -60,7 +69,8 @@ class BfTextureLoader
    VkSampler       __sampler;
    VkCommandBuffer __commandBuffer;
 
-   VkDescriptorSetLayout __desc_sey_layout;
+   VkDescriptorSetLayout __desc_set_layout;
+   VkDescriptorPool      __imguiDescriptorPool;
 
    std::vector<BfTexture> __textures;
 
@@ -77,12 +87,12 @@ public:
 
    BfTexture* get(uint32_t id);
 
-   void create_descriptor();
+   void create_imgui_descriptor_pool();
+   void create_imgui_descriptor_set(BfTexture* texture);
+   void create_imgui_descriptor_set_layout();
 
 private:
-   // CREATING DESCRIPTOR 
-   void __create_descriptor_pool();
-   void __create_descriptor_set_layout();
+   // CREATING DESCRIPTOR
 
    // LOADING TEXTURES
    void __create_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture);

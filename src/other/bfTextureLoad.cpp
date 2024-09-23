@@ -213,7 +213,7 @@ void BfTextureLoader::__create_temp_buffer(BfAllocatedBuffer* buffer,
 {
    bfCreateBuffer(buffer,
                   buffer->allocator,
-                  texture->size() * 2,
+                  texture->size() * 4,
                   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                   VMA_MEMORY_USAGE_AUTO,
                   VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
@@ -267,6 +267,7 @@ uint32_t BfTextureLoader::load(const std::string& path)
    __textures.emplace_back(path);
 
    BfTexture* texture = &(*__textures.rbegin());
+   texture->__sampler = &__sampler;
 
    BfAllocatedBuffer buffer;
    buffer.allocator = *__pAllocator;
@@ -312,50 +313,86 @@ BfTexture* BfTextureLoader::get(uint32_t id)
    return nullptr;
 }
 
-void BfTextureLoader::create_descriptor() {}
-
-void BfTextureLoader::__create_descriptor_pool()
+void BfTextureLoader::create_imgui_descriptor_pool()
 {
-   VkDescriptorPoolSize poolSize{};
-   poolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   poolSize.descriptorCount = static_cast<uint32_t>(__textures.size());
+   VkDescriptorPoolSize poolSizes[] = {
+       {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        // static_cast<uint32_t>(__textures.size())}
+        100}};
 
    VkDescriptorPoolCreateInfo poolInfo{};
    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.poolSizeCount = 1;
-   poolInfo.pPoolSizes    = &poolSize;
-   poolInfo.maxSets       = 1;
+   poolInfo.pPoolSizes    = poolSizes;
+   // poolInfo.maxSets       = static_cast<uint32_t>(__textures.size());
+   poolInfo.maxSets       = 100;
 
-   VkDescriptorPool descriptorPool;
    if (vkCreateDescriptorPool(*__pDevice,
                               &poolInfo,
                               nullptr,
-                              &descriptorPool) != VK_SUCCESS)
+                              &__imguiDescriptorPool) != VK_SUCCESS)
    {
-      throw std::runtime_error("failed to create descriptor pool!");
+      throw std::runtime_error("failed to create descriptor pool for ImGui!");
    }
 }
 
-void BfTextureLoader::__create_descriptor_set_layout()
+void BfTextureLoader::create_imgui_descriptor_set_layout()
 {
-   VkDescriptorSetLayoutBinding slb{};
-   slb.binding            = 0;
-   slb.descriptorCount    = static_cast<uint32_t>(__textures.size());
-   slb.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   slb.pImmutableSamplers = nullptr;
-   slb.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+   VkDescriptorSetLayoutBinding layoutBinding{};
+   layoutBinding.binding            = 0;
+   layoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   layoutBinding.descriptorCount    = 1;
+   layoutBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+   layoutBinding.pImmutableSamplers = nullptr;
 
-   VkDescriptorSetLayoutCreateInfo ci{};
-   ci.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-   ci.bindingCount = 1;
-   ci.pBindings    = &slb;
+   VkDescriptorSetLayoutCreateInfo layoutInfo{};
+   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   layoutInfo.bindingCount = 1;
+   layoutInfo.pBindings    = &layoutBinding;
 
    if (vkCreateDescriptorSetLayout(*__pDevice,
-                                   &ci,
+                                   &layoutInfo,
                                    nullptr,
-                                   &__desc_sey_layout) != VK_SUCCESS)
+                                   &__desc_set_layout) != VK_SUCCESS)
    {
+      throw std::runtime_error("failed to create descriptor set layout!");
    }
+}
+
+void BfTextureLoader::create_imgui_descriptor_set(BfTexture* texture)
+{
+   VkDescriptorSetAllocateInfo allocInfo{};
+   allocInfo.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+   allocInfo.descriptorPool = __imguiDescriptorPool;
+   allocInfo.descriptorSetCount = 1;
+   allocInfo.pSetLayouts        = &__desc_set_layout;
+
+   if (vkAllocateDescriptorSets(*__pDevice, &allocInfo, texture->set()) !=
+       VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to allocate descriptor set!");
+   }
+
+   VkDescriptorImageInfo imageInfo{};
+   imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   imageInfo.imageView   = texture->__image.view;
+   imageInfo.sampler     = __sampler;
+
+   VkWriteDescriptorSet descriptorWrite{};
+   descriptorWrite.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrite.dstSet          = *texture->set();
+   descriptorWrite.dstBinding      = 0;
+   descriptorWrite.dstArrayElement = 0;
+   descriptorWrite.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   descriptorWrite.descriptorCount = 1;
+   descriptorWrite.pImageInfo      = &imageInfo;
+
+   vkUpdateDescriptorSets(*__pDevice, 1, &descriptorWrite, 0, nullptr);
+
+   texture->imgui_id =
+       ImGui_ImplVulkan_AddTexture(__sampler,
+                                   texture->__image.view,
+                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 BfAllocatedImage* BfTexture::image() { return &__image; }
@@ -426,3 +463,7 @@ const std::string& BfTexture::path() const { return __path; };
 VmaAllocator BfTexture::allocator() const { return __image.allocator; }
 
 uint32_t BfTexture::size() const { return __width * __height * __channels; }
+
+VkSampler* BfTexture::sampler() const { return __sampler; }
+
+VkDescriptorSet* BfTexture::set() { return &__desc_set; }
