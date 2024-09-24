@@ -124,7 +124,7 @@ if(WIN32)
 endif(WIN32)
 
 if(UNIX)
-  if( EXISTS ${VULKAN_SHADER_COMPILER})
+  if(EXISTS ${VULKAN_SHADER_COMPILER})
     set(SHADER_EXTENSIONS
         "*.vert"
         "*.frag"
@@ -265,12 +265,7 @@ list(
   ${BF_OTHER})
 
 # Add source to this project's executable.
-add_executable(
-  ${PROJECT_NAME}
-  "main.h" 
-  "main.cpp"
-  ${SOURCES}
-)
+add_executable(${PROJECT_NAME} "main.h" "main.cpp" ${SOURCES})
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 
@@ -278,16 +273,21 @@ if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
 
-if (WIN32)
+if(WIN32)
   set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3")
-endif (WIN32)
+endif(WIN32)
 
-find_package(glfw3 REQUIRED)
-find_package(Vulkan REQUIRED)
+# find_package(glfw3 REQUIRED) find_package(Vulkan REQUIRED)
+#
+# include_directories(${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+# link_directories(${Vulkan_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS})
+# target_link_libraries(BladeForge PRIVATE ${Vulkan_LIBRARIES})
+#
+# target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
+# target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
 
-include_directories(${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
-link_directories(${Vulkan_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS})
-target_link_libraries(BladeForge PRIVATE ${Vulkan_LIBRARIES})
+add_subdirectory(external)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfexternallib)
 
 find_package(Catch2 REQUIRED)
 
@@ -300,22 +300,21 @@ set(IMGUI_IMPL_VULKAN
 find_package(glm CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
-
 if(WIN32)
-  set(VulkanMemoryAllocator_DIR "C:/Program Files (x86)/VMA/share/cmake/VulkanMemoryAllocator/")
+  set(VulkanMemoryAllocator_DIR
+      "C:/Program Files (x86)/VMA/share/cmake/VulkanMemoryAllocator/")
 endif(WIN32)
 
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE GPUOpen::VulkanMemoryAllocator)
 
-add_subdirectory(external/splines-lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE splines-lib)
+# add_subdirectory(external/splines-lib) target_link_libraries(${PROJECT_NAME}
+# PRIVATE splines-lib)
 
-add_subdirectory(external/imgui_doc)
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-vulkan imgui-glfw)
+# add_subdirectory(external/imgui_doc) target_link_libraries(${PROJECT_NAME}
+# PUBLIC imgui imgui-vulkan imgui-glfw)
 
-# CATCH 2
-# add_subdirectory(external/catch2)
+# CATCH 2 add_subdirectory(external/catch2)
 
 # Tests
 # ~~~
@@ -341,11 +340,14 @@ add_executable(
   # ${SOURCES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-target_link_libraries(tests PRIVATE GPUOpen::VulkanMemoryAllocator)
-target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES})
-target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
+# target_link_libraries(tests PRIVATE GPUOpen::VulkanMemoryAllocator)
+# target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES})
+# target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
+
+target_link_libraries(tests PUBLIC bfexternallib)
 target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
-target_link_libraries(tests PRIVATE splines-lib)
+# target_link_libraries(tests PRIVATE splines-lib)
+
 include_directories(external/eigen)
 include_directories(external/splines-lib)
 # target_link_libraries(tests PRIVATE glm)
