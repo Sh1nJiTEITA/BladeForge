@@ -179,8 +179,6 @@ void BfGui::presentCamera()
             is_per                        = true;
 
             __ptr_base->window->proj_mode = 0;
-
-            // std::cout << "pers active" << "\n";
          }
          if (ImGui::RadioButton("Ortho", is_ort))
          {
@@ -188,8 +186,6 @@ void BfGui::presentCamera()
             is_per                        = false;
 
             __ptr_base->window->proj_mode = 1;
-
-            // std::cout << "Ortho active" << "\n";
          }
 
          ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left, 0.1f);
