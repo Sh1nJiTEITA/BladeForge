@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(bfexternal)
 
-set(BF_IMGUI_DIR_NAME "imgui_doc")
+set(BF_IMGUI_DIR_NAME "imgui")
 
 add_library(
   bfexternallib

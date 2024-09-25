@@ -45,7 +45,7 @@ enum BfEnActionType
    BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_FAILURE               = -0x3,
    BF_ACTION_TYPE_INIT_DEBUG_MESSENGER_NO_INIT               = 0x3A,
    BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_SUCCESS            = 0x3B,
-   BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_FAILURE            =-0x3B,
+   BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_FAILURE            = -0x3B,
    BF_ACTION_TYPE_DESTROY_DEBUG_MESSENGER_NO_INIT            = 0x3BA,
 
    BF_ACTION_TYPE_INIT_SURFACE_SUCCESS                       = 0x4,
@@ -211,7 +211,14 @@ enum BfEnActionType
    BF_ACTION_TYPE_CREATE_TEXTURE_DESCRIPTOR_FAILURE          = -0x58,
 
    BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS              = 0x59,
-   BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_FAILURE              = -0x59
+   BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_FAILURE              = -0x59,
+
+   BF_ACTION_TYPE_BIND_BASE_TO_GUI_SUCCESS                   = 0x60,
+   BF_ACTION_TYPE_BIND_BASE_TO_GUI_FAILURE                   = -0x60,
+
+   BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_SUCCESS                 = 0x61,
+   BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_FAILURE                 = -0x61,
+
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -245,9 +252,10 @@ const std::map<int, std::string> bfSetActionsStr{
     {-0x3, "Vulkan Debug messenger wasn't created"},
     {0x3A,
      "Vulkan Debug messenger wasn't created due to disabled validation layers"},
-   {0x3B, "Vulkan Debug messenger was destroyed"},
-   {-0x3B, "Vulkan Debug messenger was not destroyed"},
-   {0x3BA, "Vulkan Debut messenger was not destroyed -> was not created before"},
+    {0x3B, "Vulkan Debug messenger was destroyed"},
+    {-0x3B, "Vulkan Debug messenger was not destroyed"},
+    {0x3BA,
+     "Vulkan Debut messenger was not destroyed -> was not created before"},
 
     {0x4, "Vulkan Surface was created successfully"},
     {-0x4, "Vulkan Surface wasn't created"},
@@ -412,7 +420,11 @@ const std::map<int, std::string> bfSetActionsStr{
     {0.59, "BfTextureLoader was successfully created"},
     {-0.59, "BfTextureLoader was not created"},
 
-};
+    {0.60, "BfBase was succesfully bound to gui-class"},
+    {-0.60, "BfBase was not bind to gui-class due to null ptr"},
+
+    {0.61, "BfHolder was succesfully bound to gui-class"},
+    {-0.61, "BfHolder was not bind to gui-class due to null ptr"}};
 
 enum BfEnSingleEventType
 {

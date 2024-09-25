@@ -227,7 +227,7 @@ set(BF_GEOMETRY
 set(BF_INTERACTION
     "include/interaction/bfConsole.h" "src/interaction/bfConsole.cpp"
     "include/interaction/bfEvent.h" "src/interaction/bfEvent.cpp"
-    "include/interaction/bfGUI.h" "src/interaction/bfGUI.cpp")
+    "include/interaction/bfGui.h" "src/interaction/bfGui.cpp")
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"

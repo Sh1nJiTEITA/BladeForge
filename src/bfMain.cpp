@@ -100,6 +100,9 @@ void BfMain::__init()
    bfInitImGUI(__base);
 
    bfCreateSampler(__base);
+
+   __gui.bindBase(&__base);
+   __gui.bindHolder(&__holder);
 }
 
 void BfMain::__kill()
@@ -252,14 +255,18 @@ void BfMain::__start_loop()
       ImGui::NewFrame();
       // ImGui::ShowDemoWindow();
 
-      __present_menu_bar();
-      __present_camera();
-      __present_info();
+      /*__present_menu_bar();*/
+      /*__present_camera();*/
+      /*__present_info();*/
+
       __present_event_log();
       __present_tooltype();
       __present_blade_base_create_window();
 
-      bfPresentLayerHandler(__base.layer_handler);
+      __gui.presentMenueBar();
+      __gui.presentCamera();
+      __gui.presentLayerHandler();
+
       // ShowTestPlot();
 
       ImGui::Render();
@@ -322,202 +329,6 @@ void BfMain::__present_tooltype()
       ImGui::EndTooltip();
    }
 }
-
-void BfMain::__present_info()
-{
-   double currentTime         = glfwGetTime();
-
-   static int counter         = 0;
-   static int print_counter   = 0;
-
-   static double previousTime = currentTime;
-   if (__gui.is_info)
-   {
-      std::string fps  = "Current FPS: ";
-
-      int screenWidth  = ImGui::GetIO().DisplaySize.x;
-      int screenHeight = ImGui::GetIO().DisplaySize.y;
-
-      auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                   ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove |
-                   ImGuiWindowFlags_NoBackground |
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
-
-      ImGui::SetNextWindowPos(ImVec2(screenWidth - 20, 20),
-                              ImGuiCond_Always,
-                              ImVec2(1.0f, 0.0f));
-      ImGui::Begin("Info", nullptr, flags);
-
-      // Display the frame count here any way you want.
-      counter += 1;
-
-      float x = 1.0;  // displays the frame rate every 1 second
-      if ((currentTime - previousTime) >= x)
-      {
-         print_counter = counter;
-         counter       = 0;
-         previousTime  = currentTime;
-      }
-      ImGui::Text((fps + std::to_string(print_counter)).c_str());
-
-      std::string pos_string = "Position = (" +
-                               std::to_string(__base.window->pos.x) + ", " +
-                               std::to_string(__base.window->pos.y) + ", " +
-                               std::to_string(__base.window->pos.z) + ")";
-
-      std::string up_string = "Up-vector = (" +
-                              std::to_string(__base.window->up.x) + ", " +
-                              std::to_string(__base.window->up.y) + ", " +
-                              std::to_string(__base.window->up.z) + ")";
-
-      std::string front_string = "Front-vector = (" +
-                                 std::to_string(__base.window->front.x) + ", " +
-                                 std::to_string(__base.window->front.y) + ", " +
-                                 std::to_string(__base.window->front.z) + ")";
-
-      std::string center_string =
-          "Center-vector = (" +
-          std::to_string(__base.window->front.x + __base.window->pos.x) + ", " +
-          std::to_string(__base.window->front.y + __base.window->pos.y) + ", " +
-          std::to_string(__base.window->front.z + __base.window->pos.z) + ")";
-
-      std::string yaw_string =
-          "Current-yaw = " + std::to_string(__base.window->yaw);
-      std::string pitch_string =
-          "Current-pitch = " + std::to_string(__base.window->pitch);
-
-      std::string mpos_string =
-          "Mouse-pos = " + std::to_string(__base.window->xpos) + ", " +
-          std::to_string(__base.window->ypos);
-      std::string selected_id_string =
-          "Selected_id = " + std::to_string(__base.pos_id);
-
-      ImGui::Text(pos_string.c_str());
-      ImGui::Text(up_string.c_str());
-      ImGui::Text(front_string.c_str());
-      ImGui::Text(center_string.c_str());
-      ImGui::Text(yaw_string.c_str());
-      ImGui::Text(pitch_string.c_str());
-      ImGui::Text(mpos_string.c_str());
-      ImGui::Text(selected_id_string.c_str());
-
-      ImGui::End();
-   }
-}
-
-void BfMain::__present_camera()
-{
-   if (__gui.is_camera_info)
-   {
-      ImGui::Begin("Camera");
-      static bool is_per = true;
-      static bool is_ort = false;
-
-      ImGui::BeginTable("VIEWS", 3);
-
-      ImGui::TableNextRow();  // 0
-
-      ImGui::TableSetColumnIndex(0);
-      ImGui::TableSetColumnIndex(1);
-      if (ImGui::Button("Up", ImVec2(50, 50))) bfSetOrthoUp(__base.window);
-      ImGui::TableSetColumnIndex(2);
-
-      ImGui::TableNextRow();  // 1
-
-      ImGui::TableSetColumnIndex(0);
-      if (ImGui::Button("Left", ImVec2(50, 50))) bfSetOrthoLeft(__base.window);
-
-      ImGui::TableSetColumnIndex(1);
-      if (ImGui::Button("Near", ImVec2(50, 50))) bfSetOrthoNear(__base.window);
-
-      ImGui::TableSetColumnIndex(2);
-      if (ImGui::Button("Right", ImVec2(50, 50)))
-         bfSetOrthoRight(__base.window);
-
-      ImGui::TableNextRow();  // 2
-
-      ImGui::TableSetColumnIndex(0);
-      ImGui::TableSetColumnIndex(1);
-      if (ImGui::Button("Bottom", ImVec2(50, 50)))
-         bfSetOrthoBottom(__base.window);
-      ImGui::TableSetColumnIndex(2);
-      if (ImGui::Button("Far", ImVec2(50, 50))) bfSetOrthoFar(__base.window);
-
-      ImGui::EndTable();
-
-      if (ImGui::RadioButton("Perspective", is_per))
-      {
-         is_ort                   = false;
-         is_per                   = true;
-
-         __base.window->proj_mode = 0;
-
-         // std::cout << "pers active" << "\n";
-      }
-      if (ImGui::RadioButton("Ortho", is_ort))
-      {
-         is_ort                   = true;
-         is_per                   = false;
-
-         __base.window->proj_mode = 1;
-
-         // std::cout << "Ortho active" << "\n";
-      }
-
-      ImGui::InputFloat("Ortho-left", &__base.window->ortho_left, 0.1f);
-      ImGui::InputFloat("Ortho-right", &__base.window->ortho_right, 0.1f);
-      ImGui::InputFloat("Ortho-top", &__base.window->ortho_top, 0.1f);
-      ImGui::InputFloat("Ortho-bottom", &__base.window->ortho_bottom, 0.1f);
-      ImGui::InputFloat("Ortho-near", &__base.window->ortho_near, 0.1f);
-      ImGui::InputFloat("Ortho-far", &__base.window->ortho_far, 0.1f);
-      ImGui::Checkbox("is_asp", &__base.window->is_asp);
-
-      ImGui::End();
-   }
-}
-
-void BfMain::__present_menu_bar()
-{
-   if (ImGui::BeginMainMenuBar())
-   {
-      if (ImGui::BeginMenu("File"))
-      {
-         if (ImGui::MenuItem("Create"))
-         {
-         }
-         if (ImGui::MenuItem("Open", "Ctrl+O"))
-         {
-         }
-         if (ImGui::MenuItem("Save", "Ctrl+S"))
-         {
-         }
-         if (ImGui::MenuItem("Save as.."))
-         {
-         }
-         ImGui::EndMenu();
-      }
-      if (ImGui::BeginMenu("View"))
-      {
-         if (ImGui::MenuItem(bfGetMenueInfoStr(__gui).c_str()))
-         {
-            __gui.is_info = !__gui.is_info;
-         }
-         if (ImGui::MenuItem(bfGetMenueEventLogStr(__gui).c_str()))
-         {
-            __gui.is_event_log = !__gui.is_event_log;
-         }
-         if (ImGui::MenuItem(bfGetMenueCameraInfoStr(__gui).c_str()))
-         {
-            __gui.is_camera_info = !__gui.is_camera_info;
-         }
-
-         ImGui::EndMenu();
-      }
-
-      ImGui::EndMainMenuBar();
-   }
-}
-
 void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
 {
    ImGui::Begin("IdMap");
@@ -601,46 +412,46 @@ void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
 
 void BfMain::__present_event_log()
 {
-   if (__gui.is_event_log)
-   {
-      ImVec2 size = {400, 600};
-      ImVec2 pos  = {__base.swap_chain_extent.width - size[0],
-                     (float)(__base.swap_chain_extent.height - size[1])};
-
-      ImGui::SetNextWindowPos(pos);
-      ImGui::SetNextWindowSize(size);
-
-      ImGuiWindowFlags windowFlags =
-          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-          ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground |
-          ImGuiWindowFlags_NoTitleBar |
-          ImGuiWindowFlags_AlwaysVerticalScrollbar;
-
-      // Устанавливаем скролл внизу
-
-      ImGui::Begin("Console", nullptr, windowFlags);
-      {
-         auto it_event   = BfEventHandler::single_events.rbegin();
-         auto it_time    = BfEventHandler::single_event_time.rbegin();
-         auto it_message = BfEventHandler::single_event_message.rbegin();
-
-         // Перебираем оба списка одновременно в обратном порядке
-         while (it_event != BfEventHandler::single_events.rend() &&
-                it_time != BfEventHandler::single_event_time.rend() &&
-                it_message != BfEventHandler::single_event_message.rend())
-         {
-            ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f},
-                               it_time->c_str());
-            ImGui::SameLine();
-            ImGui::TextWrapped(it_message->c_str());
-
-            ++it_event;
-            ++it_time;
-            ++it_message;
-         }
-      }
-      ImGui::End();
-   }
+   /*if (__gui.is_event_log)*/
+   /*{*/
+   /*   ImVec2 size = {400, 600};*/
+   /*   ImVec2 pos  = {__base.swap_chain_extent.width - size[0],*/
+   /*                  (float)(__base.swap_chain_extent.height - size[1])};*/
+   /**/
+   /*   ImGui::SetNextWindowPos(pos);*/
+   /*   ImGui::SetNextWindowSize(size);*/
+   /**/
+   /*   ImGuiWindowFlags windowFlags =*/
+   /*       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |*/
+   /*       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground |*/
+   /*       ImGuiWindowFlags_NoTitleBar |*/
+   /*       ImGuiWindowFlags_AlwaysVerticalScrollbar;*/
+   /**/
+   /*   // Устанавливаем скролл внизу*/
+   /**/
+   /*   ImGui::Begin("Console", nullptr, windowFlags);*/
+   /*   {*/
+   /*      auto it_event   = BfEventHandler::single_events.rbegin();*/
+   /*      auto it_time    = BfEventHandler::single_event_time.rbegin();*/
+   /*      auto it_message = BfEventHandler::single_event_message.rbegin();*/
+   /**/
+   /*      // Перебираем оба списка одновременно в обратном порядке*/
+   /*      while (it_event != BfEventHandler::single_events.rend() &&*/
+   /*             it_time != BfEventHandler::single_event_time.rend() &&*/
+   /*             it_message != BfEventHandler::single_event_message.rend())*/
+   /*      {*/
+   /*         ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f},*/
+   /*                            it_time->c_str());*/
+   /*         ImGui::SameLine();*/
+   /*         ImGui::TextWrapped(it_message->c_str());*/
+   /**/
+   /*         ++it_event;*/
+   /*         ++it_time;*/
+   /*         ++it_message;*/
+   /*      }*/
+   /*   }*/
+   /*   ImGui::End();*/
+   /*}*/
 }
 
 // void BfMain::__present_blade_section_create_window() {

@@ -10,14 +10,14 @@
 
 #include "bfBase.h"
 #include "bfBladeSection.h"
+#include "bfBuffer.h"
 #include "bfConsole.h"
 #include "bfCurves.hpp"
 #include "bfCurves2.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
-#include "bfGUI.h"
+#include "bfGui.h"
 #include "bfTextureLoad.h"
-#include "bfBuffer.h"
 
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"
@@ -29,7 +29,7 @@ class BfMain
 private:
    BfBase   __base;
    BfHolder __holder;
-   BfGUI    __gui;
+   BfGui    __gui;
 
    BfDrawLayer *__blade_bases = nullptr;
    BfDrawLayer *__other_layer = nullptr;
@@ -48,6 +48,7 @@ private:
    void __present_menu_bar();
    void __present_id_map(BfBase &base, std::vector<uint32_t> image_data_);
    void __present_event_log();
+
    // void __present_blade_section_create_window();
    void __present_blade_base_create_window();
 

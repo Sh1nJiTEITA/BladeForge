@@ -1,39 +1,215 @@
-#include "bfGUI.h"
+#include "bfGui.h"
 
-#include <functional>
-#include <memory>
+#include "bfEvent.h"
 
-#include "bfCurves3.h"
-#include "bfDrawObjectDefineType.h"
-#include "imgui.h"
+BfGui::BfGui() {}
 
-std::string bfGetMenueInfoStr(BfGUI gui)
+BfEvent BfGui::bindBase(BfBase *base)
 {
-   if (gui.is_info)
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (base)
+   {
+      __ptr_base   = base;
+      event.action = BF_ACTION_TYPE_BIND_BASE_TO_GUI_SUCCESS;
+   }
+   else
+   {
+      event.action = BF_ACTION_TYPE_BIND_BASE_TO_GUI_FAILURE;
+   }
+   return event;
+}
+
+BfEvent BfGui::bindHolder(BfHolder *handler)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (handler)
+   {
+      __ptr_holder = handler;
+      event.action = BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_SUCCESS;
+   }
+   else
+   {
+      event.action = BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_FAILURE;
+   }
+   return event;
+}
+
+std::string BfGui::getMenueInfoStr()
+{
+   if (__is_info)
       return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_ENABLED);
    else
       return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_DISABLED);
-};
+}
 
-std::string bfGetMenueEventLogStr(BfGUI gui)
+std::string BfGui::getMenueEventLogStr()
 {
-   if (gui.is_event_log)
+   if (__is_event_log)
       return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
    else
       return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
 }
 
-std::string bfGetMenueCameraInfoStr(BfGUI gui)
+std::string BfGui::getMenueCameraInfoStr()
 {
-   if (gui.is_camera_info)
+   if (__is_camera_info)
       return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_ENABLED);
    else
       return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_DISABLED);
 }
 
+void BfGui::presentLayerHandler()
+{
+   ImGui::Begin("Layer observer");
+   {
+      for (size_t i = 0; i < __ptr_base->layer_handler.get_layer_count(); i++)
+      {
+         auto layer = __ptr_base->layer_handler.get_layer_by_index(i);
+         bfShowNestedLayersRecursive(layer);
+      }
+   }
+   ImGui::End();
+}
+
+void BfGui::presentMenueBar()
+{
+   if (ImGui::BeginMainMenuBar())
+   {
+      if (ImGui::BeginMenu("File"))
+      {
+         if (ImGui::MenuItem("Create"))
+         {
+         }
+         if (ImGui::MenuItem("Open", "Ctrl+O"))
+         {
+         }
+         if (ImGui::MenuItem("Save", "Ctrl+S"))
+         {
+         }
+         if (ImGui::MenuItem("Save as.."))
+         {
+         }
+         ImGui::EndMenu();
+      }
+      if (ImGui::BeginMenu("View"))
+      {
+         if (ImGui::MenuItem(getMenueInfoStr().c_str()))
+         {
+            __is_info = !__is_info;
+         }
+         if (ImGui::MenuItem(getMenueEventLogStr().c_str()))
+         {
+            __is_event_log = !__is_event_log;
+         }
+         if (ImGui::MenuItem(getMenueCameraInfoStr().c_str()))
+         {
+            __is_camera_info = !__is_camera_info;
+         }
+
+         ImGui::EndMenu();
+      }
+
+      ImGui::EndMainMenuBar();
+   }
+}
+
+void BfGui::presentCamera()
+{
+   if (__is_camera_info)
+   {
+      static bool is_per = true;
+      static bool is_ort = false;
+
+      ImGui::Begin("Camera");
+      {
+         ImGui::BeginTable("VIEWS", 3);
+         {
+            ImGui::TableNextRow();  // 0
+            {
+               ImGui::TableSetColumnIndex(1);
+               if (ImGui::Button("Up", ImVec2(50, 50)))
+               {
+                  bfSetOrthoUp(__ptr_base->window);
+               }
+            }
+
+            ImGui::TableNextRow();  // 1
+            {
+               ImGui::TableSetColumnIndex(2);
+               if (ImGui::Button("Left", ImVec2(50, 50)))
+               {
+                  bfSetOrthoLeft(__ptr_base->window);
+               }
+
+               ImGui::TableSetColumnIndex(1);
+               if (ImGui::Button("Near", ImVec2(50, 50)))
+               {
+                  bfSetOrthoNear(__ptr_base->window);
+               }
+
+               ImGui::TableSetColumnIndex(2);
+               if (ImGui::Button("Right", ImVec2(50, 50)))
+               {
+                  bfSetOrthoRight(__ptr_base->window);
+               }
+            }
+
+            ImGui::TableNextRow();  // 2
+            {
+               ImGui::TableSetColumnIndex(1);
+               if (ImGui::Button("Bottom", ImVec2(50, 50)))
+               {
+                  bfSetOrthoBottom(__ptr_base->window);
+               }
+
+               ImGui::TableSetColumnIndex(2);
+               if (ImGui::Button("Far", ImVec2(50, 50)))
+               {
+                  bfSetOrthoFar(__ptr_base->window);
+               }
+            }
+         }
+         ImGui::EndTable();
+         /**/
+         if (ImGui::RadioButton("Perspective", is_per))
+         {
+            is_ort                        = false;
+            is_per                        = true;
+
+            __ptr_base->window->proj_mode = 0;
+
+            // std::cout << "pers active" << "\n";
+         }
+         if (ImGui::RadioButton("Ortho", is_ort))
+         {
+            is_ort                        = true;
+            is_per                        = false;
+
+            __ptr_base->window->proj_mode = 1;
+
+            // std::cout << "Ortho active" << "\n";
+         }
+
+         ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left, 0.1f);
+         ImGui::InputFloat("Ortho-right",
+                           &__ptr_base->window->ortho_right,
+                           0.1f);
+         ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top, 0.1f);
+         ImGui::InputFloat("Ortho-bottom",
+                           &__ptr_base->window->ortho_bottom,
+                           0.1f);
+         ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near, 0.1f);
+         ImGui::InputFloat("Ortho-far", &__ptr_base->window->ortho_far, 0.1f);
+         ImGui::Checkbox("is_asp", &__ptr_base->window->is_asp);
+      }
+      ImGui::End();
+   }
+}
+
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
 {
-   // Sub layer inside info shower
 #define BF_OBJ_NAME_LEN 30
 #define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
 
@@ -114,54 +290,6 @@ void bfPresentLayerHandler(BfLayerHandler &layer_handler)
          bfShowNestedLayersRecursive(layer);
       }
    }
-
-   // if (ImGui::CollapsingHeader("Variables"))
-   // {
-   //    for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
-   //    {
-   //       auto layer             = layer_handler.get_layer_by_index(i);
-   //       std::string layer_name = "Layer " + std::to_string(layer->id.get());
-   //
-   //       if (ImGui::TreeNode(layer_name.c_str()))
-   //       {
-   //          for (size_t j = 0; j < layer->get_obj_count(); ++j)
-   //          {
-   //             auto obj = layer->get_object_by_index(j);
-   //             std::string obj_name =
-   //                 "Obj " + std::to_string(obj->id.get()) + ", " +
-   //                 bfGetStrNameDrawObjType(obj->id.get_type());
-   //
-   //             ImGui::Selectable(
-   //                 obj_name.c_str(),
-   //                 layer->get_object_by_index(j)->get_pSelection(),
-   //                 ImGuiSelectableFlags_AllowDoubleClick);
-   //          }
-   //
-   //          ImGui::TreePop();
-   //       }
-   //    }
-   // }
-   //
-   // if (ImGui::Button("Delete"))
-   // {
-   //    std::vector<uint32_t> ids;
-   //    ids.reserve(layer_handler.get_whole_obj_count());
-   //
-   //    for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
-   //    {
-   //       ids.clear();
-   //       auto layer = layer_handler.get_layer_by_index(i);
-   //       for (size_t j = 0; j < layer->get_obj_count(); j++)
-   //       {
-   //          if (*layer->get_object_by_index(j)->get_pSelection())
-   //
-   //             ids.emplace_back(layer->get_object_by_index(j)->id.get());
-   //       }
-   //
-   //       layer->del(ids);
-   //    }
-   // }
-
    ImGui::End();
 }
 
@@ -171,7 +299,7 @@ void bfPresentBladeSectionInside(BfBladeBase              *layer,
 {
    static int inputFloatMode = 0;
 
-   auto make_row = [](std::string n,
+   auto make_row             = [](std::string n,
                       std::string d,
                       std::string dim,
                       float      *value,
@@ -316,18 +444,6 @@ void bfPresentBladeSectionInside(BfBladeBase              *layer,
    //}
    //*old = *info;
 };
-
-void ShowVariableContents(const Variable &var)
-{
-   ImGui::Text("Variable: %s", var.name.c_str());
-   ImGui::Separator();
-   ImGui::Text("Values:");
-   for (size_t i = 0; i < var.values.size(); ++i)
-   {
-      ImGui::Text("- %d", var.values[i]);
-   }
-}
-
 void ShowTestPlot()
 {
    std::vector<glm::vec3> v{{0.0, 0.0, 0.0f},
