@@ -44,10 +44,7 @@ private:
    // Presents //
    void __present_tooltype();
    void __present_info();
-   void __present_camera();
-   void __present_menu_bar();
    void __present_id_map(BfBase &base, std::vector<uint32_t> image_data_);
-   void __present_event_log();
 
    // void __present_blade_section_create_window();
    void __present_blade_base_create_window();

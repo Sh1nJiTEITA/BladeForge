@@ -229,20 +229,7 @@ void BfMain::__start_loop()
 
    __base.layer_handler.add(layer_1);
    __base.layer_handler.add(layer_2);
-   // __base.layer_handler.add(section_layer);
 
-   // return;
-   uint32_t local_tId =
-       __base.texture_loader.load("./resources/buttons/test.png");
-   // BfTexture *t = __base.texture_loader.get(local_tId);
-   // __base.texture_loader.create_imgui_descriptor_set(t);
-
-   //
-   // std::cout << "Creating ImGui texture\n";
-   // ImTextureID tId =
-   //     ImGui_ImplVulkan_AddTexture(*__base.t_texture->sampler(),
-   //                                 __base.t_texture->image()->view,
-   //                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -259,15 +246,13 @@ void BfMain::__start_loop()
       /*__present_camera();*/
       /*__present_info();*/
 
-      __present_event_log();
-      __present_tooltype();
       __present_blade_base_create_window();
 
       __gui.presentMenueBar();
       __gui.presentCamera();
       __gui.presentLayerHandler();
-
-      // ShowTestPlot();
+      __gui.presentEventLog();
+      __gui.presentToolType();
 
       ImGui::Render();
 
@@ -295,40 +280,6 @@ void BfMain::__start_loop()
    vkDeviceWaitIdle(__base.device);
 }
 
-void BfMain::__present_tooltype()
-{
-   /*
-       Пастельные оттенки:
-       Светло-розовый: ImVec4(1.0f, 0.8f, 0.8f, 1.0f)
-       Светло-голубой: ImVec4(0.8f, 0.8f, 1.0f, 1.0f)
-       Светло-зеленый: ImVec4(0.8f, 1.0f, 0.8f, 1.0f)
-       Светло-желтый: ImVec4(1.0f, 1.0f, 0.8f, 1.0f)
-
-       Приглушенные оттенки:
-       Серый: ImVec4(0.5f, 0.5f, 0.5f, 1.0f)
-       Светло-коричневый: ImVec4(0.7f, 0.6f, 0.5f, 1.0f)
-       Светло-фиолетовый: ImVec4(0.7f, 0.6f, 0.8f, 1.0f)
-       Светло-оранжевый: ImVec4(0.8f, 0.7f, 0.6f, 1.0f)
-
-       Яркие оттенки:
-       Красный: ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-       Синий: ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
-       Зеленый: ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
-       Желтый: ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
-   */
-   if (__base.pos_id != 0)
-   {
-      ImGui::BeginTooltip();
-
-      ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
-                       BfObjID::find_type(__base.pos_id))))
-                      .c_str());
-
-      ImGui::Text(
-          (std::string("id=").append(std::to_string(__base.pos_id)).c_str()));
-      ImGui::EndTooltip();
-   }
-}
 void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
 {
    ImGui::Begin("IdMap");
@@ -408,50 +359,6 @@ void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
       // ImGui::TextWrapped(s.c_str());
    }
    ImGui::End();
-}
-
-void BfMain::__present_event_log()
-{
-   /*if (__gui.is_event_log)*/
-   /*{*/
-   /*   ImVec2 size = {400, 600};*/
-   /*   ImVec2 pos  = {__base.swap_chain_extent.width - size[0],*/
-   /*                  (float)(__base.swap_chain_extent.height - size[1])};*/
-   /**/
-   /*   ImGui::SetNextWindowPos(pos);*/
-   /*   ImGui::SetNextWindowSize(size);*/
-   /**/
-   /*   ImGuiWindowFlags windowFlags =*/
-   /*       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |*/
-   /*       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground |*/
-   /*       ImGuiWindowFlags_NoTitleBar |*/
-   /*       ImGuiWindowFlags_AlwaysVerticalScrollbar;*/
-   /**/
-   /*   // Устанавливаем скролл внизу*/
-   /**/
-   /*   ImGui::Begin("Console", nullptr, windowFlags);*/
-   /*   {*/
-   /*      auto it_event   = BfEventHandler::single_events.rbegin();*/
-   /*      auto it_time    = BfEventHandler::single_event_time.rbegin();*/
-   /*      auto it_message = BfEventHandler::single_event_message.rbegin();*/
-   /**/
-   /*      // Перебираем оба списка одновременно в обратном порядке*/
-   /*      while (it_event != BfEventHandler::single_events.rend() &&*/
-   /*             it_time != BfEventHandler::single_event_time.rend() &&*/
-   /*             it_message != BfEventHandler::single_event_message.rend())*/
-   /*      {*/
-   /*         ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f},*/
-   /*                            it_time->c_str());*/
-   /*         ImGui::SameLine();*/
-   /*         ImGui::TextWrapped(it_message->c_str());*/
-   /**/
-   /*         ++it_event;*/
-   /*         ++it_time;*/
-   /*         ++it_message;*/
-   /*      }*/
-   /*   }*/
-   /*   ImGui::End();*/
-   /*}*/
 }
 
 // void BfMain::__present_blade_section_create_window() {

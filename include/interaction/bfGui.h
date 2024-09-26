@@ -40,6 +40,8 @@ public:
    void presentLayerHandler();
    void presentMenueBar();
    void presentCamera();
+   void presentEventLog();
+   void presentToolType();
 };
 
 enum BfEnMenueStatus

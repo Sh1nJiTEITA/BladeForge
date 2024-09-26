@@ -204,6 +204,64 @@ void BfGui::presentCamera()
    }
 }
 
+void BfGui::presentToolType()
+{
+   if (__ptr_base->pos_id != 0)
+   {
+      ImGui::BeginTooltip();
+
+      ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
+                       BfObjID::find_type(__ptr_base->pos_id))))
+                      .c_str());
+
+      ImGui::Text((std::string("id=")
+                       .append(std::to_string(__ptr_base->pos_id))
+                       .c_str()));
+      ImGui::EndTooltip();
+   }
+}
+
+void BfGui::presentEventLog()
+{
+   if (__is_event_log)
+   {
+      ImVec2 size = {400, 600};
+      ImVec2 pos  = {__ptr_base->swap_chain_extent.width - size[0],
+                     (float)(__ptr_base->swap_chain_extent.height - size[1])};
+
+      ImGui::SetNextWindowPos(pos);
+      ImGui::SetNextWindowSize(size);
+
+      ImGuiWindowFlags windowFlags =
+          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+          ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground |
+          ImGuiWindowFlags_NoTitleBar |
+          ImGuiWindowFlags_AlwaysVerticalScrollbar;
+
+      ImGui::Begin("Console", nullptr, windowFlags);
+      {
+         auto it_event   = BfEventHandler::single_events.rbegin();
+         auto it_time    = BfEventHandler::single_event_time.rbegin();
+         auto it_message = BfEventHandler::single_event_message.rbegin();
+
+         while (it_event != BfEventHandler::single_events.rend() &&
+                it_time != BfEventHandler::single_event_time.rend() &&
+                it_message != BfEventHandler::single_event_message.rend())
+         {
+            ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f},
+                               it_time->c_str());
+            ImGui::SameLine();
+            ImGui::TextWrapped(it_message->c_str());
+
+            ++it_event;
+            ++it_time;
+            ++it_message;
+         }
+      }
+      ImGui::End();
+   }
+}
+
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
 {
 #define BF_OBJ_NAME_LEN 30
