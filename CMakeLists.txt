@@ -269,6 +269,7 @@ list(
 add_executable(${PROJECT_NAME} "main.h" "main.cpp" ${SOURCES})
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
+file(COPY "${CMAKE_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_BINARY_DIR}/")
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
@@ -336,8 +337,10 @@ add_executable(
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
   # "tests/bez_test.cpp"
   # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
-  "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" "include/other/bfMath.hpp"
-  "src/other/bfMath.cpp"
+  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" "include/other/bfMath.hpp"
+  # "src/other/bfMath.cpp"
+  "tests/sol2_lua_test.cpp"
+  # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
   # ${SOURCES}
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

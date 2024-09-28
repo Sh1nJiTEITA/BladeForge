@@ -53,3 +53,9 @@ target_link_libraries(bfexternallib PUBLIC ${Vulkan_LIBRARIES}
                                            ${GLFW_LIBRARIES})
 
 target_link_libraries(bfexternallib PUBLIC glfw)
+
+find_package(Lua REQUIRED)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sol2)
+
+target_link_libraries(bfexternallib PUBLIC sol2::sol2 ${LUA_LIBRARIES})
+target_include_directories(bfexternallib PUBLIC ${LUA_INCLUDE_DIR})
