@@ -6,6 +6,7 @@
 #include "bfDescriptor.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
+#include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
 #include "bfLayerKiller.h"
 #include "bfPhysicalDevice.h"
@@ -94,7 +95,7 @@ struct BfBase
    bool         is_resized;
    uint32_t     pos_id;
 
-   BfTexture* t_texture;
+   BfTexture *t_texture;
 };
 
 // Main functions
@@ -198,6 +199,7 @@ void bfEndSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer);
 void bfDrawFrame(BfBase &base);
 void bfMainRecordCommandBuffer(BfBase &base);
 uint32_t bfGetCurrentObjectId(BfBase &base);
+void     bfUpdateImGuiPlatformWindows();
 
 // Uniform buffers
 size_t bfPadUniformBufferSize(const BfPhysicalDevice *physical_device,

@@ -11,6 +11,7 @@
 #include "bfCurves3.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
+#include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
 #include "implot.h"
 
@@ -18,6 +19,9 @@ class BfGui
 {
    BfBase*   __ptr_base   = nullptr;
    BfHolder* __ptr_holder = nullptr;
+
+   ImFont* __default_font = nullptr;
+   ImFont* __icon_font    = nullptr;
 
    bool __is_info         = true;
    bool __is_event_log    = false;
@@ -32,6 +36,8 @@ public:
 
    BfEvent bindBase(BfBase* base);
    BfEvent bindHolder(BfHolder* base);
+   BfEvent bindDefaultFont(std::string path);
+   BfEvent bindIconFont(std::string path);
 
    std::string getMenueInfoStr();
    std::string getMenueEventLogStr();
@@ -42,6 +48,7 @@ public:
    void presentCamera();
    void presentEventLog();
    void presentToolType();
+   void presentLeftDock();
 };
 
 enum BfEnMenueStatus

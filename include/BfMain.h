@@ -42,8 +42,6 @@ private:
    void __kill();
 
    // Presents //
-   void __present_tooltype();
-   void __present_info();
    void __present_id_map(BfBase &base, std::vector<uint32_t> image_data_);
 
    // void __present_blade_section_create_window();

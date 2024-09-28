@@ -9,6 +9,8 @@
 #include "bfEvent.h"
 #include "implot.h"
 
+#define IMGUI_ENABLE_DOCKING
+
 // Function definitions
 BfEvent bfCreateInstance(BfBase &base)
 {
@@ -2366,10 +2368,31 @@ BfEvent bfInitImGUI(BfBase &base)
    init_info.MinImageCount = imageCount;
 
    this->minImageCount = imageCount;*/
+   {  // FONTS TODO: RECREATE LOGIC IN OTHER FUNCTION
+      //
+      init_info.ImageCount      = imageCount;
+      init_info.MinImageCount   = imageCount;
+      init_info.CheckVkResultFn = check_vk_result;
 
-   init_info.ImageCount      = imageCount;
-   init_info.MinImageCount   = imageCount;
-   init_info.CheckVkResultFn = check_vk_result;
+      ImFontConfig config;
+
+      config.GlyphOffset.y = 2.0f;
+      config.SizePixels    = 10.0f;
+
+      io.Fonts->AddFontFromFileTTF("./resources/fonts/Cousine-Regular.ttf",
+                                   16.0f,
+                                   &config);
+
+      config.MergeMode        = true;
+      config.GlyphMinAdvanceX = 13.0f;
+
+      //
+      static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
+      io.Fonts->AddFontFromFileTTF("./resources/fonts/fa-solid-900.ttf",
+                                   16.0f,
+                                   &config,
+                                   icon_ranges);
+   }
 
    ImGui_ImplVulkan_Init(&init_info);
 
@@ -3399,6 +3422,17 @@ uint32_t bfGetCurrentObjectId(BfBase &base)
    void    *id_on_cursor_ = base.id_image_buffer.allocation_info.pMappedData;
    memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
    return id_on_cursor;
+}
+
+void bfUpdateImGuiPlatformWindows()
+{
+   ImGuiIO &io = ImGui::GetIO();
+   (void)io;
+   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+   {
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
+   }
 }
 
 size_t bfPadUniformBufferSize(const BfPhysicalDevice *physical_device,

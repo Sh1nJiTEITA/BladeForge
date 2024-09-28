@@ -240,7 +240,8 @@ set(BF_OTHER
     "include/other/bfMath.hpp"
     "src/other/bfMath.cpp"
     "include/other/bfTextureLoad.h"
-    "src/other/bfTextureLoad.cpp")
+    "src/other/bfTextureLoad.cpp"
+    "include/other/bfIconsFontAwesome6.h")
 
 set(BF_DRAW
     "include/draw/bfDrawObject.h"

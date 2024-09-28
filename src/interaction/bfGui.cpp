@@ -1,6 +1,11 @@
 #include "bfGui.h"
 
+#include <sstream>
+#include <string>
+
 #include "bfEvent.h"
+#include "bfIconsFontAwesome6.h"
+#include "imgui.h"
 
 BfGui::BfGui() {}
 
@@ -34,6 +39,37 @@ BfEvent BfGui::bindHolder(BfHolder *handler)
       event.action = BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_FAILURE;
    }
    return event;
+}
+
+BfEvent BfGui::bindDefaultFont(std::string path)
+{
+   ImGuiIO     &io = ImGui::GetIO();
+   ImFontConfig config;
+
+   config.GlyphOffset.y = 2.0f;
+   config.SizePixels    = 20.0f;
+
+   __default_font = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config);
+
+   config.MergeMode        = true;
+   config.GlyphMinAdvanceX = 13.0f;
+
+   return BfEvent();
+}
+
+BfEvent BfGui::bindIconFont(std::string path)
+{
+   ImGuiIO     &io = ImGui::GetIO();
+   ImFontConfig config;
+
+   config.GlyphOffset.y = 2.0f;
+   config.SizePixels    = 20.0f;
+   //
+   static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
+   __icon_font =
+       io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config, icon_ranges);
+
+   return BfEvent();
 }
 
 std::string BfGui::getMenueInfoStr()
@@ -221,6 +257,41 @@ void BfGui::presentToolType()
    }
 }
 
+void BfGui::presentLeftDock()
+{
+   /*int flags = ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking;*/
+   /*int flags = 0;*/
+
+   ImGui::SetNextWindowPos(ImVec2(0, 20));
+   /*ImGui::SetNextWindowSizeConstraints(ImVec2(200, 100), ImVec2(FLT_MAX,
+    * 100));*/
+
+   ImGuiWindowFlags flags =
+       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar;
+
+   ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg,
+                         ImVec4(0.05f, 0.05f, 0.05f, 0.05f));
+   {
+      ImGui::Begin("0x313312393812938103281", nullptr, flags);
+      {
+         ImGuiID left_dockspace_id = ImGui::GetID("LeftDockSpace");
+         /*ImGui::SetNextWindowPos(*/
+         /*    ImGui::GetCursorScreenPos());  // Устанавливаем начальную
+          * позицию*/
+         /*                                   //*/
+         /*ImVec2 dockspace_size = ImVec2(ImGui::GetContentRegionAvail().x *
+          * 0.3f,*/
+         /*                               ImGui::GetContentRegionAvail().y);*/
+         /*ImGui::SetNextWindowSize(dockspace_size);  // Размер док-зоны*/
+         ImGui::DockSpace(left_dockspace_id,
+                          ImVec2(0.0f, 0.0f),
+                          ImGuiDockNodeFlags_None);
+      }
+      ImGui::End();
+   }
+   ImGui::PopStyleColor();
+}
+
 void BfGui::presentEventLog()
 {
    if (__is_event_log)
@@ -267,41 +338,11 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
 #define BF_OBJ_NAME_LEN 30
 #define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
 
-   auto gen_vert_count = [](std::shared_ptr<BfDrawObj> o) {
-      std::string vert;
-      vert.reserve(BF_OBJ_NAME_LEN);
-      vert.append("\tVertices ");
-      vert.append(std::move(std::to_string(o->get_vertices_count())));
-      return vert;
-   };
+   size_t obj_count     = l->get_obj_count();
+   size_t lay_count     = l->get_layer_count();
 
-   auto gen_ind_count = [](std::shared_ptr<BfDrawObj> o) {
-      std::string vert;
-      vert.reserve(BF_OBJ_NAME_LEN);
-      vert.append("\tIndices ");
-      vert.append(std::move(std::to_string(o->get_indices_count())));
-      return vert;
-   };
-
-   auto gen_dvert_count = [](std::shared_ptr<BfDrawObj> o) {
-      std::string vert;
-      vert.reserve(BF_OBJ_NAME_LEN);
-      vert.append("\tDVertices ");
-      vert.append(std::move(std::to_string(o->get_dvertices_count())));
-      return vert;
-   };
-
-   size_t obj_count = l->get_obj_count();
-   size_t lay_count = l->get_layer_count();
-
-   std::string lay_name;
-   lay_name.reserve(BF_OBJ_NAME_LEN);
-   lay_name.append("Layer (");
-   lay_name.append(bfGetStrNameDrawObjType(l->id.get_type()));
-   lay_name.append(") ");
-   lay_name.append(std::to_string(l->id.get()));
-
-   ImVec4 layer_color(BF_LAYER_COLOR);
+   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
+                          ") " + std::to_string(l->id.get());
 
    if (ImGui::TreeNode(lay_name.c_str()))
    {
@@ -312,20 +353,26 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
       for (size_t i = 0; i < obj_count; ++i)
       {
          std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
+         //
+         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
+                                bfGetStrNameDrawObjType(obj->id.get_type()) +
+                                ") " + std::to_string(obj->id.get());
 
-         std::string obj_name;
-         obj_name.reserve(BF_OBJ_NAME_LEN);
-         obj_name.append("Object (");
-         obj_name.append(bfGetStrNameDrawObjType(obj->id.get_type()));
-         obj_name.append(") ");
-         obj_name.append(std::to_string(obj->id.get()));
-
-         ImGui::PushStyleColor(ImGuiCol_Text, layer_color);
+         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
          if (ImGui::TreeNode(obj_name.c_str()))
          {
-            ImGui::Text(gen_dvert_count(obj).c_str());
-            ImGui::Text(gen_vert_count(obj).c_str());
-            ImGui::Text(gen_ind_count(obj).c_str());
+            ImGui::Text(
+                ("\tVertices " + std::to_string(obj->get_vertices_count()))
+                    .c_str());
+
+            ImGui::Text(
+                ("\tIndices " + std::to_string(obj->get_indices_count()))
+                    .c_str());
+
+            ImGui::Text(
+                ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
+                    .c_str());
+
             ImGui::TreePop();
          }
          ImGui::PopStyleColor();

@@ -46,6 +46,7 @@ void BfMain::__process_keys()
 
 void BfMain::__poll_events()
 {
+   glfwPollEvents();
    auto &io = ImGui::GetIO();
    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
    {
@@ -103,6 +104,8 @@ void BfMain::__init()
 
    __gui.bindBase(&__base);
    __gui.bindHolder(&__holder);
+   /*__gui.bindDefaultFont("./resources/fonts/fa-solid-900.ttf");*/
+   /*__gui.bindIconFont("./resources/fonts/fa-solid-900.ttf");*/
 }
 
 void BfMain::__kill()
@@ -147,104 +150,35 @@ void BfMain::__start_loop()
    __base.current_frame = 0;
    __base.is_resized    = true;
 
-   double previousTime  = glfwGetTime();
-
    // BfLayerHandler
-   auto layer_1 = std::make_shared<BfDrawLayer>(__base.allocator,
-                                                sizeof(BfVertex3),
-                                                100000,
-                                                10,
-                                                false);
+   {
+      auto otherLayer = std::make_shared<BfDrawLayer>(__base.allocator,
+                                                      sizeof(BfVertex3),
+                                                      100000,
+                                                      10,
+                                                      false);
+      __other_layer   = otherLayer.get();
+      __base.layer_handler.add(otherLayer);
+   }
    //
-   auto layer_2 = std::make_shared<BfDrawLayer>(__base.allocator,
-                                                sizeof(BfVertex3),
-                                                1000,
-                                                1000,
-                                                false);
-
-   BfDrawLayerCreateInfo layer_info_1{};
-   layer_info_1.allocator          = __base.allocator;
-   layer_info_1.vertex_size        = sizeof(BfVertex3);
-   layer_info_1.max_vertex_count   = 1000;
-   layer_info_1.max_reserved_count = 100;
-
-   BfBladeSectionCreateInfo section_info_1{};
-   section_info_1.layer_create_info = layer_info_1;
-
-   section_info_1.width             = 1.0f;
-   section_info_1.install_angle     = 102.0f;
-   section_info_1.inlet_angle       = 25.0f;
-   section_info_1.outlet_angle      = 42.0f;
-   section_info_1.inlet_radius      = 0.025f;
-   section_info_1.outlet_radius     = 0.005f;
-   section_info_1.border_length     = 2.0f;
-   section_info_1.l_pipeline        = __base.tline_pipeline;
-   section_info_1.t_pipeline        = __base.triangle_pipeline;
-
-   // auto o_line_x = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
-   // 0.0f),
-   //                                                glm::vec3(1.0f, 0.0f,
-   //                                                0.0f));
-   // o_line_x->set_color({1.0f, 0.0f, 0.0f});
-   // o_line_x->create_vertices();
-   // o_line_x->create_indices();
-   // o_line_x->bind_pipeline(&__base.line_pipeline);
-   //
-   // auto o_line_y = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
-   // 0.0f),
-   //                                                glm::vec3(0.0f, 1.0f,
-   //                                                0.0f));
-   // o_line_y->set_color({0.0f, 1.0f, 0.0f});
-   // o_line_y->create_vertices();
-   // o_line_y->create_indices();
-   // o_line_y->bind_pipeline(&__base.line_pipeline);
-   //
-   // auto o_line_z = std::make_shared<BfSingleLine>(glm::vec3(0.0f, 0.0f,
-   // 0.0f),
-   //                                                glm::vec3(0.0f,
-   //                                                0.0f, 1.0f));
-   // o_line_z->set_color({0.0f, 0.0f, 1.0f});
-   // o_line_z->create_vertices();
-   // o_line_z->create_indices();
-   // o_line_z->bind_pipeline(&__base.line_pipeline);
-   //
-   // auto layer_1_n = std::make_shared<BfDrawLayer>();
-   // layer_1_n->add(o_line_x);
-   // layer_1_n->add(o_line_y);
-   // layer_1_n->add(o_line_z);
-   //
-   auto section_layer   = std::make_shared<BfDrawLayer>(__base.allocator,
+   {
+      auto bladeBases = std::make_shared<BfDrawLayer>(__base.allocator,
                                                       sizeof(BfVertex3),
                                                       1000,
                                                       1000,
                                                       false);
-
-   __base.section_layer = section_layer.get();
-
-   __blade_bases        = layer_2.get();
-   // layer_1->add(layer_1_n);
-   __other_layer = layer_1.get();
-
-   // layer_1->update_buffer();
-
-   __base.layer_handler.add(layer_1);
-   __base.layer_handler.add(layer_2);
+      __blade_bases   = bladeBases.get();
+      __base.layer_handler.add(bladeBases);
+   }
 
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
-      glfwPollEvents();
       __poll_events();
-      double currentTime = glfwGetTime();
 
       ImGui_ImplVulkan_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
-      // ImGui::ShowDemoWindow();
-
-      /*__present_menu_bar();*/
-      /*__present_camera();*/
-      /*__present_info();*/
 
       __present_blade_base_create_window();
 
@@ -253,18 +187,10 @@ void BfMain::__start_loop()
       __gui.presentLayerHandler();
       __gui.presentEventLog();
       __gui.presentToolType();
+      __gui.presentLeftDock();
 
       ImGui::Render();
-
-      ImGuiIO &io = ImGui::GetIO();
-      (void)io;
-
-      if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-      {
-         ImGui::UpdatePlatformWindows();
-         ImGui::RenderPlatformWindowsDefault();
-      }
-
+      bfUpdateImGuiPlatformWindows();
       bfDrawFrame(__base);
    }
 
@@ -272,7 +198,6 @@ void BfMain::__start_loop()
    for (size_t i = 0; i < __base.layer_handler.get_layer_count(); ++i)
    {
       auto buffer = __base.layer_handler.get_layer_by_index(i);
-      // std::cout << "Adding buffer to kill " << "\n";
       layer_killer->add(__base.layer_handler.get_layer_by_index(i));
    }
    layer_killer->kill();
