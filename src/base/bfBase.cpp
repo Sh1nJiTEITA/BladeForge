@@ -2316,6 +2316,11 @@ BfEvent bfInitImGUI(BfBase &base)
    ImGui::CreateContext();
    ImPlot::CreateContext();
 
+   return BfEvent();
+}
+
+BfEvent bfPostInitImGui(BfBase &base)
+{
    ImGuiIO &io = ImGui::GetIO();
    (void)io;
    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
@@ -2368,11 +2373,14 @@ BfEvent bfInitImGUI(BfBase &base)
    init_info.MinImageCount = imageCount;
 
    this->minImageCount = imageCount;*/
+
+   init_info.ImageCount      = imageCount;
+   init_info.MinImageCount   = imageCount;
+   init_info.CheckVkResultFn = check_vk_result;
+
+   if (true == false)
    {  // FONTS TODO: RECREATE LOGIC IN OTHER FUNCTION
       //
-      init_info.ImageCount      = imageCount;
-      init_info.MinImageCount   = imageCount;
-      init_info.CheckVkResultFn = check_vk_result;
 
       ImFontConfig config;
 
@@ -2396,10 +2404,6 @@ BfEvent bfInitImGUI(BfBase &base)
 
    ImGui_ImplVulkan_Init(&init_info);
 
-   VkCommandBuffer command_buffer;
-   bfBeginSingleTimeCommands(base, command_buffer);
-   ImGui_ImplVulkan_CreateFontsTexture();
-   bfEndSingleTimeCommands(base, command_buffer);
    return BfEvent();
 }
 

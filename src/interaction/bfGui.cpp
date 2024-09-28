@@ -51,9 +51,6 @@ BfEvent BfGui::bindDefaultFont(std::string path)
 
    __default_font = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config);
 
-   config.MergeMode        = true;
-   config.GlyphMinAdvanceX = 13.0f;
-
    return BfEvent();
 }
 
@@ -62,8 +59,11 @@ BfEvent BfGui::bindIconFont(std::string path)
    ImGuiIO     &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y = 2.0f;
-   config.SizePixels    = 20.0f;
+   config.GlyphOffset.y    = 2.0f;
+   config.SizePixels       = 20.0f;
+
+   config.MergeMode        = true;
+   config.GlyphMinAdvanceX = 13.0f;
    //
    static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
    __icon_font =

@@ -98,14 +98,18 @@ void BfMain::__init()
    bfCreateStandartCommandBuffers(__base);
    bfCreateGUICommandBuffers(__base);
    bfCreateSyncObjects(__base);
+
    bfInitImGUI(__base);
+   {
+      __gui.bindDefaultFont("./resources/fonts/Cousine-Regular.ttf");
+      __gui.bindIconFont("./resources/fonts/fa-solid-900.ttf");
+   }
+   bfPostInitImGui(__base);
 
    bfCreateSampler(__base);
 
    __gui.bindBase(&__base);
    __gui.bindHolder(&__holder);
-   /*__gui.bindDefaultFont("./resources/fonts/fa-solid-900.ttf");*/
-   /*__gui.bindIconFont("./resources/fonts/fa-solid-900.ttf");*/
 }
 
 void BfMain::__kill()
