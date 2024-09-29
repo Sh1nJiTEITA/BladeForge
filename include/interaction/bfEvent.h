@@ -219,6 +219,14 @@ enum BfEnActionType
    BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_SUCCESS                 = 0x61,
    BF_ACTION_TYPE_BIND_HOLDER_TO_GUI_FAILURE                 = -0x61,
 
+   BF_ACTION_TYPE_LOAD_LUA_SCRIPT_SUCCESS                    = 0x62,
+   BF_ACTION_TYPE_LOAD_LUA_SCRIPT_FAILURE                    = -0x62,
+
+   BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_SUCCESS               = 0x63,
+   BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_FAILURE               = -0x63,
+
+   BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_SUCCESS               = 0x64,
+   BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE               = 0x64,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -417,14 +425,24 @@ const std::map<int, std::string> bfSetActionsStr{
     {0x58, "Adding texture to descriptor was successfull"},
     {-0x58, "Adding texture to descriptor handler was not successfull:"},
 
-    {0.59, "BfTextureLoader was successfully created"},
-    {-0.59, "BfTextureLoader was not created"},
+    {0x59, "BfTextureLoader was successfully created"},
+    {-0x59, "BfTextureLoader was not created"},
 
-    {0.60, "BfBase was succesfully bound to gui-class"},
-    {-0.60, "BfBase was not bind to gui-class due to null ptr"},
+    {0x60, "BfBase was succesfully bound to gui-class"},
+    {-0x60, "BfBase was not bind to gui-class due to null ptr"},
 
-    {0.61, "BfHolder was succesfully bound to gui-class"},
-    {-0.61, "BfHolder was not bind to gui-class due to null ptr"}};
+    {0x61, "BfHolder was succesfully bound to gui-class"},
+    {-0x61, "BfHolder was not bind to gui-class due to null ptr"},
+
+    {0x62, "Lua Script was loaded:"},
+    {-0x62, "Lua Script wasn't loaded due to:"},
+
+    {0x63, "Standart lua library was loaded, input lib name:"},
+    {-0x63, "Standart lua library wasn't loaded, input lib name:"},
+
+    {0x64, "Added package path to lua-state:"},
+    {-0x64, "Cant add package path to lua-state:"},
+};
 
 enum BfEnSingleEventType
 {

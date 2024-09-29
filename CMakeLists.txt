@@ -241,7 +241,9 @@ set(BF_OTHER
     "src/other/bfMath.cpp"
     "include/other/bfTextureLoad.h"
     "src/other/bfTextureLoad.cpp"
-    "include/other/bfIconsFontAwesome6.h")
+    "include/other/bfIconsFontAwesome6.h"
+    "include/other/bfConfigManager.h"
+    "src/other/bfConfigManager.cpp")
 
 set(BF_DRAW
     "include/draw/bfDrawObject.h"
@@ -341,8 +343,7 @@ add_executable(
   # "src/other/bfMath.cpp"
   "tests/sol2_lua_test.cpp"
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
-  # ${SOURCES}
-)
+  ${SOURCES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 # target_link_libraries(tests PRIVATE GPUOpen::VulkanMemoryAllocator)
 # target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES})
