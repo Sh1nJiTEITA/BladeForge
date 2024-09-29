@@ -57,4 +57,10 @@ TEST_CASE("bfConfigManager -> lua init", "[single-file]")
    REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
    REQUIRE_NOTHROW(BfConfigManager::addPackagePath("./scripts"));
    REQUIRE_NOTHROW(BfConfigManager::loadRequireScript("./scripts/test0.lua"));
+   sol::table table = BfConfigManager::getLuaObj("test0");
+   REQUIRE(table.get<std::string>("option1") == "value83939393");
+   REQUIRE(table.get<int>("option2") == 39123123);
+   REQUIRE(table.get<sol::table>("option3")[1] == 9);
+   REQUIRE(table.get<sol::table>("option3")[2] == 10);
+   REQUIRE(table.get<sol::table>("option3")[3] == 12);
 }

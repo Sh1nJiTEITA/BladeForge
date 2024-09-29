@@ -213,3 +213,8 @@ BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
    }
    return event;
 }
+
+sol::object BfConfigManager::getLuaObj(const std::string& key)
+{
+   return BfConfigManager::getInstance()->__lua[key];
+}

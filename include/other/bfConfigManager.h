@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <sol/forward.hpp>
 #include <sol/sol.hpp>
 
 class BfConfigManager
@@ -15,8 +16,9 @@ class BfConfigManager
 
    using BFCM = BfConfigManager;
 
-public:
    BfConfigManager();
+
+public:
    BfConfigManager(const BfConfigManager&)            = delete;
    BfConfigManager& operator=(const BfConfigManager&) = delete;
 
@@ -33,6 +35,8 @@ public:
    static BfEvent loadScript(std::filesystem::path path);
    static BfEvent loadRequireScript(std::filesystem::path path,
                                     std::string           varname = "");
+
+   static sol::object getLuaObj(const std::string& key);
 };
 
 #endif
