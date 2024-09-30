@@ -8,6 +8,7 @@
 
 #include "bfBase.h"
 #include "bfBladeSection.h"
+#include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
@@ -37,6 +38,7 @@ public:
    BfEvent bindBase(BfBase* base);
    BfEvent bindHolder(BfHolder* base);
    BfEvent bindDefaultFont(std::string path);
+   BfEvent bindDefaultFont(sol::table table);
    BfEvent bindIconFont(std::string path);
 
    std::string getMenueInfoStr();

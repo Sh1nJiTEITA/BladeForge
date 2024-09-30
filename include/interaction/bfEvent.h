@@ -226,7 +226,10 @@ enum BfEnActionType
    BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_FAILURE               = -0x63,
 
    BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_SUCCESS               = 0x64,
-   BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE               = 0x64,
+   BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE               = -0x64,
+
+   BF_ACTION_TYPE_FILL_FORM_SUCCESS                          = 0x65,
+   BF_ACTION_TYPE_FILL_FORM_FAILURE                          = -0x65,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -442,6 +445,9 @@ const std::map<int, std::string> bfSetActionsStr{
 
     {0x64, "Added package path to lua-state:"},
     {-0x64, "Cant add package path to lua-state:"},
+
+    {0x65, "Form loaded:"},
+    {-0x65, "Form did not load:"},
 };
 
 enum BfEnSingleEventType

@@ -1,12 +1,31 @@
 #include <bfConfigManager.h>
+#include <bits/fs_dir.h>
 
 #include <exception>
 #include <filesystem>
 #include <memory>
+#include <string>
 
 #include "bfEvent.h"
 
 std::shared_ptr<BfConfigManager> BfConfigManager::__instance = nullptr;
+
+void BfConfigManager::__findFilesInDir(std::filesystem::path               root,
+                                       std::string                         ext,
+                                       std::vector<std::filesystem::path>& out)
+{
+   for (const auto& entry : std::filesystem::directory_iterator(root))
+   {
+      if (entry.is_directory())
+      {
+         __findFilesInDir(std::filesystem::absolute(entry), ext, out);
+      }
+      else if (entry.is_regular_file() && entry.path().extension() == ext)
+      {
+         out.push_back(entry.path());
+      }
+   }
+}
 
 BfConfigManager::BfConfigManager() {}
 
@@ -214,7 +233,74 @@ BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
    return event;
 }
 
+std::string BfConfigManager::__indent_separator = "   ";
+
+std::string BfConfigManager::getLuaTableStr(sol::table table, int level)
+{
+   std::string str = "{\n";
+   for (const auto& pair : table)
+   {
+      sol::object key   = pair.first;
+      sol::object value = pair.second;
+
+      std::string indent(level * __indent_separator.size(), ' ');
+
+      if (value.is<sol::table>())
+      {
+         str += indent;
+         str += (key.is<int>() ? "" : key.as<std::string>() + " = ");
+         str += getLuaTableStr(value, level + 1);
+      }
+      else
+      {
+         str += indent + (key.is<int>() ? "" : key.as<std::string>() + " = ");
+         if (value.is<std::string>())
+         {
+            str += value.as<std::string>();
+         }
+         else if (value.is<int>())
+         {
+            str += std::to_string(value.as<int>());
+         }
+         else if (value.is<float>())
+         {
+            str += std::to_string(value.as<float>());
+         }
+         else if (value.is<double>())
+         {
+            str += std::to_string(value.as<double>());
+         }
+         else if (value.is<bool>())
+         {
+            str += value.as<bool>() ? "true" : "false";
+         }
+
+         str += ",\n";
+      }
+   }
+   str += std::string(level * __indent_separator.size(), ' ') + "}\n";
+   return str;
+}
+
 sol::object BfConfigManager::getLuaObj(const std::string& key)
 {
    return BfConfigManager::getInstance()->__lua[key];
+}
+
+BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
+   {
+      form->name                 = obj.get<std::string>("name");
+
+      form->size                 = obj.get<int>("size");
+      form->glypth_offset        = {obj.get<sol::table>("glypth_offset")[1],
+                                    obj.get<sol::table>("glypth_offset")[2]};
+      form->glypth_min_advance_x = obj.get_or("glypth_offset", 0.0f);
+   }
+   event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
+   // event.info =
+
+   return event;
 }

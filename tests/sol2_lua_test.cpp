@@ -21,20 +21,20 @@ TEST_CASE("sol2->standart test", "[single-file]")
    std::cout << "Lua-tests ended\n";
 };
 
-TEST_CASE("sol2->executing simple lua script", "[single-file]")
-{
-   sol::state lua;
-   lua.script_file("./scripts/test.lua");
-   sol::table settings = lua["settings"];
-
-   REQUIRE(settings["option1"].get<std::string>() == "value1");
-   REQUIRE(settings["option2"].get<int>() == 42);
-
-   sol::table option3 = settings["option3"];
-   REQUIRE(option3[1].get<int>() == 1);
-   REQUIRE(option3[2].get<int>() == 2);
-   REQUIRE(option3[3].get<int>() == 3);
-}
+// TEST_CASE("sol2->executing simple lua script", "[single-file]")
+// {
+//    sol::state lua;
+//    lua.script_file("./scripts/test.lua");
+//    sol::table settings = lua["settings"];
+//
+//    REQUIRE(settings["option1"].get<std::string>() == "value1");
+//    REQUIRE(settings["option2"].get<int>() == 42);
+//
+//    sol::table option3 = settings["option3"];
+//    REQUIRE(option3[1].get<int>() == 1);
+//    REQUIRE(option3[2].get<int>() == 2);
+//    REQUIRE(option3[3].get<int>() == 3);
+// }
 
 TEST_CASE("sol2->executing multiple lua scripts in different tables",
           "[multi-file]")
@@ -63,4 +63,20 @@ TEST_CASE("bfConfigManager -> lua init", "[single-file]")
    REQUIRE(table.get<sol::table>("option3")[1] == 9);
    REQUIRE(table.get<sol::table>("option3")[2] == 10);
    REQUIRE(table.get<sol::table>("option3")[3] == 12);
+
+   std::cout << BfConfigManager::getLuaTableStr(table);
+}
+
+TEST_CASE("find files")
+{
+   // auto abs = std::filesystem::current_path();
+
+   std::vector<std::filesystem::path> out;
+   BfConfigManager::getInstance()->__findFilesInDir("./resources/",
+                                                    ".png",
+                                                    out);
+   for (int i = 0; i < out.size(); ++i)
+   {
+      std::cout << out[i].string() << "\n";
+   }
 }

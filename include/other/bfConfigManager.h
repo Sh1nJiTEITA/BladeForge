@@ -2,23 +2,27 @@
 #define BF_CONFIG_MANAGER_H
 
 #include <bfEvent.h>
+#include <config_forms/bfFormGui.h>
 
 #include <filesystem>
 #include <memory>
-#include <sol/forward.hpp>
 #include <sol/sol.hpp>
 
 class BfConfigManager
 {
-   static std::shared_ptr<BfConfigManager> __instance;
-
-   sol::state __lua;
-
    using BFCM = BfConfigManager;
+
+   static std::shared_ptr<BfConfigManager> __instance;
+   static std::string                      __indent_separator;
+   sol::state                              __lua;
+
+public:
+   void __findFilesInDir(std::filesystem::path               root,
+                         std::string                         ext,
+                         std::vector<std::filesystem::path>& out);
 
    BfConfigManager();
 
-public:
    BfConfigManager(const BfConfigManager&)            = delete;
    BfConfigManager& operator=(const BfConfigManager&) = delete;
 
@@ -29,14 +33,17 @@ public:
    static BfConfigManager* getInstance();
 
    // Lua manipulation
-
    static BfEvent loadStdLibrary(sol::lib lib);
    static BfEvent addPackagePath(std::filesystem::path path);
    static BfEvent loadScript(std::filesystem::path path);
    static BfEvent loadRequireScript(std::filesystem::path path,
                                     std::string           varname = "");
 
+   static std::string getLuaTableStr(sol::table table, int indent_level = 0);
+
    static sol::object getLuaObj(const std::string& key);
+
+   static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
 };
 
 #endif

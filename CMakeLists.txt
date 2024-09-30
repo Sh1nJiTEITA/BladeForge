@@ -245,6 +245,8 @@ set(BF_OTHER
     "include/other/bfConfigManager.h"
     "src/other/bfConfigManager.cpp")
 
+set(BF_FORMS "include/other/config_forms/bfFormGui.h")
+
 set(BF_DRAW
     "include/draw/bfDrawObject.h"
     "src/draw/bfDrawObject.cpp"
@@ -265,7 +267,8 @@ list(
   ${BF_INTERACTION}
   ${BF_OTHER}
   ${BF_DRAW}
-  ${BF_OTHER})
+  ${BF_OTHER}
+  ${BF_FORMS})
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} "main.h" "main.cpp" ${SOURCES})

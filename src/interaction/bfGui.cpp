@@ -3,8 +3,10 @@
 #include <sstream>
 #include <string>
 
+#include "bfConfigManager.h"
 #include "bfEvent.h"
 #include "bfIconsFontAwesome6.h"
+#include "config_forms/bfFormGui.h"
 #include "imgui.h"
 
 BfGui::BfGui() {}
@@ -50,6 +52,24 @@ BfEvent BfGui::bindDefaultFont(std::string path)
    config.SizePixels    = 20.0f;
 
    __default_font = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config);
+
+   return BfEvent();
+}
+
+BfEvent BfGui::bindDefaultFont(sol::table table)
+{
+   BfFormFont form{};
+   BfConfigManager::fillFormFont(table, &form);
+
+   ImGuiIO     &io = ImGui::GetIO();
+   ImFontConfig config;
+
+   config.GlyphOffset.x = form.glypth_offset.first;
+   config.GlyphOffset.y = form.glypth_offset.second;
+   config.SizePixels    = form.size;
+
+   __default_font =
+       io.Fonts->AddFontFromFileTTF(form.path.c_str(), form.size, &config);
 
    return BfEvent();
 }
