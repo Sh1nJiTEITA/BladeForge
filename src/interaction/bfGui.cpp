@@ -75,7 +75,7 @@ BfEvent BfGui::bindSettings(std::filesystem::path path)
    sol::table settings_table = BfConfigManager::getLuaObj("guiconfig");
 
    BfConfigManager::fillFormFontSettings(settings_table["fonts"],
-                                         &settings_form);
+                                         &__settings_form);
 
    event.action = BF_ACTION_TYPE_BIND_GUI_SETTINGS_SUCCESS;
    return event;
@@ -86,13 +86,13 @@ BfEvent BfGui::bindDefaultFont()
    ImGuiIO     &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y = settings_form.standart_font.glypth_offset.second;
-   config.SizePixels    = settings_form.standart_font.size;
+   config.GlyphOffset.y = __settings_form.standart_font.glypth_offset.second;
+   config.SizePixels    = __settings_form.standart_font.size;
 
    __default_font       = io.Fonts->AddFontFromFileTTF(
-       settings_form.standart_font.name[settings_form.standart_font.current]
+       __settings_form.standart_font.name[__settings_form.standart_font.current]
            .c_str(),
-       settings_form.standart_font.size,
+       __settings_form.standart_font.size,
        &config);
 
    return BfEvent();
@@ -103,16 +103,17 @@ BfEvent BfGui::bindIconFont()
    ImGuiIO     &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y    = settings_form.icon_font.glypth_offset.second;
-   config.SizePixels       = settings_form.icon_font.size;
+   config.GlyphOffset.y    = __settings_form.icon_font.glypth_offset.second;
+   config.SizePixels       = __settings_form.icon_font.size;
 
    config.MergeMode        = true;
-   config.GlyphMinAdvanceX = settings_form.icon_font.glypth_min_advance_x;
+   config.GlyphMinAdvanceX = __settings_form.icon_font.glypth_min_advance_x;
    //
    static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
    __icon_font                        = io.Fonts->AddFontFromFileTTF(
-       settings_form.icon_font.name[settings_form.icon_font.current].c_str(),
-       settings_form.icon_font.size,
+       __settings_form.icon_font.name[__settings_form.icon_font.current]
+           .c_str(),
+       __settings_form.icon_font.size,
        &config,
        icon_ranges);
 
@@ -366,59 +367,164 @@ void BfGui::presentSettings()
 
    ImGui::Begin("Settings");
    {
-      if (ImGui::BeginTable("Fonts",
+      ImGui::Text("Standart font settings");
+      if (ImGui::BeginTable("Standart Font",
                             2,
                             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
       {
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Standart font");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::Combo(
-                    "##SETTINGS_FONTS_STANDART_COMBO",
-                    &this->settings_form.standart_font.current,
-                    createVectorStr(this->settings_form.standart_font.name)
-                        .data(),
-                    static_cast<int>(
-                        this->settings_form.standart_font.name.size())))
+         {  // Standart font
+            ImGui::TableNextRow();
             {
-               __queue_after_render.push([this]() { this->updateFonts(); });
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Text("Name");
+               ImGui::TableSetColumnIndex(1);
+               ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+               if (ImGui::Combo(
+                       "##SETTINGS_FONTS_STANDART_COMBO",
+                       &this->__settings_form.standart_font.current,
+                       createVectorStr(this->__settings_form.standart_font.name)
+                           .data(),
+                       static_cast<int>(
+                           this->__settings_form.standart_font.name.size())))
+               {
+                  __queue_after_render.push([this]() { updateFonts(); });
+               }
             }
-         }
 
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Standart font size");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputInt("##SETTINGS_FONTS_STANART_SIZE_COMBO",
-                                &settings_form.standart_font.size))
+            ImGui::TableNextRow();
             {
-               __queue_after_render.push([this]() { updateFonts(); });
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Text("Size");
+               ImGui::TableSetColumnIndex(1);
+               ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+               if (ImGui::InputInt("##SETTINGS_FONTS_STANDART_SIZE",
+                                   &__settings_form.standart_font.size))
+               {
+                  __queue_after_render.push([this]() { updateFonts(); });
+               }
             }
-         }
 
+            ImGui::TableNextRow();
+            {
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Text("Glypth offset 'x'");
+               ImGui::TableSetColumnIndex(1);
+               ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+               if (ImGui::InputFloat(
+                       "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_X",
+                       &__settings_form.standart_font.glypth_offset.first))
+               {
+                  __queue_after_render.push([this]() { updateFonts(); });
+               }
+            }
+            ImGui::TableNextRow();
+            {
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Text("Glypth offset 'y'");
+               ImGui::TableSetColumnIndex(1);
+               ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+               if (ImGui::InputFloat(
+                       "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_Y",
+                       &__settings_form.standart_font.glypth_offset.second))
+               {
+                  __queue_after_render.push([this]() { updateFonts(); });
+               }
+            }
+            ImGui::TableNextRow();
+            {
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Text("Glypth minimum advance 'x'");
+               ImGui::TableSetColumnIndex(1);
+               ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+               if (ImGui::InputFloat(
+                       "##SETTINGS_FONTS_STANDART_GLYPTH_MIN_ADVANCE_X",
+                       &__settings_form.standart_font.glypth_min_advance_x))
+               {
+                  __queue_after_render.push([this]() { updateFonts(); });
+               }
+            }
+         }  // ===> Standart Font
+      }
+      ImGui::EndTable();
+      ImGui::Spacing();
+
+      ImGui::Text("Icon font settings");
+      if (ImGui::BeginTable("Icon Font",
+                            2,
+                            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+      {  // Icon Font
          ImGui::TableNextRow();
          {
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Icon font");
+            ImGui::Text("Name");
             ImGui::TableSetColumnIndex(1);
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
             if (ImGui::Combo(
                     "##SETTINGS_FONTS_ICON_COMBO",
-                    &this->settings_form.icon_font.current,
-                    createVectorStr(this->settings_form.icon_font.name).data(),
+                    &this->__settings_form.icon_font.current,
+                    createVectorStr(this->__settings_form.icon_font.name)
+                        .data(),
                     static_cast<int>(
-                        this->settings_form.icon_font.name.size())))
+                        this->__settings_form.icon_font.name.size())))
             {
                __queue_after_render.push([this]() { updateFonts(); });
             }
          }
-      }
+
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Size");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputInt("##SETTINGS_FONTS_ICON_SIZE",
+                                &__settings_form.icon_font.size))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Glypth offset 'x'");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputFloat(
+                    "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_X",
+                    &__settings_form.icon_font.glypth_offset.first))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Glypth offset 'y'");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputFloat(
+                    "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_Y",
+                    &__settings_form.icon_font.glypth_offset.second))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Glypth minimum advance 'x'");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputFloat(
+                    "##SETTINGS_FONTS_ICON_GLYPTH_MIN_ADVANCE_X",
+                    &__settings_form.icon_font.glypth_min_advance_x))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+      }  // ===> Icon font
       ImGui::EndTable();
+      ImGui::Spacing();
    }
    ImGui::End();
 }

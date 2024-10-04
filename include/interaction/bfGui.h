@@ -30,12 +30,10 @@ class BfGui
    bool __is_event_log    = false;
    bool __is_camera_info  = false;
    //
-   bool __is_show_absolute_font_paths = false;
 
    uint32_t __current_id;
 
-   BfBladeSectionCreateInfo blade_section_info;
-   BfFormFontSettings       settings_form;
+   BfFormFontSettings __settings_form;
 
    std::queue<std::function<void()>> __queue_after_render;
 
