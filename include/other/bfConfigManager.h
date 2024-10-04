@@ -43,7 +43,10 @@ public:
 
    static sol::object getLuaObj(const std::string& key);
 
+
    static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
+   static BfEvent fillFormFontSettings(sol::table          obs,
+                                       BfFormFontSettings* form);
 };
 
 #endif

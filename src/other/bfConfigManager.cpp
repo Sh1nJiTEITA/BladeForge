@@ -304,3 +304,22 @@ BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
 
    return event;
 }
+
+BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
+                                              BfFormFontSettings* form)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
+   {
+      sol::table font_paths = obj["font_paths"];
+      for (const auto& font_path : font_paths)
+      {
+         form->font_directory_paths.push_back(
+             fs::path(font_path.second.as<std::string>()));
+      }
+      BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);
+      BfConfigManager::fillFormFont(obj["icon_font"], &form->icon_font);
+   }
+   event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
+   return event;
+}

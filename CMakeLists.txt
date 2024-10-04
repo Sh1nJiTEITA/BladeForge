@@ -245,7 +245,8 @@ set(BF_OTHER
     "include/other/bfConfigManager.h"
     "src/other/bfConfigManager.cpp")
 
-set(BF_FORMS "include/other/config_forms/bfFormGui.h")
+set(BF_FORMS "include/other/config_forms/bfFormGui.h"
+             "include/other/config_forms/bfFormSettings.h")
 
 set(BF_DRAW
     "include/draw/bfDrawObject.h"
