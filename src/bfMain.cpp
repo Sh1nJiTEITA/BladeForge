@@ -1,6 +1,7 @@
 ﻿#include <imgui_impl_vulkan.h>
 
 #include "bfBase.h"
+#include "bfConfigManager.h"
 #define VMA_IMPLEMENTATION
 #include <memory>
 
@@ -57,10 +58,15 @@ void BfMain::__poll_events()
    }
 
    __process_keys();
+
+   // __gui.updateFonts();
+   __gui.pollEvents();
 }
 
 void BfMain::__init()
 {
+   BfConfigManager::createInstance();
+
    bfBindHolder(&__holder);
 
    bfHoldWindow(__base.window);
@@ -99,10 +105,11 @@ void BfMain::__init()
    bfCreateGUICommandBuffers(__base);
    bfCreateSyncObjects(__base);
 
+   __gui.bindSettings("./scripts/guiconfig.lua");
    bfInitImGUI(__base);
    {
-      __gui.bindDefaultFont("./resources/fonts/Cousine-Regular.ttf");
-      __gui.bindIconFont("./resources/fonts/fa-solid-900.ttf");
+      __gui.bindDefaultFont();
+      __gui.bindIconFont();
    }
    bfPostInitImGui(__base);
 
@@ -192,6 +199,7 @@ void BfMain::__start_loop()
       __gui.presentEventLog();
       __gui.presentToolType();
       __gui.presentLeftDock();
+      __gui.presentSettings();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();

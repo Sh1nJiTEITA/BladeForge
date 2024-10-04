@@ -230,6 +230,13 @@ enum BfEnActionType
 
    BF_ACTION_TYPE_FILL_FORM_SUCCESS                          = 0x65,
    BF_ACTION_TYPE_FILL_FORM_FAILURE                          = -0x65,
+
+   BF_ACTION_TYPE_BIND_GUI_SETTINGS_SUCCESS                  = 0x66,
+   BF_ACTION_TYPE_BIND_GUI_SETTINGS_FAILURE                  = -0x66,
+
+   BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_NAME_FAILURE   = -0x67,
+   BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_TYPE_FAILURE   = -0x68,
+
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -448,6 +455,17 @@ const std::map<int, std::string> bfSetActionsStr{
 
     {0x65, "Form loaded:"},
     {-0x65, "Form did not load:"},
+
+    {0x66, "Gui settings were bound successfully"},
+    {-0x66, "Gui settings were not bound:"},
+
+    {-0x67,
+     "No name inside font table provided "
+     "might be lua-table names or string of name"},
+
+    {-0x68,
+     "Invalid settings->fonts lua type or no standart font provided in "
+     "standart directory './resources/fonts/Cousine-Regular.ttf"},
 };
 
 enum BfEnSingleEventType

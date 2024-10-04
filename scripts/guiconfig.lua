@@ -5,7 +5,8 @@ local settings = {
       },
 
       standart_font = {
-         name = "Cousine-Regular.ttf",
+         name = { "Cousine-Regular.ttf", "MONO.ttf" },
+         current = 0,
          size = 20,
          -- Смещения глифа (символа) по горизонтали/вертикали
          glypth_offset = { 0, 2.0 },
@@ -14,6 +15,7 @@ local settings = {
 
       icon_font = {
          name = "fa-solid-900.ttf",
+         current = 0,
          size = 20,
          glypth_offset = { 0, 2.0 },
          glypth_min_advance_x = 13.0,

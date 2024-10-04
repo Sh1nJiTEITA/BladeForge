@@ -17,9 +17,9 @@ class BfConfigManager
    sol::state                              __lua;
 
 public:
-   void __findFilesInDir(std::filesystem::path               root,
-                         std::string                         ext,
-                         std::vector<std::filesystem::path>& out);
+   static void __findFilesInDir(std::filesystem::path               root,
+                                std::string                         ext,
+                                std::vector<std::filesystem::path>& out);
 
    BfConfigManager();
 
@@ -42,7 +42,6 @@ public:
    static std::string getLuaTableStr(sol::table table, int indent_level = 0);
 
    static sol::object getLuaObj(const std::string& key);
-
 
    static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
    static BfEvent fillFormFontSettings(sol::table          obs,

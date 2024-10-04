@@ -1,5 +1,8 @@
 #include "bfGui.h"
 
+#include <csignal>
+#include <filesystem>
+#include <set>
 #include <sstream>
 #include <string>
 
@@ -10,6 +13,15 @@
 #include "imgui.h"
 
 BfGui::BfGui() {}
+
+void BfGui::pollEvents()
+{
+   while (!__queue_after_render.empty())
+   {
+      __queue_after_render.front()();
+      __queue_after_render.pop();
+   }
+}
 
 BfEvent BfGui::bindBase(BfBase *base)
 {
@@ -43,53 +55,82 @@ BfEvent BfGui::bindHolder(BfHolder *handler)
    return event;
 }
 
-BfEvent BfGui::bindDefaultFont(std::string path)
+BfEvent BfGui::bindSettings(std::filesystem::path path)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (path.extension() != ".lua")
+   {
+      event.action = BF_ACTION_TYPE_BIND_GUI_SETTINGS_FAILURE;
+      event.info =
+          " input file path= " + path.string() + " extension is not '.lua'";
+      return event;
+   }
+   path = std::filesystem::absolute(path);
+   BfConfigManager::loadStdLibrary(sol::lib::base);
+   BfConfigManager::loadStdLibrary(sol::lib::package);
+   BfConfigManager::addPackagePath("./scripts");
+   BfConfigManager::loadRequireScript(path);
+
+   sol::table settings_table = BfConfigManager::getLuaObj("guiconfig");
+
+   BfConfigManager::fillFormFontSettings(settings_table["fonts"],
+                                         &settings_form);
+
+   event.action = BF_ACTION_TYPE_BIND_GUI_SETTINGS_SUCCESS;
+   return event;
+}
+
+BfEvent BfGui::bindDefaultFont()
 {
    ImGuiIO     &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y = 2.0f;
-   config.SizePixels    = 20.0f;
+   config.GlyphOffset.y = settings_form.standart_font.glypth_offset.second;
+   config.SizePixels    = settings_form.standart_font.size;
 
-   __default_font = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config);
+   __default_font       = io.Fonts->AddFontFromFileTTF(
+       settings_form.standart_font.name[settings_form.standart_font.current]
+           .c_str(),
+       settings_form.standart_font.size,
+       &config);
 
    return BfEvent();
 }
 
-BfEvent BfGui::bindDefaultFont(sol::table table)
-{
-   BfFormFont form{};
-   BfConfigManager::fillFormFont(table, &form);
-
-   ImGuiIO     &io = ImGui::GetIO();
-   ImFontConfig config;
-
-   config.GlyphOffset.x = form.glypth_offset.first;
-   config.GlyphOffset.y = form.glypth_offset.second;
-   config.SizePixels    = form.size;
-
-   __default_font =
-       io.Fonts->AddFontFromFileTTF(form.path.c_str(), form.size, &config);
-
-   return BfEvent();
-}
-
-BfEvent BfGui::bindIconFont(std::string path)
+BfEvent BfGui::bindIconFont()
 {
    ImGuiIO     &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y    = 2.0f;
-   config.SizePixels       = 20.0f;
+   config.GlyphOffset.y    = settings_form.icon_font.glypth_offset.second;
+   config.SizePixels       = settings_form.icon_font.size;
 
    config.MergeMode        = true;
-   config.GlyphMinAdvanceX = 13.0f;
+   config.GlyphMinAdvanceX = settings_form.icon_font.glypth_min_advance_x;
    //
    static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
-   __icon_font =
-       io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f, &config, icon_ranges);
+   __icon_font                        = io.Fonts->AddFontFromFileTTF(
+       settings_form.icon_font.name[settings_form.icon_font.current].c_str(),
+       settings_form.icon_font.size,
+       &config,
+       icon_ranges);
 
    return BfEvent();
+}
+
+void BfGui::updateFonts()
+{
+   // if (!__default_font or !__icon_font)
+   // {
+   ImGuiIO &io = ImGui::GetIO();
+   io.Fonts->Clear();
+
+   bindDefaultFont();
+   bindIconFont();
+
+   ImGui_ImplVulkan_CreateFontsTexture();
+   // }
 }
 
 std::string BfGui::getMenueInfoStr()
@@ -310,6 +351,76 @@ void BfGui::presentLeftDock()
       ImGui::End();
    }
    ImGui::PopStyleColor();
+}
+
+void BfGui::presentSettings()
+{
+   auto createVectorStr = [&](const std::vector<std::string> &d) {
+      std::vector<const char *> c_str_items;
+      for (const auto &item : d)
+      {
+         c_str_items.push_back(item.c_str());
+      }
+      return c_str_items;
+   };
+
+   ImGui::Begin("Settings");
+   {
+      if (ImGui::BeginTable("Fonts",
+                            2,
+                            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+      {
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Standart font");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::Combo(
+                    "##SETTINGS_FONTS_STANDART_COMBO",
+                    &this->settings_form.standart_font.current,
+                    createVectorStr(this->settings_form.standart_font.name)
+                        .data(),
+                    static_cast<int>(
+                        this->settings_form.standart_font.name.size())))
+            {
+               __queue_after_render.push([this]() { this->updateFonts(); });
+            }
+         }
+
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Standart font size");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputInt("##SETTINGS_FONTS_STANART_SIZE_COMBO",
+                                &settings_form.standart_font.size))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+
+         ImGui::TableNextRow();
+         {
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Icon font");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::Combo(
+                    "##SETTINGS_FONTS_ICON_COMBO",
+                    &this->settings_form.icon_font.current,
+                    createVectorStr(this->settings_form.icon_font.name).data(),
+                    static_cast<int>(
+                        this->settings_form.icon_font.name.size())))
+            {
+               __queue_after_render.push([this]() { updateFonts(); });
+            }
+         }
+      }
+      ImGui::EndTable();
+   }
+   ImGui::End();
 }
 
 void BfGui::presentEventLog()

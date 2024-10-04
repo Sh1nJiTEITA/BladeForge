@@ -20,9 +20,16 @@ void BfConfigManager::__findFilesInDir(std::filesystem::path               root,
       {
          __findFilesInDir(std::filesystem::absolute(entry), ext, out);
       }
-      else if (entry.is_regular_file() && entry.path().extension() == ext)
+      else if (entry.is_regular_file())
       {
-         out.push_back(entry.path());
+         if (ext == "")
+         {
+            out.push_back(entry.path());
+         }
+         else if (entry.path().extension() == ext)
+         {
+            out.push_back(entry.path());
+         }
       }
    }
 }
@@ -292,16 +299,39 @@ BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
    {
-      form->name                 = obj.get<std::string>("name");
-
+      if (!obj["name"].valid())
+      {
+         event.action = BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_NAME_FAILURE;
+         return event;
+      }
+      if (obj["name"].get_type() == sol::type::table)
+      {
+         sol::table font_names = obj.get<sol::table>("name");
+         for (const auto& font_name : font_names)
+         {
+            form->name.push_back(font_name.second.as<std::string>());
+         }
+      }
+      else if (obj["name"].get_type() == sol::type::string)
+      {
+         form->name.push_back(obj.get<std::string>("name"));
+      }
+      else if (std::filesystem::exists("./resources/fonts/Cousine-Regular.ttf"))
+      {
+         form->name.push_back("Cousine-Regular.ttf");
+      }
+      else
+      {
+         event.action = BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_TYPE_FAILURE;
+         return event;
+      }
+      form->current              = obj.get_or("current", 0);
       form->size                 = obj.get<int>("size");
       form->glypth_offset        = {obj.get<sol::table>("glypth_offset")[1],
                                     obj.get<sol::table>("glypth_offset")[2]};
       form->glypth_min_advance_x = obj.get_or("glypth_offset", 0.0f);
    }
    event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
-   // event.info =
-
    return event;
 }
 
@@ -311,7 +341,8 @@ BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
    {
-      sol::table font_paths = obj["font_paths"];
+      sol::table font_paths = obj["fonts_paths"];
+
       for (const auto& font_path : font_paths)
       {
          form->font_directory_paths.push_back(
@@ -319,6 +350,32 @@ BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
       }
       BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);
       BfConfigManager::fillFormFont(obj["icon_font"], &form->icon_font);
+
+      for (const auto& font_root_path : form->font_directory_paths)
+      {
+         std::vector<std::filesystem::path> file_paths;
+         BfConfigManager::__findFilesInDir(font_root_path, "", file_paths);
+
+         for (const auto& found_font_root_path : file_paths)
+         {
+            for (int i = 0; i < form->standart_font.name.size(); ++i)
+            {
+               if (found_font_root_path.filename() ==
+                   form->standart_font.name[i])
+               {
+                  form->standart_font.name[i] = found_font_root_path.string();
+               }
+            }
+
+            for (int i = 0; i < form->icon_font.name.size(); ++i)
+            {
+               if (found_font_root_path.filename() == form->icon_font.name[i])
+               {
+                  form->icon_font.name[i] = found_font_root_path.string();
+               }
+            }
+         }
+      }
    }
    event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
    return event;

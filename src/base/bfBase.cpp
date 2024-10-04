@@ -2401,9 +2401,9 @@ BfEvent bfPostInitImGui(BfBase &base)
                                    &config,
                                    icon_ranges);
    }
-
    ImGui_ImplVulkan_Init(&init_info);
 
+   ImGui_ImplVulkan_CreateFontsTexture();
    return BfEvent();
 }
 

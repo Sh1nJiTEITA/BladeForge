@@ -4,6 +4,7 @@
 #include <fstream>
 #include <functional>
 #include <map>
+#include <queue>
 #include <string>
 
 #include "bfBase.h"
@@ -14,6 +15,7 @@
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
+#include "config_forms/bfFormGui.h"
 #include "implot.h"
 
 class BfGui
@@ -27,19 +29,28 @@ class BfGui
    bool __is_info         = true;
    bool __is_event_log    = false;
    bool __is_camera_info  = false;
+   //
+   bool __is_show_absolute_font_paths = false;
 
    uint32_t __current_id;
 
    BfBladeSectionCreateInfo blade_section_info;
+   BfFormFontSettings       settings_form;
+
+   std::queue<std::function<void()>> __queue_after_render;
 
 public:
    BfGui();
 
+   void pollEvents();
+
    BfEvent bindBase(BfBase* base);
    BfEvent bindHolder(BfHolder* base);
-   BfEvent bindDefaultFont(std::string path);
-   BfEvent bindDefaultFont(sol::table table);
-   BfEvent bindIconFont(std::string path);
+   BfEvent bindSettings(std::filesystem::path path);
+   BfEvent bindDefaultFont();
+   BfEvent bindIconFont();
+
+   void updateFonts();
 
    std::string getMenueInfoStr();
    std::string getMenueEventLogStr();
@@ -51,6 +62,7 @@ public:
    void presentEventLog();
    void presentToolType();
    void presentLeftDock();
+   void presentSettings();
 };
 
 enum BfEnMenueStatus
