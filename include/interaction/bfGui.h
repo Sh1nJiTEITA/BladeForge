@@ -20,16 +20,18 @@
 
 class BfGui
 {
-   BfBase*   __ptr_base   = nullptr;
-   BfHolder* __ptr_holder = nullptr;
+   BfBase*   __ptr_base           = nullptr;
+   BfHolder* __ptr_holder         = nullptr;
 
-   ImFont* __default_font = nullptr;
-   ImFont* __icon_font    = nullptr;
+   ImFont* __default_font         = nullptr;
+   ImFont* __icon_font            = nullptr;
 
-   bool __is_info         = true;
-   bool __is_event_log    = false;
-   bool __is_camera_info  = false;
-   //
+   bool __is_info                 = true;
+   bool __is_event_log            = false;
+   bool __is_camera_info          = true;
+   bool __is_settings             = false;
+
+   bool __is_left_dock_space_name = false;
 
    uint32_t __current_id;
 
@@ -50,32 +52,41 @@ public:
 
    void updateFonts();
 
-   std::string getMenueInfoStr();
-   std::string getMenueEventLogStr();
-   std::string getMenueCameraInfoStr();
+   std::string getMenuInfoStr();
+   std::string getMenuEventLogStr();
+   std::string getMenuCameraInfoStr();
+   std::string getMenuSettingsInfoStr();
+   std::string getMenuIsLeftDockTitleInfoStr();
 
    void presentLayerHandler();
-   void presentMenueBar();
+   void presentMenuBar();
    void presentCamera();
    void presentEventLog();
    void presentToolType();
    void presentLeftDock();
+   void presentTopDock();
    void presentSettings();
 };
 
-enum BfEnMenueStatus
+enum BfEnMenuStatus
 {
-   BF_MENUE_STATUS_INFO_ENABLED         = 0x1,
-   BF_MENUE_STATUS_INFO_DISABLED        = -0x1,
+   BF_MENU_STATUS_INFO_ENABLED             = 0x1,
+   BF_MENU_STATUS_INFO_DISABLED            = -0x1,
 
-   BF_MENUE_STATUS_EVENT_LOG_ENABLED    = 0x2,
-   BF_MENUE_STATUS_EVENT_LOG_DISABLED   = -0x2,
+   BF_MENU_STATUS_EVENT_LOG_ENABLED        = 0x2,
+   BF_MENU_STATUS_EVENT_LOG_DISABLED       = -0x2,
 
-   BF_MENUE_STATUS_CAMERA_INFO_ENABLED  = 0x3,
-   BF_MENUE_STATUS_CAMERA_INFO_DISABLED = -0x3,
+   BF_MENU_STATUS_CAMERA_INFO_ENABLED      = 0x3,
+   BF_MENU_STATUS_CAMERA_INFO_DISABLED     = -0x3,
+
+   BF_MENU_STATUS_SETTINGS_ENABLED         = 0x4,
+   BF_MENU_STATUS_SETTINGS_DISABLED        = -0x4,
+
+   BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED  = 0x5,
+   BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED = -0x5,
 };
 
-const std::map<int, std::string> bfSetMenueStr{
+const std::map<int, std::string> bfSetMenuStr{
     {0x1, "Hide perfomance/view pannel"},
     {-0x1, "Show perfomance/view pannel"},
 
@@ -83,7 +94,15 @@ const std::map<int, std::string> bfSetMenueStr{
     {-0x2, "Show console log window"},
 
     {0x3, "Hide camera info window"},
-    {-0x3, "Show camera info window"}};
+    {-0x3, "Show camera info window"},
+
+    {0x4, "Hide settings window"},
+    {-0x4, "Show settings window"},
+
+    {0x5, "Hide left-dock name window"},
+    {-0x5, "Show left-dock name window"},
+
+};
 
 void bfPresentLayerHandler(BfLayerHandler&);
 void bfPresentBladeSectionInside(BfBladeBase*              layer,

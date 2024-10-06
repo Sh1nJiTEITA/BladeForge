@@ -11,6 +11,7 @@
 #include "bfIconsFontAwesome6.h"
 #include "config_forms/bfFormGui.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 
 BfGui::BfGui() {}
 
@@ -134,33 +135,53 @@ void BfGui::updateFonts()
    // }
 }
 
-std::string BfGui::getMenueInfoStr()
+std::string BfGui::getMenuInfoStr()
 {
    if (__is_info)
-      return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_ENABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_INFO_ENABLED);
    else
-      return bfSetMenueStr.at(BF_MENUE_STATUS_INFO_DISABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_INFO_DISABLED);
 }
 
-std::string BfGui::getMenueEventLogStr()
+std::string BfGui::getMenuEventLogStr()
 {
    if (__is_event_log)
-      return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_ENABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_EVENT_LOG_ENABLED);
    else
-      return bfSetMenueStr.at(BF_MENUE_STATUS_EVENT_LOG_DISABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_EVENT_LOG_DISABLED);
 }
 
-std::string BfGui::getMenueCameraInfoStr()
+std::string BfGui::getMenuCameraInfoStr()
 {
    if (__is_camera_info)
-      return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_ENABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_CAMERA_INFO_ENABLED);
    else
-      return bfSetMenueStr.at(BF_MENUE_STATUS_CAMERA_INFO_DISABLED);
+      return bfSetMenuStr.at(BF_MENU_STATUS_CAMERA_INFO_DISABLED);
+}
+
+std::string BfGui::getMenuSettingsInfoStr()
+{
+   if (__is_camera_info)
+      return bfSetMenuStr.at(BF_MENU_STATUS_SETTINGS_ENABLED);
+   else
+      return bfSetMenuStr.at(BF_MENU_STATUS_SETTINGS_DISABLED);
+}
+
+std::string BfGui::getMenuIsLeftDockTitleInfoStr()
+{
+   if (__is_left_dock_space_name)
+      return bfSetMenuStr.at(BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED);
+   else
+      return bfSetMenuStr.at(BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED);
 }
 
 void BfGui::presentLayerHandler()
 {
-   ImGui::Begin("Layer observer");
+   if (!ImGui::Begin("Layer observer", nullptr, ImGuiWindowFlags_None))
+   {
+      ImGui::End();
+      return;
+   }
    {
       for (size_t i = 0; i < __ptr_base->layer_handler.get_layer_count(); i++)
       {
@@ -171,7 +192,7 @@ void BfGui::presentLayerHandler()
    ImGui::End();
 }
 
-void BfGui::presentMenueBar()
+void BfGui::presentMenuBar()
 {
    if (ImGui::BeginMainMenuBar())
    {
@@ -189,21 +210,29 @@ void BfGui::presentMenueBar()
          if (ImGui::MenuItem("Save as.."))
          {
          }
+         if (ImGui::MenuItem(getMenuSettingsInfoStr().c_str()))
+         {
+            __is_settings = !__is_settings;
+         }
          ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("View"))
       {
-         if (ImGui::MenuItem(getMenueInfoStr().c_str()))
+         if (ImGui::MenuItem(getMenuInfoStr().c_str()))
          {
             __is_info = !__is_info;
          }
-         if (ImGui::MenuItem(getMenueEventLogStr().c_str()))
+         if (ImGui::MenuItem(getMenuEventLogStr().c_str()))
          {
             __is_event_log = !__is_event_log;
          }
-         if (ImGui::MenuItem(getMenueCameraInfoStr().c_str()))
+         if (ImGui::MenuItem(getMenuCameraInfoStr().c_str()))
          {
             __is_camera_info = !__is_camera_info;
+         }
+         if (ImGui::MenuItem(getMenuIsLeftDockTitleInfoStr().c_str()))
+         {
+            __is_left_dock_space_name = !__is_left_dock_space_name;
          }
 
          ImGui::EndMenu();
@@ -220,83 +249,199 @@ void BfGui::presentCamera()
       static bool is_per = true;
       static bool is_ort = false;
 
-      ImGui::Begin("Camera");
+      if (ImGui::Begin("Camera"))
       {
-         ImGui::BeginTable("VIEWS", 3);
+         ImVec2 table_size = ImGui::GetContentRegionAvail();
+         ImGui::BeginChild("##PresentcameraButtonsTableChild",
+                           {table_size.x - 130.0f, table_size.y});
          {
-            ImGui::TableNextRow();  // 0
+            if (ImGui::BeginTable(
+                    "##PresentCameraButtonsTable",
+                    3
+                    // ,ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+                    ))
             {
+               float  row_h = table_size.y / 3.0f;
+               ImVec2 dummy_size{0.1, 0.1};
+
+               ImGui::TableNextRow(0, row_h);
                ImGui::TableSetColumnIndex(1);
-               if (ImGui::Button("Up", ImVec2(50, 50)))
+               ImVec2 button_size{ImGui::GetContentRegionAvail().x, row_h - 10};
+
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button("\uf062", button_size))
                {
                   bfSetOrthoUp(__ptr_base->window);
                }
-            }
 
-            ImGui::TableNextRow();  // 1
-            {
-               ImGui::TableSetColumnIndex(2);
-               if (ImGui::Button("Left", ImVec2(50, 50)))
+               ImGui::TableNextRow(0, row_h);
+               ImGui::TableSetColumnIndex(0);
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button("\uf060", button_size))
                {
                   bfSetOrthoLeft(__ptr_base->window);
                }
-
                ImGui::TableSetColumnIndex(1);
-               if (ImGui::Button("Near", ImVec2(50, 50)))
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button(ICON_FA_CIRCLE_DOT, button_size))
                {
                   bfSetOrthoNear(__ptr_base->window);
                }
-
                ImGui::TableSetColumnIndex(2);
-               if (ImGui::Button("Right", ImVec2(50, 50)))
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button("\uf061", button_size))
                {
                   bfSetOrthoRight(__ptr_base->window);
                }
-            }
 
-            ImGui::TableNextRow();  // 2
-            {
+               ImGui::TableNextRow(0, row_h);
                ImGui::TableSetColumnIndex(1);
-               if (ImGui::Button("Bottom", ImVec2(50, 50)))
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button("\uf063", button_size))
                {
                   bfSetOrthoBottom(__ptr_base->window);
                }
-
                ImGui::TableSetColumnIndex(2);
-               if (ImGui::Button("Far", ImVec2(50, 50)))
+               ImGui::Dummy(dummy_size);
+               if (ImGui::Button("\uf148", button_size))
                {
                   bfSetOrthoFar(__ptr_base->window);
                }
+
+               ImGui::EndTable();
             }
+            ImGui::EndChild();
          }
-         ImGui::EndTable();
+         ImGui::SameLine();
+         ImGui::BeginChild("##PresentcameraRadioChoiceChild");
+         {
+            if (ImGui::RadioButton("Perspective", is_per))
+            {
+               is_ort                        = false;
+               is_per                        = true;
+
+               __ptr_base->window->proj_mode = 0;
+            }
+            if (ImGui::RadioButton("Ortho", is_ort))
+            {
+               is_ort                        = true;
+               is_per                        = false;
+
+               __ptr_base->window->proj_mode = 1;
+            }
+            ImGui::EndChild();
+         }
+
+         // // ImVec2 table_size  = {
+         // //     ImGui::GetContentRegionAvail().x,
+         // //     ImGui::GetContentRegionAvail().y -
+         // ImGui::GetFrameHeight()}; ImVec2 left_child_size =
+         // ImGui::GetContentRegionAvail();
+         //
+         // ImGui::BeginChild("##CameraTableButtonsChild", left_child_size);
+         // {
+         //    ImVec2 table_size  = ImGui::GetContentRegionAvail();
+         //    ImVec2 button_size = {table_size.x / 3.0f, table_size.y
+         //    / 3.0f};
+         //
+         //    if (ImGui::BeginTable(
+         //            "VIEWS",
+         //            3,
+         //            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+         //            // |ImGuiTableFlags_SizingStretchSame
+         //            // {ImGui::GetContentRegionAvail().x / 2,
+         //            //  ImGui::GetContentRegionAvail().y}
+         //            ))
+         //    {
+         //       // table_size = ImGui::GetContentRegionAvail();
+         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 0
+         //       {
+         //          ImGui::TableSetColumnIndex(1);
+         //          button_size = {
+         //              ImGui::GetContentRegionAvail().x,
+         //              ImGui::GetContentRegionAvail().y / 3.0f * 0.95f};
+         //          if (ImGui::Button("Up", button_size))
+         //          {
+         //             bfSetOrthoUp(__ptr_base->window);
+         //          }
+         //       }
+         //
+         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 1
+         //       {
+         //          ImGui::TableSetColumnIndex(0);
+         //          if (ImGui::Button("Left", button_size))
+         //          {
+         //             bfSetOrthoLeft(__ptr_base->window);
+         //          }
+         //
+         //          ImGui::TableSetColumnIndex(1);
+         //          if (ImGui::Button("Near", button_size))
+         //          {
+         //             bfSetOrthoNear(__ptr_base->window);
+         //          }
+         //
+         //          ImGui::TableSetColumnIndex(2);
+         //          if (ImGui::Button("Right", button_size))
+         //          {
+         //             bfSetOrthoRight(__ptr_base->window);
+         //          }
+         //       }
+         //
+         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 2
+         //       {
+         //          ImGui::TableSetColumnIndex(1);
+         //          if (ImGui::Button("Bottom", button_size))
+         //          {
+         //             bfSetOrthoBottom(__ptr_base->window);
+         //          }
+         //
+         //          ImGui::TableSetColumnIndex(2);
+         //          if (ImGui::Button("Far", button_size))
+         //          {
+         //             bfSetOrthoFar(__ptr_base->window);
+         //          }
+         //       }
+         //       ImGui::EndTable();
+         //    }
+         // }
+         // ImGui::EndChild();
+         // VIEW STYLE
+         // ImGui::SameLine();
+         // ImGui::SameLine(ImGui::GetContentRegionAvail().x /
+         //                 1.6);  // Выравниваем справа
+         // ImGui::BeginGroup();
+         // {
+         //    if (ImGui::RadioButton("Perspective", is_per))
+         //    {
+         //       is_ort                        = false;
+         //       is_per                        = true;
+         //
+         //       __ptr_base->window->proj_mode = 0;
+         //    }
+         //    if (ImGui::RadioButton("Ortho", is_ort))
+         //    {
+         //       is_ort                        = true;
+         //       is_per                        = false;
+         //
+         //       __ptr_base->window->proj_mode = 1;
+         //    }
+         // }
+         // ImGui::EndGroup();
+
          /**/
-         if (ImGui::RadioButton("Perspective", is_per))
-         {
-            is_ort                        = false;
-            is_per                        = true;
 
-            __ptr_base->window->proj_mode = 0;
-         }
-         if (ImGui::RadioButton("Ortho", is_ort))
-         {
-            is_ort                        = true;
-            is_per                        = false;
-
-            __ptr_base->window->proj_mode = 1;
-         }
-
-         ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left, 0.1f);
-         ImGui::InputFloat("Ortho-right",
-                           &__ptr_base->window->ortho_right,
-                           0.1f);
-         ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top, 0.1f);
-         ImGui::InputFloat("Ortho-bottom",
-                           &__ptr_base->window->ortho_bottom,
-                           0.1f);
-         ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near, 0.1f);
-         ImGui::InputFloat("Ortho-far", &__ptr_base->window->ortho_far, 0.1f);
-         ImGui::Checkbox("is_asp", &__ptr_base->window->is_asp);
+         // ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left,
+         // 0.1f); ImGui::InputFloat("Ortho-right",
+         //                   &__ptr_base->window->ortho_right,
+         //                   0.1f);
+         // ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top,
+         // 0.1f); ImGui::InputFloat("Ortho-bottom",
+         //                   &__ptr_base->window->ortho_bottom,
+         //                   0.1f);
+         // ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near,
+         // 0.1f); ImGui::InputFloat("Ortho-far",
+         // &__ptr_base->window->ortho_far, 0.1f); ImGui::Checkbox("is_asp",
+         // &__ptr_base->window->is_asp);
       }
       ImGui::End();
    }
@@ -321,31 +466,56 @@ void BfGui::presentToolType()
 
 void BfGui::presentLeftDock()
 {
-   /*int flags = ImGuiWindowFlags_::ImGuiWindowFlags_NoDocking;*/
-   /*int flags = 0;*/
+   float frame_h          = ImGui::GetFrameHeight();
+   float view_port_h      = ImGui::GetMainViewport()->Size.y;
+   float top_dock_space_h = ImGui::FindWindowByName("Top dock space")->Size.y;
+   ImGui::SetNextWindowPos({0, top_dock_space_h + frame_h});
 
-   ImGui::SetNextWindowPos(ImVec2(0, 20));
-   /*ImGui::SetNextWindowSizeConstraints(ImVec2(200, 100), ImVec2(FLT_MAX,
-    * 100));*/
+   ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove;
+   if (!__is_left_dock_space_name)
+   {
+      flags |= ImGuiWindowFlags_NoTitleBar;
+   }
 
-   ImGuiWindowFlags flags =
-       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar;
+   ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, view_port_h),
+                                       ImVec2(FLT_MAX, view_port_h));
 
    ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg,
                          ImVec4(0.05f, 0.05f, 0.05f, 0.05f));
    {
-      ImGui::Begin("0x313312393812938103281", nullptr, flags);
+      ImGui::Begin("Left dock space", nullptr, flags);
       {
          ImGuiID left_dockspace_id = ImGui::GetID("LeftDockSpace");
-         /*ImGui::SetNextWindowPos(*/
-         /*    ImGui::GetCursorScreenPos());  // Устанавливаем начальную
-          * позицию*/
-         /*                                   //*/
-         /*ImVec2 dockspace_size = ImVec2(ImGui::GetContentRegionAvail().x *
-          * 0.3f,*/
-         /*                               ImGui::GetContentRegionAvail().y);*/
-         /*ImGui::SetNextWindowSize(dockspace_size);  // Размер док-зоны*/
          ImGui::DockSpace(left_dockspace_id,
+                          ImVec2(0.0f, 0.0f),
+                          ImGuiDockNodeFlags_None);
+      }
+      ImGui::End();
+   }
+   ImGui::PopStyleColor();
+}
+
+void BfGui::presentTopDock()
+{
+   float frame_h     = ImGui::GetFrameHeight();
+   float view_port_w = ImGui::GetMainViewport()->Size.x;
+
+   ImGui::SetNextWindowPos({0, frame_h});
+
+   ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove |
+                            ImGuiWindowFlags_NoTitleBar |
+                            ImGuiWindowFlags_NoResize;
+
+   ImGui::SetNextWindowSizeConstraints(ImVec2(view_port_w, 0.0f),
+                                       ImVec2(view_port_w, FLT_MAX));
+
+   ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg,
+                         ImVec4(0.05f, 0.05f, 0.05f, 0.05f));
+   {
+      ImGui::Begin("Top dock space", nullptr, flags);
+      {
+         ImGuiID top_dock_space_id = ImGui::GetID("TopDockSpace");
+         ImGui::DockSpace(top_dock_space_id,
                           ImVec2(0.0f, 0.0f),
                           ImGuiDockNodeFlags_None);
       }
@@ -356,23 +526,106 @@ void BfGui::presentLeftDock()
 
 void BfGui::presentSettings()
 {
-   auto createVectorStr = [&](const std::vector<std::string> &d) {
-      std::vector<const char *> c_str_items;
-      for (const auto &item : d)
-      {
-         c_str_items.push_back(item.c_str());
-      }
-      return c_str_items;
-   };
-
-   ImGui::Begin("Settings");
+   if (__is_settings)
    {
-      ImGui::Text("Standart font settings");
-      if (ImGui::BeginTable("Standart Font",
-                            2,
-                            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+      auto createVectorStr = [&](const std::vector<std::string> &d) {
+         std::vector<const char *> c_str_items;
+         for (const auto &item : d)
+         {
+            c_str_items.push_back(item.c_str());
+         }
+         return c_str_items;
+      };
+
+      ImGui::Begin("Settings");
       {
-         {  // Standart font
+         ImGui::Text("Standart font settings");
+         if (ImGui::BeginTable("Standart Font",
+                               2,
+                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+         {
+            {  // Standart font
+               ImGui::TableNextRow();
+               {
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("Name");
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                  if (ImGui::Combo(
+                          "##SETTINGS_FONTS_STANDART_COMBO",
+                          &this->__settings_form.standart_font.current,
+                          createVectorStr(
+                              this->__settings_form.standart_font.name)
+                              .data(),
+                          static_cast<int>(
+                              this->__settings_form.standart_font.name.size())))
+                  {
+                     __queue_after_render.push([this]() { updateFonts(); });
+                  }
+               }
+
+               ImGui::TableNextRow();
+               {
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("Size");
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                  if (ImGui::InputInt("##SETTINGS_FONTS_STANDART_SIZE",
+                                      &__settings_form.standart_font.size))
+                  {
+                     __queue_after_render.push([this]() { updateFonts(); });
+                  }
+               }
+
+               ImGui::TableNextRow();
+               {
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("Glypth offset 'x'");
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                  if (ImGui::InputFloat(
+                          "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_X",
+                          &__settings_form.standart_font.glypth_offset.first))
+                  {
+                     __queue_after_render.push([this]() { updateFonts(); });
+                  }
+               }
+               ImGui::TableNextRow();
+               {
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("Glypth offset 'y'");
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                  if (ImGui::InputFloat(
+                          "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_Y",
+                          &__settings_form.standart_font.glypth_offset.second))
+                  {
+                     __queue_after_render.push([this]() { updateFonts(); });
+                  }
+               }
+               ImGui::TableNextRow();
+               {
+                  ImGui::TableSetColumnIndex(0);
+                  ImGui::Text("Glypth minimum advance 'x'");
+                  ImGui::TableSetColumnIndex(1);
+                  ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                  if (ImGui::InputFloat(
+                          "##SETTINGS_FONTS_STANDART_GLYPTH_MIN_ADVANCE_X",
+                          &__settings_form.standart_font.glypth_min_advance_x))
+                  {
+                     __queue_after_render.push([this]() { updateFonts(); });
+                  }
+               }
+            }  // ===> Standart Font
+            ImGui::EndTable();
+            ImGui::Spacing();
+         }
+
+         ImGui::Text("Icon font settings");
+         if (ImGui::BeginTable("Icon Font",
+                               2,
+                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+         {  // Icon Font
             ImGui::TableNextRow();
             {
                ImGui::TableSetColumnIndex(0);
@@ -380,12 +633,12 @@ void BfGui::presentSettings()
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::Combo(
-                       "##SETTINGS_FONTS_STANDART_COMBO",
-                       &this->__settings_form.standart_font.current,
-                       createVectorStr(this->__settings_form.standart_font.name)
+                       "##SETTINGS_FONTS_ICON_COMBO",
+                       &this->__settings_form.icon_font.current,
+                       createVectorStr(this->__settings_form.icon_font.name)
                            .data(),
                        static_cast<int>(
-                           this->__settings_form.standart_font.name.size())))
+                           this->__settings_form.icon_font.name.size())))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -397,13 +650,12 @@ void BfGui::presentSettings()
                ImGui::Text("Size");
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-               if (ImGui::InputInt("##SETTINGS_FONTS_STANDART_SIZE",
-                                   &__settings_form.standart_font.size))
+               if (ImGui::InputInt("##SETTINGS_FONTS_ICON_SIZE",
+                                   &__settings_form.icon_font.size))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
             }
-
             ImGui::TableNextRow();
             {
                ImGui::TableSetColumnIndex(0);
@@ -411,8 +663,8 @@ void BfGui::presentSettings()
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
-                       "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_X",
-                       &__settings_form.standart_font.glypth_offset.first))
+                       "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_X",
+                       &__settings_form.icon_font.glypth_offset.first))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -424,8 +676,8 @@ void BfGui::presentSettings()
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
-                       "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_Y",
-                       &__settings_form.standart_font.glypth_offset.second))
+                       "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_Y",
+                       &__settings_form.icon_font.glypth_offset.second))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -437,96 +689,18 @@ void BfGui::presentSettings()
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
-                       "##SETTINGS_FONTS_STANDART_GLYPTH_MIN_ADVANCE_X",
-                       &__settings_form.standart_font.glypth_min_advance_x))
+                       "##SETTINGS_FONTS_ICON_GLYPTH_MIN_ADVANCE_X",
+                       &__settings_form.icon_font.glypth_min_advance_x))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
             }
-         }  // ===> Standart Font
+            ImGui::EndTable();
+            ImGui::Spacing();
+         }  // ===> Icon font
       }
-      ImGui::EndTable();
-      ImGui::Spacing();
-
-      ImGui::Text("Icon font settings");
-      if (ImGui::BeginTable("Icon Font",
-                            2,
-                            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
-      {  // Icon Font
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Name");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::Combo(
-                    "##SETTINGS_FONTS_ICON_COMBO",
-                    &this->__settings_form.icon_font.current,
-                    createVectorStr(this->__settings_form.icon_font.name)
-                        .data(),
-                    static_cast<int>(
-                        this->__settings_form.icon_font.name.size())))
-            {
-               __queue_after_render.push([this]() { updateFonts(); });
-            }
-         }
-
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Size");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputInt("##SETTINGS_FONTS_ICON_SIZE",
-                                &__settings_form.icon_font.size))
-            {
-               __queue_after_render.push([this]() { updateFonts(); });
-            }
-         }
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Glypth offset 'x'");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputFloat(
-                    "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_X",
-                    &__settings_form.icon_font.glypth_offset.first))
-            {
-               __queue_after_render.push([this]() { updateFonts(); });
-            }
-         }
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Glypth offset 'y'");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputFloat(
-                    "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_Y",
-                    &__settings_form.icon_font.glypth_offset.second))
-            {
-               __queue_after_render.push([this]() { updateFonts(); });
-            }
-         }
-         ImGui::TableNextRow();
-         {
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Glypth minimum advance 'x'");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputFloat(
-                    "##SETTINGS_FONTS_ICON_GLYPTH_MIN_ADVANCE_X",
-                    &__settings_form.icon_font.glypth_min_advance_x))
-            {
-               __queue_after_render.push([this]() { updateFonts(); });
-            }
-         }
-      }  // ===> Icon font
-      ImGui::EndTable();
-      ImGui::Spacing();
+      ImGui::End();
    }
-   ImGui::End();
 }
 
 void BfGui::presentEventLog()

@@ -38,7 +38,7 @@ private:
    void __poll_events();
 
    void __init();
-   void __start_loop();
+   void __loop();
    void __kill();
 
    // Presents //

@@ -156,7 +156,7 @@ void BfMain::__kill()
    // std::cout << BfAllocationViewer::print_info();
 }
 
-void BfMain::__start_loop()
+void BfMain::__loop()
 {
    __base.current_frame = 0;
    __base.is_resized    = true;
@@ -193,12 +193,14 @@ void BfMain::__start_loop()
 
       __present_blade_base_create_window();
 
-      __gui.presentMenueBar();
+      __gui.presentTopDock();
+      __gui.presentLeftDock();
+
+      __gui.presentMenuBar();
       __gui.presentCamera();
       __gui.presentLayerHandler();
       __gui.presentEventLog();
       __gui.presentToolType();
-      __gui.presentLeftDock();
       __gui.presentSettings();
 
       ImGui::Render();
@@ -626,7 +628,6 @@ BfMain::BfMain()
 void BfMain::run()
 {
    __init();
-   __start_loop();
-
+   __loop();
    __kill();
 }
