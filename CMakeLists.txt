@@ -225,9 +225,14 @@ set(BF_GEOMETRY
     "src/geometry/bfBladeSection.cpp")
 
 set(BF_INTERACTION
-    "include/interaction/bfConsole.h" "src/interaction/bfConsole.cpp"
-    "include/interaction/bfEvent.h" "src/interaction/bfEvent.cpp"
-    "include/interaction/bfGui.h" "src/interaction/bfGui.cpp")
+    "include/interaction/bfConsole.h"
+    "src/interaction/bfConsole.cpp"
+    "include/interaction/bfEvent.h"
+    "src/interaction/bfEvent.cpp"
+    "include/interaction/bfGui.h"
+    "src/interaction/bfGui.cpp"
+    "include/interaction/bfGuiFileDialog.h"
+    "src/interaction/bfGuiFileDialog.cpp")
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"
@@ -345,7 +350,7 @@ add_executable(
   # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
   # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" "include/other/bfMath.hpp"
   # "src/other/bfMath.cpp"
-  "tests/sol2_lua_test.cpp"
+  "tests/sol2_lua_test.cpp" "tests/filedialog_test.cpp"
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
   ${SOURCES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

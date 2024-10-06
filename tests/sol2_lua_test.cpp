@@ -64,7 +64,7 @@ TEST_CASE("bfConfigManager -> lua init", "[single-file]")
    REQUIRE(table.get<sol::table>("option3")[2] == 10);
    REQUIRE(table.get<sol::table>("option3")[3] == 12);
 
-   std::cout << BfConfigManager::getLuaTableStr(table);
+   // std::cout << BfConfigManager::getLuaTableStr(table);
 }
 
 TEST_CASE("find files")
@@ -75,8 +75,8 @@ TEST_CASE("find files")
    BfConfigManager::getInstance()->__findFilesInDir("./resources/",
                                                     ".png",
                                                     out);
-   for (int i = 0; i < out.size(); ++i)
-   {
-      std::cout << out[i].string() << "\n";
-   }
+   // for (int i = 0; i < out.size(); ++i)
+   // {
+   //    std::cout << out[i].string() << "\n";
+   // }
 }

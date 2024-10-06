@@ -2,6 +2,7 @@
 
 #include "bfBase.h"
 #include "bfConfigManager.h"
+#include "bfGuiFileDialog.h"
 #define VMA_IMPLEMENTATION
 #include <memory>
 
@@ -182,6 +183,9 @@ void BfMain::__loop()
       __base.layer_handler.add(bladeBases);
    }
 
+   BfGuiFileDialog dialog{};
+   dialog.setRoot("./");
+
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -202,6 +206,10 @@ void BfMain::__loop()
       __gui.presentEventLog();
       __gui.presentToolType();
       __gui.presentSettings();
+      __gui.presentLuaInteraction();
+      dialog.draw();
+
+      // ImGui::ShowDemoWindow();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();

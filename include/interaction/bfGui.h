@@ -12,6 +12,7 @@
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
+#include "bfGuiFileDialog.h"
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
@@ -30,6 +31,9 @@ class BfGui
    bool __is_event_log            = false;
    bool __is_camera_info          = true;
    bool __is_settings             = false;
+   bool __is_ortho_settings       = false;
+   bool __is_lua_iteraction       = true;
+   bool __is_file_dialog          = true;
 
    bool __is_left_dock_space_name = false;
 
@@ -66,6 +70,11 @@ public:
    void presentLeftDock();
    void presentTopDock();
    void presentSettings();
+   void presentLuaInteraction();
+
+   void presentFileDialog();
+
+   void __presentOrthoSettings();
 };
 
 enum BfEnMenuStatus

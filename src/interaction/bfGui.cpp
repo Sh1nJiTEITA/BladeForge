@@ -246,8 +246,9 @@ void BfGui::presentCamera()
 {
    if (__is_camera_info)
    {
-      static bool is_per = true;
-      static bool is_ort = false;
+      static bool is_per   = true;
+      static bool is_ort   = false;
+      static bool is_ortho = false;
 
       if (ImGui::Begin("Camera"))
       {
@@ -329,122 +330,17 @@ void BfGui::presentCamera()
 
                __ptr_base->window->proj_mode = 1;
             }
+            ImGui::Dummy({0.0f, 14.0f});
+            if (ImGui::Button("Ortho settings"))
+            {
+               __is_ortho_settings = !__is_ortho_settings;
+            }
             ImGui::EndChild();
          }
-
-         // // ImVec2 table_size  = {
-         // //     ImGui::GetContentRegionAvail().x,
-         // //     ImGui::GetContentRegionAvail().y -
-         // ImGui::GetFrameHeight()}; ImVec2 left_child_size =
-         // ImGui::GetContentRegionAvail();
-         //
-         // ImGui::BeginChild("##CameraTableButtonsChild", left_child_size);
-         // {
-         //    ImVec2 table_size  = ImGui::GetContentRegionAvail();
-         //    ImVec2 button_size = {table_size.x / 3.0f, table_size.y
-         //    / 3.0f};
-         //
-         //    if (ImGui::BeginTable(
-         //            "VIEWS",
-         //            3,
-         //            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
-         //            // |ImGuiTableFlags_SizingStretchSame
-         //            // {ImGui::GetContentRegionAvail().x / 2,
-         //            //  ImGui::GetContentRegionAvail().y}
-         //            ))
-         //    {
-         //       // table_size = ImGui::GetContentRegionAvail();
-         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 0
-         //       {
-         //          ImGui::TableSetColumnIndex(1);
-         //          button_size = {
-         //              ImGui::GetContentRegionAvail().x,
-         //              ImGui::GetContentRegionAvail().y / 3.0f * 0.95f};
-         //          if (ImGui::Button("Up", button_size))
-         //          {
-         //             bfSetOrthoUp(__ptr_base->window);
-         //          }
-         //       }
-         //
-         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 1
-         //       {
-         //          ImGui::TableSetColumnIndex(0);
-         //          if (ImGui::Button("Left", button_size))
-         //          {
-         //             bfSetOrthoLeft(__ptr_base->window);
-         //          }
-         //
-         //          ImGui::TableSetColumnIndex(1);
-         //          if (ImGui::Button("Near", button_size))
-         //          {
-         //             bfSetOrthoNear(__ptr_base->window);
-         //          }
-         //
-         //          ImGui::TableSetColumnIndex(2);
-         //          if (ImGui::Button("Right", button_size))
-         //          {
-         //             bfSetOrthoRight(__ptr_base->window);
-         //          }
-         //       }
-         //
-         //       ImGui::TableNextRow(0, table_size.y / 3.0);  // 2
-         //       {
-         //          ImGui::TableSetColumnIndex(1);
-         //          if (ImGui::Button("Bottom", button_size))
-         //          {
-         //             bfSetOrthoBottom(__ptr_base->window);
-         //          }
-         //
-         //          ImGui::TableSetColumnIndex(2);
-         //          if (ImGui::Button("Far", button_size))
-         //          {
-         //             bfSetOrthoFar(__ptr_base->window);
-         //          }
-         //       }
-         //       ImGui::EndTable();
-         //    }
-         // }
-         // ImGui::EndChild();
-         // VIEW STYLE
-         // ImGui::SameLine();
-         // ImGui::SameLine(ImGui::GetContentRegionAvail().x /
-         //                 1.6);  // Выравниваем справа
-         // ImGui::BeginGroup();
-         // {
-         //    if (ImGui::RadioButton("Perspective", is_per))
-         //    {
-         //       is_ort                        = false;
-         //       is_per                        = true;
-         //
-         //       __ptr_base->window->proj_mode = 0;
-         //    }
-         //    if (ImGui::RadioButton("Ortho", is_ort))
-         //    {
-         //       is_ort                        = true;
-         //       is_per                        = false;
-         //
-         //       __ptr_base->window->proj_mode = 1;
-         //    }
-         // }
-         // ImGui::EndGroup();
-
-         /**/
-
-         // ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left,
-         // 0.1f); ImGui::InputFloat("Ortho-right",
-         //                   &__ptr_base->window->ortho_right,
-         //                   0.1f);
-         // ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top,
-         // 0.1f); ImGui::InputFloat("Ortho-bottom",
-         //                   &__ptr_base->window->ortho_bottom,
-         //                   0.1f);
-         // ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near,
-         // 0.1f); ImGui::InputFloat("Ortho-far",
-         // &__ptr_base->window->ortho_far, 0.1f); ImGui::Checkbox("is_asp",
-         // &__ptr_base->window->is_asp);
       }
       ImGui::End();
    }
+   __presentOrthoSettings();
 }
 
 void BfGui::presentToolType()
@@ -502,9 +398,9 @@ void BfGui::presentTopDock()
 
    ImGui::SetNextWindowPos({0, frame_h});
 
-   ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove |
-                            ImGuiWindowFlags_NoTitleBar |
-                            ImGuiWindowFlags_NoResize;
+   ImGuiWindowFlags flags =
+       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar;
+   // ImGuiWindowFlags_NoResize;
 
    ImGui::SetNextWindowSizeConstraints(ImVec2(view_port_w, 0.0f),
                                        ImVec2(view_port_w, FLT_MAX));
@@ -702,6 +598,50 @@ void BfGui::presentSettings()
       ImGui::End();
    }
 }
+
+void BfGui::presentLuaInteraction()
+{
+   if (__is_lua_iteraction)
+   {
+      if (ImGui::Begin("Lua Interaction", &__is_lua_iteraction))
+      {
+      }
+      ImGui::End();
+   }
+}
+
+void BfGui::presentFileDialog()
+{
+   if (__is_file_dialog)
+   {
+      if (ImGui::Begin("Lua Interaction", &__is_file_dialog))
+      {
+      }
+      ImGui::End();
+   }
+}
+
+void BfGui::__presentOrthoSettings()
+{
+   if (__is_ortho_settings)
+   {
+      if (ImGui::Begin("Ortho settings", &__is_ortho_settings))
+      {
+         ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left, 0.1f);
+         ImGui::InputFloat("Ortho-right",
+                           &__ptr_base->window->ortho_right,
+                           0.1f);
+         ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top, 0.1f);
+         ImGui::InputFloat("Ortho-bottom",
+                           &__ptr_base->window->ortho_bottom,
+                           0.1f);
+         ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near, 0.1f);
+         ImGui::InputFloat("Ortho-far", &__ptr_base->window->ortho_far, 0.1f);
+         ImGui::Checkbox("is_asp", &__ptr_base->window->is_asp);
+      }
+      ImGui::End();
+   }
+};
 
 void BfGui::presentEventLog()
 {
