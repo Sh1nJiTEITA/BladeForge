@@ -19,18 +19,18 @@ enum BfFileDialogElementType_
    BfFileDialogElementType_DirectoryEmpty,
    BfFileDialogElementType_RegularFile,
    BfFileDialogElementType_LuaFile,
+   BfFileDialogElementType_BackDirectory
 };
-const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e);
+const char*  bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e);
 const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e);
-
 
 struct BfFileDialogElement
 {
    fs::path                 path;
-   std::string              str;
    std::time_t              date;
    size_t                   size;
    BfFileDialogElementType_ type;
+   bool                     is_selected;
 };
 
 class BfGuiFileDialog

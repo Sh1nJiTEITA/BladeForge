@@ -17,6 +17,7 @@ const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
        {BfFileDialogElementType_DirectoryEmpty, ICON_FA_FOLDER_MINUS},
        {BfFileDialogElementType_RegularFile, ICON_FA_FILE},
        {BfFileDialogElementType_LuaFile, ICON_FA_CODE},
+       {BfFileDialogElementType_BackDirectory, ICON_FA_ARROW_ROTATE_LEFT},
    };
    return s.at(e);
 }
@@ -29,6 +30,7 @@ const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
        {BfFileDialogElementType_DirectoryEmpty, {255.0f, 200.0f, 100.0f, 1.0f}},
        {BfFileDialogElementType_RegularFile, {255.0f, 255.0f, 255.0f, 1.0f}},
        {BfFileDialogElementType_LuaFile, {10.0f, 20.0f, 255.0f, 1.0f}},
+       {BfFileDialogElementType_BackDirectory, {255.0f, 255.0f, 255.0f, 1.0f}},
    };
    return s.at(e);
 }
@@ -61,78 +63,65 @@ void BfGuiFileDialog::__render()
 
 void BfGuiFileDialog::__render_table()
 {
-   static int selected_row = -1;
+   bool is_update = false;
    if (ImGui::BeginTable("##BfGuiFileDialogTable",
                          3,
                          /*ImGuiTableFlags_RowBg | */
                          ImGuiTableFlags_Sortable))
    {
-      try
+      float table_w = ImGui::GetContentRegionAvail().x;
+      float name_w  = 60.0f;
+      float date_w  = 140.0f;
+
+      ImGui::TableSetupColumn("Name",
+                              ImGuiTableColumnFlags_WidthFixed,
+                              table_w - name_w - date_w);
+      ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, name_w);
+      ImGui::TableSetupColumn("Last modified",
+                              ImGuiTableColumnFlags_WidthFixed,
+                              date_w);
+
+      ImGui::TableHeadersRow();
+      ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
+      if (sort_specs) sort(sort_specs);
+      int row_index = 0;
+      for (auto& element : __elements)
       {
-         float table_w = ImGui::GetContentRegionAvail().x;
-         float name_w  = 60.0f;
-         float date_w  = 140.0f;
+         ImGui::TableNextRow();
+         ImGui::TableSetColumnIndex(0);
 
-         ImGui::TableSetupColumn("Name",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 table_w - name_w - date_w);
-         ImGui::TableSetupColumn("Size",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 name_w);
-         ImGui::TableSetupColumn("Last modified",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 date_w);
+         ImGui::Selectable(("##" + element.path.string()).c_str(),
+                           element.is_selected,
+                           ImGuiSelectableFlags_SpanAllColumns);
 
-         ImGui::TableHeadersRow();
-         ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
-         if (sort_specs) sort(sort_specs);
-         int row_index = 0;
-         for (const auto& element : __elements)
+         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
          {
-            std::cout << element.str << "\n";
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            bool row_selected = (selected_row == row_index);
-
-            ImGui::Selectable(("##" + element.str).c_str(),
-                              row_selected,
-                              ImGuiSelectableFlags_SpanAllColumns);
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-            {
-               this->__root = fs::absolute(__root / element.path);
-               update();
-               /*return;*/
-            }
-
-            /*if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))*/
-            /*{*/
-            /*   selected_row = row_index;*/
-            /*   std::cout << element.path << " " << element.type << " "*/
-            /*             << element.date << " " << element.size << "\n";*/
-            /*}*/
-
-            ImGui::SameLine();
-            ImGui::TextColored(bfGetFileDialogElementTypeColor(element.type),
-                               "%s",
-                               bfGetFileDialogElementTypeEmoji(element.type));
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(40.0);
-            ImGui::Text("%s", element.str.c_str());
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%d", static_cast<int>(element.size));
-            ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%s",
-                        getLastWriteFileTime_string(element.date).c_str());
-            row_index += 1;
+            this->__root = fs::absolute(__root / element.path);
+            is_update    = true;
          }
-      }
-      catch (const std::exception& e)
-      {
-         std::cerr << "Filesystem error: " << e.what() << "\n";
+
+         if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+         {
+            element.is_selected = !element.is_selected;
+         }
+
+         ImGui::SameLine();
+         ImGui::TextColored(bfGetFileDialogElementTypeColor(element.type),
+                            "%s",
+                            bfGetFileDialogElementTypeEmoji(element.type));
+         ImGui::SameLine();
+         ImGui::SetCursorPosX(40.0);
+         ImGui::Text("%s", element.path.filename().c_str());
+         ImGui::TableSetColumnIndex(1);
+         ImGui::Text("%d", static_cast<int>(element.size));
+         ImGui::TableSetColumnIndex(2);
+         ImGui::Text("%s", getLastWriteFileTime_string(element.date).c_str());
+         row_index += 1;
       }
    }
    ImGui::EndTable();
+
+   if (is_update) update();
 }
 
 std::time_t BfGuiFileDialog::getLastWriteFileTime_time_t(const fs::path& path)
@@ -299,12 +288,11 @@ void BfGuiFileDialog::update()
    }
    try
    {
-      std::cout << "Entering " << fs::absolute(__root) << "\n";
+      __elements.push_back(
+          {__root.root_name(), 0, 0, BfFileDialogElementType_BackDirectory});
       for (const auto& item : fs::directory_iterator(__root))
       {
-         /*fs::path abs = fs::canonical(fs::absolute(__root / item));*/
          fs::path abs = fs::absolute(__root / item);
-         std::cout << "Found " << abs << "\n";
          if (abs.empty())
          {
             continue;
@@ -314,7 +302,6 @@ void BfGuiFileDialog::update()
             abs = fs::canonical(abs);
             BfFileDialogElement element{
                 .path = abs,
-                .str = abs.filename().string(),
                 .date = getLastWriteFileTime_time_t(abs),
                 .size = getElementSize(abs),
                 .type = BfFileDialogElementType_None};
