@@ -21,10 +21,13 @@ enum BfFileDialogElementType_
    BfFileDialogElementType_LuaFile,
 };
 const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e);
+const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e);
+
 
 struct BfFileDialogElement
 {
    fs::path                 path;
+   std::string              str;
    std::time_t              date;
    size_t                   size;
    BfFileDialogElementType_ type;

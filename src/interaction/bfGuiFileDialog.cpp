@@ -1,6 +1,7 @@
 #include "bfGuiFileDialog.h"
 
 #include <algorithm>
+#include <exception>
 #include <filesystem>
 
 #include "bfGui.h"
@@ -20,6 +21,18 @@ const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
    return s.at(e);
 }
 
+const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
+{
+   static std::map<BfFileDialogElementType_, const ImVec4> s{
+       {BfFileDialogElementType_None, {0.0f, 0.0f, 0.0f, 1.0f}},
+       {BfFileDialogElementType_Directory, {255.0f, 165.0f, 0.0f, 1.0f}},
+       {BfFileDialogElementType_DirectoryEmpty, {255.0f, 200.0f, 100.0f, 1.0f}},
+       {BfFileDialogElementType_RegularFile, {255.0f, 255.0f, 255.0f, 1.0f}},
+       {BfFileDialogElementType_LuaFile, {10.0f, 20.0f, 255.0f, 1.0f}},
+   };
+   return s.at(e);
+}
+
 BfGuiFileDialog::BfGuiFileDialog() {}
 
 void BfGuiFileDialog::setRoot(fs::path root) noexcept { __root = root; }
@@ -30,6 +43,12 @@ void BfGuiFileDialog::__render()
    {
       if (ImGui::Begin("File Dialog", &__is_render))
       {
+         if (ImGui::Button(ICON_FA_ARROW_LEFT))
+         {
+            __root = __root.parent_path();
+            this->update();
+         }
+         ImGui::SameLine();
          if (ImGui::Button("Update list"))
          {
             this->update();
@@ -42,47 +61,75 @@ void BfGuiFileDialog::__render()
 
 void BfGuiFileDialog::__render_table()
 {
+   static int selected_row = -1;
    if (ImGui::BeginTable("##BfGuiFileDialogTable",
                          3,
-                         ImGuiTableFlags_RowBg | ImGuiTableFlags_Sortable))
+                         /*ImGuiTableFlags_RowBg | */
+                         ImGuiTableFlags_Sortable))
    {
-      float table_w = ImGui::GetContentRegionAvail().x;
-      float name_w  = 60.0f;
-      float date_w  = 140.0f;
-      // ImGui::SetColumnWidth(0, table_w * 0.7);
-      // ImGui::SetColumnWidth(1, table_w * 0.15);
-      // ImGui::SetColumnWidth(2, table_w * 0.15);
-
-      // ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_None, -1.0f, 0);
-      // ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_None, -1.0f, 1);
-      // ImGui::TableSetupColumn("Last Modified",
-      //                         ImGuiTableColumnFlags_None,
-      //                         -1.0f,
-      //                         2);
-      //
-      ImGui::TableSetupColumn("Name",
-                              ImGuiTableColumnFlags_WidthFixed,
-                              table_w - name_w - date_w);
-      ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, name_w);
-      ImGui::TableSetupColumn("Last modified",
-                              ImGuiTableColumnFlags_WidthFixed,
-                              date_w);
-
-      ImGui::TableHeadersRow();
-      ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
-      if (sort_specs) sort(sort_specs);
-      for (const auto& element : __elements)
+      try
       {
-         ImGui::TableNextRow();
-         ImGui::TableSetColumnIndex(0);
-         ImGui::Text(" %s", bfGetFileDialogElementTypeEmoji(element.type));
-         ImGui::SameLine();
-         ImGui::SetCursorPosX(40.0);
-         ImGui::Text("%s", element.path.filename().c_str());
-         ImGui::TableSetColumnIndex(1);
-         ImGui::Text("%d", static_cast<int>(element.size));
-         ImGui::TableSetColumnIndex(2);
-         ImGui::Text("%s", getLastWriteFileTime_string(element.date).c_str());
+         float table_w = ImGui::GetContentRegionAvail().x;
+         float name_w  = 60.0f;
+         float date_w  = 140.0f;
+
+         ImGui::TableSetupColumn("Name",
+                                 ImGuiTableColumnFlags_WidthFixed,
+                                 table_w - name_w - date_w);
+         ImGui::TableSetupColumn("Size",
+                                 ImGuiTableColumnFlags_WidthFixed,
+                                 name_w);
+         ImGui::TableSetupColumn("Last modified",
+                                 ImGuiTableColumnFlags_WidthFixed,
+                                 date_w);
+
+         ImGui::TableHeadersRow();
+         ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
+         if (sort_specs) sort(sort_specs);
+         int row_index = 0;
+         for (const auto& element : __elements)
+         {
+            std::cout << element.str << "\n";
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            bool row_selected = (selected_row == row_index);
+
+            ImGui::Selectable(("##" + element.str).c_str(),
+                              row_selected,
+                              ImGuiSelectableFlags_SpanAllColumns);
+
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+            {
+               this->__root = fs::absolute(__root / element.path);
+               update();
+               /*return;*/
+            }
+
+            /*if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))*/
+            /*{*/
+            /*   selected_row = row_index;*/
+            /*   std::cout << element.path << " " << element.type << " "*/
+            /*             << element.date << " " << element.size << "\n";*/
+            /*}*/
+
+            ImGui::SameLine();
+            ImGui::TextColored(bfGetFileDialogElementTypeColor(element.type),
+                               "%s",
+                               bfGetFileDialogElementTypeEmoji(element.type));
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(40.0);
+            ImGui::Text("%s", element.str.c_str());
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%d", static_cast<int>(element.size));
+            ImGui::TableSetColumnIndex(2);
+            ImGui::Text("%s",
+                        getLastWriteFileTime_string(element.date).c_str());
+            row_index += 1;
+         }
+      }
+      catch (const std::exception& e)
+      {
+         std::cerr << "Filesystem error: " << e.what() << "\n";
       }
    }
    ImGui::EndTable();
@@ -115,7 +162,8 @@ size_t BfGuiFileDialog::getElementSize(const fs::path& root)
 {
    if (fs::is_directory(root))
    {
-      return getDirectorySize(root);
+      /*return getDirectorySize(root);*/
+      return 0;
    }
    else if (fs::is_regular_file(root))
    {
@@ -249,29 +297,51 @@ void BfGuiFileDialog::update()
    {
       __elements.clear();
    }
-   for (const auto& item : fs::directory_iterator(__root))
+   try
    {
-      fs::path abs = fs::canonical(fs::absolute(__root / item));
-      if (fs::exists(abs))
+      std::cout << "Entering " << fs::absolute(__root) << "\n";
+      for (const auto& item : fs::directory_iterator(__root))
       {
-         BfFileDialogElement element{.path = abs,
-                                     .date = getLastWriteFileTime_time_t(abs),
-                                     .size = getElementSize(abs),
-                                     .type = BfFileDialogElementType_None};
-         if (fs::is_directory(abs))
+         /*fs::path abs = fs::canonical(fs::absolute(__root / item));*/
+         fs::path abs = fs::absolute(__root / item);
+         std::cout << "Found " << abs << "\n";
+         if (abs.empty())
          {
-            if (isDirectoryEmpty(abs))
-               element.type = BfFileDialogElementType_DirectoryEmpty;
+            continue;
+         }
+         if (fs::exists(abs))
+         {
+            abs = fs::canonical(abs);
+            BfFileDialogElement element{
+                .path = abs,
+                .str = abs.filename().string(),
+                .date = getLastWriteFileTime_time_t(abs),
+                .size = getElementSize(abs),
+                .type = BfFileDialogElementType_None};
+            if (fs::is_directory(abs))
+            {
+               if (isDirectoryEmpty(abs))
+                  element.type = BfFileDialogElementType_DirectoryEmpty;
+               else
+                  element.type = BfFileDialogElementType_Directory;
+            }
+            else if (fs::is_regular_file(abs))
+            {
+               element.type = BfFileDialogElementType_RegularFile;
+            }
             else
-               element.type = BfFileDialogElementType_Directory;
-         }
-         else if (fs::is_regular_file(abs))
-         {
-            element.type = BfFileDialogElementType_RegularFile;
-         }
+            {
+               element.type = BfFileDialogElementType_None;
+            }
 
-         __elements.emplace_back(std::move(element));
+            __elements.emplace_back(std::move(element));
+         }
       }
+   }
+   catch (const fs::filesystem_error& e)
+   {
+      std::cerr << "Filesystem error: " << e.what() << "\n";
+      update();
    }
 }
 
