@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iostream>
 #include <list>
+#include <stack>
 #include <vector>
 
 #include "bfIconsFontAwesome6.h"
@@ -33,15 +34,27 @@ struct BfFileDialogElement
    bool                     is_selected;
 };
 
+enum BfFileDialogOpenMode_
+{
+   BfFileDialogOpenMode_File,
+   BfFileDialogOpenMode_Files,
+   BfFileDialogOpenMode_Directory,
+};
+
 class BfGuiFileDialog
 {
    bool     __is_render         = true;
    bool     __is_warning_window = false;
    fs::path __root;
 
+   std::vector<std::string> __extensions;
+   int                      __chosen_ext = -1;
+
    std::list<BfFileDialogElement> __elements;
    //
-   std::string __warning_msg;
+   std::string          __warning_msg;
+   std::stack<fs::path> __forward_stack;
+   std::stack<fs::path> __back_stack;
 
    int __hovered_item = -1;
 
@@ -49,6 +62,8 @@ class BfGuiFileDialog
    void __renderPath();
    void __renderTable();
    void __renderWarning();
+   void __renderFileExtensionPicker();
+   void __renderChosenFiles();
 
    void __sortByTime(bool inverse = false);
    void __sortBySize(bool inverse = false);
@@ -58,11 +73,17 @@ public:
    BfGuiFileDialog();
 
    void setRoot(fs::path root) noexcept;
+
+   void setExtension(std::initializer_list<std::string> list);
+
    void show() noexcept;
    void hide() noexcept;
    void draw();
    void sort(const ImGuiTableSortSpecs* sort_specs);
    void update();
+   void goTo(const fs::path&);
+   void goBack();
+   void goForward();
 
    static std::time_t getLastWriteFileTime_time_t(const fs::path&);
    static std::string getLastWriteFileTime_string(const fs::path&);

@@ -185,6 +185,7 @@ void BfMain::__loop()
 
    BfGuiFileDialog dialog{};
    dialog.setRoot("./");
+   dialog.setExtension({".lua", ".txt"});
 
    bfSetOrthoLeft(__base.window);
    while (!glfwWindowShouldClose(__base.window->pWindow))

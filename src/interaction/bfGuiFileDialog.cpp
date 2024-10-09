@@ -19,7 +19,8 @@ const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
        {BfFileDialogElementType_DirectoryEmpty, ICON_FA_FOLDER_MINUS},
        {BfFileDialogElementType_RegularFile, ICON_FA_FILE},
        {BfFileDialogElementType_LuaFile, ICON_FA_CODE},
-       {BfFileDialogElementType_BackDirectory, ICON_FA_ARROW_ROTATE_LEFT},
+       // {BfFileDialogElementType_BackDirectory, ICON_FA_ARROW_ROTATE_LEFT},
+       {BfFileDialogElementType_BackDirectory, ICON_FA_REPLY},
    };
    return s.at(e);
 }
@@ -39,7 +40,17 @@ const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
 
 BfGuiFileDialog::BfGuiFileDialog() {}
 
-void BfGuiFileDialog::setRoot(fs::path root) noexcept { __root = root; }
+void BfGuiFileDialog::setRoot(fs::path root) noexcept
+{
+   __root = (fs::canonical(root));
+   update();
+}
+
+void BfGuiFileDialog::setExtension(std::initializer_list<std::string> list)
+{
+   __extensions = list;
+   if (!__extensions.empty()) __chosen_ext = 0;
+}
 
 void BfGuiFileDialog::__render()
 {
@@ -47,19 +58,29 @@ void BfGuiFileDialog::__render()
    {
       if (ImGui::Begin("File Dialog", &__is_render))
       {
-         __renderPath();
          if (ImGui::Button(ICON_FA_ARROW_LEFT))
          {
-            __root = __root.parent_path();
-            this->update();
+            goBack();
          }
          ImGui::SameLine();
-         if (ImGui::Button("Update list"))
+         if (ImGui::Button(ICON_FA_REPEAT))
          {
-            this->update();
+            goTo(__root);
          }
+         ImGui::SameLine();
+         if (ImGui::Button(ICON_FA_ARROW_RIGHT))
+         {
+            goForward();
+         }
+         ImGui::SameLine();
+         __renderPath();
          __renderTable();
          __renderWarning();
+         ImGui::SeparatorText("Choose Extension");
+         ImGui::Dummy({0, 20});
+         __renderChosenFiles();
+         ImGui::SameLine();
+         __renderFileExtensionPicker();
       }
       ImGui::End();
    }
@@ -67,8 +88,12 @@ void BfGuiFileDialog::__render()
 
 void BfGuiFileDialog::__renderPath()
 {
+   bool     found_hovered = false;
+   bool     is_update     = false;
+   fs::path new_path;
    for (auto it = __root.begin(); it != __root.end(); ++it)
    {
+      if (!is_update) new_path /= *it;
       size_t      distance = std::distance(__root.begin(), it);
       std::string strid =
           std::move(it->string() + "##" + std::to_string(distance));
@@ -91,23 +116,28 @@ void BfGuiFileDialog::__renderPath()
       }
       if (ImGui::Button(path_item.c_str()))
       {
+         is_update = true;
       }
       ImGui::PopStyleColor(1 + (is_hovered ? 2 : 0));
-      if (ImGui::IsItemHovered())
+      if (ImGui::IsItemHovered() && !found_hovered)
       {
          __hovered_item = distance;
-      }
-      else
-      {
-         __hovered_item = -1;
+         found_hovered  = true;
       }
       ImGui::SameLine();
+   }
+   ImGui::Dummy({0, 0});
+   if (!found_hovered) __hovered_item = -1;
+   if (is_update)
+   {
+      goTo(new_path);
    }
 }
 
 void BfGuiFileDialog::__renderTable()
 {
-   bool is_update = false;
+   bool     is_update = false;
+   fs::path new_path;
    if (ImGui::BeginTable("##BfGuiFileDialogTable",
                          3,
                          /*ImGuiTableFlags_RowBg | */
@@ -143,12 +173,12 @@ void BfGuiFileDialog::__renderTable()
             if (element.type == BfFileDialogElementType_Directory ||
                 element.type == BfFileDialogElementType_DirectoryEmpty)
             {
-               __root    = fs::absolute(__root / element.path);
+               new_path  = fs::absolute(__root / element.path);
                is_update = true;
             }
             else if (element.type == BfFileDialogElementType_BackDirectory)
             {
-               __root    = __root.parent_path();
+               new_path  = __root.parent_path();
                is_update = true;
             }
          }
@@ -179,7 +209,7 @@ void BfGuiFileDialog::__renderTable()
    }
    ImGui::EndTable();
 
-   if (is_update) update();
+   if (is_update) goTo(new_path);
 }
 
 void BfGuiFileDialog::__renderWarning()
@@ -196,6 +226,56 @@ void BfGuiFileDialog::__renderWarning()
       }
       ImGui::EndPopup();
    }
+}
+
+void BfGuiFileDialog::__renderFileExtensionPicker()
+{
+   float window_w         = ImGui::GetContentRegionAvail().x;
+   float window_padding_x = ImGui::GetStyle().WindowPadding.x * 0.5;
+   float combo_w          = 80.0f;
+   float combo_x          = window_w - combo_w + window_padding_x;
+   ImGui::SetCursorPosX(combo_x);
+   ImGui::SetNextItemWidth(combo_w);
+
+   std::string chosen_ext =
+       __chosen_ext == -1 ? "" : __extensions[__chosen_ext];
+   if (ImGui::BeginCombo("##BfGuiFileDialogExtensionId", chosen_ext.c_str()))
+   {
+      for (size_t i = 0; i < __extensions.size(); ++i)
+      {
+         bool is_selected = (__chosen_ext == i);
+         if (ImGui::Selectable(__extensions[i].c_str(), is_selected))
+         {
+            __chosen_ext = i;
+         }
+         if (is_selected)
+         {
+            ImGui::SetItemDefaultFocus();
+         }
+      }
+
+      ImGui::EndCombo();
+   }
+}
+
+void BfGuiFileDialog::__renderChosenFiles()
+{
+   std::ostringstream oss;
+   for (auto element = __elements.begin(); element != __elements.end();
+        element++)
+   {
+      size_t distance = std::distance(__elements.begin(), element);
+      if (element->is_selected)
+      {
+         oss << element->path.filename();
+
+         if (distance < __elements.size()) oss << ", ";
+      }
+   }
+   std::string res = oss.str();
+   ImGui::InputText("##BfGuiFileDialogRenderChosenFilesId",
+                    const_cast<char*>(res.c_str()),
+                    100000);
 }
 
 std::time_t BfGuiFileDialog::getLastWriteFileTime_time_t(const fs::path& path)
@@ -414,6 +494,45 @@ void BfGuiFileDialog::update()
    {
       __warning_msg = e.what();
       ImGui::OpenPopup("File dialog warning");
+   }
+}
+
+void BfGuiFileDialog::goTo(const fs::path& path)
+{
+   if (path != __root)
+   {
+      __back_stack.push(__root);
+      __root          = path;
+      __forward_stack = std::stack<fs::path>();
+      this->update();
+   }
+}
+
+void BfGuiFileDialog::goBack()
+{
+   if (!__back_stack.empty())
+   {
+      __forward_stack.push(__root);
+      __root = __back_stack.top();
+      __back_stack.pop();
+      update();
+   }
+   else
+   {
+   }
+}
+
+void BfGuiFileDialog::goForward()
+{
+   if (!__forward_stack.empty())
+   {
+      __back_stack.push(__root);
+      __root = __forward_stack.top();
+      __forward_stack.pop();
+      update();
+   }
+   else
+   {
    }
 }
 
