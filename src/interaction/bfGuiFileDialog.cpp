@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <exception>
 #include <filesystem>
+#include <iterator>
+#include <string>
 
 #include "bfGui.h"
 #include "bfIconsFontAwesome6.h"
@@ -45,6 +47,7 @@ void BfGuiFileDialog::__render()
    {
       if (ImGui::Begin("File Dialog", &__is_render))
       {
+         __renderPath();
          if (ImGui::Button(ICON_FA_ARROW_LEFT))
          {
             __root = __root.parent_path();
@@ -55,13 +58,54 @@ void BfGuiFileDialog::__render()
          {
             this->update();
          }
-         __render_table();
+         __renderTable();
+         __renderWarning();
       }
       ImGui::End();
    }
 }
 
-void BfGuiFileDialog::__render_table()
+void BfGuiFileDialog::__renderPath()
+{
+   for (auto it = __root.begin(); it != __root.end(); ++it)
+   {
+      size_t      distance = std::distance(__root.begin(), it);
+      std::string strid =
+          std::move(it->string() + "##" + std::to_string(distance));
+
+      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+      std::string path_item;
+#if defined(__linux__)
+      if (distance)
+         path_item = std::string("/") + strid;
+      else
+         path_item = strid;
+#endif
+      bool is_hovered = __hovered_item != -1 && __hovered_item >= distance;
+      if (is_hovered)
+      {
+         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                               ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+         ImGui::PushStyleColor(ImGuiCol_Button,
+                               ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+      }
+      if (ImGui::Button(path_item.c_str()))
+      {
+      }
+      ImGui::PopStyleColor(1 + (is_hovered ? 2 : 0));
+      if (ImGui::IsItemHovered())
+      {
+         __hovered_item = distance;
+      }
+      else
+      {
+         __hovered_item = -1;
+      }
+      ImGui::SameLine();
+   }
+}
+
+void BfGuiFileDialog::__renderTable()
 {
    bool is_update = false;
    if (ImGui::BeginTable("##BfGuiFileDialogTable",
@@ -96,8 +140,17 @@ void BfGuiFileDialog::__render_table()
 
          if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
          {
-            this->__root = fs::absolute(__root / element.path);
-            is_update    = true;
+            if (element.type == BfFileDialogElementType_Directory ||
+                element.type == BfFileDialogElementType_DirectoryEmpty)
+            {
+               __root    = fs::absolute(__root / element.path);
+               is_update = true;
+            }
+            else if (element.type == BfFileDialogElementType_BackDirectory)
+            {
+               __root    = __root.parent_path();
+               is_update = true;
+            }
          }
 
          if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
@@ -113,15 +166,36 @@ void BfGuiFileDialog::__render_table()
          ImGui::SetCursorPosX(40.0);
          ImGui::Text("%s", element.path.filename().c_str());
          ImGui::TableSetColumnIndex(1);
-         ImGui::Text("%d", static_cast<int>(element.size));
+         ImGui::Text("%s",
+                     (element.size ? std::to_string(element.size).c_str()
+                                   : std::string("").c_str()));
          ImGui::TableSetColumnIndex(2);
-         ImGui::Text("%s", getLastWriteFileTime_string(element.date).c_str());
+         ImGui::Text("%s",
+                     (element.date != std::time_t()
+                          ? getLastWriteFileTime_string(element.date).c_str()
+                          : std::string("").c_str()));
          row_index += 1;
       }
    }
    ImGui::EndTable();
 
    if (is_update) update();
+}
+
+void BfGuiFileDialog::__renderWarning()
+{
+   if (ImGui::BeginPopupModal("File dialog warning",
+                              NULL,
+                              ImGuiWindowFlags_AlwaysAutoResize))
+   {
+      ImGui::Text("%s", __warning_msg.c_str());
+      if (ImGui::Button("Close"))
+      {
+         ImGui::CloseCurrentPopup();
+         __warning_msg = "";
+      }
+      ImGui::EndPopup();
+   }
 }
 
 std::time_t BfGuiFileDialog::getLastWriteFileTime_time_t(const fs::path& path)
@@ -199,10 +273,16 @@ void BfGuiFileDialog::__sortByTime(bool inverse)
 {
    if (!inverse)
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
+         if (a.type == BfFileDialogElementType_BackDirectory) return true;
+         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+
          return a.date < b.date;
       });
    else
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
+         if (a.type == BfFileDialogElementType_BackDirectory) return true;
+         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+
          return a.date > b.date;
       });
 }
@@ -211,35 +291,40 @@ void BfGuiFileDialog::__sortBySize(bool inverse)
 {
    if (!inverse)
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
+         if (a.type == BfFileDialogElementType_BackDirectory) return true;
+         if (b.type == BfFileDialogElementType_BackDirectory) return false;
          return a.size < b.size;
       });
    else
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
+         if (a.type == BfFileDialogElementType_BackDirectory) return true;
+         if (b.type == BfFileDialogElementType_BackDirectory) return false;
          return a.size > b.size;
       });
 }
 void BfGuiFileDialog::__sortByName(bool inverse)
 {
-   if (!inverse)
-      __elements.sort(
-          [&](const BfFileDialogElement& a, const BfFileDialogElement& b) {
-             if (a.type != b.type)
-                return a.type == BfFileDialogElementType_Directory;
+   __elements.sort(
+       [&](const BfFileDialogElement& a, const BfFileDialogElement& b) {
+          if (a.type == BfFileDialogElementType_BackDirectory) return true;
+          if (b.type == BfFileDialogElementType_BackDirectory) return false;
 
-             std::string a_str = a.path.filename().string();
-             std::string b_str = b.path.filename().string();
-             return a_str.compare(b_str) < 0;
-          });
-   else
-      __elements.sort(
-          [&](const BfFileDialogElement& a, const BfFileDialogElement& b) {
-             if (a.type != b.type)
-                return a.type == BfFileDialogElementType_Directory;
+          if (a.type != b.type)
+          {
+             if (a.type == BfFileDialogElementType_Directory) return true;
+             if (b.type == BfFileDialogElementType_Directory) return false;
 
-             std::string a_str = a.path.filename().string();
-             std::string b_str = b.path.filename().string();
-             return a_str.compare(b_str) > 0;
-          });
+             if (a.type == BfFileDialogElementType_DirectoryEmpty) return true;
+             if (b.type == BfFileDialogElementType_DirectoryEmpty) return false;
+
+             return a.type == BfFileDialogElementType_RegularFile;
+          }
+
+          std::string a_str = a.path.filename().string();
+          std::string b_str = b.path.filename().string();
+
+          return inverse ? a_str.compare(b_str) > 0 : a_str.compare(b_str) < 0;
+       });
 }
 void BfGuiFileDialog::show() noexcept { __is_render = true; }
 void BfGuiFileDialog::hide() noexcept { __is_render = false; }
@@ -282,13 +367,11 @@ void BfGuiFileDialog::sort(const ImGuiTableSortSpecs* sort_specs)
 
 void BfGuiFileDialog::update()
 {
-   if (!__elements.empty())
-   {
-      __elements.clear();
-   }
+   __root = fs::absolute(__root);
    try
    {
-      __elements.push_back(
+      std::list<BfFileDialogElement> tmp;
+      tmp.push_back(
           {__root.root_name(), 0, 0, BfFileDialogElementType_BackDirectory});
       for (const auto& item : fs::directory_iterator(__root))
       {
@@ -308,7 +391,9 @@ void BfGuiFileDialog::update()
             if (fs::is_directory(abs))
             {
                if (isDirectoryEmpty(abs))
+               {
                   element.type = BfFileDialogElementType_DirectoryEmpty;
+               }
                else
                   element.type = BfFileDialogElementType_Directory;
             }
@@ -320,15 +405,15 @@ void BfGuiFileDialog::update()
             {
                element.type = BfFileDialogElementType_None;
             }
-
-            __elements.emplace_back(std::move(element));
+            tmp.emplace_back(std::move(element));
          }
       }
+      __elements = std::move(tmp);
    }
    catch (const fs::filesystem_error& e)
    {
-      std::cerr << "Filesystem error: " << e.what() << "\n";
-      update();
+      __warning_msg = e.what();
+      ImGui::OpenPopup("File dialog warning");
    }
 }
 

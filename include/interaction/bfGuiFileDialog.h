@@ -35,13 +35,20 @@ struct BfFileDialogElement
 
 class BfGuiFileDialog
 {
-   bool     __is_render = true;
+   bool     __is_render         = true;
+   bool     __is_warning_window = false;
    fs::path __root;
 
    std::list<BfFileDialogElement> __elements;
+   //
+   std::string __warning_msg;
+
+   int __hovered_item = -1;
 
    void __render();
-   void __render_table();
+   void __renderPath();
+   void __renderTable();
+   void __renderWarning();
 
    void __sortByTime(bool inverse = false);
    void __sortBySize(bool inverse = false);
