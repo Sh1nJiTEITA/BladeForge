@@ -120,6 +120,7 @@ void BfGuiFileDialog::__renderSettings()
    ImGui::Checkbox("Search extensions inside directories",
                    &__is_check_extension_in_dirs);
    ImGui::Separator();
+   //
 }
 
 void BfGuiFileDialog::__renderArrows()
