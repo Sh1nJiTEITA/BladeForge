@@ -183,11 +183,13 @@ void BfMain::__loop()
       __base.layer_handler.add(bladeBases);
    }
 
-   BfGuiFileDialog dialog{};
-   dialog.setRoot("./");
-   dialog.setExtension({".lua", ".txt"});
-
    bfSetOrthoLeft(__base.window);
+
+   fs::path              path;
+   std::vector<fs::path> paths;
+   // BfGuiFileDialog::instance()->openDir(&path);
+   BfGuiFileDialog::instance()->openFiles(&paths, {".*", ".lua"});
+
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
       __poll_events();
@@ -208,7 +210,7 @@ void BfMain::__loop()
       __gui.presentToolType();
       __gui.presentSettings();
       __gui.presentLuaInteraction();
-      dialog.draw();
+      __gui.presentFileDialog();
 
       // ImGui::ShowDemoWindow();
 

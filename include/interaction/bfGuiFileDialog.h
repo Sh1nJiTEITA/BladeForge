@@ -6,7 +6,9 @@
 #include <filesystem>
 #include <iostream>
 #include <list>
+#include <set>
 #include <stack>
+#include <variant>
 #include <vector>
 
 #include "bfIconsFontAwesome6.h"
@@ -32,6 +34,7 @@ struct BfFileDialogElement
    size_t                   size;
    BfFileDialogElementType_ type;
    bool                     is_selected;
+   bool                     is_extension;
 };
 
 enum BfFileDialogOpenMode_
@@ -43,12 +46,20 @@ enum BfFileDialogOpenMode_
 
 class BfGuiFileDialog
 {
-   bool     __is_render         = true;
-   bool     __is_warning_window = false;
+   static BfGuiFileDialog* __instance;
+
+   bool     __is_render                  = false;
+   bool     __is_warning_window          = false;
+   bool     __is_check_extension_in_dirs = true;
    fs::path __root;
 
-   std::vector<std::string> __extensions;
-   int                      __chosen_ext = -1;
+   BfFileDialogOpenMode_ __mode;
+   //
+   std::variant<fs::path*, std::vector<fs::path>*> __out;
+   //
+   std::vector<std::string> __extensions = {".*"};
+   //
+   int __chosen_ext = -1;
 
    std::list<BfFileDialogElement> __elements;
    //
@@ -59,28 +70,41 @@ class BfGuiFileDialog
    int __hovered_item = -1;
 
    void __render();
+   void __renderSettings();
+   void __renderArrows();
    void __renderPath();
    void __renderTable();
    void __renderWarning();
-   void __renderFileExtensionPicker();
+   void __renderPicker();
    void __renderChosenFiles();
+
+   void __pick();
 
    void __sortByTime(bool inverse = false);
    void __sortBySize(bool inverse = false);
    void __sortByName(bool inverse = false);
 
+   void __update();
+   void __updateElementExtensions();
+
 public:
    BfGuiFileDialog();
 
    void setRoot(fs::path root) noexcept;
+   void setExtension(std::initializer_list<std::string> list) noexcept;
+   //
+   static void             bindInstance(BfGuiFileDialog* ptr) noexcept;
+   static BfGuiFileDialog* instance() noexcept;
 
-   void setExtension(std::initializer_list<std::string> list);
+   void openFile(fs::path* path, std::initializer_list<std::string> ext);
+   void openFiles(std::vector<fs::path>*             path,
+                  std::initializer_list<std::string> ext);
+   void openDir(fs::path* path);
 
    void show() noexcept;
    void hide() noexcept;
    void draw();
    void sort(const ImGuiTableSortSpecs* sort_specs);
-   void update();
    void goTo(const fs::path&);
    void goBack();
    void goForward();
@@ -94,6 +118,7 @@ public:
    static size_t getFileSize(const fs::path&);
 
    static bool isDirectoryEmpty(const fs::path&);
+   static bool isDirectoryContainsExt(const fs::path&, std::string ext);
 };
 
 void bfGetDirectoryItemsList(fs::path               root,

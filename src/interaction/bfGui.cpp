@@ -8,12 +8,17 @@
 
 #include "bfConfigManager.h"
 #include "bfEvent.h"
+#include "bfGuiFileDialog.h"
 #include "bfIconsFontAwesome6.h"
 #include "config_forms/bfFormGui.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 
-BfGui::BfGui() {}
+BfGui::BfGui()
+{
+   BfGuiFileDialog::bindInstance(&__file_dialog);
+   __file_dialog.setRoot("./");
+}
 
 void BfGui::pollEvents()
 {
@@ -610,16 +615,7 @@ void BfGui::presentLuaInteraction()
    }
 }
 
-void BfGui::presentFileDialog()
-{
-   if (__is_file_dialog)
-   {
-      if (ImGui::Begin("Lua Interaction", &__is_file_dialog))
-      {
-      }
-      ImGui::End();
-   }
-}
+void BfGui::presentFileDialog() { __file_dialog.draw(); }
 
 void BfGui::__presentOrthoSettings()
 {

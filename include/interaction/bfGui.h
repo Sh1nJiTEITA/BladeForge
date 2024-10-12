@@ -21,8 +21,10 @@
 
 class BfGui
 {
-   BfBase*   __ptr_base           = nullptr;
-   BfHolder* __ptr_holder         = nullptr;
+   BfBase*   __ptr_base   = nullptr;
+   BfHolder* __ptr_holder = nullptr;
+
+   BfGuiFileDialog __file_dialog;
 
    ImFont* __default_font         = nullptr;
    ImFont* __icon_font            = nullptr;
@@ -71,7 +73,6 @@ public:
    void presentTopDock();
    void presentSettings();
    void presentLuaInteraction();
-
    void presentFileDialog();
 
    void __presentOrthoSettings();
