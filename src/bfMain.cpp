@@ -185,11 +185,6 @@ void BfMain::__loop()
 
    bfSetOrthoLeft(__base.window);
 
-   fs::path              path;
-   std::vector<fs::path> paths;
-   // BfGuiFileDialog::instance()->openDir(&path);
-   BfGuiFileDialog::instance()->openFiles(&paths, {".*", ".lua"});
-
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
       __poll_events();
@@ -212,7 +207,7 @@ void BfMain::__loop()
       __gui.presentLuaInteraction();
       __gui.presentFileDialog();
 
-      // ImGui::ShowDemoWindow();
+      ImGui::ShowDemoWindow();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();

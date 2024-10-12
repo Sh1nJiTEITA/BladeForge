@@ -237,6 +237,8 @@ enum BfEnActionType
    BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_NAME_FAILURE   = -0x67,
    BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_TYPE_FAILURE   = -0x68,
 
+   BF_ACTION_TYPE_READ_FILE_SUCCESS                          = 0x69,
+   BF_ACTION_TYPE_READ_FILE_FAILURE                          = -0x69,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -466,6 +468,9 @@ const std::map<int, std::string> bfSetActionsStr{
     {-0x68,
      "Invalid settings->fonts lua type or no standart font provided in "
      "standart directory './resources/fonts/Cousine-Regular.ttf"},
+
+    {0x69, "Text file was read sucessfully, path:"},
+    {-0x69, "Text file was not read, path:"},
 };
 
 enum BfEnSingleEventType

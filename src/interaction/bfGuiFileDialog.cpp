@@ -818,6 +818,8 @@ void BfGuiFileDialog::goForward()
    }
 }
 
+bool BfGuiFileDialog::isActive() { return __is_render; }
+
 void bfGetDirectoryItemsList(fs::path               root,
                              std::vector<fs::path>& dirs,
                              std::vector<fs::path>& files)

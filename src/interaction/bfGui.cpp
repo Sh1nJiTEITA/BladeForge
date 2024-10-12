@@ -27,6 +27,7 @@ void BfGui::pollEvents()
       __queue_after_render.front()();
       __queue_after_render.pop();
    }
+   __lua_interaction.pollEvents();
 }
 
 BfEvent BfGui::bindBase(BfBase *base)
@@ -604,16 +605,7 @@ void BfGui::presentSettings()
    }
 }
 
-void BfGui::presentLuaInteraction()
-{
-   if (__is_lua_iteraction)
-   {
-      if (ImGui::Begin("Lua Interaction", &__is_lua_iteraction))
-      {
-      }
-      ImGui::End();
-   }
-}
+void BfGui::presentLuaInteraction() { __lua_interaction.draw(); }
 
 void BfGui::presentFileDialog() { __file_dialog.draw(); }
 

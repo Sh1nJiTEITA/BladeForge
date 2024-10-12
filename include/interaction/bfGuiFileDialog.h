@@ -109,6 +109,8 @@ public:
    void goBack();
    void goForward();
 
+   bool isActive();
+
    static std::time_t getLastWriteFileTime_time_t(const fs::path&);
    static std::string getLastWriteFileTime_string(const fs::path&);
    static std::string getLastWriteFileTime_string(std::time_t);

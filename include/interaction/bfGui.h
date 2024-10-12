@@ -7,6 +7,7 @@
 #include <queue>
 #include <string>
 
+#include "BfGuiLuaInteraction.h"
 #include "bfBase.h"
 #include "bfBladeSection.h"
 #include "bfConfigManager.h"
@@ -24,7 +25,8 @@ class BfGui
    BfBase*   __ptr_base   = nullptr;
    BfHolder* __ptr_holder = nullptr;
 
-   BfGuiFileDialog __file_dialog;
+   BfGuiFileDialog     __file_dialog;
+   BfGuiLuaInteraction __lua_interaction;
 
    ImFont* __default_font         = nullptr;
    ImFont* __icon_font            = nullptr;
@@ -34,7 +36,6 @@ class BfGui
    bool __is_camera_info          = true;
    bool __is_settings             = false;
    bool __is_ortho_settings       = false;
-   bool __is_lua_iteraction       = true;
    bool __is_file_dialog          = true;
 
    bool __is_left_dock_space_name = false;
