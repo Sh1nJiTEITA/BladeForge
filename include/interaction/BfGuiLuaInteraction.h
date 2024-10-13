@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <list>
+#include <memory>
 
 #include "bfConfigManager.h"
 #include "bfEvent.h"
@@ -17,6 +18,9 @@ struct BfGuiLuaScript
 {
    fs::path    path;
    std::string text;
+   sol::table  table;
+   //
+   std::shared_ptr<BfLuaTable> read_table;
 };
 
 class BfGuiLuaInteraction
@@ -33,6 +37,9 @@ class BfGuiLuaInteraction
    void __renderImportScriptPannel();
    void __renderList();
    void __renderFileText();
+   void __renderLuaTable(std::shared_ptr<BfLuaTable>);
+
+   void __runSelectedScript();
 
 public:
    void draw();

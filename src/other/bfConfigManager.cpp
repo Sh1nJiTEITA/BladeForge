@@ -5,10 +5,49 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "bfEvent.h"
 
 std::shared_ptr<BfConfigManager> BfConfigManager::__instance = nullptr;
+//
+// BfLuaValue& BfLuaTable::operator[](BfLuaValue t) { return v[t]; }
+//
+// std::string BfLuaTable::get(BfLuaValue key_str)
+// {
+//    return BfLuaTable::convert(v[key_str]);
+// }
+
+std::string BfLuaTable::convert(const BfLuaValue& v)
+{
+   std::string o;
+   std::visit(
+       [&o](auto&& arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, std::string>)
+          {
+             o = arg;
+          }
+          else if constexpr (std::is_same_v<T, int>)
+          {
+             o = std::to_string(arg);
+          }
+          else if constexpr (std::is_same_v<T, float>)
+          {
+             o = std::to_string(arg);
+          }
+          else if constexpr (std::is_same_v<T, double>)
+          {
+             o = std::to_string(arg);
+          }
+          else if constexpr (std::is_same_v<T, bool>)
+          {
+             o = std::to_string(arg);
+          }
+       },
+       v);
+   return o;
+}
 
 void BfConfigManager::__findFilesInDir(std::filesystem::path               root,
                                        std::string                         ext,
@@ -293,6 +332,56 @@ sol::object BfConfigManager::getLuaObj(const std::string& key)
 {
    return BfConfigManager::getInstance()->__lua[key];
 }
+
+BfLuaTable BfConfigManager::convertLuaTable(sol::table* obj)
+{
+   BfLuaTable table;
+   for (const auto& pair : *obj)
+   {
+      sol::object key   = pair.first;
+      sol::object value = pair.second;
+      std::string key_str;
+
+      if (key.is<std::string>())
+      {
+         key_str = key.as<std::string>();
+      }
+      else if (key.is<int>())  // для массивов
+      {
+         key_str = std::to_string(key.as<int>());
+      }
+
+      if (value.is<sol::table>())
+      {
+         sol::table t   = value;
+         table[key_str] = std::make_shared<BfLuaTable>(convertLuaTable(&t));
+      }
+      else
+      {
+         if (value.is<std::string>())
+         {
+            table[key_str] = value.as<std::string>();
+         }
+         else if (value.is<int>())
+         {
+            table[key_str] = std::to_string(value.as<int>());
+         }
+         else if (value.is<float>())
+         {
+            table[key_str] = std::to_string(value.as<float>());
+         }
+         else if (value.is<double>())
+         {
+            table[key_str] = std::to_string(value.as<double>());
+         }
+         else if (value.is<bool>())
+         {
+            table[key_str] = value.as<bool>() ? "true" : "false";
+         }
+      }
+   }
+   return table;
+};
 
 BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
 {

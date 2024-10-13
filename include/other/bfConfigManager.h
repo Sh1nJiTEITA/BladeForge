@@ -8,6 +8,30 @@
 #include <memory>
 #include <sol/sol.hpp>
 
+// class BfLuaTable
+// {
+// public:
+//    using _type = std::map<BfLuaValue, BfLuaValue>;
+//
+//    _type v;
+//
+//    BfLuaValue& operator[](BfLuaValue);
+//    std::string get(BfLuaValue);
+//    //
+//    static std::string convert(const BfLuaValue&);
+// };
+
+class BfLuaTable;
+
+using BfLuaValue =
+    std::variant<int, double, std::string, bool, std::shared_ptr<BfLuaTable>>;
+
+class BfLuaTable : public std::map<BfLuaValue, BfLuaValue>
+{
+public:
+   static std::string convert(const BfLuaValue&);
+};
+
 class BfConfigManager
 {
    using BFCM = BfConfigManager;
@@ -42,6 +66,8 @@ public:
    static std::string getLuaTableStr(sol::table table, int indent_level = 0);
 
    static sol::object getLuaObj(const std::string& key);
+
+   static BfLuaTable convertLuaTable(sol::table* obj);
 
    static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
    static BfEvent fillFormFontSettings(sol::table          obs,
