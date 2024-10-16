@@ -1,7 +1,6 @@
 #ifndef BF_DRAW_OBJECT_DEFINE_TYPE_H
 #define BF_DRAW_OBJECT_DEFINE_TYPE_H
 
-#include <map>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -47,6 +46,7 @@ static std::string bfGetStrNameDrawObjType(uint32_t type)
       default:
          throw std::runtime_error("Invalid BfDrawObject type");
    }
+
 }
 
 #endif  // !BF_DRAW_OBJECT_DEFINE_TYPE_H

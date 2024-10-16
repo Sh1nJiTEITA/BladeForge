@@ -4,10 +4,74 @@
 #include <filesystem>
 #include <iterator>
 #include <memory>
+#include <tuple>
+#include <type_traits>
 
 #include "bfConfigManager.h"
+#include "bfCurves3.h"
+#include "bfDrawObjectDefineType.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+
+BfGuiLuaDragDropElement::BfGuiLuaDragDropElement(BfObj obj)
+    : __obj{obj}
+{
+}
+
+std::string BfGuiLuaDragDropElement::type()
+{
+   std::string type_str = "INVALID";
+   std::visit(
+       [&](auto&& arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, std::shared_ptr<BfDrawObj>>)
+          {
+             type_str = bfGetStrNameDrawObjType(arg->id.get_type());
+          }
+          else if constexpr (std::is_same_v<T, std::shared_ptr<BfDrawLayer>>)
+          {
+             type_str = bfGetStrNameDrawObjType(arg->id.get_type());
+          }
+          /*return arg->id.get_type();*/
+       },
+       __obj);
+   return type_str;
+}
+
+std::string BfGuiLuaDragDropElement::id()
+{
+   std::string id_str = "INVALID";
+   std::visit(
+       [&](auto&& arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, std::shared_ptr<BfDrawObj>>)
+          {
+             id_str = std::to_string(arg->id.get());
+          }
+          else if constexpr (std::is_same_v<T, std::shared_ptr<BfDrawLayer>>)
+          {
+             id_str = std::to_string(arg->id.get());
+          }
+          /*return arg->id.get_type();*/
+       },
+       __obj);
+   return id_str;
+}
+
+void BfGuiLuaDragDropElement::draw()
+{
+   std::string string_id =
+       std::format("##{}{}BfGuiLuaDragDropSingleElement", type(), id());
+   ImGui::BeginChild(string_id.c_str(), {}, __is_border);
+   {
+      ImGui::Text("Name: %s", __name.c_str());
+      ImGui::Text("Type: %s", type().c_str());
+   }
+   ImGui::EndChild();
+}
+
+ImVec2& BfGuiLuaDragDropElement::pos() noexcept { return __pos; }
+bool& BfGuiLuaDragDropElement::isDragging() noexcept { return __is_dragging; }
 
 void BfGuiLuaInteraction::__render()
 {
@@ -97,6 +161,7 @@ void BfGuiLuaInteraction::__render()
             }
             ImGui::EndChild();
          }
+         __renderDrop();
       }
       if (!is_button_resize_hovered)
       {
@@ -178,6 +243,99 @@ void BfGuiLuaInteraction::__renderLuaTable(std::shared_ptr<BfLuaTable> script)
          }
       }
    }
+}
+
+void BfGuiLuaInteraction::__renderDrop()
+{
+   BfGuiLuaDragDropEvent_ mode = BfGuiLuaDragDropEvent_Swap;
+   //
+   static const char* names[6] = {
+       "Section 1",
+       "Section 2",
+       "Section 3",
+       "Section 4",
+       "Section 5",
+       "Section 6",
+   };
+   ImGui::BeginChild("##BfGUiLuaDragDropList", {}, true);
+   ImGui::Text("Base");
+   for (int n = 0; n < IM_ARRAYSIZE(names); n++)
+   {
+      ImGui::PushID(n);
+      /*if ((n % 3) != 0) ImGui::SameLine();*/
+      ImGui::Button(names[n], ImVec2(80, 20));
+      // Our buttons are both drag sources and drag targets here!
+      if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+      {
+         // Set payload to carry the index of our item (could be anything)
+         ImGui::SetDragDropPayload("DND_DEMO_CELL", &n, sizeof(int));
+
+         // Display preview (could be anything, e.g. when dragging an image we
+         // could decide to display the filename and a small preview of the
+         // image, etc.)
+         if (mode == BfGuiLuaDragDropEvent_Copy)
+         {
+            ImGui::Text("Copy %s", names[n]);
+         }
+         if (mode == BfGuiLuaDragDropEvent_Move)
+         {
+            ImGui::Text("Move %s", names[n]);
+         }
+         if (mode == BfGuiLuaDragDropEvent_Swap)
+         {
+            ImGui::Text("Swap %s", names[n]);
+         }
+         ImGui::EndDragDropSource();
+      }
+      if (ImGui::BeginDragDropTarget())
+      {
+         if (const ImGuiPayload* payload =
+                 ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
+         {
+            IM_ASSERT(payload->DataSize == sizeof(int));
+            int payload_n = *(const int*)payload->Data;
+            if (mode == BfGuiLuaDragDropEvent_Copy)
+            {
+               names[n] = names[payload_n];
+            }
+            if (mode == BfGuiLuaDragDropEvent_Move)
+            {
+               names[n]         = names[payload_n];
+               names[payload_n] = "";
+            }
+            if (mode == BfGuiLuaDragDropEvent_Swap)
+            {
+               const char* tmp  = names[n];
+               names[n]         = names[payload_n];
+               names[payload_n] = tmp;
+            }
+         }
+         ImGui::EndDragDropTarget();
+      }
+      ImGui::PopID();
+   }
+   ImGui::EndChild();
+
+   static bool                                 is_start = true;
+   static std::vector<BfGuiLuaDragDropElement> elems;
+   if (is_start)
+   {
+      BfVertex3 f({0.0f, 0.0f, 0.0f});
+      BfVertex3 s({1.0f, 1.0f, 0.0f});
+      auto      line = std::make_shared<BfSingleLine>(f, s);
+      elems.push_back({line});
+
+      is_start = false;
+   }
+
+   ImGui::BeginChild("3u123813dsa", {}, true);
+   {
+      for (auto& elem : elems)
+      {
+         elem.draw();
+      }
+   }
+   ImGui::EndChild();
 }
 
 void BfGuiLuaInteraction::__runSelectedScript()
