@@ -204,8 +204,9 @@ void BfMain::__loop()
       __gui.presentEventLog();
       __gui.presentToolType();
       __gui.presentSettings();
-      __gui.presentLuaInteraction();
+      // __gui.presentLuaInteraction();
       __gui.presentFileDialog();
+      __gui.presentCreateWindow();
 
       ImGui::ShowDemoWindow();
 

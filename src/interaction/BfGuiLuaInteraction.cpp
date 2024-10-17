@@ -58,20 +58,51 @@ std::string BfGuiLuaDragDropElement::id()
    return id_str;
 }
 
-void BfGuiLuaDragDropElement::draw()
+void BfGuiLuaDragDropElement::draw(const ImVec2& out_window_pos,
+                                   const ImVec2& out_window_size)
 {
    std::string string_id =
        std::format("##{}{}BfGuiLuaDragDropSingleElement", type(), id());
-   ImGui::BeginChild(string_id.c_str(), {}, __is_border);
+
+   ImGui::SetNextWindowPos(__pos);
+   ImGui::Begin(string_id.c_str(),
+                nullptr,
+                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
    {
+      ImVec2 element_size = ImGui::GetWindowSize();
+      if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0))
+      {
+         __is_dragging = true;
+      }
+      if (ImGui::IsMouseReleased(0))
+      {
+         __is_dragging = false;
+      }
+      if (__is_dragging)
+      {
+         ImVec2 mouse_delta = ImGui::GetIO().MouseDelta;
+         __pos.x += mouse_delta.x;
+         __pos.y += mouse_delta.y;
+         __pos.x =
+             std::clamp(__pos.x,
+                        out_window_pos.x,
+                        out_window_pos.x + out_window_size.x - element_size.x);
+         __pos.y =
+             std::clamp(__pos.y,
+                        out_window_pos.y,
+                        out_window_pos.y + out_window_size.y - element_size.y);
+      }
+
       ImGui::Text("Name: %s", __name.c_str());
       ImGui::Text("Type: %s", type().c_str());
    }
-   ImGui::EndChild();
+   ImGui::End();
+
+   // ImGui::EndChild();
 }
 
 ImVec2& BfGuiLuaDragDropElement::pos() noexcept { return __pos; }
-bool& BfGuiLuaDragDropElement::isDragging() noexcept { return __is_dragging; }
+bool&   BfGuiLuaDragDropElement::isDragging() noexcept { return __is_dragging; }
 
 void BfGuiLuaInteraction::__render()
 {
@@ -92,7 +123,7 @@ void BfGuiLuaInteraction::__render()
          ImVec2 window_size = ImGui::GetWindowSize();
          float  button_w    = 10.0f;
          float  button_h    = ImGui::GetContentRegionAvail().y;
-
+         //
          __renderImportScriptPannel();
          {
             ImGui::BeginChild("##BfGuiLuaInteractionListChild",
@@ -107,7 +138,6 @@ void BfGuiLuaInteraction::__render()
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 7.0f);
             ImGui::InvisibleButton("##BfGuiLuaInteractionListAndTextResize1",
                                    {button_w, -1.0f});
-
             if (ImGui::IsItemHovered())
             {
                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
@@ -120,10 +150,10 @@ void BfGuiLuaInteraction::__render()
                c_1_w.x =
                    std::ranges::clamp(c_1_w.x, 50.0f, window_size.x - button_w);
             }
-         }
-         ImGui::SameLine();
-         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 7.0f);
-         {
+
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 7.0f);
+
             ImGui::BeginChild("##BfGuiLuaInteractionTextChild",
                               {-button_w * 2 + c_2_w.x, 0.0f},
                               false);
@@ -149,10 +179,8 @@ void BfGuiLuaInteraction::__render()
                c_2_w.x =
                    std::ranges::clamp(c_2_w.x, 50.0f, window_size.x - button_w);
             }
-         }
-         ImGui::SameLine();
-         ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 7.0f);
-         {
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 7.0f);
             ImGui::BeginChild("##BfGuiLuaInteractionTableChild", {}, false);
             {
                ImGui::SeparatorText("Table preview");
@@ -167,7 +195,6 @@ void BfGuiLuaInteraction::__render()
       {
          ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
       }
-
       ImGui::End();
    }
 }
@@ -247,95 +274,124 @@ void BfGuiLuaInteraction::__renderLuaTable(std::shared_ptr<BfLuaTable> script)
 
 void BfGuiLuaInteraction::__renderDrop()
 {
-   BfGuiLuaDragDropEvent_ mode = BfGuiLuaDragDropEvent_Swap;
+   // BfGuiLuaDragDropEvent_ mode = BfGuiLuaDragDropEvent_Swap;
+   // //
+   // static const char* names[6] = {
+   //     "Section 1",
+   //     "Section 2",
+   //     "Section 3",
+   //     "Section 4",
+   //     "Section 5",
+   //     "Section 6",
+   // };
+   // ImGui::BeginChild("##BfGUiLuaDragDropList", {}, true);
+   // ImGui::Text("Base");
+   // for (int n = 0; n < IM_ARRAYSIZE(names); n++)
+   // {
+   //    ImGui::PushID(n);
+   //    /*if ((n % 3) != 0) ImGui::SameLine();*/
+   //    ImGui::Button(names[n], ImVec2(80, 20));
+   //    // Our buttons are both drag sources and drag targets here!
+   //    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+   //    {
+   //       // Set payload to carry the index of our item (could be anything)
+   //       ImGui::SetDragDropPayload("DND_DEMO_CELL", &n, sizeof(int));
    //
-   static const char* names[6] = {
-       "Section 1",
-       "Section 2",
-       "Section 3",
-       "Section 4",
-       "Section 5",
-       "Section 6",
-   };
-   ImGui::BeginChild("##BfGUiLuaDragDropList", {}, true);
-   ImGui::Text("Base");
-   for (int n = 0; n < IM_ARRAYSIZE(names); n++)
-   {
-      ImGui::PushID(n);
-      /*if ((n % 3) != 0) ImGui::SameLine();*/
-      ImGui::Button(names[n], ImVec2(80, 20));
-      // Our buttons are both drag sources and drag targets here!
-      if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-      {
-         // Set payload to carry the index of our item (could be anything)
-         ImGui::SetDragDropPayload("DND_DEMO_CELL", &n, sizeof(int));
+   //       // Display preview (could be anything, e.g. when dragging an
+   //       image we
+   //       // could decide to display the filename and a small preview of
+   //       the
+   //       // image, etc.)
+   //       if (mode == BfGuiLuaDragDropEvent_Copy)
+   //       {
+   //          ImGui::Text("Copy %s", names[n]);
+   //       }
+   //       if (mode == BfGuiLuaDragDropEvent_Move)
+   //       {
+   //          ImGui::Text("Move %s", names[n]);
+   //       }
+   //       if (mode == BfGuiLuaDragDropEvent_Swap)
+   //       {
+   //          ImGui::Text("Swap %s", names[n]);
+   //       }
+   //       ImGui::EndDragDropSource();
+   //    }
+   //    if (ImGui::BeginDragDropTarget())
+   //    {
+   //       if (const ImGuiPayload* payload =
+   //               ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
+   //       {
+   //          IM_ASSERT(payload->DataSize == sizeof(int));
+   //          int payload_n = *(const int*)payload->Data;
+   //          if (mode == BfGuiLuaDragDropEvent_Copy)
+   //          {
+   //             names[n] = names[payload_n];
+   //          }
+   //          if (mode == BfGuiLuaDragDropEvent_Move)
+   //          {
+   //             names[n]         = names[payload_n];
+   //             names[payload_n] = "";
+   //          }
+   //          if (mode == BfGuiLuaDragDropEvent_Swap)
+   //          {
+   //             const char* tmp  = names[n];
+   //             names[n]         = names[payload_n];
+   //             names[payload_n] = tmp;
+   //          }
+   //       }
+   //       ImGui::EndDragDropTarget();
+   //    }
+   //    ImGui::PopID();
+   // }
+   // ImGui::EndChild();
+   //
+   // static bool                                 is_start = true;
+   // static std::vector<BfGuiLuaDragDropElement> elems;
+   // if (is_start)
+   // {
+   //    BfVertex3 f({0.0f, 0.0f, 0.0f});
+   //    BfVertex3 s({1.0f, 1.0f, 0.0f});
+   //    auto      line = std::make_shared<BfSingleLine>(f, s);
+   //    elems.push_back({line});
+   //
+   //    is_start = false;
+   // }
+   //
+   // static ImVec2 oldwsize = ImGui::GetWindowSize();
+   // static ImVec2 oldwpos  = ImGui::GetWindowPos();
+   // //
+   // ImVec2 wsize = ImGui::GetWindowSize();
+   // ImVec2 wpos  = ImGui::GetWindowPos();
 
-         // Display preview (could be anything, e.g. when dragging an image we
-         // could decide to display the filename and a small preview of the
-         // image, etc.)
-         if (mode == BfGuiLuaDragDropEvent_Copy)
-         {
-            ImGui::Text("Copy %s", names[n]);
-         }
-         if (mode == BfGuiLuaDragDropEvent_Move)
-         {
-            ImGui::Text("Move %s", names[n]);
-         }
-         if (mode == BfGuiLuaDragDropEvent_Swap)
-         {
-            ImGui::Text("Swap %s", names[n]);
-         }
-         ImGui::EndDragDropSource();
-      }
-      if (ImGui::BeginDragDropTarget())
-      {
-         if (const ImGuiPayload* payload =
-                 ImGui::AcceptDragDropPayload("DND_DEMO_CELL"))
-         {
-            IM_ASSERT(payload->DataSize == sizeof(int));
-            int payload_n = *(const int*)payload->Data;
-            if (mode == BfGuiLuaDragDropEvent_Copy)
-            {
-               names[n] = names[payload_n];
-            }
-            if (mode == BfGuiLuaDragDropEvent_Move)
-            {
-               names[n]         = names[payload_n];
-               names[payload_n] = "";
-            }
-            if (mode == BfGuiLuaDragDropEvent_Swap)
-            {
-               const char* tmp  = names[n];
-               names[n]         = names[payload_n];
-               names[payload_n] = tmp;
-            }
-         }
-         ImGui::EndDragDropTarget();
-      }
-      ImGui::PopID();
-   }
-   ImGui::EndChild();
-
-   static bool                                 is_start = true;
-   static std::vector<BfGuiLuaDragDropElement> elems;
-   if (is_start)
-   {
-      BfVertex3 f({0.0f, 0.0f, 0.0f});
-      BfVertex3 s({1.0f, 1.0f, 0.0f});
-      auto      line = std::make_shared<BfSingleLine>(f, s);
-      elems.push_back({line});
-
-      is_start = false;
-   }
-
-   ImGui::BeginChild("3u123813dsa", {}, true);
-   {
-      for (auto& elem : elems)
-      {
-         elem.draw();
-      }
-   }
-   ImGui::EndChild();
+   // ImGui::BeginChild("3u123813dsa", {}, true);
+   // {
+   //    for (auto& elem : elems)
+   //    {
+   //       std::string string_id =
+   //           std::format("##{}{}BfGuiLuaDragDropSingleElement",
+   //                       elem.type(),
+   //                       elem.id());
+   //
+   //       if ((oldwsize.x != wsize.x && oldwsize.y != wsize.y) ||
+   //           (oldwpos.x != wpos.x && oldwpos.y != wpos.y))
+   //       {
+   //          // ImVec2 new_pos = {
+   //          // elem.pos().x + (oldwpos.x - wpos.x) + (oldwsize.x -
+   //          wsize.x),
+   //          // elem.pos().y + (oldwpos.y - wpos.y) + (oldwsize.y -
+   //          wsize.y)};
+   //
+   //          // ImGui::SetNextWindowPos(new_pos);
+   //          // ImGui::SetNextWindowSize(wsize);
+   //
+   //          // oldwsize = wsize;
+   //          // oldwpos  = wpos;
+   //       }
+   //
+   //       elem.draw(wpos, wsize);
+   //    }
+   // }
+   // ImGui::EndChild();
 }
 
 void BfGuiLuaInteraction::__runSelectedScript()

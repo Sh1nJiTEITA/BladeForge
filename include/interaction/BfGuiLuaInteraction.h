@@ -36,9 +36,9 @@ public:
    BfGuiLuaDragDropElement(BfObj __obj);
    std::string type();
    std::string id();
-   void        draw();
-   ImVec2&     pos() noexcept;
-   bool&       isDragging() noexcept;
+   void    draw(const ImVec2& out_window_pos, const ImVec2& out_window_size);
+   ImVec2& pos() noexcept;
+   bool&   isDragging() noexcept;
 };
 
 struct BfGuiLuaScript

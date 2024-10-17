@@ -234,7 +234,9 @@ set(BF_INTERACTION
     "include/interaction/bfGuiFileDialog.h"
     "src/interaction/bfGuiFileDialog.cpp"
     "include/interaction/BfGuiLuaInteraction.h"
-    "src/interaction/BfGuiLuaInteraction.cpp")
+    "src/interaction/BfGuiLuaInteraction.cpp"
+    "include/interaction/BfGuiCreateWindow.h"
+    "src/interaction/BfGuiCreateWindow.cpp")
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"

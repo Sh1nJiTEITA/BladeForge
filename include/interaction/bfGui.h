@@ -7,6 +7,7 @@
 #include <queue>
 #include <string>
 
+#include "BfGuiCreateWindow.h"
 #include "BfGuiLuaInteraction.h"
 #include "bfBase.h"
 #include "bfBladeSection.h"
@@ -27,6 +28,7 @@ class BfGui
 
    BfGuiFileDialog     __file_dialog;
    BfGuiLuaInteraction __lua_interaction;
+   BfGuiCreateWindow   __create_window;
 
    ImFont* __default_font         = nullptr;
    ImFont* __icon_font            = nullptr;
@@ -75,6 +77,7 @@ public:
    void presentSettings();
    void presentLuaInteraction();
    void presentFileDialog();
+   void presentCreateWindow();
 
    void __presentOrthoSettings();
 };

@@ -631,6 +631,8 @@ void BfGui::__presentOrthoSettings()
    }
 };
 
+void BfGui::presentCreateWindow() { __create_window.render(); }
+
 void BfGui::presentEventLog()
 {
    if (__is_event_log)
