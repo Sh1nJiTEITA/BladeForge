@@ -257,6 +257,13 @@ void BfGuiCreateWindowContainer::render()
       __is_resizing_hovered_v = false;
 
       __clampPosition();
+
+      if (__is_first_render)
+      {
+         __is_first_render = false;
+         ImGui::SetNextWindowSize(__window_size);
+      }
+
       if (ImGui::Begin(__str_id.c_str(),
                        &__is_render,
                        ImGuiWindowFlags_NoTitleBar      //
@@ -267,6 +274,7 @@ void BfGuiCreateWindowContainer::render()
                            ImGuiWindowFlags_NoScrollbar))
       {
          __pushStyle();
+
          {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() +
                                  __resize_button_size.x +

@@ -19,9 +19,10 @@ class BfGuiCreateWindowContainer
 
    std::string __str_child_border_id;
 
-   ImVec2 __resize_button_size     = {5.0f, 5.0f};
-   ImVec2 __bot_resize_button_size = {5.0f, 5.0f};
+   ImVec2 __resize_button_size     = {10.0f, 10.0f};
+   ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
 
+   bool __is_first_render          = true;
    bool __is_render                = true;
    bool __is_dragging              = false;
    bool __is_resizing              = false;
@@ -30,7 +31,7 @@ class BfGuiCreateWindowContainer
 
    ImVec2 __window_pos;
    ImVec2 __old_outter_pos;
-   ImVec2 __window_size = {200, 400};
+   ImVec2 __window_size = {300, 300};
 
    void         __pushStyle();
    void         __popStyle();
