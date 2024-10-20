@@ -97,8 +97,6 @@ void BfGuiLuaDragDropElement::draw(const ImVec2& out_window_pos,
       ImGui::Text("Type: %s", type().c_str());
    }
    ImGui::End();
-
-   // ImGui::EndChild();
 }
 
 ImVec2& BfGuiLuaDragDropElement::pos() noexcept { return __pos; }

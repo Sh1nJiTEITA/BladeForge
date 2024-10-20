@@ -12,14 +12,39 @@
 class BfGuiCreateWindowContainer
 {
    std::string __str_id;
-   bool        __is_render = true;
-   ImVec2      __window_pos;
-   ImVec2      __old_outter_pos;
-   ImVec2      __window_size = {100, 200};
+   std::string __str_left_resize_button_id;
+   std::string __str_right_resize_button_id;
+   std::string __str_bot_resize_button_id;
+   std::string __str_top_resize_button_id;
 
+   std::string __str_child_border_id;
+
+   ImVec2 __resize_button_size     = {5.0f, 5.0f};
+   ImVec2 __bot_resize_button_size = {5.0f, 5.0f};
+
+   bool __is_render                = true;
+   bool __is_dragging              = false;
+   bool __is_resizing              = false;
+   bool __is_resizing_hovered_h    = false;
+   bool __is_resizing_hovered_v    = false;
+
+   ImVec2 __window_pos;
+   ImVec2 __old_outter_pos;
+   ImVec2 __window_size = {200, 400};
+
+   void         __pushStyle();
+   void         __popStyle();
    void         __clampPosition();
    void         __updatePosition();
+   void         __updateResizeButtonSize();
+   void         __changeCursorStyle();
    ImGuiWindow* __findCurrentWindowPointer();
+
+   void __renderLeftResizeButton();
+   void __renderRightResizeButton();
+   void __renderBotResizeButton();
+   void __renderTopResizeButton();
+   void __renderChildBorder();
 
 public:
    BfGuiCreateWindowContainer();
