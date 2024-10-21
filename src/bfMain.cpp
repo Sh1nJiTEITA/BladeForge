@@ -208,7 +208,7 @@ void BfMain::__loop()
       __gui.presentFileDialog();
       __gui.presentCreateWindow();
 
-      ImGui::ShowDemoWindow();
+      // ImGui::ShowDemoWindow();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();
