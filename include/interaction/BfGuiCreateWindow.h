@@ -26,12 +26,12 @@ class BfGuiCreateWindowContainer
    ImVec2 __resize_button_size     = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
    //
-   bool __is_invisiable_buttons = true;
    //
-   bool        __is_first_render = true;
-   bool        __is_render       = true;
-   bool        __is_dragging     = false;
-   bool        __is_resizing     = false;
+   bool        __is_invisiable_buttons = true;
+   bool        __is_first_render       = true;
+   bool        __is_render             = true;
+   bool        __is_dragging           = false;
+   bool        __is_resizing           = false;
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
 
@@ -40,11 +40,8 @@ class BfGuiCreateWindowContainer
    void __pushStyle();
    void __popStyle();
    void __clampPosition();
-   void __updatePosition();
-   void __updateResizeButtonSize();
-   //
-   ImGuiWindow* __findCurrentWindowPointer();
 
+   //
    void __renderLeftResizeButton();
    void __renderRightResizeButton();
    void __renderBotResizeButton();
@@ -60,11 +57,17 @@ protected:
    ImVec2        __window_pos;
    ImVec2        __window_size = {150, 150};
    wptrContainer __root_container;
-   // std::string   __str_root_name;
+
+   bool __is_collapsed = false;
    //
    std::list<ptrContainer> __containers;
 
+   virtual void __renderHeader();
    virtual void __renderClildContent();
+   virtual void __prerender();
+
+   void __updatePosition();
+   void __updateResizeButtonSize();
 
 public:
    BfGuiCreateWindowContainer(wptrContainer root);
@@ -75,7 +78,8 @@ public:
    ImVec2&        size() noexcept;
    wptrContainer& root() noexcept;
 
-   bool isEmpty();
+   bool isEmpty() noexcept;
+   bool isCollapsed() noexcept;
    //
    static void resetResizeHover();
    static void changeCursorStyle();
@@ -103,15 +107,23 @@ class BfGuiCreateWindowContainerObj
 {
    static bool __is_moving_container;
    bool        __is_current_moving;
+   ImVec2      __old_size;
 
 protected:
+   virtual void __pushButtonColorStyle();
+   virtual void __popButtonColorStyle();
    virtual void __renderClildContent() override;
+   virtual void __prerender() override;
+   virtual void __renderHeader() override;
+
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
 
 public:
    BfGuiCreateWindowContainerObj(
        BfGuiCreateWindowContainer::wptrContainer root);
+
+   static bool isAnyMoving() noexcept;
 };
 
 //
@@ -126,11 +138,12 @@ class BfGuiCreateWindow
    //
    bool __is_render = true;
 
-   std::list<std::shared_ptr<BfGuiCreateWindowContainer>> __containers;
+   std::list<BfGuiCreateWindowContainer::ptrContainer> __containers;
 
    void __renderManagePanel();
    void __renderContainers();
 
+   void __renderDragDropZone();
    void __addBlankContainer();
 
 public:
