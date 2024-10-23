@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <queue>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 
@@ -23,8 +24,18 @@ void BfGuiCreateWindowContainer::__popStyle() { ImGui::PopStyleVar(2); }
 
 void BfGuiCreateWindowContainer::__clampPosition()
 {
-   ImVec2 outter_pos  = ImGui::FindWindowByName(__str_root_name.c_str())->Pos;
-   ImVec2 outter_size = ImGui::FindWindowByName(__str_root_name.c_str())->Size;
+   ImVec2 outter_pos;
+   ImVec2 outter_size;
+   if (auto shared_root = __root_container.lock())
+   {
+      outter_pos  = ImGui::FindWindowByName(shared_root->name())->Pos;
+      outter_size = ImGui::FindWindowByName(shared_root->name())->Size;
+   }
+   else
+   {
+      outter_pos  = ImGui::FindWindowByName("Create")->Pos;
+      outter_size = ImGui::FindWindowByName("Create")->Size;
+   }
 
    ImVec2 delta_pos{outter_pos.x - __old_outter_pos.x,
                     outter_pos.y - __old_outter_pos.y};
@@ -242,9 +253,8 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
 
 void BfGuiCreateWindowContainer::__renderClildContent() {}
 
-BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(std::string   root_name,
-                                                       wptrContainer root)
-    : __str_root_name{root_name}, __root_container{root}
+BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(wptrContainer root)
+    : __root_container{root}
 {
    static uint32_t growing_id = 0;
    //
@@ -275,12 +285,25 @@ bool BfGuiCreateWindowContainer::render()
       {
          __is_first_render = false;
          ImGui::SetNextWindowSize(__window_size);
-         ImGuiWindow* root = ImGui::FindWindowByName(__str_root_name.c_str());
-         ImVec2       pos  = root->Pos;
-         pos.x += root->Size.x * 0.5f;
-         pos.y += root->Size.y * 0.5f;
-         ImGui::SetNextWindowPos(pos);
-         __window_pos = pos;
+
+         ImVec2 root_size;
+         ImVec2 root_pos;
+         if (auto shared_root = __root_container.lock())
+         {
+            root_size = shared_root->size();
+            root_pos  = shared_root->pos();
+         }
+         else
+         {
+            ImGuiWindow* root = ImGui::FindWindowByName("Create");
+            root_size         = root->Size;
+            root_pos          = root->Pos;
+         }
+
+         root_pos.x += root_size.x * 0.5f;
+         root_pos.y += root_size.y * 0.5f;
+         ImGui::SetNextWindowPos(root_pos);
+         __window_pos = root_pos;
       }
 
       if (ImGui::Begin(
@@ -331,7 +354,7 @@ const char* BfGuiCreateWindowContainer::name() noexcept
 ImVec2& BfGuiCreateWindowContainer::pos() noexcept { return __window_pos; }
 ImVec2& BfGuiCreateWindowContainer::size() noexcept { return __window_size; }
 
-BfGuiCreateWindowContainer::wptrContainer
+BfGuiCreateWindowContainer::wptrContainer&
 BfGuiCreateWindowContainer::root() noexcept
 {
    return __root_container;
@@ -408,10 +431,7 @@ void BfGuiCreateWindowContainerObj::__renderClildContent()
    if (ImGui::Button("Add container"))
    {
       auto new_container = std::make_shared<BfGuiCreateWindowContainerObj>(
-          __str_id,
-          shared_from_this()->weak_from_this()
-
-      );
+          shared_from_this()->weak_from_this());
       new_container->__window_size.x -= 20.0f;
       new_container->__window_size.y -= 20.0f;
       __containers.push_back(std::move(new_container));
@@ -491,89 +511,39 @@ void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
             Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
             перемещено)
          */
-         auto wptr_old_root = (*__containers.rbegin())->__root_container;
+         auto wptr_old_root = (*__containers.rbegin())->root();
 
          /*
             Получаем указатель на внешнее окошко которое хранило то, что
             было перемещено
          */
+
+         std::string dropped_name = (*__containers.rbegin())->name();
          if (auto shared_obj = wptr_old_root.lock())
          {
             // Удаляем из прошлого root-окна контейнер, который
             // был перемещен, чтобы он не дублировался
-            std::string dropped_name = (*__containers.rbegin())->name();
             shared_obj->clearEmptyContainersByName(dropped_name);
          }
          else
          {
-            // ERROR ?
+            BfGuiCreateWindow::instance()->removeByName(dropped_name);
          }
 
          /*
             Меняем перемещенному окну 'root'-указатель и 'root'-имя
          */
-         (*__containers.rbegin())->__str_root_name = this->name();
-         (*__containers.rbegin())->__root_container =
+         // (*__containers.rbegin())->__str_root_name = this->name();
+         (*__containers.rbegin())->root() =
              shared_from_this()->weak_from_this();
       }
       ImGui::EndDragDropTarget();
    }
 }
 
-// void BfGuiCreateWindowContainerObj::__renderChildWindows()
-// {
-//    ImGuiWindow* current = ImGui::FindWindowByName(__str_id.c_str());
-//
-//    if (!__containers.empty())
-//    {
-//       if (__containers.size() >= 2)
-//       {
-//          // for (auto container : __containers)
-//
-//          auto next_container = __containers.begin()++;
-//
-//          for (auto container = __containers.begin();
-//               container != __containers.end();
-//               ++container)
-//          {
-//             // ImGui::SetNextWindowFocus();
-//             (*container)->render();
-//
-//             /*
-//              Рендерить уровнями!
-//             */
-//             ImGui::BringWindowToDisplayBehind(
-//                 current,
-//                 ImGui::FindWindowByName((*next_container)->name()));
-//
-//             ImGui::BringWindowToDisplayBehind(
-//                 ImGui::FindWindowByName((*container)->name()),
-//                 ImGui::FindWindowByName((*next_container)->name()));
-//             ImGui::BringWindowToDisplayFront(
-//                 ImGui::FindWindowByName((*container)->name()));
-//             next_container++;
-//          }
-//       }
-//       else
-//       {
-//          for (auto container = __containers.begin();
-//               container != __containers.end();
-//               ++container)
-//          {
-//             // ImGui::SetNextWindowFocus();
-//             (*container)->render();
-//
-//             ImGui::BringWindowToDisplayBehind(
-//                 current,
-//                 ImGui::FindWindowByName((*(container))->name()));
-//          }
-//       }
-//    }
-// }
-
 BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
-    std::string root_name, BfGuiCreateWindowContainer::wptrContainer root)
-    : BfGuiCreateWindowContainer(root_name, root)
+    BfGuiCreateWindowContainer::wptrContainer root)
+    : BfGuiCreateWindowContainer(root)
 {
 }
 //
@@ -584,7 +554,21 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 //
 //
 
-BfGuiCreateWindow::BfGuiCreateWindow() {}
+BfGuiCreateWindow* BfGuiCreateWindow::__instance = nullptr;
+
+BfGuiCreateWindow::BfGuiCreateWindow()
+{
+   if (__instance)
+   {
+      throw std::runtime_error(
+          "Create window was already created, "
+          "could not be 2 at the same time");
+   }
+
+   __instance = this;
+}
+
+BfGuiCreateWindow* BfGuiCreateWindow::instance() noexcept { return __instance; }
 
 void BfGuiCreateWindow::__renderManagePanel()
 {
@@ -687,8 +671,13 @@ void BfGuiCreateWindow::__renderContainers()
 void BfGuiCreateWindow::__addBlankContainer()
 {
    __containers.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
-       "Create",
        std::weak_ptr<BfGuiCreateWindowContainer>()));
+}
+
+void BfGuiCreateWindow::removeByName(std::string name)
+{
+   std::erase_if(__containers,
+                 [&name](auto c) { return std::string(c->name()) == name; });
 }
 
 void BfGuiCreateWindow::render()

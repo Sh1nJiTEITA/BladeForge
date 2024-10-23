@@ -56,25 +56,24 @@ public:
    using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
 
 protected:
-   std::string __str_id;
+   std::string   __str_id;
+   ImVec2        __window_pos;
+   ImVec2        __window_size = {150, 150};
+   wptrContainer __root_container;
+   // std::string   __str_root_name;
    //
    std::list<ptrContainer> __containers;
 
    virtual void __renderClildContent();
 
 public:
-   ImVec2        __window_pos;
-   ImVec2        __window_size = {150, 150};
-   wptrContainer __root_container;
-   std::string   __str_root_name;
-
-   BfGuiCreateWindowContainer(std::string root_name, wptrContainer root);
+   BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
 
-   const char*   name() noexcept;
-   ImVec2&       pos() noexcept;
-   ImVec2&       size() noexcept;
-   wptrContainer root() noexcept;
+   const char*    name() noexcept;
+   ImVec2&        pos() noexcept;
+   ImVec2&        size() noexcept;
+   wptrContainer& root() noexcept;
 
    bool isEmpty();
    //
@@ -112,7 +111,7 @@ protected:
 
 public:
    BfGuiCreateWindowContainerObj(
-       std::string root_name, BfGuiCreateWindowContainer::wptrContainer root);
+       BfGuiCreateWindowContainer::wptrContainer root);
 };
 
 //
@@ -123,6 +122,8 @@ public:
 
 class BfGuiCreateWindow
 {
+   static BfGuiCreateWindow* __instance;
+   //
    bool __is_render = true;
 
    std::list<std::shared_ptr<BfGuiCreateWindowContainer>> __containers;
@@ -134,7 +135,9 @@ class BfGuiCreateWindow
 
 public:
    BfGuiCreateWindow();
+   static BfGuiCreateWindow* instance() noexcept;
 
+   void removeByName(std::string);
    void render();
 };
 
