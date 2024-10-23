@@ -5,7 +5,9 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <tuple>
 
+#include "bfIconsFontAwesome6.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -181,12 +183,11 @@ void BfGuiCreateWindowContainer::__renderBotResizeButton()
 
 void BfGuiCreateWindowContainer::__renderTopResizeButton()
 {
-   static bool is = false;
    if (__is_invisiable_buttons
            ? ImGui::InvisibleButton(__str_top_resize_button_id.c_str(),
                                     __bot_resize_button_size)
-           : ImGui::InvisibleButton(__str_top_resize_button_id.c_str(),
-                                    __bot_resize_button_size))
+           : ImGui::Button(__str_top_resize_button_id.c_str(),
+                           __bot_resize_button_size))
    {
    }
 
@@ -195,16 +196,11 @@ void BfGuiCreateWindowContainer::__renderTopResizeButton()
       __is_resizing_hovered_v = true;
    }
 
-   if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+   if (ImGui::IsItemHovered())
    {
-      is = true;
+      __is_resizing_hovered_v = true;
    }
-   if (ImGui::IsMouseReleased(0))
-   {
-      is = false;
-   }
-
-   if (is)
+   if (ImGui::IsItemActive())
    {
       __is_resizing = true;
       __window_pos.y += ImGui::GetIO().MouseDelta.y;
@@ -216,11 +212,6 @@ void BfGuiCreateWindowContainer::__renderTopResizeButton()
    {
       __is_resizing = false;
    }
-   // std::cout << __str_id << " " << "ACT:" << ImGui::IsItemActive()
-   //           << " DR: " << ImGui::IsMouseDragging(0)
-   //           << " RES: " << __is_resizing << " HOV: " <<
-   //           ImGui::IsItemHovered()
-   //           << "\n";
 }
 
 bool BfGuiCreateWindowContainer::__renderChildBorder()
@@ -230,13 +221,11 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
        __str_child_border_id.c_str(),
        {
            __window_size.x - ImGui::GetStyle().WindowPadding.x * 2.0f -
-               // __bot_resize_button_size.x * 2.0f -
                __resize_button_size.x * 2.0f -
                ImGui::GetStyle().ItemSpacing.x * 2.0f,
 
            __window_size.y - ImGui::GetStyle().WindowPadding.y * 2.0f -
                __bot_resize_button_size.y * 2.0f -
-               //__resize_button_size.y -
                ImGui::GetStyle().ItemSpacing.y * 2.0f,
        },
        true);
@@ -247,15 +236,15 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
       is_hovered = ImGui::IsWindowHovered();
    }
    ImGui::EndChild();
-   // __popStyle();
    __updateResizeButtonSize();
    return is_hovered;
 }
 
 void BfGuiCreateWindowContainer::__renderClildContent() {}
 
-BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(std::string root_name)
-    : __str_root_name{root_name}
+BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(std::string   root_name,
+                                                       wptrContainer root)
+    : __str_root_name{root_name}, __root_container{root}
 {
    static uint32_t growing_id = 0;
    //
@@ -280,9 +269,6 @@ bool BfGuiCreateWindowContainer::render()
    bool is_window_hovered = false;
    if (__is_render)
    {
-      // __is_resizing_hovered_h = false;
-      // __is_resizing_hovered_v = false;
-
       __clampPosition();
 
       if (__is_first_render)
@@ -332,22 +318,29 @@ bool BfGuiCreateWindowContainer::render()
             __renderBotResizeButton();
          }
          __popStyle();
-         // __changeCursorStyle();
       }
       ImGui::End();
    }
    return is_window_hovered;
 }
 
-const char* BfGuiCreateWindowContainer::name() { return __str_id.c_str(); }
+const char* BfGuiCreateWindowContainer::name() noexcept
+{
+   return __str_id.c_str();
+}
+ImVec2& BfGuiCreateWindowContainer::pos() noexcept { return __window_pos; }
+ImVec2& BfGuiCreateWindowContainer::size() noexcept { return __window_size; }
+
+BfGuiCreateWindowContainer::wptrContainer
+BfGuiCreateWindowContainer::root() noexcept
+{
+   return __root_container;
+}
 
 bool BfGuiCreateWindowContainer::isEmpty() { return __containers.empty(); }
 
 void BfGuiCreateWindowContainer::resetResizeHover()
 {
-   // std::cout << __is_resizing_hovered_h << " " << __is_resizing_hovered_v
-   // << "\n";
-
    __is_resizing_hovered_h = false;
    __is_resizing_hovered_v = false;
 
@@ -375,6 +368,10 @@ BfGuiCreateWindowContainer::rend()
 {
    return __containers.rend();
 }
+void BfGuiCreateWindowContainer::clearEmptyContainersByName(std::string name)
+{
+   __containers.remove_if([&name](auto c) { return c->name() == name; });
+}
 
 //
 //
@@ -383,17 +380,143 @@ BfGuiCreateWindowContainer::rend()
 //
 //
 //
+
+bool BfGuiCreateWindowContainerObj::__is_moving_container = false;
 
 void BfGuiCreateWindowContainerObj::__renderClildContent()
 {
-   ImGui::SeparatorText("Object");
+   ImGui::SetCursorPosX(ImGui::GetWindowWidth() -
+                        ImGui::GetStyle().WindowPadding.x * 2.0f - 5.0f);
+
+   __renderDragDropSource();
+
+   if (__is_moving_container && !__is_current_moving)
+   {
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
+      ImGui::Text("<---> Add here <--->");
+   }
+   else
+   {
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
+      ImGui::Text("%s", name());
+   }
+
+   __renderDragDropTarget();
+
    if (ImGui::Button("Add container"))
    {
-      auto new_container =
-          std::make_shared<BfGuiCreateWindowContainerObj>(__str_id);
+      auto new_container = std::make_shared<BfGuiCreateWindowContainerObj>(
+          __str_id,
+          shared_from_this()->weak_from_this()
+
+      );
       new_container->__window_size.x -= 20.0f;
       new_container->__window_size.y -= 20.0f;
       __containers.push_back(std::move(new_container));
+   }
+   for (auto c : __containers)
+   {
+      ImGui::Text("%s", c->name());
+   }
+}
+
+void BfGuiCreateWindowContainerObj::__renderDragDropSource()
+{
+   __is_current_moving = false;
+   if (ImGui::Button(ICON_FA_ARROWS_SPIN))
+   {
+   }
+   /*
+      Суть в том, что когда окошко начинает двигаться, то есть
+      Кнопка задержана и активна одновременно, то работают 2
+      флага -> первый отвечает за то что какой-то контейнер будет
+      помещен куда-то, а значит другие контейнеры кроме этого
+      должны открыть зону, куда можно будет поместить этот контейнер,
+      это осуществляется за счет 'static' переменной внутри класса
+      Второй флаг отвечает за не отображение зоны перемещения в окне,
+      которое пермещается, это необходимо, так как при пермещении
+      ОКНА само окно не исчезает.
+   */
+   if (ImGui::IsItemActive() && ImGui::IsMouseDown(0))
+   {
+      __is_moving_container = true;
+      __is_current_moving   = true;
+   }
+   if (ImGui::IsMouseReleased(0))
+   {
+      __is_moving_container = false;
+   }
+
+   if (ImGui::BeginDragDropSource())
+   {
+      /*
+         Так как перемещается именно этот КОНКРЕТНЫЙ КОНТЕЙНЕР, который
+         щас рендерится, то мы получаем указатель на себя самого, так как
+         выше (в окошке 'Create') они хранятся в виде std::shared_ptr
+
+         Далее данный указатель мы передаем через ImGui::SetDragDropPayload
+
+      */
+      std::shared_ptr<BfGuiCreateWindowContainerObj> self = shared_from_this();
+
+      ImGui::SetDragDropPayload("Container", &self, sizeof(self));
+      ImGui::Text("Dragging Container: %s", __str_id.c_str());
+
+      ImGui::EndDragDropSource();
+   }
+}
+
+void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
+{
+   if (ImGui::BeginDragDropTarget())
+   {
+      if (const ImGuiPayload* payload =
+              ImGui::AcceptDragDropPayload("Container"))
+      {
+         /*
+            Получаем указатель на окошко которое было сюда перемещено
+         */
+         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
+             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+
+         /*
+            Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
+            перемещено)
+         */
+         __containers.push_back(dropped_container);
+
+         /*
+            Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
+            перемещено)
+         */
+         auto wptr_old_root = (*__containers.rbegin())->__root_container;
+
+         /*
+            Получаем указатель на внешнее окошко которое хранило то, что
+            было перемещено
+         */
+         if (auto shared_obj = wptr_old_root.lock())
+         {
+            // Удаляем из прошлого root-окна контейнер, который
+            // был перемещен, чтобы он не дублировался
+            std::string dropped_name = (*__containers.rbegin())->name();
+            shared_obj->clearEmptyContainersByName(dropped_name);
+         }
+         else
+         {
+            // ERROR ?
+         }
+
+         /*
+            Меняем перемещенному окну 'root'-указатель и 'root'-имя
+         */
+         (*__containers.rbegin())->__str_root_name = this->name();
+         (*__containers.rbegin())->__root_container =
+             shared_from_this()->weak_from_this();
+      }
+      ImGui::EndDragDropTarget();
    }
 }
 
@@ -449,8 +572,8 @@ void BfGuiCreateWindowContainerObj::__renderClildContent()
 // }
 
 BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
-    std::string root_name)
-    : BfGuiCreateWindowContainer(root_name)
+    std::string root_name, BfGuiCreateWindowContainer::wptrContainer root)
+    : BfGuiCreateWindowContainer(root_name, root)
 {
 }
 //
@@ -508,6 +631,7 @@ void BfGuiCreateWindow::__renderContainers()
    int level = 0;
    for (auto container : __containers)
    {
+      // container->clearEmptyContainers();
       render_stack.push(container);
       level = 0;
       while (!render_stack.empty())
@@ -543,18 +667,12 @@ void BfGuiCreateWindow::__renderContainers()
    std::vector<ImGuiWindow*> windows_under_mouse;
    BfGetWindowsUnderMouse(windows_under_mouse);
 
-   for (auto name = l.rbegin(); name != l.rend(); ++name)
-   {
-      std::cout << name->first << " level:" << name->second << "\n";
-   }
-
    ImGuiWindow* last = nullptr;
    for (auto name = l.rbegin(); name != l.rend(); ++name)
    {
       bool is_found = false;
       for (auto& under : windows_under_mouse)
       {
-         std::cout << "hovered: " << under->Name << "\n";
          if (std::string(under->Name) == name->first)
          {
             ImGui::SetWindowFocus(under->Name);
@@ -568,8 +686,9 @@ void BfGuiCreateWindow::__renderContainers()
 
 void BfGuiCreateWindow::__addBlankContainer()
 {
-   __containers.push_back(
-       std::make_shared<BfGuiCreateWindowContainerObj>("Create"));
+   __containers.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
+       "Create",
+       std::weak_ptr<BfGuiCreateWindowContainer>()));
 }
 
 void BfGuiCreateWindow::render()
@@ -589,7 +708,8 @@ void BfGuiCreateWindow::render()
 }
 
 /*
-      зарендерить все окна слоями! сначала на однмо уровне потом на другом и тд
+      зарендерить все окна слоями! сначала на однмо уровне потом на другом и
+   тд
 
 
 

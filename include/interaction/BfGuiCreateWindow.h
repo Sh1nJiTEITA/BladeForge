@@ -13,6 +13,8 @@
 #include <stack>
 #include <vector>
 
+#include "bfIconsFontAwesome6.h"
+
 class BfGuiCreateWindowContainer
 {
    std::string __str_left_resize_button_id;
@@ -50,10 +52,10 @@ class BfGuiCreateWindowContainer
    bool __renderChildBorder();
 
 public:
-   using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
+   using ptrContainer  = std::shared_ptr<BfGuiCreateWindowContainer>;
+   using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
 
 protected:
-   std::string __str_root_name;
    std::string __str_id;
    //
    std::list<ptrContainer> __containers;
@@ -61,12 +63,18 @@ protected:
    virtual void __renderClildContent();
 
 public:
-   ImVec2 __window_pos;
-   ImVec2 __window_size = {150, 150};
+   ImVec2        __window_pos;
+   ImVec2        __window_size = {150, 150};
+   wptrContainer __root_container;
+   std::string   __str_root_name;
 
-   BfGuiCreateWindowContainer(std::string root_name);
-   bool        render();
-   const char* name();
+   BfGuiCreateWindowContainer(std::string root_name, wptrContainer root);
+   bool render();
+
+   const char*   name() noexcept;
+   ImVec2&       pos() noexcept;
+   ImVec2&       size() noexcept;
+   wptrContainer root() noexcept;
 
    bool isEmpty();
    //
@@ -78,6 +86,8 @@ public:
    //
    std::list<ptrContainer>::reverse_iterator rbegin();
    std::list<ptrContainer>::reverse_iterator rend();
+
+   void clearEmptyContainersByName(std::string);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -88,13 +98,21 @@ void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
 //
 //
 
-class BfGuiCreateWindowContainerObj : public BfGuiCreateWindowContainer
+class BfGuiCreateWindowContainerObj
+    : public BfGuiCreateWindowContainer,
+      public std::enable_shared_from_this<BfGuiCreateWindowContainerObj>
 {
+   static bool __is_moving_container;
+   bool        __is_current_moving;
+
 protected:
    virtual void __renderClildContent() override;
+   virtual void __renderDragDropSource();
+   virtual void __renderDragDropTarget();
 
 public:
-   BfGuiCreateWindowContainerObj(std::string root_name);
+   BfGuiCreateWindowContainerObj(
+       std::string root_name, BfGuiCreateWindowContainer::wptrContainer root);
 };
 
 //
