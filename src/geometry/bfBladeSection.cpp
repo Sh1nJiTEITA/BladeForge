@@ -1,10 +1,5 @@
 #include "bfBladeSection.h"
 
-#include <memory>
-
-#include "Splines.h"
-#include "bfCurves3.h"
-
 bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo &i_1,
                                            const BfBladeSectionCreateInfo &i_2)
 {

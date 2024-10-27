@@ -1,14 +1,17 @@
 #ifndef BF_GUI_H
 #define BF_GUI_H
 
+#include <csignal>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <map>
 #include <queue>
+#include <set>
+#include <sstream>
 #include <string>
 
 #include "bfBase.h"
-#include "bfBladeSection.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
@@ -19,6 +22,8 @@
 #include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
 #include "config_forms/bfFormGui.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "implot.h"
 
 class BfGui

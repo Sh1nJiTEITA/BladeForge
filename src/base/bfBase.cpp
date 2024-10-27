@@ -2401,9 +2401,11 @@ BfEvent bfPostInitImGui(BfBase &base)
                                    &config,
                                    icon_ranges);
    }
+
+   // ????????????????????????????????????
+   // ImGui_ImplVulkan_CreateFontsTexture();
    ImGui_ImplVulkan_Init(&init_info);
 
-   ImGui_ImplVulkan_CreateFontsTexture();
    return BfEvent();
 }
 
@@ -2695,189 +2697,189 @@ BfEvent bfLoadTextures(BfBase &base)
 //	}
 // }
 
-void bfUploadMesh(BfBase &base, BfMesh &mesh)
-{
-   bfUploadVertices(base, mesh);
-   bfUploadIndices(base, mesh);
-}
-
-void bfUploadVertices(BfBase &base, BfMesh &mesh)
-{
-   VkBuffer      local_buffer;
-   VmaAllocation local_allocation;
-
-   VkBufferCreateInfo bufferInfo{};
-   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-   bufferInfo.size  = mesh.vertices.size() * sizeof(bfVertex);
-   bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-   VmaAllocationCreateInfo allocationInfo{};
-   allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
-   allocationInfo.flags =
-       VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-       VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
-
-   if (vmaCreateBuffer(base.allocator,
-                       &bufferInfo,
-                       &allocationInfo,
-                       &local_buffer,
-                       &local_allocation,
-                       nullptr) != VK_SUCCESS)
-   {
-      throw std::runtime_error("vmaCrateBuffer didn't work");
-   }
-
-   void *data;
-   vmaMapMemory(base.allocator, local_allocation, &data);
-   memcpy(data, mesh.vertices.data(), bufferInfo.size);
-   vmaUnmapMemory(base.allocator, local_allocation);
-
-   bufferInfo.usage =
-       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-   allocationInfo.flags = 0;
-
-   if (vmaCreateBuffer(base.allocator,
-                       &bufferInfo,
-                       &allocationInfo,
-                       &mesh.vertex_buffer.buffer,
-                       &mesh.vertex_buffer.allocation,
-                       nullptr) != VK_SUCCESS)
-   {
-      throw std::runtime_error("vmaCrateBuffer didn't work");
-   }
-
-   VkCommandBufferAllocateInfo allocInfo{};
-   allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocInfo.level       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocInfo.commandPool = base.command_pool;
-   allocInfo.commandBufferCount = 1;
-
-   VkCommandBuffer commandBuffer;
-   vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
-
-   VkCommandBufferBeginInfo beginInfo{};
-   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-   vkBeginCommandBuffer(commandBuffer, &beginInfo);
-   VkBufferCopy copyRegion{};
-   copyRegion.srcOffset = 0;  // Optional
-   copyRegion.dstOffset = 0;  // Optional
-   copyRegion.size      = bufferInfo.size;
-   vkCmdCopyBuffer(commandBuffer,
-                   local_buffer,
-                   mesh.vertex_buffer.buffer,
-                   1,
-                   &copyRegion);
-   vkEndCommandBuffer(commandBuffer);
-
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers    = &commandBuffer;
-
-   vkQueueSubmit(
-       base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE],
-       1,
-       &submitInfo,
-       VK_NULL_HANDLE);
-   vkQueueWaitIdle(
-       base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
-
-   vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
-
-   vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
-}
-
-void bfUploadIndices(BfBase &base, BfMesh &mesh)
-{
-   VkBuffer      local_buffer;
-   VmaAllocation local_allocation;
-
-   VkBufferCreateInfo bufferInfo{};
-   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-   bufferInfo.size  = mesh.indices.size() * sizeof(uint32_t);
-   bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-   // bufferInfo.flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-   //  VMA_ALLOCATION_CREATE_HOST_ACCESS_
-
-   VmaAllocationCreateInfo allocationInfo{};
-   allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
-   allocationInfo.flags =
-       VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-       VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
-
-   if (vmaCreateBuffer(base.allocator,
-                       &bufferInfo,
-                       &allocationInfo,
-                       &local_buffer,
-                       &local_allocation,
-                       nullptr) != VK_SUCCESS)
-   {
-      throw std::runtime_error("vmaCrateBuffer didn't work");
-   }
-
-   void *data;
-   vmaMapMemory(base.allocator, local_allocation, &data);
-   memcpy(data, mesh.indices.data(), bufferInfo.size);
-   vmaUnmapMemory(base.allocator, local_allocation);
-
-   bufferInfo.usage =
-       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-   allocationInfo.flags = 0;
-
-   if (vmaCreateBuffer(base.allocator,
-                       &bufferInfo,
-                       &allocationInfo,
-                       &mesh.index_buffer.buffer,
-                       &mesh.index_buffer.allocation,
-                       nullptr) != VK_SUCCESS)
-   {
-      throw std::runtime_error("vmaCrateBuffer didn't work");
-   }
-
-   VkCommandBufferAllocateInfo allocInfo{};
-   allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocInfo.level       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocInfo.commandPool = base.command_pool;
-   allocInfo.commandBufferCount = 1;
-
-   VkCommandBuffer commandBuffer;
-   vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
-
-   VkCommandBufferBeginInfo beginInfo{};
-   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-   vkBeginCommandBuffer(commandBuffer, &beginInfo);
-   VkBufferCopy copyRegion{};
-   copyRegion.srcOffset = 0;  // Optional
-   copyRegion.dstOffset = 0;  // Optional
-   copyRegion.size      = bufferInfo.size;
-   vkCmdCopyBuffer(commandBuffer,
-                   local_buffer,
-                   mesh.index_buffer.buffer,
-                   1,
-                   &copyRegion);
-   vkEndCommandBuffer(commandBuffer);
-
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers    = &commandBuffer;
-
-   vkQueueSubmit(
-       base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE],
-       1,
-       &submitInfo,
-       VK_NULL_HANDLE);
-   vkQueueWaitIdle(
-       base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
-
-   vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
-
-   vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
-}
+// void bfUploadMesh(BfBase &base, BfMesh &mesh)
+// {
+//    bfUploadVertices(base, mesh);
+//    bfUploadIndices(base, mesh);
+// }
+//
+// void bfUploadVertices(BfBase &base, BfMesh &mesh)
+// {
+//    VkBuffer      local_buffer;
+//    VmaAllocation local_allocation;
+//
+//    VkBufferCreateInfo bufferInfo{};
+//    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+//    bufferInfo.size  = mesh.vertices.size() * sizeof(bfVertex);
+//    bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+//
+//    VmaAllocationCreateInfo allocationInfo{};
+//    allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+//    allocationInfo.flags =
+//        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+//        VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
+//
+//    if (vmaCreateBuffer(base.allocator,
+//                        &bufferInfo,
+//                        &allocationInfo,
+//                        &local_buffer,
+//                        &local_allocation,
+//                        nullptr) != VK_SUCCESS)
+//    {
+//       throw std::runtime_error("vmaCrateBuffer didn't work");
+//    }
+//
+//    void *data;
+//    vmaMapMemory(base.allocator, local_allocation, &data);
+//    memcpy(data, mesh.vertices.data(), bufferInfo.size);
+//    vmaUnmapMemory(base.allocator, local_allocation);
+//
+//    bufferInfo.usage =
+//        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+//    allocationInfo.flags = 0;
+//
+//    if (vmaCreateBuffer(base.allocator,
+//                        &bufferInfo,
+//                        &allocationInfo,
+//                        &mesh.vertex_buffer.buffer,
+//                        &mesh.vertex_buffer.allocation,
+//                        nullptr) != VK_SUCCESS)
+//    {
+//       throw std::runtime_error("vmaCrateBuffer didn't work");
+//    }
+//
+//    VkCommandBufferAllocateInfo allocInfo{};
+//    allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+//    allocInfo.level       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+//    allocInfo.commandPool = base.command_pool;
+//    allocInfo.commandBufferCount = 1;
+//
+//    VkCommandBuffer commandBuffer;
+//    vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
+//
+//    VkCommandBufferBeginInfo beginInfo{};
+//    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+//    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+//
+//    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+//    VkBufferCopy copyRegion{};
+//    copyRegion.srcOffset = 0;  // Optional
+//    copyRegion.dstOffset = 0;  // Optional
+//    copyRegion.size      = bufferInfo.size;
+//    vkCmdCopyBuffer(commandBuffer,
+//                    local_buffer,
+//                    mesh.vertex_buffer.buffer,
+//                    1,
+//                    &copyRegion);
+//    vkEndCommandBuffer(commandBuffer);
+//
+//    VkSubmitInfo submitInfo{};
+//    submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+//    submitInfo.commandBufferCount = 1;
+//    submitInfo.pCommandBuffers    = &commandBuffer;
+//
+//    vkQueueSubmit(
+//        base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE],
+//        1,
+//        &submitInfo,
+//        VK_NULL_HANDLE);
+//    vkQueueWaitIdle(
+//        base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
+//
+//    vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
+//
+//    vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
+// }
+//
+// void bfUploadIndices(BfBase &base, BfMesh &mesh)
+// {
+//    VkBuffer      local_buffer;
+//    VmaAllocation local_allocation;
+//
+//    VkBufferCreateInfo bufferInfo{};
+//    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+//    bufferInfo.size  = mesh.indices.size() * sizeof(uint32_t);
+//    bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+//    // bufferInfo.flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+//    //  VMA_ALLOCATION_CREATE_HOST_ACCESS_
+//
+//    VmaAllocationCreateInfo allocationInfo{};
+//    allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+//    allocationInfo.flags =
+//        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+//        VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
+//
+//    if (vmaCreateBuffer(base.allocator,
+//                        &bufferInfo,
+//                        &allocationInfo,
+//                        &local_buffer,
+//                        &local_allocation,
+//                        nullptr) != VK_SUCCESS)
+//    {
+//       throw std::runtime_error("vmaCrateBuffer didn't work");
+//    }
+//
+//    void *data;
+//    vmaMapMemory(base.allocator, local_allocation, &data);
+//    memcpy(data, mesh.indices.data(), bufferInfo.size);
+//    vmaUnmapMemory(base.allocator, local_allocation);
+//
+//    bufferInfo.usage =
+//        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+//    allocationInfo.flags = 0;
+//
+//    if (vmaCreateBuffer(base.allocator,
+//                        &bufferInfo,
+//                        &allocationInfo,
+//                        &mesh.index_buffer.buffer,
+//                        &mesh.index_buffer.allocation,
+//                        nullptr) != VK_SUCCESS)
+//    {
+//       throw std::runtime_error("vmaCrateBuffer didn't work");
+//    }
+//
+//    VkCommandBufferAllocateInfo allocInfo{};
+//    allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+//    allocInfo.level       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+//    allocInfo.commandPool = base.command_pool;
+//    allocInfo.commandBufferCount = 1;
+//
+//    VkCommandBuffer commandBuffer;
+//    vkAllocateCommandBuffers(base.device, &allocInfo, &commandBuffer);
+//
+//    VkCommandBufferBeginInfo beginInfo{};
+//    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+//    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+//
+//    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+//    VkBufferCopy copyRegion{};
+//    copyRegion.srcOffset = 0;  // Optional
+//    copyRegion.dstOffset = 0;  // Optional
+//    copyRegion.size      = bufferInfo.size;
+//    vkCmdCopyBuffer(commandBuffer,
+//                    local_buffer,
+//                    mesh.index_buffer.buffer,
+//                    1,
+//                    &copyRegion);
+//    vkEndCommandBuffer(commandBuffer);
+//
+//    VkSubmitInfo submitInfo{};
+//    submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+//    submitInfo.commandBufferCount = 1;
+//    submitInfo.pCommandBuffers    = &commandBuffer;
+//
+//    vkQueueSubmit(
+//        base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE],
+//        1,
+//        &submitInfo,
+//        VK_NULL_HANDLE);
+//    vkQueueWaitIdle(
+//        base.physical_device->queues[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]);
+//
+//    vkFreeCommandBuffers(base.device, base.command_pool, 1, &commandBuffer);
+//
+//    vmaDestroyBuffer(base.allocator, local_buffer, local_allocation);
+// }
 
 BfEvent bfaCreateShaderModule(VkShaderModule          &module,
                               VkDevice                 device,

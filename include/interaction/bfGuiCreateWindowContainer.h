@@ -1,6 +1,7 @@
 #ifndef BF_GUI_CREATE_WINDOW_CONTAINER_H
 #define BF_GUI_CREATE_WINDOW_CONTAINER_H
 
+#include <bfBladeSection.h>
 #include <bfIconsFontAwesome6.h>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -11,6 +12,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "bfBuffer.h"
+#include "bfUniforms.h"
+#include "bfVertex2.hpp"
 
 class BfGuiCreateWindow;
 
@@ -116,6 +121,7 @@ protected:
    virtual void __renderClildContent() override;
    virtual void __renderHeader() override;
 
+   virtual void __renderHeaderName();
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
 
@@ -125,6 +131,20 @@ public:
 
    static bool isAnyMoving() noexcept;
    static void setRootDelete(std::function<void(std::string)>);
+};
+
+//
+//
+//
+//
+//
+
+class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
+// , public BfBladeSectionCreateInfo
+{
+public:
+   BfGuiCreateWindowBladeSection(BfGuiCreateWindowContainer::wptrContainer root,
+                                 bool is_target = true);
 };
 
 #endif

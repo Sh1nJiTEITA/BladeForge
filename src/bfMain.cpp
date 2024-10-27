@@ -2,12 +2,10 @@
 
 #include "bfBase.h"
 #include "bfConfigManager.h"
-#include "bfGuiFileDialog.h"
+
 #define VMA_IMPLEMENTATION
-#include <memory>
 
 #include "BfMain.h"
-#include "imgui.h"
 #include "vk_mem_alloc.h"
 
 void BfMain::__process_keys()
@@ -50,6 +48,7 @@ void BfMain::__poll_events()
 {
    glfwPollEvents();
    auto &io = ImGui::GetIO();
+
    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
    {
    }
@@ -117,6 +116,7 @@ void BfMain::__init()
    bfCreateSampler(__base);
 
    __gui.bindBase(&__base);
+
    __gui.bindHolder(&__holder);
 }
 
@@ -193,7 +193,7 @@ void BfMain::__loop()
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      __present_blade_base_create_window();
+      // __present_blade_base_create_window();
 
       __gui.presentTopDock();
       __gui.presentLeftDock();
@@ -226,86 +226,89 @@ void BfMain::__loop()
    vkDeviceWaitIdle(__base.device);
 }
 
-void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
-{
-   ImGui::Begin("IdMap");
-   {
-      if (ImGui::Button("Show Id map"))
-      {
-         std::ofstream outFile("id_map.txt");
-
-         if (outFile.is_open())
-         {
-            for (int i = 0; i < base.swap_chain_extent.height; i++)
-            {
-               for (int j = 0; j < base.swap_chain_extent.width; j++)
-               {
-                  outFile << data[j + i * base.swap_chain_extent.width] << " ";
-               }
-               outFile << "\n";
-            }
-         }
-
-         outFile << "Пример текста для записи в файл." << std::endl;
-         outFile << "Это вторая строка." << std::endl;
-         outFile << "И еще одна строка." << std::endl;
-
-         // Закрываем файл
-         outFile.close();
-
-         std::random_device rd;
-         std::mt19937       mt(rd());
-
-         std::map<uint32_t, glm::vec4> id_color_map;
-         for (int i = 0;
-              i < base.swap_chain_extent.width * base.swap_chain_extent.height;
-              ++i)
-         {
-            if (!id_color_map.contains((int)data[i]))
-            {
-               float red                  = (float)(mt() % 255);
-               float green                = (float)(mt() % 255);
-               float blue                 = (float)(mt() % 255);
-
-               id_color_map[(int)data[i]] = glm::vec4(red, green, blue, 1.0f);
-
-               std::cout << id_color_map[(int)data[i]].r << ", "
-                         << id_color_map[(int)data[i]].g << ", "
-                         << id_color_map[data[i]].b << "\n";
-            }
-         }
-
-         std::vector<uint8_t> rgba_data(base.swap_chain_extent.width *
-                                        base.swap_chain_extent.height * 3);
-         size_t               index = 0;
-         for (int i = 0; i < base.swap_chain_extent.width *
-                                 base.swap_chain_extent.height * 3;
-              i += 3)
-         {
-            rgba_data[i + 0] = int(id_color_map[(int)data[index]].r);
-            rgba_data[i + 1] = int(id_color_map[(int)data[index]].g);
-            rgba_data[i + 2] = int(id_color_map[(int)data[index]].b);
-            // rgba_data[i + 3] = id_color_map[data[i]].a;
-
-            index++;
-         }
-
-         if (!stbi_write_png("output.png",
-                             base.swap_chain_extent.width,
-                             base.swap_chain_extent.height,
-                             3,
-                             rgba_data.data(),
-                             base.swap_chain_extent.width * 3))
-         {
-            // Обработайте ошибку сохранения изображения
-            // std::cerr << "Ошибка сохранения изображения." << std::endl;
-         }
-      }
-
-      // ImGui::TextWrapped(s.c_str());
-   }
-   ImGui::End();
-}
+// void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
+// {
+//    ImGui::Begin("IdMap");
+//    {
+//       if (ImGui::Button("Show Id map"))
+//       {
+//          std::ofstream outFile("id_map.txt");
+//
+//          if (outFile.is_open())
+//          {
+//             for (int i = 0; i < base.swap_chain_extent.height; i++)
+//             {
+//                for (int j = 0; j < base.swap_chain_extent.width; j++)
+//                {
+//                   outFile << data[j + i * base.swap_chain_extent.width] << "
+//                   ";
+//                }
+//                outFile << "\n";
+//             }
+//          }
+//
+//          outFile << "Пример текста для записи в файл." << std::endl;
+//          outFile << "Это вторая строка." << std::endl;
+//          outFile << "И еще одна строка." << std::endl;
+//
+//          // Закрываем файл
+//          outFile.close();
+//
+//          std::random_device rd;
+//          std::mt19937       mt(rd());
+//
+//          std::map<uint32_t, glm::vec4> id_color_map;
+//          for (int i = 0;
+//               i < base.swap_chain_extent.width *
+//               base.swap_chain_extent.height;
+//               ++i)
+//          {
+//             if (!id_color_map.contains((int)data[i]))
+//             {
+//                float red                  = (float)(mt() % 255);
+//                float green                = (float)(mt() % 255);
+//                float blue                 = (float)(mt() % 255);
+//
+//                id_color_map[(int)data[i]] = glm::vec4(red, green,
+//                blue, 1.0f);
+//
+//                std::cout << id_color_map[(int)data[i]].r << ", "
+//                          << id_color_map[(int)data[i]].g << ", "
+//                          << id_color_map[data[i]].b << "\n";
+//             }
+//          }
+//
+//          std::vector<uint8_t> rgba_data(base.swap_chain_extent.width *
+//                                         base.swap_chain_extent.height * 3);
+//          size_t               index = 0;
+//          for (int i = 0; i < base.swap_chain_extent.width *
+//                                  base.swap_chain_extent.height * 3;
+//               i += 3)
+//          {
+//             rgba_data[i + 0] = int(id_color_map[(int)data[index]].r);
+//             rgba_data[i + 1] = int(id_color_map[(int)data[index]].g);
+//             rgba_data[i + 2] = int(id_color_map[(int)data[index]].b);
+//             // rgba_data[i + 3] = id_color_map[data[i]].a;
+//
+//             index++;
+//          }
+//
+//          if (!stbi_write_png("output.png",
+//                              base.swap_chain_extent.width,
+//                              base.swap_chain_extent.height,
+//                              3,
+//                              rgba_data.data(),
+//                              base.swap_chain_extent.width * 3))
+//          {
+//             // Обработайте ошибку сохранения изображения
+//             // std::cerr << "Ошибка сохранения изображения." << std::endl;
+//          }
+//       }
+//
+//       // ImGui::TextWrapped(s.c_str());
+//    }
+//    ImGui::End();
+// }
 
 // void BfMain::__present_blade_section_create_window() {
 //
@@ -475,166 +478,173 @@ void BfMain::__present_id_map(BfBase &base, std::vector<uint32_t> data)
 //     old = info;
 // }
 
-void BfMain::__present_blade_base_create_window()
-{
-   static int sec_count                                   = 0;
-   static int new_sec_count                               = 0;
-
-   static std::shared_ptr<BfBladeBase> base_section_layer = nullptr;
-   static int                          base_id            = -1;
-
-   static int shape_id                                    = -1;
-
-   static bool is_first_frame                             = true;
-   if (is_first_frame)
-   {
-      BfBladeBaseCreateInfo blade_base_info{};
-      blade_base_info.layer_create_info.allocator          = __base.allocator;
-      blade_base_info.layer_create_info.is_nested          = true;
-      blade_base_info.layer_create_info.max_vertex_count   = 1000;
-      blade_base_info.layer_create_info.max_reserved_count = 1000;
-      blade_base_info.layer_create_info.vertex_size        = sizeof(BfVertex3);
-      // blade_base_info.layer_create_info.id_type = 0xA1;
-
-      base_section_layer = std::make_shared<BfBladeBase>(blade_base_info);
-
-      __blade_bases->add(base_section_layer);
-
-      base_id        = base_section_layer->id.get();
-      is_first_frame = false;
-   }
-
-   static std::vector<BfBladeSectionCreateInfo> old_infos;
-   static std::vector<BfBladeSectionCreateInfo> infos;
-
-   bool is_new_tab_item = false;
-   ImGui::Begin("Create blade base");
-   {
-      if (ImGui::InputInt("Section count", &new_sec_count))
-      {
-         // -
-         if (new_sec_count - sec_count < 0)
-         {
-            infos.pop_back();
-         }
-         // +
-         else if (new_sec_count - sec_count > 0)
-         {
-            BfBladeSectionCreateInfo ns{};
-            ns.layer_create_info.is_nested = true;
-            // ns.layer_create_info.id_type = 0xA1;
-            ns.width = 1.0f, ns.install_angle = 102.0f, ns.inlet_angle = 25.0f,
-            ns.outlet_angle        = 42.0f,
-
-            ns.inlet_surface_angle = 15.0f, ns.outlet_surface_angle = 15.0f,
-
-            ns.inlet_radius = 0.025f, ns.outlet_radius = 0.005f,
-
-            ns.border_length  = 20.0f,
-
-            ns.is_triangulate = false, ns.is_center = true,
-
-            ns.l_pipeline = __base.line_pipeline,
-            ns.t_pipeline = __base.triangle_pipeline,
-
-            infos.push_back(std::move(ns));
-
-            is_new_tab_item = true;
-         }
-
-         sec_count = new_sec_count;
-      }
-
-      if (ImGui::BeginTabBar("MyTabBar"))
-      {
-         for (size_t i = 0; i < sec_count; i++)
-         {
-            std::string tab_name = "Section " + std::to_string(i + 1);
-            if ((i == sec_count - 1) and is_new_tab_item)
-            {
-               if (ImGui::BeginTabItem(tab_name.c_str(),
-                                       nullptr,
-                                       ImGuiTabItemFlags_SetSelected))
-               {
-                  bfPresentBladeSectionInside(base_section_layer.get(),
-                                              &infos[i],
-                                              &old_infos[i]);
-                  ImGui::EndTabItem();
-               }
-            }
-            else
-            {
-               if (ImGui::BeginTabItem(tab_name.c_str()))
-               {
-                  bfPresentBladeSectionInside(base_section_layer.get(),
-                                              &infos[i],
-                                              &old_infos[i]);
-                  ImGui::EndTabItem();
-               }
-            }
-         }
-
-         ImGui::EndTabBar();
-      }
-
-      if (ImGui::Button("Create shape"))
-      {
-         if (shape_id != -1) __other_layer->del(shape_id);
-
-         auto base = std::static_pointer_cast<BfBladeBase>(
-             __blade_bases->get_layer_by_index(0));
-         auto shape = base->create_shape();
-         shape->bind_pipeline(&__base.triangle_pipeline);
-         __other_layer->add(shape);
-         shape_id = shape->id.get();
-
-         __other_layer->update_buffer();
-      }
-   }
-   ImGui::End();
-
-   bool is_changed = false;
-   for (size_t i = 0; i < infos.size(); i++)
-   {
-      if (infos.size() != old_infos.size())
-      {
-         is_changed = true;
-         break;
-      }
-
-      if (!bfCheckBladeSectionCreateInfoEquality(infos[i], old_infos[i]))
-      {
-         is_changed = true;
-         break;
-      }
-   }
-
-   if (is_changed)
-   {
-      __blade_bases->del(base_id);
-
-      BfBladeBaseCreateInfo blade_base_info{};
-      blade_base_info.layer_create_info.is_nested = true;
-      blade_base_info.section_infos               = infos;
-      base_section_layer = std::make_shared<BfBladeBase>(blade_base_info);
-
-      base_id            = base_section_layer->id.get();
-      __blade_bases->add(base_section_layer);
-
-      __blade_bases->update_buffer();
-
-      old_infos = infos;
-   }
-}
+// void BfMain::__present_blade_base_create_window()
+// {
+//    static int sec_count                                   = 0;
+//    static int new_sec_count                               = 0;
+//
+//    static std::shared_ptr<BfBladeBase> base_section_layer = nullptr;
+//    static int                          base_id            = -1;
+//
+//    static int shape_id                                    = -1;
+//
+//    static bool is_first_frame                             = true;
+//    if (is_first_frame)
+//    {
+//       BfBladeBaseCreateInfo blade_base_info{};
+//       blade_base_info.layer_create_info.allocator          =
+//       __base.allocator; blade_base_info.layer_create_info.is_nested = true;
+//       blade_base_info.layer_create_info.max_vertex_count   = 1000;
+//       blade_base_info.layer_create_info.max_reserved_count = 1000;
+//       blade_base_info.layer_create_info.vertex_size        =
+//       sizeof(BfVertex3);
+//       // blade_base_info.layer_create_info.id_type = 0xA1;
+//
+//       base_section_layer = std::make_shared<BfBladeBase>(blade_base_info);
+//
+//       __blade_bases->add(base_section_layer);
+//
+//       base_id        = base_section_layer->id.get();
+//       is_first_frame = false;
+//    }
+//
+//    static std::vector<BfBladeSectionCreateInfo> old_infos;
+//    static std::vector<BfBladeSectionCreateInfo> infos;
+//
+//    bool is_new_tab_item = false;
+//    ImGui::Begin("Create blade base");
+//    {
+//       if (ImGui::InputInt("Section count", &new_sec_count))
+//       {
+//          // -
+//          if (new_sec_count - sec_count < 0)
+//          {
+//             infos.pop_back();
+//          }
+//          // +
+//          else if (new_sec_count - sec_count > 0)
+//          {
+//             BfBladeSectionCreateInfo ns{};
+//             ns.layer_create_info.is_nested = true;
+//             // ns.layer_create_info.id_type = 0xA1;
+//             ns.width = 1.0f, ns.install_angle = 102.0f, ns.inlet_angle
+//             = 25.0f, ns.outlet_angle        = 42.0f,
+//
+//             ns.inlet_surface_angle = 15.0f, ns.outlet_surface_angle = 15.0f,
+//
+//             ns.inlet_radius = 0.025f, ns.outlet_radius = 0.005f,
+//
+//             ns.border_length  = 20.0f,
+//
+//             ns.is_triangulate = false, ns.is_center = true,
+//
+//             ns.l_pipeline = __base.line_pipeline,
+//             ns.t_pipeline = __base.triangle_pipeline,
+//
+//             infos.push_back(std::move(ns));
+//
+//             is_new_tab_item = true;
+//          }
+//
+//          sec_count = new_sec_count;
+//       }
+//
+//       if (ImGui::BeginTabBar("MyTabBar"))
+//       {
+//          for (size_t i = 0; i < sec_count; i++)
+//          {
+//             std::string tab_name = "Section " + std::to_string(i + 1);
+//             if ((i == sec_count - 1) and is_new_tab_item)
+//             {
+//                if (ImGui::BeginTabItem(tab_name.c_str(),
+//                                        nullptr,
+//                                        ImGuiTabItemFlags_SetSelected))
+//                {
+//                   bfPresentBladeSectionInside(base_section_layer.get(),
+//                                               &infos[i],
+//                                               &old_infos[i]);
+//                   ImGui::EndTabItem();
+//                }
+//             }
+//             else
+//             {
+//                if (ImGui::BeginTabItem(tab_name.c_str()))
+//                {
+//                   bfPresentBladeSectionInside(base_section_layer.get(),
+//                                               &infos[i],
+//                                               &old_infos[i]);
+//                   ImGui::EndTabItem();
+//                }
+//             }
+//          }
+//
+//          ImGui::EndTabBar();
+//       }
+//
+//       if (ImGui::Button("Create shape"))
+//       {
+//          if (shape_id != -1) __other_layer->del(shape_id);
+//
+//          auto base = std::static_pointer_cast<BfBladeBase>(
+//              __blade_bases->get_layer_by_index(0));
+//          auto shape = base->create_shape();
+//          shape->bind_pipeline(&__base.triangle_pipeline);
+//          __other_layer->add(shape);
+//          shape_id = shape->id.get();
+//
+//          __other_layer->update_buffer();
+//       }
+//    }
+//    ImGui::End();
+//
+//    bool is_changed = false;
+//    for (size_t i = 0; i < infos.size(); i++)
+//    {
+//       if (infos.size() != old_infos.size())
+//       {
+//          is_changed = true;
+//          break;
+//       }
+//
+//       if (!bfCheckBladeSectionCreateInfoEquality(infos[i], old_infos[i]))
+//       {
+//          is_changed = true;
+//          break;
+//       }
+//    }
+//
+//    if (is_changed)
+//    {
+//       __blade_bases->del(base_id);
+//
+//       BfBladeBaseCreateInfo blade_base_info{};
+//       blade_base_info.layer_create_info.is_nested = true;
+//       blade_base_info.section_infos               = infos;
+//       base_section_layer = std::make_shared<BfBladeBase>(blade_base_info);
+//
+//       base_id            = base_section_layer->id.get();
+//       __blade_bases->add(base_section_layer);
+//
+//       __blade_bases->update_buffer();
+//
+//       old_infos = infos;
+//    }
+// }
 
 BfMain::BfMain()
-    : __base{}, __holder{}
+// : __base{}, __holder{}
 {
+   std::cout << "HI_1\n";
+   __base = BfBase();
+   std::cout << "HI_2\n";
+   __holder = BfHolder();
+   std::cout << "HI_3\n";
 }
 
 void BfMain::run()
 {
    __init();
+   std::cout << "Aftet init\n";
    __loop();
    __kill();
 }

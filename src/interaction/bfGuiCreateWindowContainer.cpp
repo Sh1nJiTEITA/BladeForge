@@ -1,5 +1,7 @@
 #include "bfGuiCreateWindowContainer.h"
 
+#include "imgui.h"
+
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_v = false;
 
@@ -446,18 +448,15 @@ void BfGuiCreateWindowContainerObj::__renderClildContent()
 {
    if (!__is_collapsed)
    {
-      if (ImGui::Button("Add container"))
-      {
-         auto new_container = std::make_shared<BfGuiCreateWindowContainerObj>(
-             shared_from_this()->weak_from_this());
-         new_container->__window_size.x -= 20.0f;
-         new_container->__window_size.y -= 20.0f;
-         __containers.push_back(std::move(new_container));
-      }
-      for (auto c : __containers)
-      {
-         ImGui::Text("%s", c->name());
-      }
+      // if (ImGui::Button("Add container"))
+      // {
+      //    auto new_container =
+      //    std::make_shared<BfGuiCreateWindowContainerObj>(
+      //        shared_from_this()->weak_from_this());
+      //    new_container->__window_size.x -= 20.0f;
+      //    new_container->__window_size.y -= 20.0f;
+      //    __containers.push_back(std::move(new_container));
+      // }
    }
 }
 
@@ -493,8 +492,36 @@ void BfGuiCreateWindowContainerObj::__renderHeader()
 
          ImGui::SetWindowSize(__str_id.c_str(), __window_size);
       }
+
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetWindowWidth() -
+                           ImGui::GetStyle().WindowPadding.x * 2.0f -
+                           ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
+                           ImGui::CalcTextSize(ICON_FA_MINIMIZE).x - 15.0f -
+                           -ImGui::CalcTextSize(ICON_FA_INFO).x - 35.0f);
+
+      if (ImGui::Button(ICON_FA_INFO))
+      {
+      }
+
+      if (ImGui::IsItemHovered())
+      {
+         std::string total_containers = "";
+         for (auto& c : __containers)
+         {
+            total_containers += std::string(c->name()) + "\n";
+         }
+         ImGui::SetTooltip("Inner containers:\n%s", total_containers.c_str());
+      }
    }
    __popButtonColorStyle();
+}
+
+void BfGuiCreateWindowContainerObj::__renderHeaderName()
+{
+   ImGui::SameLine();
+   ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
+   ImGui::Text("%s", name());
 }
 
 void BfGuiCreateWindowContainerObj::__renderDragDropSource()
@@ -545,6 +572,7 @@ void BfGuiCreateWindowContainerObj::__renderDragDropSource()
 
 void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
 {
+   if (!__is_drop_target) return;
    // Where to drop
    if (__is_moving_container && !__is_current_moving)
    {
@@ -554,9 +582,7 @@ void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
    }
    else
    {
-      ImGui::SameLine();
-      ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
-      ImGui::Text("%s", name());
+      // __renderHeaderName();
    }
 
    if (ImGui::BeginDragDropTarget())
@@ -618,5 +644,17 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
     : BfGuiCreateWindowContainer{root}
     , __old_size{__window_size}
     , __is_drop_target{is_target}
+{
+}
+
+//
+//
+//
+//
+//
+
+BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
+    BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
+    : BfGuiCreateWindowContainerObj(root, is_target)
 {
 }

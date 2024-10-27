@@ -3,7 +3,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 // BfCurves3
 #define BF_DRAW_OBJ_TYPE_NULL 0x00
@@ -18,7 +17,7 @@
 #define BF_DRAW_LAYER_TYPE_BLADE_BASE 0xA2
 #define BF_DRAW_LAYER_TYPE_BEZIER_FRAME 0xA3
 
-static std::string bfGetStrNameDrawObjType(uint32_t type)
+static std::string bfGetStrNameDrawObjType(unsigned int type)
 {
    switch (type)
    {
@@ -46,7 +45,6 @@ static std::string bfGetStrNameDrawObjType(uint32_t type)
       default:
          throw std::runtime_error("Invalid BfDrawObject type");
    }
-
 }
 
 #endif  // !BF_DRAW_OBJECT_DEFINE_TYPE_H

@@ -37,9 +37,14 @@ void BfGuiCreateWindow::__renderManagePanel()
    {
       if (!BfGuiCreateWindowContainerObj::isAnyMoving())
       {
-         if (ImGui::Button("Add container"))
+         if (ImGui::Button("Add Obj container"))
          {
             __addBlankContainer();
+         }
+         ImGui::SameLine();
+         if (ImGui::Button("Add Section"))
+         {
+            __addSection();
          }
          ImGui::SameLine();
       }
@@ -194,6 +199,12 @@ void BfGuiCreateWindow::__renderDragDropZone()
 void BfGuiCreateWindow::__addBlankContainer()
 {
    __containers.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
+       std::weak_ptr<BfGuiCreateWindowContainer>()));
+}
+
+void BfGuiCreateWindow::__addSection()
+{
+   __containers.push_back(std::make_shared<BfGuiCreateWindowBladeSection>(
        std::weak_ptr<BfGuiCreateWindowContainer>()));
 }
 

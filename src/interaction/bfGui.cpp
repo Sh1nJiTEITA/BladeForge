@@ -1,23 +1,9 @@
 #include "bfGui.h"
 
-#include <csignal>
-#include <filesystem>
-#include <set>
-#include <sstream>
-#include <string>
-
-#include "bfConfigManager.h"
-#include "bfEvent.h"
-#include "bfGuiFileDialog.h"
-#include "bfIconsFontAwesome6.h"
-#include "config_forms/bfFormGui.h"
-#include "imgui.h"
-#include "imgui_internal.h"
-
 BfGui::BfGui()
 {
    BfGuiFileDialog::bindInstance(&__file_dialog);
-   __file_dialog.setRoot("./");
+   // __file_dialog.setRoot("./");
 }
 
 void BfGui::pollEvents()
@@ -27,6 +13,7 @@ void BfGui::pollEvents()
       __queue_after_render.front()();
       __queue_after_render.pop();
    }
+
    __lua_interaction.pollEvents();
 }
 

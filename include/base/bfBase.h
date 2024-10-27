@@ -170,9 +170,9 @@ BfEvent bfDestroyTextureLoader(BfBase &base);
 
 BfEvent bfLoadTextures(BfBase &base);
 
-void bfUploadMesh(BfBase &base, BfMesh &mesh);
-void bfUploadVertices(BfBase &base, BfMesh &mesh);
-void bfUploadIndices(BfBase &base, BfMesh &mesh);
+// void bfUploadMesh(BfBase &base, BfMesh &mesh);
+// void bfUploadVertices(BfBase &base, BfMesh &mesh);
+// void bfUploadIndices(BfBase &base, BfMesh &mesh);
 
 // Populate
 void bfPopulateMessengerCreateInfo(

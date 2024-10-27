@@ -20,7 +20,9 @@ class BfGuiCreateWindow
    void __renderContainers();
 
    void __renderDragDropZone();
+
    void __addBlankContainer();
+   void __addSection();
 
 public:
    BfGuiCreateWindow();
