@@ -1,19 +1,18 @@
-#ifndef BF_GUI_CREATE_WINDOW_H
-#define BF_GUI_CREATE_WINDOW_H
+#ifndef BF_GUI_CREATE_WINDOW_CONTAINER_H
+#define BF_GUI_CREATE_WINDOW_CONTAINER_H
 
+#include <bfIconsFontAwesome6.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include <cstdint>
 #include <format>
-#include <iostream>
+#include <functional>
 #include <list>
 #include <memory>
-#include <set>
-#include <stack>
+#include <string>
 #include <vector>
 
-#include "bfIconsFontAwesome6.h"
+class BfGuiCreateWindow;
 
 class BfGuiCreateWindowContainer
 {
@@ -25,6 +24,8 @@ class BfGuiCreateWindowContainer
 
    ImVec2 __resize_button_size     = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
+   ImVec2 __old_outter_pos;
+
    //
    //
    bool        __is_invisiable_buttons = true;
@@ -34,8 +35,6 @@ class BfGuiCreateWindowContainer
    bool        __is_resizing           = false;
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
-
-   ImVec2 __old_outter_pos;
 
    void __pushStyle();
    void __popStyle();
@@ -64,7 +63,6 @@ protected:
 
    virtual void __renderHeader();
    virtual void __renderClildContent();
-   virtual void __prerender();
 
    void __updatePosition();
    void __updateResizeButtonSize();
@@ -107,51 +105,26 @@ class BfGuiCreateWindowContainerObj
 {
    static bool __is_moving_container;
    bool        __is_current_moving;
+   bool        __is_drop_target;
    ImVec2      __old_size;
+
+   static std::function<void(std::string)> __f_root_delete;
 
 protected:
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();
    virtual void __renderClildContent() override;
-   virtual void __prerender() override;
    virtual void __renderHeader() override;
 
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
 
 public:
-   BfGuiCreateWindowContainerObj(
-       BfGuiCreateWindowContainer::wptrContainer root);
+   BfGuiCreateWindowContainerObj(BfGuiCreateWindowContainer::wptrContainer root,
+                                 bool is_target = true);
 
    static bool isAnyMoving() noexcept;
-};
-
-//
-//
-//
-//
-//
-
-class BfGuiCreateWindow
-{
-   static BfGuiCreateWindow* __instance;
-   //
-   bool __is_render = true;
-
-   std::list<BfGuiCreateWindowContainer::ptrContainer> __containers;
-
-   void __renderManagePanel();
-   void __renderContainers();
-
-   void __renderDragDropZone();
-   void __addBlankContainer();
-
-public:
-   BfGuiCreateWindow();
-   static BfGuiCreateWindow* instance() noexcept;
-
-   void removeByName(std::string);
-   void render();
+   static void setRootDelete(std::function<void(std::string)>);
 };
 
 #endif

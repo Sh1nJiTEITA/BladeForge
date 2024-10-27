@@ -7,14 +7,14 @@
 #include <queue>
 #include <string>
 
-#include "BfGuiCreateWindow.h"
-#include "BfGuiLuaInteraction.h"
 #include "bfBase.h"
 #include "bfBladeSection.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
+#include "bfGuiCreateWindow.h"
 #include "bfGuiFileDialog.h"
+#include "bfGuiLuaInteraction.h"
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"

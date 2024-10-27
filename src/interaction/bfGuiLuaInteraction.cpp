@@ -1,4 +1,4 @@
-#include "BfGuiLuaInteraction.h"
+#include "bfGuiLuaInteraction.h"
 
 #include <algorithm>
 #include <filesystem>
