@@ -1513,7 +1513,6 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
        // info_id_map
        // info_texture,
    };
-   std::cout << "1\n";
    base.descriptor.add_descriptor_create_info(infos);
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
@@ -1523,7 +1522,6 @@ BfEvent bfInitOwnDescriptors(BfBase &base)
    base.descriptor.update_desc_sets();
    // base.descriptor.map_textures();
 
-   std::cout << "\\1\n";
    base.layer_handler.bind_descriptor(&base.descriptor);
 
    bfCreateBuffer(

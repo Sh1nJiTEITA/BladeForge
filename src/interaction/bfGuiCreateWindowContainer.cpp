@@ -1,5 +1,8 @@
 #include "bfGuiCreateWindowContainer.h"
 
+#include <memory>
+
+#include "bfIconsFontAwesome6.h"
 #include "imgui.h"
 
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
@@ -232,7 +235,7 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
    {
       __updateResizeButtonSize();
       __renderHeader();
-      if (!__is_collapsed) __renderClildContent();
+      if (!__is_collapsed) __renderChildContent();
       __updatePosition();
       is_hovered = ImGui::IsWindowHovered();
    }
@@ -241,8 +244,12 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
    return is_hovered;
 }
 
+std::function<void(const std::string&, const std::string&)>
+    BfGuiCreateWindowContainer::__swapFunc =
+        [](const auto& a, const auto& b) {};
+
 void BfGuiCreateWindowContainer::__renderHeader() {}
-void BfGuiCreateWindowContainer::__renderClildContent() {}
+void BfGuiCreateWindowContainer::__renderChildContent() {}
 
 BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(wptrContainer root)
     : __root_container{root}
@@ -389,6 +396,11 @@ void BfGuiCreateWindowContainer::resetResizeHover()
    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 }
 
+void BfGuiCreateWindowContainer::bindSwapFunction(swapFuncType func) noexcept
+{
+   __swapFunc = func;
+}
+
 std::list<BfGuiCreateWindowContainer::ptrContainer>::iterator
 BfGuiCreateWindowContainer::begin()
 {
@@ -413,6 +425,36 @@ BfGuiCreateWindowContainer::rend()
 void BfGuiCreateWindowContainer::clearEmptyContainersByName(std::string name)
 {
    __containers.remove_if([&name](auto c) { return c->name() == name; });
+}
+
+void BfGuiCreateWindowContainer::swapByName(const std::string& a,
+                                            const std::string& b,
+                                            bool               change_pos)
+
+{
+   auto itA =
+       std::find_if(__containers.begin(), __containers.end(), [&a](auto c) {
+          return a == std::string(c->name());
+       });
+
+   auto itB =
+       std::find_if(__containers.begin(), __containers.end(), [&b](auto c) {
+          return b == std::string(c->name());
+       });
+
+   if (itA != __containers.end() && itB != __containers.end())
+   {
+      std::cout << "Swapped done\n";
+      std::iter_swap(itA, itB);
+      if (change_pos)
+      {
+         std::swap((*itA)->pos(), (*itB)->pos());
+      }
+   }
+   else
+   {
+      std::cout << "Swap failed: one or both elements not found\n";
+   }
 }
 
 //
@@ -444,7 +486,7 @@ void BfGuiCreateWindowContainerObj::__popButtonColorStyle()
    ImGui::PopStyleColor(2);
 }
 
-void BfGuiCreateWindowContainerObj::__renderClildContent()
+void BfGuiCreateWindowContainerObj::__renderChildContent()
 {
    if (!__is_collapsed)
    {
@@ -506,12 +548,24 @@ void BfGuiCreateWindowContainerObj::__renderHeader()
 
       if (ImGui::IsItemHovered())
       {
+         std::string root_name;
+         if (auto shared_root = __root_container.lock())
+         {
+            root_name = shared_root->name();
+         }
+         else
+         {
+            root_name = "Create";
+         }
+
          std::string total_containers = "";
          for (auto& c : __containers)
          {
             total_containers += std::string(c->name()) + "\n";
          }
-         ImGui::SetTooltip("Inner containers:\n%s", total_containers.c_str());
+         ImGui::SetTooltip("Root container: %s\nInner containers:\n%s",
+                           root_name.c_str(),
+                           total_containers.c_str());
       }
    }
    __popButtonColorStyle();
@@ -582,7 +636,7 @@ void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
    }
    else
    {
-      // __renderHeaderName();
+      __renderHeaderName();
    }
 
    if (ImGui::BeginDragDropTarget())
@@ -656,5 +710,250 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
     BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
     : BfGuiCreateWindowContainerObj(root, is_target)
+{
+}
+
+void BfGuiCreateWindowBladeSection::__renderDragDropSourceUp()
+{
+   ImGui::SameLine();
+   ImGui::SetCursorPosX(ImGui::GetWindowWidth() * 0.5f -
+                        ImGui::CalcTextSize(ICON_FA_LOCATION_DOT).x * 0.5);
+   ImGui::Button(ICON_FA_LOCATION_DOT "##UP");
+
+   if (ImGui::BeginDragDropSource())
+   {
+      std::shared_ptr<BfGuiCreateWindowContainer> self = shared_from_this();
+
+      ImGui::SetDragDropPayload("BladeSection", &self, sizeof(self));
+      ImGui::Text("Binding container from top node: %s", __str_id.c_str());
+
+      ImGui::EndDragDropSource();
+   }
+}
+
+void BfGuiCreateWindowBladeSection::__renderDragDropSourceDown()
+{
+   ImGui::SetCursorPosX(ImGui::GetWindowWidth() * 0.5f -
+                        ImGui::CalcTextSize(ICON_FA_LOCATION_DOT).x * 0.5);
+   ImGui::Button(ICON_FA_LOCATION_DOT "##DOWN");
+
+   if (ImGui::BeginDragDropSource())
+   {
+      std::shared_ptr<BfGuiCreateWindowContainer> self = shared_from_this();
+
+      ImGui::SetDragDropPayload("BladeSection", &self, sizeof(self));
+      ImGui::Text("Binding container from bottom node: %s", __str_id.c_str());
+
+      ImGui::EndDragDropSource();
+   }
+}
+
+void BfGuiCreateWindowBladeSection::__renderDragDropTargetUp()
+{
+   if (ImGui::BeginDragDropTarget())
+   {
+      if (const ImGuiPayload* payload =
+              ImGui::AcceptDragDropPayload("BladeSection"))
+      {
+         /*
+            Получаем указатель на окошко которое было сюда перемещено
+         */
+         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
+             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+
+         std::cout << dropped_container->name() << "\n";
+      }
+      ImGui::EndDragDropTarget();
+   }
+}
+
+void BfGuiCreateWindowBladeSection::__renderDragDropTargetDown()
+{
+   if (ImGui::BeginDragDropTarget())
+   {
+      if (const ImGuiPayload* payload =
+              ImGui::AcceptDragDropPayload("BladeSection"))
+      {
+         /*
+            Получаем указатель на окошко которое было сюда перемещено
+         */
+         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
+             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+
+         std::cout << dropped_container->name() << "\n";
+      }
+      ImGui::EndDragDropTarget();
+   }
+}
+//
+// void BfGuiCreateWindowBladeSection::__renderChildContent()
+// {
+//    // __renderDragDropSourceUp();
+//    // __renderDragDropTargetUp();
+//    ImGui::InputFloat("Width", &__create_info.width);
+//    ImGui::InputFloat("Install Angle", &__create_info.install_angle);
+//    ImGui::InputFloat("Inlet Angle", &__create_info.inlet_angle);
+//    ImGui::InputFloat("Outlet Angle", &__create_info.outlet_angle);
+//    // __renderDragDropSourceDown();
+//    // __renderDragDropTargetDown();
+// }
+
+void BfGuiCreateWindowBladeSection::__renderDragDropTarget()
+{
+   if (!__is_drop_target) return;
+   // Where to drop
+   if (__is_moving_container && !__is_current_moving)
+   {
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
+      ImGui::Text("<---> Swap <--->");
+   }
+   else
+   {
+      __renderHeaderName();
+   }
+
+   if (!__is_drop_target) return;
+   // Where to drop
+   if (__is_moving_container && !__is_current_moving)
+   {
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
+      ImGui::Text("<---> Add here <--->");
+   }
+   else
+   {
+      __renderHeaderName();
+   }
+
+   if (ImGui::BeginDragDropTarget())
+   {
+      if (const ImGuiPayload* payload =
+              ImGui::AcceptDragDropPayload("Container"))
+      {
+         // {
+         //    /*
+         //       Получаем указатель на окошко которое было сюда перемещено
+         //    */
+         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
+             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+
+         __swapFunc(this->name(), dropped_container->name());
+      }
+
+      //
+      //    // if (auto next =
+      //    //         std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+      //    //             dropped_container))
+      //    if (auto next =
+      //    std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(
+      //            dropped_container))
+      //    {
+      //       std::cout << "Swapping: ";
+      //       BfGuiCreateWindow::instance()
+      //       // if (auto root = __root_container.lock())
+      //       // {
+      //       //    std::cout << "ROOT" << this->name() << " " << next->name()
+      //       //              << "\n";
+      //       //
+      //       //    // Находим итератор на `this` в контейнере root
+      //       //    auto it = std::find_if(root->begin(),
+      //       //                           root->end(),
+      //       //                           [&](const ptrContainer& a) {
+      //       //                              return a->name() == this->name();
+      //       //                           });
+      //       //
+      //       //    // Если итератор найден, меняем значения по указателям
+      //       //    if (it != root->end())
+      //       //    {
+      //       //       std::cout << "Totaly swapping\n";
+      //       //       // (*it).swap(next);
+      //       //       next.swap(*it);
+      //       //    }
+      //    }
+      //    else
+      //    {
+      //       // Обработка случая, когда root недоступен
+      //    }
+      // }
+      //
+      // else if (auto next_ =
+      //              std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(
+      //                  dropped_container))
+      // {
+      //    std::cout << "can be base\n";
+      // }
+      // else
+      // {
+      //    /*
+      //       Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
+      //       перемещено)
+      //    */
+      //    __containers.push_back(dropped_container);
+      //
+      //    /*
+      //       Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
+      //       перемещено)
+      //    */
+      //    auto wptr_old_root = (*__containers.rbegin())->root();
+      //
+      //    /*
+      //       Получаем указатель на внешнее окошко которое хранило то, что
+      //       было перемещено
+      //    */
+      //
+      //    std::string dropped_name = (*__containers.rbegin())->name();
+      //    if (auto shared_obj = wptr_old_root.lock())
+      //    {
+      //       // Удаляем из прошлого root-окна контейнер, который
+      //       // был перемещен, чтобы он не дублировался
+      //       shared_obj->clearEmptyContainersByName(dropped_name);
+      //    }
+      //    else
+      //    {
+      //       // BfGuiCreateWindow::instance()->removeByName(dropped_name);
+      //       __f_root_delete(dropped_name);
+      //    }
+      //
+      //    /*
+      //       Меняем перемещенному окну 'root'-указатель и 'root'-имя
+      //    */
+      //    (*__containers.rbegin())->root() =
+      //        shared_from_this()->weak_from_this();
+      // }
+      //
+      ImGui::EndDragDropTarget();
+   }
+}
+
+//
+//
+//
+//
+//
+
+void BfGuiCreateWindowBladeBase::__setContainersPos()
+{
+   ImVec2 avail = size();
+   avail.x -= ImGui::GetStyle().WindowPadding.x * 2;
+   avail.y -= ImGui::GetStyle().WindowPadding.y * 2;
+
+   float next_container_h = ImGui::GetStyle().WindowPadding.y * 5;
+   for (auto& c : __containers)
+   {
+      c->pos().y = pos().y + next_container_h;
+      next_container_h += c->size().y - 25.0f;
+   }
+}
+//
+void BfGuiCreateWindowBladeBase::__renderChildContent()
+{
+   __setContainersPos();
+}
+
+BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
+    BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
+    : BfGuiCreateWindowContainerObj{root, is_target}
+
 {
 }

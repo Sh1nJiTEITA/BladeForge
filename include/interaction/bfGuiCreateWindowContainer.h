@@ -10,12 +10,9 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <queue>
 #include <string>
 #include <vector>
-
-#include "bfBuffer.h"
-#include "bfUniforms.h"
-#include "bfVertex2.hpp"
 
 class BfGuiCreateWindow;
 
@@ -26,12 +23,10 @@ class BfGuiCreateWindowContainer
    std::string __str_bot_resize_button_id;
    std::string __str_top_resize_button_id;
    std::string __str_child_border_id;
-
+   //
    ImVec2 __resize_button_size     = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
    ImVec2 __old_outter_pos;
-
-   //
    //
    bool        __is_invisiable_buttons = true;
    bool        __is_first_render       = true;
@@ -40,11 +35,10 @@ class BfGuiCreateWindowContainer
    bool        __is_resizing           = false;
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
-
+   //
    void __pushStyle();
    void __popStyle();
    void __clampPosition();
-
    //
    void __renderLeftResizeButton();
    void __renderRightResizeButton();
@@ -55,38 +49,47 @@ class BfGuiCreateWindowContainer
 public:
    using ptrContainer  = std::shared_ptr<BfGuiCreateWindowContainer>;
    using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
+   using swapFuncType =
+       std::function<void(const std::string&, const std::string&)>;
 
 protected:
    std::string   __str_id;
    ImVec2        __window_pos;
    ImVec2        __window_size = {150, 150};
    wptrContainer __root_container;
-
+   //
+   static swapFuncType __swapFunc;
+   //
    bool __is_collapsed = false;
+   //
+   //
    //
    std::list<ptrContainer> __containers;
 
    virtual void __renderHeader();
-   virtual void __renderClildContent();
-
-   void __updatePosition();
-   void __updateResizeButtonSize();
+   virtual void __renderChildContent();
+   void         __updatePosition();
+   void         __updateResizeButtonSize();
 
 public:
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
 
+   // GETTERS --------------------
    const char*    name() noexcept;
    ImVec2&        pos() noexcept;
    ImVec2&        size() noexcept;
    wptrContainer& root() noexcept;
-
+   // ----------------------------
    bool isEmpty() noexcept;
    bool isCollapsed() noexcept;
    //
+
+   static void bindSwapFunction(swapFuncType func) noexcept;
    static void resetResizeHover();
    static void changeCursorStyle();
 
+   // ITER
    std::list<ptrContainer>::iterator begin();
    std::list<ptrContainer>::iterator end();
    //
@@ -94,6 +97,10 @@ public:
    std::list<ptrContainer>::reverse_iterator rend();
 
    void clearEmptyContainersByName(std::string);
+
+   void swapByName(const std::string& a,
+                   const std::string& b,
+                   bool               change_pos = false);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -108,6 +115,7 @@ class BfGuiCreateWindowContainerObj
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerObj>
 {
+protected:
    static bool __is_moving_container;
    bool        __is_current_moving;
    bool        __is_drop_target;
@@ -115,10 +123,9 @@ class BfGuiCreateWindowContainerObj
 
    static std::function<void(std::string)> __f_root_delete;
 
-protected:
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();
-   virtual void __renderClildContent() override;
+   virtual void __renderChildContent() override;
    virtual void __renderHeader() override;
 
    virtual void __renderHeaderName();
@@ -140,11 +147,52 @@ public:
 //
 
 class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
-// , public BfBladeSectionCreateInfo
 {
+   BfBladeSectionCreateInfo __create_info;
+
+   BfGuiCreateWindowContainer::wptrContainer __ptr_up;
+   BfGuiCreateWindowContainer::wptrContainer __ptr_down;
+
+   /*
+      Добавить какой-то статический архив для сваппа!
+      После определенных действий (конца ренедра) вызывать свап!
+      Важно, правильно найти, где находятся контейнеры и свапнуть.
+   */
+
+protected:
+   virtual void __renderDragDropTarget() override;
+   // virtual void __renderChildContent() override;
+
+   void __renderDragDropSourceUp();
+   void __renderDragDropSourceDown();
+   void __renderDragDropTargetUp();
+   void __renderDragDropTargetDown();
+
 public:
    BfGuiCreateWindowBladeSection(BfGuiCreateWindowContainer::wptrContainer root,
                                  bool is_target = true);
+};
+
+//
+//
+//
+//
+//
+
+class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
+{
+   std::queue<std::pair<ptrContainer, ptrContainer>> __swap_queue;
+
+   //
+   void __setContainersPos();
+
+protected:
+   virtual void __renderChildContent() override;
+   // virtual void __renderDragDropTarget() override;
+
+public:
+   BfGuiCreateWindowBladeBase(BfGuiCreateWindowContainer::wptrContainer root,
+                              bool is_target = true);
 };
 
 #endif

@@ -1,5 +1,9 @@
 #include "bfGuiCreateWindow.h"
 
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+
 //
 //
 //
@@ -25,11 +29,61 @@ BfGuiCreateWindow::BfGuiCreateWindow()
          This is what happens when ROOT-container is 'Create' window!
          Function below deletes cointeiner from this staring 'Create' window.
     */
+
+   BfGuiCreateWindowContainerObj::bindSwapFunction(
+       [&](const std::string& a, const std::string& b) {
+          std::cout << "RootWindow msg: swapping " << a << " <-> " << b << "\n";
+          __swap_pairs.push({a, b});
+
+          // auto it_a = __findContainer(__containers.begin(),
+          // __containers.end(), a); if (it_a != __containers.end())
+          // {
+          //    std::cout << "'A' FOUND\n";
+          // }
+          // else
+          // {
+          //    std::cout << "'A' NOT FOUND\n";
+          // }
+          // auto it_b = __findContainer(__containers.begin(),
+          // __containers.end(), b); if (it_b != __containers.end())
+          // {
+          //    std::cout << "'B' FOUND\n";
+          // }
+          // else
+          // {
+          //    std::cout << "'B' NOT FOUND\n";
+          // }
+       });
+
    BfGuiCreateWindowContainerObj::setRootDelete(
        [&](std::string name) { BfGuiCreateWindow::removeByName(name); });
 }
 
 BfGuiCreateWindow* BfGuiCreateWindow::instance() noexcept { return __instance; }
+
+BfGuiCreateWindow::foundContainer BfGuiCreateWindow::__findContainer(
+    std::list<ptrContainer>::iterator begin,
+    std::list<ptrContainer>::iterator end,
+    const std::string&                name)
+{
+   for (auto it = begin; it != end; ++it)
+   {
+      if ((*it)->name() == name)
+      {
+         return it;  // Found the container, return iterator
+      }
+      if (!(*it)->isEmpty())
+      {
+         auto nested_result =
+             __findContainer((*it)->begin(), (*it)->end(), name);
+         if (nested_result)
+         {
+            return nested_result;  // Found in nested container
+         }
+      }
+   }
+   return std::nullopt;  // Not found
+}
 
 void BfGuiCreateWindow::__renderManagePanel()
 {
@@ -45,6 +99,11 @@ void BfGuiCreateWindow::__renderManagePanel()
          if (ImGui::Button("Add Section"))
          {
             __addSection();
+         }
+         ImGui::SameLine();
+         if (ImGui::Button("Add Base"))
+         {
+            __addBase();
          }
          ImGui::SameLine();
       }
@@ -208,6 +267,58 @@ void BfGuiCreateWindow::__addSection()
        std::weak_ptr<BfGuiCreateWindowContainer>()));
 }
 
+void BfGuiCreateWindow::__addBase()
+{
+   __containers.push_back(std::make_shared<BfGuiCreateWindowBladeBase>(
+       std::weak_ptr<BfGuiCreateWindowContainer>()));
+}
+
+void BfGuiCreateWindow::__processSwaps()
+{
+   while (!__swap_pairs.empty())
+   {
+      auto pair = __swap_pairs.top();
+
+      // Retrieve iterators to the containers by name
+      auto a =
+          __findContainer(__containers.begin(), __containers.end(), pair.first);
+      auto b = __findContainer(__containers.begin(),
+                               __containers.end(),
+                               pair.second);
+
+      if (!a || !b)
+      {
+         std::stringstream ss;
+         ss << "Some of the containers were not found: ";
+         ss << "a " << (a ? " was found" : " was not found");
+         ss << "; ";
+         ss << "b " << (b ? " was found" : " was not found");
+
+         std::cout << ss.str() << "\n";
+
+         throw std::runtime_error(ss.str());
+      }
+
+      ImVec2 pos_a       = (*a)->get()->pos();
+      ImVec2 pos_b       = (*b)->get()->pos();
+
+      (*a)->get()->pos() = pos_b;
+      (*b)->get()->pos() = pos_a;
+      //
+      BfGuiCreateWindowContainerObj::wptrContainer root_a = (*a)->get()->root();
+      BfGuiCreateWindowContainerObj::wptrContainer root_b = (*b)->get()->root();
+      //
+      (*a)->get()->root() = root_b;
+      (*b)->get()->root() = root_a;
+
+      std::iter_swap(*a, *b);
+
+      __swap_pairs.pop();
+   }
+}
+
+void BfGuiCreateWindow::__processEvents() { __processSwaps(); }
+
 void BfGuiCreateWindow::removeByName(std::string name)
 {
    std::erase_if(__containers,
@@ -228,6 +339,7 @@ void BfGuiCreateWindow::render()
       }
       ImGui::End();
    }
+   __processEvents();
 }
 
 /*
