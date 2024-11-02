@@ -51,6 +51,8 @@ public:
    using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
    using swapFuncType =
        std::function<void(const std::string&, const std::string&)>;
+   using moveFuncType =
+       std::function<void(const std::string&, const std::string&)>;
 
 protected:
    std::string   __str_id;
@@ -59,6 +61,7 @@ protected:
    wptrContainer __root_container;
    //
    static swapFuncType __swapFunc;
+   static swapFuncType __moveFunc;
    //
    bool __is_collapsed = false;
    //
@@ -86,6 +89,8 @@ public:
    //
 
    static void bindSwapFunction(swapFuncType func) noexcept;
+   static void bindMoveFunction(swapFuncType func) noexcept;
+
    static void resetResizeHover();
    static void changeCursorStyle();
 
@@ -97,10 +102,7 @@ public:
    std::list<ptrContainer>::reverse_iterator rend();
 
    void clearEmptyContainersByName(std::string);
-
-   void swapByName(const std::string& a,
-                   const std::string& b,
-                   bool               change_pos = false);
+   void add(ptrContainer container);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -129,8 +131,14 @@ protected:
    virtual void __renderHeader() override;
 
    virtual void __renderHeaderName();
+   virtual void __renderChangeName();
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
+
+   void __processDragDropSource();
+   void __processDragDropTarget();
+   void __processDragDropTargetSwap();
+   void __processDragDropTargetMove();
 
 public:
    BfGuiCreateWindowContainerObj(BfGuiCreateWindowContainer::wptrContainer root,
@@ -150,9 +158,6 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
 {
    BfBladeSectionCreateInfo __create_info;
 
-   BfGuiCreateWindowContainer::wptrContainer __ptr_up;
-   BfGuiCreateWindowContainer::wptrContainer __ptr_down;
-
    /*
       Добавить какой-то статический архив для сваппа!
       После определенных действий (конца ренедра) вызывать свап!
@@ -160,13 +165,8 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    */
 
 protected:
-   virtual void __renderDragDropTarget() override;
+   // virtual void __renderDragDropTarget() override;
    // virtual void __renderChildContent() override;
-
-   void __renderDragDropSourceUp();
-   void __renderDragDropSourceDown();
-   void __renderDragDropTargetUp();
-   void __renderDragDropTargetDown();
 
 public:
    BfGuiCreateWindowBladeSection(BfGuiCreateWindowContainer::wptrContainer root,
@@ -181,8 +181,7 @@ public:
 
 class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 {
-   std::queue<std::pair<ptrContainer, ptrContainer>> __swap_queue;
-
+   // virtual void __renderHeaderName() override;
    //
    void __setContainersPos();
 

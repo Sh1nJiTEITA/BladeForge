@@ -32,27 +32,12 @@ BfGuiCreateWindow::BfGuiCreateWindow()
 
    BfGuiCreateWindowContainerObj::bindSwapFunction(
        [&](const std::string& a, const std::string& b) {
-          std::cout << "RootWindow msg: swapping " << a << " <-> " << b << "\n";
           __swap_pairs.push({a, b});
+       });
 
-          // auto it_a = __findContainer(__containers.begin(),
-          // __containers.end(), a); if (it_a != __containers.end())
-          // {
-          //    std::cout << "'A' FOUND\n";
-          // }
-          // else
-          // {
-          //    std::cout << "'A' NOT FOUND\n";
-          // }
-          // auto it_b = __findContainer(__containers.begin(),
-          // __containers.end(), b); if (it_b != __containers.end())
-          // {
-          //    std::cout << "'B' FOUND\n";
-          // }
-          // else
-          // {
-          //    std::cout << "'B' NOT FOUND\n";
-          // }
+   BfGuiCreateWindowContainerObj::bindMoveFunction(
+       [&](const std::string& what, const std::string& where) {
+          __move_pairs.push({what, where});
        });
 
    BfGuiCreateWindowContainerObj::setRootDelete(
@@ -85,9 +70,32 @@ BfGuiCreateWindow::foundContainer BfGuiCreateWindow::__findContainer(
    return std::nullopt;  // Not found
 }
 
+BfGuiCreateWindow::ptrPair BfGuiCreateWindow::__findAndCheckPair(
+    const pair& name)
+{
+   auto a =
+       __findContainer(__containers.begin(), __containers.end(), name.first);
+   auto b =
+       __findContainer(__containers.begin(), __containers.end(), name.second);
+
+   if (!a || !b)
+   {
+      std::stringstream ss;
+      ss << "Some of the containers were not found: ";
+      ss << "a " << (a ? " was found" : " was not found");
+      ss << "; ";
+      ss << "b " << (b ? " was found" : " was not found");
+
+      std::cout << ss.str() << "\n";
+
+      throw std::runtime_error(ss.str());
+   }
+   return {a, b};
+}
+
 void BfGuiCreateWindow::__renderManagePanel()
 {
-   ImGui::BeginChild("##CreateWindowManagePanel", {}, true);
+   ImGui::BeginChild("##CreateWindowManagePanel", {0.0, 37.0f}, true);
    {
       if (!BfGuiCreateWindowContainerObj::isAnyMoving())
       {
@@ -201,10 +209,10 @@ void BfGuiCreateWindow::__renderContainers()
    }
 }
 
+// TODO: REMAKE -> to work with std::function ...
 void BfGuiCreateWindow::__renderDragDropZone()
 {
    ImGui::Text("<=== Move here ===>");
-   // {ImGui::GetContentRegionAvail().x, 10.0f});
    if (ImGui::BeginDragDropTarget())
    {
       if (const ImGuiPayload* payload =
@@ -278,30 +286,11 @@ void BfGuiCreateWindow::__processSwaps()
    while (!__swap_pairs.empty())
    {
       auto pair = __swap_pairs.top();
-
-      // Retrieve iterators to the containers by name
-      auto a =
-          __findContainer(__containers.begin(), __containers.end(), pair.first);
-      auto b = __findContainer(__containers.begin(),
-                               __containers.end(),
-                               pair.second);
-
-      if (!a || !b)
-      {
-         std::stringstream ss;
-         ss << "Some of the containers were not found: ";
-         ss << "a " << (a ? " was found" : " was not found");
-         ss << "; ";
-         ss << "b " << (b ? " was found" : " was not found");
-
-         std::cout << ss.str() << "\n";
-
-         throw std::runtime_error(ss.str());
-      }
-
-      ImVec2 pos_a       = (*a)->get()->pos();
-      ImVec2 pos_b       = (*b)->get()->pos();
-
+      //
+      auto [a, b]  = __findAndCheckPair(pair);
+      ImVec2 pos_a = (*a)->get()->pos();
+      ImVec2 pos_b = (*b)->get()->pos();
+      //
       (*a)->get()->pos() = pos_b;
       (*b)->get()->pos() = pos_a;
       //
@@ -317,7 +306,39 @@ void BfGuiCreateWindow::__processSwaps()
    }
 }
 
-void BfGuiCreateWindow::__processEvents() { __processSwaps(); }
+void BfGuiCreateWindow::__processMoves()
+{
+   while (!__move_pairs.empty())
+   {
+      auto pair = __move_pairs.top();
+      //
+      auto optPair = __findAndCheckPair(pair);
+      auto what    = (*optPair.first);
+      auto where   = (*optPair.second);
+
+      where->get()->add(*what);
+
+      auto wptr_old_root = what->get()->root();
+      if (auto shared_old_root = wptr_old_root.lock())
+      {
+         shared_old_root->clearEmptyContainersByName(what->get()->name());
+      }
+      else
+      {
+         __containers.remove_if(
+             [&what](auto c) { return c->name() == what->get()->name(); });
+      }
+      what->get()->root() = *where;
+
+      __move_pairs.pop();
+   }
+}
+
+void BfGuiCreateWindow::__processEvents()
+{
+   __processSwaps();
+   __processMoves();
+}
 
 void BfGuiCreateWindow::removeByName(std::string name)
 {

@@ -12,9 +12,10 @@
 
 class BfGuiCreateWindow
 {
-   using swapPair       = std::pair<std::string, std::string>;
+   using pair           = std::pair<std::string, std::string>;
    using ptrContainer   = BfGuiCreateWindowContainer::ptrContainer;
    using foundContainer = std::optional<std::list<ptrContainer>::iterator>;
+   using ptrPair        = std::pair<foundContainer, foundContainer>;
    // --------------------------------------------------------------------
 
    static BfGuiCreateWindow* __instance;
@@ -23,13 +24,16 @@ class BfGuiCreateWindow
 
    std::list<BfGuiCreateWindowContainer::ptrContainer> __containers;
    //
-   std::stack<swapPair> __swap_pairs;
+   std::stack<pair> __swap_pairs;
+   std::stack<pair> __move_pairs;
 
    // --------------------------------------------------------------------
 
    foundContainer __findContainer(std::list<ptrContainer>::iterator begin,
                                   std::list<ptrContainer>::iterator end,
                                   const std::string&                name);
+   //
+   ptrPair __findAndCheckPair(const pair& name);
 
    void __renderManagePanel();
    void __renderContainers();
@@ -41,6 +45,7 @@ class BfGuiCreateWindow
    void __addBase();
 
    void __processSwaps();
+   void __processMoves();
    void __processEvents();
 
 public:
