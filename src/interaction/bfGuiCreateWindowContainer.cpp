@@ -782,6 +782,7 @@ void BfGuiCreateWindowBladeSection::__renderSettings()
 
       ImGui::EndTable();
    }
+   ImGui::Text("Греческие буквы: α, β, γ, δ, ε");
 }
 
 void BfGuiCreateWindowBladeSection::__processDragDropTarget()

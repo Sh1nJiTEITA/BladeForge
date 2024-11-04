@@ -37,6 +37,7 @@ class BfGui
 
    ImFont* __default_font         = nullptr;
    ImFont* __icon_font            = nullptr;
+   ImFont* __greek_font           = nullptr;
 
    bool __is_info                 = true;
    bool __is_event_log            = false;
@@ -63,6 +64,7 @@ public:
    BfEvent bindSettings(std::filesystem::path path);
    BfEvent bindDefaultFont();
    BfEvent bindIconFont();
+   BfEvent bindGreekFont();
 
    void updateFonts();
 

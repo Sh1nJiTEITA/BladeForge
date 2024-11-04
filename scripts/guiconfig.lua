@@ -5,7 +5,15 @@ local settings = {
       },
 
       standart_font = {
-         name = { "Cousine-Regular.ttf", "MONO.ttf" },
+         name = { "Cousine-Regular_m.ttf", "MONO.ttf" },
+         current = 0,
+         size = 14,
+         glypth_offset = { 0, 2.0 },
+         glypth_min_advance_x = nil,
+      },
+
+      greek_font = {
+         name = { "Cousine-Regular_greek.ttf" },
          current = 0,
          size = 14,
          glypth_offset = { 0, 2.0 },

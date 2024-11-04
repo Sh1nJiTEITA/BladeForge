@@ -439,6 +439,7 @@ BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
       }
       BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);
       BfConfigManager::fillFormFont(obj["icon_font"], &form->icon_font);
+      BfConfigManager::fillFormFont(obj["greek_font"], &form->greek_font);
 
       for (const auto& font_root_path : form->font_directory_paths)
       {
@@ -461,6 +462,14 @@ BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
                if (found_font_root_path.filename() == form->icon_font.name[i])
                {
                   form->icon_font.name[i] = found_font_root_path.string();
+               }
+            }
+
+            for (int i = 0; i < form->greek_font.name.size(); ++i)
+            {
+               if (found_font_root_path.filename() == form->greek_font.name[i])
+               {
+                  form->greek_font.name[i] = found_font_root_path.string();
                }
             }
          }

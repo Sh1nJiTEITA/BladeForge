@@ -21,6 +21,7 @@ struct BfFormFontSettings
    std::vector<fs::path> font_directory_paths;
    BfFormFont            standart_font;
    BfFormFont            icon_font;
+   BfFormFont            greek_font;
 };
 
 #endif

@@ -83,7 +83,20 @@ BfEvent BfGui::bindDefaultFont()
    config.GlyphOffset.y = __settings_form.standart_font.glypth_offset.second;
    config.SizePixels    = __settings_form.standart_font.size;
 
-   __default_font       = io.Fonts->AddFontFromFileTTF(
+   static const ImWchar ranges[] = {
+       0x0020,
+       0x007F,  // ASCII range
+       0x0391,
+       0x03A1,  // Greek Capital Letters
+       0x03A3,
+       0x03A9,  // Greek Capital Letters (continued)
+       0x03B1,
+       0x03C1,  // Greek Small Letters
+       0x03C3,
+       0x03C9,  // Greek Small Letters (continued)
+       0};
+
+   __default_font = io.Fonts->AddFontFromFileTTF(
        __settings_form.standart_font.name[__settings_form.standart_font.current]
            .c_str(),
        __settings_form.standart_font.size,
@@ -114,6 +127,29 @@ BfEvent BfGui::bindIconFont()
    return BfEvent();
 }
 
+BfEvent BfGui::bindGreekFont()
+{
+   ImGuiIO     &io = ImGui::GetIO();
+   ImFontConfig config;
+
+   config.GlyphOffset.y    = __settings_form.greek_font.glypth_offset.second;
+   config.SizePixels       = __settings_form.greek_font.size;
+
+   config.MergeMode        = true;
+   config.GlyphMinAdvanceX = __settings_form.greek_font.glypth_min_advance_x;
+   //
+   static const ImWchar greek_ranges[] = {0x0370, 0x03FF, 0};
+
+   __greek_font                        = io.Fonts->AddFontFromFileTTF(
+       __settings_form.greek_font.name[__settings_form.icon_font.current]
+           .c_str(),
+       __settings_form.greek_font.size,
+       &config,
+       greek_ranges);
+
+   return BfEvent();
+}
+
 void BfGui::updateFonts()
 {
    // if (!__default_font or !__icon_font)
@@ -123,6 +159,7 @@ void BfGui::updateFonts()
 
    bindDefaultFont();
    bindIconFont();
+   bindGreekFont();
 
    ImGui_ImplVulkan_CreateFontsTexture();
    // }

@@ -110,6 +110,7 @@ void BfMain::__init()
    {
       __gui.bindDefaultFont();
       __gui.bindIconFont();
+      __gui.bindGreekFont();
    }
    bfPostInitImGui(__base);
 
