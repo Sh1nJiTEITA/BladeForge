@@ -123,8 +123,6 @@ protected:
    bool        __is_drop_target;
    ImVec2      __old_size;
 
-   static std::function<void(std::string)> __f_root_delete;
-
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();
    virtual void __renderChildContent() override;
@@ -135,17 +133,14 @@ protected:
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
 
-   void __processDragDropSource();
-   void __processDragDropTarget();
-   void __processDragDropTargetSwap();
-   void __processDragDropTargetMove();
+   virtual void __processDragDropSource();
+   virtual void __processDragDropTarget();
 
 public:
    BfGuiCreateWindowContainerObj(BfGuiCreateWindowContainer::wptrContainer root,
                                  bool is_target = true);
 
    static bool isAnyMoving() noexcept;
-   static void setRootDelete(std::function<void(std::string)>);
 };
 
 //
@@ -158,6 +153,9 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
 {
    BfBladeSectionCreateInfo __create_info;
 
+   std::string __section_name;
+   bool        __is_settings = false;
+
    /*
       Добавить какой-то статический архив для сваппа!
       После определенных действий (конца ренедра) вызывать свап!
@@ -165,8 +163,12 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    */
 
 protected:
-   // virtual void __renderDragDropTarget() override;
-   // virtual void __renderChildContent() override;
+   void __renderSettingsWindow();
+   void __renderSettings();
+
+   virtual void __renderHeaderName() override;
+   virtual void __renderChildContent() override;
+   virtual void __processDragDropTarget() override;
 
 public:
    BfGuiCreateWindowBladeSection(BfGuiCreateWindowContainer::wptrContainer root,
@@ -181,13 +183,14 @@ public:
 
 class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 {
-   // virtual void __renderHeaderName() override;
-   //
+   std::string __base_name;
+
    void __setContainersPos();
 
 protected:
+   virtual void __renderHeaderName() override;
    virtual void __renderChildContent() override;
-   // virtual void __renderDragDropTarget() override;
+   virtual void __processDragDropTarget() override;
 
 public:
    BfGuiCreateWindowBladeBase(BfGuiCreateWindowContainer::wptrContainer root,

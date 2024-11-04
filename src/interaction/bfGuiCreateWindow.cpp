@@ -28,7 +28,7 @@ BfGuiCreateWindow::BfGuiCreateWindow()
    /*
          This is what happens when ROOT-container is 'Create' window!
          Function below deletes cointeiner from this staring 'Create' window.
-    */
+   */
 
    BfGuiCreateWindowContainerObj::bindSwapFunction(
        [&](const std::string& a, const std::string& b) {
@@ -39,9 +39,6 @@ BfGuiCreateWindow::BfGuiCreateWindow()
        [&](const std::string& what, const std::string& where) {
           __move_pairs.push({what, where});
        });
-
-   BfGuiCreateWindowContainerObj::setRootDelete(
-       [&](std::string name) { BfGuiCreateWindow::removeByName(name); });
 }
 
 BfGuiCreateWindow* BfGuiCreateWindow::instance() noexcept { return __instance; }
@@ -313,22 +310,22 @@ void BfGuiCreateWindow::__processMoves()
       auto pair = __move_pairs.top();
       //
       auto optPair = __findAndCheckPair(pair);
-      auto what    = (*optPair.first);
-      auto where   = (*optPair.second);
+      auto what    = *(*optPair.first);
+      auto where   = *(*optPair.second);
 
-      where->get()->add(*what);
+      where->add(what);
 
-      auto wptr_old_root = what->get()->root();
+      auto wptr_old_root = what->root();
       if (auto shared_old_root = wptr_old_root.lock())
       {
-         shared_old_root->clearEmptyContainersByName(what->get()->name());
+         shared_old_root->clearEmptyContainersByName(what->name());
       }
       else
       {
          __containers.remove_if(
-             [&what](auto c) { return c->name() == what->get()->name(); });
+             [&what](auto c) { return c->name() == what->name(); });
       }
-      what->get()->root() = *where;
+      what->root() = where;
 
       __move_pairs.pop();
    }
