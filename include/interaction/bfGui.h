@@ -129,7 +129,6 @@ void bfPresentLayerHandler(BfLayerHandler&);
 void bfPresentBladeSectionInside(BfBladeBase*              layer,
                                  BfBladeSectionCreateInfo* info,
                                  BfBladeSectionCreateInfo* old);
-void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
 
 void ShowTestPlot();
 

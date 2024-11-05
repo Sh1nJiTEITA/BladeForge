@@ -698,54 +698,6 @@ void BfGui::presentEventLog()
    }
 }
 
-void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
-{
-#define BF_OBJ_NAME_LEN 30
-#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
-
-   size_t obj_count     = l->get_obj_count();
-   size_t lay_count     = l->get_layer_count();
-
-   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
-                          ") " + std::to_string(l->id.get());
-
-   if (ImGui::TreeNode(lay_name.c_str()))
-   {
-      for (size_t i = 0; i < lay_count; ++i)
-      {
-         bfShowNestedLayersRecursive(l->get_layer_by_index(i));
-      }
-      for (size_t i = 0; i < obj_count; ++i)
-      {
-         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
-         //
-         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
-                                bfGetStrNameDrawObjType(obj->id.get_type()) +
-                                ") " + std::to_string(obj->id.get());
-
-         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
-         if (ImGui::TreeNode(obj_name.c_str()))
-         {
-            ImGui::Text(
-                ("\tVertices " + std::to_string(obj->get_vertices_count()))
-                    .c_str());
-
-            ImGui::Text(
-                ("\tIndices " + std::to_string(obj->get_indices_count()))
-                    .c_str());
-
-            ImGui::Text(
-                ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
-                    .c_str());
-
-            ImGui::TreePop();
-         }
-         ImGui::PopStyleColor();
-      }
-      ImGui::TreePop();
-   }
-}
-
 void bfPresentLayerHandler(BfLayerHandler &layer_handler)
 {
    ImGui::Begin("Layer observer");

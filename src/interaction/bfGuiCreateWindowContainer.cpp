@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "bfCurves2.h"
+#include "bfLayerHandler.h"
 #include "bfVariative.hpp"
 #include "imgui.h"
 
@@ -32,9 +34,6 @@ void BfGuiCreateWindowContainer::__clampPosition()
 
    ImVec2 delta_pos{outter_pos.x - __old_outter_pos.x,
                     outter_pos.y - __old_outter_pos.y};
-
-   bool is_outter_changed =
-       outter_pos.x != __old_outter_pos.x || outter_pos.y != __old_outter_pos.y;
 
    ImVec2 new_pos = {
        std::clamp(__window_pos.x + delta_pos.x,
@@ -608,6 +607,16 @@ void BfGuiCreateWindowContainerObj::__renderDragDropTarget()
    __processDragDropTarget();
 }
 
+void BfGuiCreateWindowContainerObj::__renderAvailableLayers()
+{
+   auto lh = BfLayerHandler::instance();
+   for (size_t i = 0; i < lh->get_layer_count(); i++)
+   {
+      auto layer = lh->get_layer_by_index(i);
+      bfShowNestedLayersRecursive(layer);
+   }
+}
+
 void BfGuiCreateWindowContainerObj::__processDragDropSource()
 {
    if (ImGui::BeginDragDropSource())
@@ -658,6 +667,11 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
     , __old_size{__window_size}
     , __is_drop_target{is_target}
 {
+   __layer_create_info = {.allocator = *BfLayerHandler::instance()->allocator(),
+                          .vertex_size        = sizeof(BfVertex3),
+                          .max_vertex_count   = 1000,
+                          .max_reserved_count = 1000,
+                          .is_nested          = true};
 }
 
 void BfGuiCreateWindowContainerObj::__addToLayer(
@@ -665,6 +679,151 @@ void BfGuiCreateWindowContainerObj::__addToLayer(
 {
    auto lh = BfLayerHandler::instance();
    // lh->add(__ptr_section);
+}
+
+void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
+{
+#define BF_OBJ_NAME_LEN 30
+#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
+
+   size_t obj_count     = l->get_obj_count();
+   size_t lay_count     = l->get_layer_count();
+
+   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
+                          ") " + std::to_string(l->id.get());
+
+   if (ImGui::TreeNode(lay_name.c_str()))
+   {
+      for (size_t i = 0; i < lay_count; ++i)
+      {
+         bfShowNestedLayersRecursive(l->get_layer_by_index(i));
+      }
+      for (size_t i = 0; i < obj_count; ++i)
+      {
+         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
+         //
+         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
+                                bfGetStrNameDrawObjType(obj->id.get_type()) +
+                                ") " + std::to_string(obj->id.get());
+
+         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
+         if (ImGui::TreeNode(obj_name.c_str()))
+         {
+            ImGui::Text(
+                ("\tVertices " + std::to_string(obj->get_vertices_count()))
+                    .c_str());
+
+            ImGui::Text(
+                ("\tIndices " + std::to_string(obj->get_indices_count()))
+                    .c_str());
+
+            ImGui::Text(
+                ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
+                    .c_str());
+
+            ImGui::TreePop();
+         }
+         ImGui::PopStyleColor();
+      }
+      ImGui::TreePop();
+   }
+}
+
+void BfGuiCreateWindowContainerPopup::__clampPosition()
+{
+   ImVec2 outter_pos;
+   ImVec2 outter_size;
+   ImVec2 new_pos;
+
+   if (auto shared_root = __root_container.lock())
+   {
+      outter_pos = ImGui::FindWindowByName(shared_root->name())->Pos;
+      // outter_size = ImGui::FindWindowByName(shared_root->name())->Size;
+      outter_size = shared_root->size();
+
+      ImVec2 delta_pos{outter_pos.x - __old_outter_pos.x,
+                       outter_pos.y - __old_outter_pos.y};
+
+      float x_clamp            = __window_pos.x + delta_pos.x;
+
+      ImGuiViewport* viewport  = ImGui::GetMainViewport();
+      ImDrawList*    draw_list = ImGui::GetForegroundDrawList(viewport);
+
+      float padding_x          = ImGui::GetStyle().WindowPadding.x;
+
+      float left_x =
+          outter_pos.x + outter_size.x - padding_x - __resize_button_size.x * 2;
+      float right_x =
+          outter_pos.x + outter_size.x + __window_size.x - padding_x * 2;
+
+      draw_list->AddLine({left_x, pos().y + 50.0f},
+                         {right_x, pos().y + 50.0f},
+                         IM_COL32(255, 0, 0, 255),
+                         2.0f);
+
+      if (outter_pos.x - __window_size.x <= x_clamp && x_clamp <= outter_pos.x)
+      {
+         x_clamp =
+             std::clamp(x_clamp, outter_pos.x - __window_size.x, outter_pos.x);
+      }
+      else if (outter_pos.x + outter_size.x <= x_clamp &&
+               x_clamp <= outter_pos.x + outter_size.x + __window_size.x)
+      {
+         float left_x  = outter_pos.x + outter_size.x;
+         float right_x = outter_pos.x + outter_size.x + __window_size.x;
+
+         x_clamp       = std::clamp(x_clamp, left_x, right_x);
+
+         draw_list->AddLine({left_x, pos().y + 50.0f},
+                            {right_x, pos().y + 50.0f},
+                            IM_COL32(255, 0, 0, 255),
+                            2.0f);
+      }
+      else
+      {
+         std::cout << outter_pos.x + outter_size.x << "<=" << x_clamp << "<="
+                   << outter_pos.x + outter_size.x + __window_size.x -
+                          ImGui::GetStyle().WindowPadding.x * 2
+                   << "\n";
+      }
+
+      new_pos = {
+          // __window_pos.x + delta_pos.x,
+          //          outter_pos.x - __window_size.x +
+          //              ImGui::GetStyle().WindowPadding.x * 2,
+          //          outter_pos.x + outter_size.x -
+          //              ImGui::GetStyle().WindowPadding.x * 2),
+
+          x_clamp,
+          std::clamp(__window_pos.y + delta_pos.y,
+                     outter_pos.y,
+                     outter_pos.y + shared_root->size().y - __window_size.y)};
+   }
+   else
+   {
+      outter_pos  = ImGui::FindWindowByName("Create")->Pos;
+      outter_size = ImGui::FindWindowByName("Create")->Size;
+
+      ImVec2 delta_pos{outter_pos.x - __old_outter_pos.x,
+                       outter_pos.y - __old_outter_pos.y};
+
+      new_pos = {std::clamp(__window_pos.x + delta_pos.x,
+                            outter_pos.x,
+                            outter_pos.x + outter_size.x - __window_size.x),
+                 std::clamp(__window_pos.y + delta_pos.y,
+                            outter_pos.y,
+                            outter_pos.y + outter_size.y - __window_size.y)};
+   }
+
+   __old_outter_pos = outter_pos;
+   __window_pos     = new_pos;
+   ImGui::SetNextWindowPos(new_pos);
+}
+
+BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
+    BfGuiCreateWindowContainer::wptrContainer root)
+    : BfGuiCreateWindowContainer{root}
+{
 }
 
 //

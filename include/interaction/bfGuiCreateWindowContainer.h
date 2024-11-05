@@ -1,6 +1,7 @@
 #ifndef BF_GUI_CREATE_WINDOW_CONTAINER_H
 #define BF_GUI_CREATE_WINDOW_CONTAINER_H
 
+#include <bfDrawObjectDefineType.h>
 #include <bfGreekFont.h>
 #include <bfIconsFontAwesome6.h>
 #include <bfLayerHandler.h>
@@ -25,11 +26,9 @@ class BfGuiCreateWindowContainer
    std::string __str_top_resize_button_id;
    std::string __str_child_border_id;
    //
-   ImVec2 __resize_button_size     = {10.0f, 10.0f};
-   ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
-   ImVec2 __old_outter_pos;
+
    //
-   bool        __is_invisiable_buttons = true;
+   bool        __is_invisiable_buttons = false;
    bool        __is_first_render       = true;
    bool        __is_render             = true;
    bool        __is_dragging           = false;
@@ -39,7 +38,6 @@ class BfGuiCreateWindowContainer
    //
    void __pushStyle();
    void __popStyle();
-   void __clampPosition();
    //
    void __renderLeftResizeButton();
    void __renderRightResizeButton();
@@ -56,9 +54,13 @@ public:
        std::function<void(const std::string&, const std::string&)>;
 
 protected:
+   ImVec2 __resize_button_size     = {10.0f, 10.0f};
+   ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
+
    std::string   __str_id;
    ImVec2        __window_pos;
    ImVec2        __window_size = {150, 150};
+   ImVec2        __old_outter_pos;
    wptrContainer __root_container;
    //
    static swapFuncType __swapFunc;
@@ -70,6 +72,7 @@ protected:
    //
    std::list<ptrContainer> __containers;
 
+   virtual void __clampPosition();
    virtual void __renderHeader();
    virtual void __renderChildContent();
    void         __updatePosition();
@@ -125,6 +128,7 @@ protected:
    bool   __is_drop_target;
    ImVec2 __old_size;
    //
+   BfDrawLayerCreateInfo        __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;
 
    virtual void __pushButtonColorStyle();
@@ -137,6 +141,8 @@ protected:
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
 
+   virtual void __renderAvailableLayers();
+
    virtual void __processDragDropSource();
    virtual void __processDragDropTarget();
 
@@ -148,6 +154,20 @@ public:
                                  bool is_target = true);
 
    static bool isAnyMoving() noexcept;
+};
+
+void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
+
+class BfGuiCreateWindowContainerPopup
+    : public BfGuiCreateWindowContainer,
+      public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
+{
+protected:
+   virtual void __clampPosition() override;
+
+public:
+   BfGuiCreateWindowContainerPopup(
+       BfGuiCreateWindowContainer::wptrContainer root);
 };
 
 //
