@@ -35,14 +35,22 @@ void BfGuiCreateWindowContainer::__clampPosition()
    ImVec2 delta_pos{outter_pos.x - __old_outter_pos.x,
                     outter_pos.y - __old_outter_pos.y};
 
-   ImVec2 new_pos = {
-       std::clamp(__window_pos.x + delta_pos.x,
-                  outter_pos.x,
-                  outter_pos.x + outter_size.x - __window_size.x),
-       std::clamp(__window_pos.y + delta_pos.y,
-                  outter_pos.y,
-                  outter_pos.y + outter_size.y - __window_size.y)};
-
+   // ImVec2 new_pos   = {std::clamp(popupPos().x + delta_pos.x,
+   //                              outter_pos.x,
+   //                              outter_pos.x + outter_size.x -
+   //                              popupSize().x),
+   //                     std::clamp(popupPos().y + delta_pos.y,
+   //                              outter_pos.y,
+   //                              outter_pos.y + outter_size.y -
+   //                              popupSize().y)};
+   //
+   //
+   ImVec2 new_pos   = {std::clamp(pos().x + delta_pos.x,
+                                outter_pos.x,
+                                outter_pos.x + outter_size.x - size().x),
+                       std::clamp(popupPos().y + delta_pos.y,
+                                outter_pos.y,
+                                outter_pos.y + outter_size.y - size().y)};
    __old_outter_pos = outter_pos;
 
    ImGui::SetNextWindowPos(new_pos);
@@ -96,11 +104,27 @@ void BfGuiCreateWindowContainer::changeCursorStyle()
 
 void BfGuiCreateWindowContainer::__renderLeftResizeButton()
 {
-   if (__is_invisiable_buttons
-           ? ImGui::InvisibleButton(__str_left_resize_button_id.c_str(),
-                                    __resize_button_size)
-           : ImGui::Button(__str_left_resize_button_id.c_str(),
-                           __resize_button_size))
+   bool buttonClicked = false;
+
+   if (!__is_left_button)
+   {
+      ImGui::Dummy(__resize_button_size);
+   }
+   else
+   {
+      if (__is_invisiable_buttons)
+      {
+         buttonClicked =
+             ImGui::InvisibleButton(__str_left_resize_button_id.c_str(),
+                                    __resize_button_size);
+      }
+      else
+      {
+         buttonClicked = ImGui::Button(__str_left_resize_button_id.c_str(),
+                                       __resize_button_size);
+      }
+   }
+   if (buttonClicked)
    {
    }
 
@@ -125,11 +149,27 @@ void BfGuiCreateWindowContainer::__renderLeftResizeButton()
 
 void BfGuiCreateWindowContainer::__renderRightResizeButton()
 {
-   if (__is_invisiable_buttons
-           ? ImGui::InvisibleButton(__str_right_resize_button_id.c_str(),
-                                    __resize_button_size)
-           : ImGui::Button(__str_right_resize_button_id.c_str(),
-                           __resize_button_size))
+   bool buttonClicked = false;
+
+   if (!__is_right_button)
+   {
+      ImGui::Dummy(__resize_button_size);
+   }
+   else
+   {
+      if (__is_invisiable_buttons)
+      {
+         buttonClicked =
+             ImGui::InvisibleButton(__str_right_resize_button_id.c_str(),
+                                    __resize_button_size);
+      }
+      else
+      {
+         buttonClicked = ImGui::Button(__str_right_resize_button_id.c_str(),
+                                       __resize_button_size);
+      }
+   }
+   if (buttonClicked)
    {
    }
 
@@ -153,11 +193,27 @@ void BfGuiCreateWindowContainer::__renderRightResizeButton()
 
 void BfGuiCreateWindowContainer::__renderBotResizeButton()
 {
-   if (__is_invisiable_buttons
-           ? ImGui::InvisibleButton(__str_bot_resize_button_id.c_str(),
-                                    __bot_resize_button_size)
-           : ImGui::Button(__str_bot_resize_button_id.c_str(),
-                           __bot_resize_button_size))
+   bool buttonClicked = false;
+
+   if (!__is_bot_button)
+   {
+      ImGui::Dummy(__resize_button_size);
+   }
+   else
+   {
+      if (__is_invisiable_buttons)
+      {
+         buttonClicked =
+             ImGui::InvisibleButton(__str_bot_resize_button_id.c_str(),
+                                    __bot_resize_button_size);
+      }
+      else
+      {
+         buttonClicked = ImGui::Button(__str_bot_resize_button_id.c_str(),
+                                       __bot_resize_button_size);
+      }
+   }
+   if (buttonClicked)
    {
    }
 
@@ -183,11 +239,28 @@ void BfGuiCreateWindowContainer::__renderBotResizeButton()
 
 void BfGuiCreateWindowContainer::__renderTopResizeButton()
 {
-   if (__is_invisiable_buttons
-           ? ImGui::InvisibleButton(__str_top_resize_button_id.c_str(),
-                                    __bot_resize_button_size)
-           : ImGui::Button(__str_top_resize_button_id.c_str(),
-                           __bot_resize_button_size))
+   bool buttonClicked = false;
+
+   if (!__is_top_button)
+   {
+      ImGui::Dummy(__bot_resize_button_size);
+   }
+   else
+   {
+      if (__is_invisiable_buttons)
+      {
+         buttonClicked =
+             ImGui::InvisibleButton(__str_top_resize_button_id.c_str(),
+                                    __bot_resize_button_size);
+      }
+      else
+      {
+         buttonClicked = ImGui::Button(__str_top_resize_button_id.c_str(),
+                                       __bot_resize_button_size);
+      }
+   }
+
+   if (buttonClicked)
    {
    }
 
@@ -317,19 +390,6 @@ bool BfGuiCreateWindowContainer::render()
 
       if (ImGui::Begin(__str_id.c_str(), &__is_render, flags))
       {
-         // if (__is_collapsed)
-         // {
-         //    __pushStyle();
-         //    {
-         //       __renderLeftResizeButton();
-         //       ImGui::SameLine();
-         //       is_window_hovered = __renderChildBorder();
-         //       ImGui::SameLine();
-         //       __renderRightResizeButton();
-         //    }
-         //    __popStyle();
-         // }
-         // else
          {
             __pushStyle();
             {
@@ -372,6 +432,55 @@ BfGuiCreateWindowContainer::wptrContainer&
 BfGuiCreateWindowContainer::root() noexcept
 {
    return __root_container;
+}
+
+ImVec2 BfGuiCreateWindowContainer::popupSize()
+{
+   ImVec2 outsize = this->size();
+   float  max_x   = 0;
+   float  max_y   = 0;
+   for (auto c : __containers)
+   {
+      if (auto potential_popup =
+              std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(c))
+      {
+         switch (potential_popup->side())
+         {
+            case BfGuiCreateWindowContainerPopup::LEFT:
+               max_x = std::max(max_x, potential_popup->size().x);
+               break;
+            case BfGuiCreateWindowContainerPopup::RIGHT:
+               max_x = std::max(max_x, potential_popup->size().x);
+               break;
+            case BfGuiCreateWindowContainerPopup::TOP:
+               max_y = std::max(max_y, potential_popup->size().y);
+               break;
+            case BfGuiCreateWindowContainerPopup::BOT:
+               max_y = std::max(max_y, potential_popup->size().y);
+               break;
+         }
+      }
+   }
+   outsize.x += max_x;
+   outsize.y += max_y;
+   return outsize;
+}
+
+ImVec2 BfGuiCreateWindowContainer::popupPos()
+{
+   ImVec2 outpos = pos();
+   for (auto c : __containers)
+   {
+      if (auto potential_popup =
+              std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(c))
+      {
+         if (potential_popup->side() == BfGuiCreateWindowContainerPopup::TOP)
+         {
+            outpos.y += c->size().y;
+         }
+      }
+   }
+   return outpos;
 }
 
 bool BfGuiCreateWindowContainer::isEmpty() noexcept
@@ -729,6 +838,25 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
    }
 }
 
+void BfGuiCreateWindowContainerPopup::__assignButtons()
+{
+   switch (__side)
+   {
+      case LEFT:
+         __is_right_button = false;
+         break;
+      case RIGHT:
+         __is_left_button = false;
+         break;
+      case TOP:
+         __is_bot_button = false;
+         break;
+      case BOT:
+         __is_top_button = false;
+         break;
+   }
+}
+
 void BfGuiCreateWindowContainerPopup::__clampPosition()
 {
    ImVec2 outter_pos;
@@ -750,54 +878,85 @@ void BfGuiCreateWindowContainerPopup::__clampPosition()
       ImDrawList*    draw_list = ImGui::GetForegroundDrawList(viewport);
 
       float padding_x          = ImGui::GetStyle().WindowPadding.x;
+      float padding_y          = ImGui::GetStyle().WindowPadding.y;
 
-      float left_x =
-          outter_pos.x + outter_size.x - padding_x - __resize_button_size.x * 2;
-      float right_x =
-          outter_pos.x + outter_size.x + __window_size.x - padding_x * 2;
-
-      draw_list->AddLine({left_x, pos().y + 50.0f},
-                         {right_x, pos().y + 50.0f},
-                         IM_COL32(255, 0, 0, 255),
-                         2.0f);
-
-      if (outter_pos.x - __window_size.x <= x_clamp && x_clamp <= outter_pos.x)
+      switch (__side)
       {
-         x_clamp =
-             std::clamp(x_clamp, outter_pos.x - __window_size.x, outter_pos.x);
+         case LEFT: {
+            float top = shared_root->pos().y;
+            float bot = shared_root->pos().y + shared_root->size().y - size().y;
+
+            new_pos   = {shared_root->pos().x - size().x +
+                             __resize_button_size.x * 3 + padding_x,
+                         std::clamp(__window_pos.y + delta_pos.y, top, bot)};
+         }
+         break;
+         case RIGHT: {
+            float top = shared_root->pos().y;
+            float bot = shared_root->pos().y + shared_root->size().y - size().y;
+
+            new_pos   = {shared_root->pos().x + shared_root->size().x -
+                             __resize_button_size.x * 3 - padding_x,
+                         std::clamp(__window_pos.y + delta_pos.y, top, bot)};
+         }
+         break;
+         case TOP: {
+            float left = shared_root->pos().x;
+            float right =
+                shared_root->pos().x + shared_root->size().x - size().x;
+
+            new_pos = {std::clamp(__window_pos.x + delta_pos.x, left, right),
+                       shared_root->pos().y - size().y +
+                           __bot_resize_button_size.y * 3};
+         }
+         break;
+         case BOT: {
+            float left = shared_root->pos().x;
+            float right =
+                shared_root->pos().x + shared_root->size().x - size().x;
+
+            new_pos = {std::clamp(__window_pos.x + delta_pos.x, left, right),
+                       shared_root->pos().y + shared_root->size().y -
+                           __bot_resize_button_size.y * 3};
+         }
+         break;
       }
-      else if (outter_pos.x + outter_size.x <= x_clamp &&
-               x_clamp <= outter_pos.x + outter_size.x + __window_size.x)
-      {
-         float left_x  = outter_pos.x + outter_size.x;
-         float right_x = outter_pos.x + outter_size.x + __window_size.x;
 
-         x_clamp       = std::clamp(x_clamp, left_x, right_x);
+      // draw_list->AddLine({left_x, pos().y + 50.0f},
+      //                    {right_x, pos().y + 50.0f},
+      //                    IM_COL32(255, 0, 0, 255),
+      //                    2.0f);
 
-         draw_list->AddLine({left_x, pos().y + 50.0f},
-                            {right_x, pos().y + 50.0f},
-                            IM_COL32(255, 0, 0, 255),
-                            2.0f);
-      }
-      else
-      {
-         std::cout << outter_pos.x + outter_size.x << "<=" << x_clamp << "<="
-                   << outter_pos.x + outter_size.x + __window_size.x -
-                          ImGui::GetStyle().WindowPadding.x * 2
-                   << "\n";
-      }
-
-      new_pos = {
-          // __window_pos.x + delta_pos.x,
-          //          outter_pos.x - __window_size.x +
-          //              ImGui::GetStyle().WindowPadding.x * 2,
-          //          outter_pos.x + outter_size.x -
-          //              ImGui::GetStyle().WindowPadding.x * 2),
-
-          x_clamp,
-          std::clamp(__window_pos.y + delta_pos.y,
-                     outter_pos.y,
-                     outter_pos.y + shared_root->size().y - __window_size.y)};
+      // if (outter_pos.x - __window_size.x <= x_clamp && x_clamp <=
+      // outter_pos.x)
+      // {
+      //    x_clamp =
+      //        std::clamp(x_clamp, outter_pos.x - __window_size.x,
+      //        outter_pos.x);
+      // }
+      // else if (outter_pos.x + outter_size.x <= x_clamp &&
+      //          x_clamp <= outter_pos.x + outter_size.x +
+      //          __window_size.x)
+      // {
+      //    float left_x  = outter_pos.x + outter_size.x;
+      //    float right_x = outter_pos.x + outter_size.x +
+      //    __window_size.x;
+      //
+      //    x_clamp       = std::clamp(x_clamp, left_x, right_x);
+      //
+      //    draw_list->AddLine({left_x, pos().y + 50.0f},
+      //                       {right_x, pos().y + 50.0f},
+      //                       IM_COL32(255, 0, 0, 255),
+      //                       2.0f);
+      // }
+      // else
+      // {
+      //    std::cout << outter_pos.x + outter_size.x << "<=" << x_clamp
+      //    << "<="
+      //              << outter_pos.x + outter_size.x + __window_size.x -
+      //                     ImGui::GetStyle().WindowPadding.x * 2
+      //              << "\n";
+      // }
    }
    else
    {
@@ -823,7 +982,15 @@ void BfGuiCreateWindowContainerPopup::__clampPosition()
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     BfGuiCreateWindowContainer::wptrContainer root)
     : BfGuiCreateWindowContainer{root}
+    , __side{BfGuiCreateWindowContainerPopup::TOP}
 {
+   // __assignButtons();
+}
+
+BfGuiCreateWindowContainerPopup::SIDE
+BfGuiCreateWindowContainerPopup::side() noexcept
+{
+   return __side;
 }
 
 //

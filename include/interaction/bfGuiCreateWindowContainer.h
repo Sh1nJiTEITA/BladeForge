@@ -17,6 +17,7 @@
 #include <vector>
 
 class BfGuiCreateWindow;
+class BfGuiCreateWindowContainerPopup;
 
 class BfGuiCreateWindowContainer
 {
@@ -25,14 +26,16 @@ class BfGuiCreateWindowContainer
    std::string __str_bot_resize_button_id;
    std::string __str_top_resize_button_id;
    std::string __str_child_border_id;
+
    //
 
    //
-   bool        __is_invisiable_buttons = false;
-   bool        __is_first_render       = true;
-   bool        __is_render             = true;
-   bool        __is_dragging           = false;
-   bool        __is_resizing           = false;
+   bool __is_invisiable_buttons = true;
+   bool __is_first_render       = true;
+   bool __is_render             = true;
+   bool __is_dragging           = false;
+   bool __is_resizing           = false;
+
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
    //
@@ -54,6 +57,11 @@ public:
        std::function<void(const std::string&, const std::string&)>;
 
 protected:
+   bool __is_left_button           = true;
+   bool __is_right_button          = true;
+   bool __is_top_button            = true;
+   bool __is_bot_button            = true;
+
    ImVec2 __resize_button_size     = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
 
@@ -87,6 +95,9 @@ public:
    ImVec2&        pos() noexcept;
    ImVec2&        size() noexcept;
    wptrContainer& root() noexcept;
+
+   ImVec2 popupSize();
+   ImVec2 popupPos();
    // ----------------------------
    bool isEmpty() noexcept;
    bool isCollapsed() noexcept;
@@ -162,12 +173,28 @@ class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
 {
+public:
+   enum SIDE
+   {
+      LEFT,
+      RIGHT,
+      TOP,
+      BOT
+   };
+
+private:
+   void __assignButtons();
+
 protected:
    virtual void __clampPosition() override;
+
+   SIDE __side;
 
 public:
    BfGuiCreateWindowContainerPopup(
        BfGuiCreateWindowContainer::wptrContainer root);
+
+   SIDE side() noexcept;
 };
 
 //

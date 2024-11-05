@@ -3,15 +3,17 @@
 void BfGuiCreateWindowBladeBase::__setContainersPos()
 {
    ImVec2 avail = size();
-   avail.x -= ImGui::GetStyle().WindowPadding.x * 2;
-   avail.y -= ImGui::GetStyle().WindowPadding.y * 2;
+   //
 
    float next_container_h = ImGui::GetStyle().WindowPadding.y * 5;
    for (auto& c : __containers)
    {
-      c->pos().y = pos().y + next_container_h;
-      next_container_h += c->size().y - 25.0f;
+      c->pos().y =
+          pos().y - (c->popupSize().y - c->size().y) + next_container_h;
+      next_container_h += c->popupSize().y;
+      // next_container_h += c->popupSize().y - 25.0f;
    }
+   std::cout << "\n";
 }
 
 void BfGuiCreateWindowBladeBase::__renderHeaderName()
