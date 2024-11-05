@@ -1,8 +1,9 @@
 #ifndef BF_GUI_CREATE_WINDOW_CONTAINER_H
 #define BF_GUI_CREATE_WINDOW_CONTAINER_H
 
-#include <bfBladeSection.h>
+#include <bfGreekFont.h>
 #include <bfIconsFontAwesome6.h>
+#include <bfLayerHandler.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -119,9 +120,12 @@ class BfGuiCreateWindowContainerObj
 {
 protected:
    static bool __is_moving_container;
-   bool        __is_current_moving;
-   bool        __is_drop_target;
-   ImVec2      __old_size;
+   //
+   bool   __is_current_moving;
+   bool   __is_drop_target;
+   ImVec2 __old_size;
+   //
+   std::shared_ptr<BfDrawLayer> __layer_obj;
 
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();
@@ -136,6 +140,9 @@ protected:
    virtual void __processDragDropSource();
    virtual void __processDragDropTarget();
 
+   virtual void __createObj();
+   virtual void __addToLayer(std::shared_ptr<BfDrawLayer> add_to);
+
 public:
    BfGuiCreateWindowContainerObj(BfGuiCreateWindowContainer::wptrContainer root,
                                  bool is_target = true);
@@ -149,52 +156,10 @@ public:
 //
 //
 
-class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
-{
-   BfBladeSectionCreateInfo __create_info;
-
-   std::string __section_name;
-   bool        __is_settings = false;
-
-   /*
-      Добавить какой-то статический архив для сваппа!
-      После определенных действий (конца ренедра) вызывать свап!
-      Важно, правильно найти, где находятся контейнеры и свапнуть.
-   */
-
-protected:
-   void __renderSettingsWindow();
-   void __renderSettings();
-
-   virtual void __renderHeaderName() override;
-   virtual void __renderChildContent() override;
-   virtual void __processDragDropTarget() override;
-
-public:
-   BfGuiCreateWindowBladeSection(BfGuiCreateWindowContainer::wptrContainer root,
-                                 bool is_target = true);
-};
-
 //
 //
 //
 //
 //
-
-class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
-{
-   std::string __base_name;
-
-   void __setContainersPos();
-
-protected:
-   virtual void __renderHeaderName() override;
-   virtual void __renderChildContent() override;
-   virtual void __processDragDropTarget() override;
-
-public:
-   BfGuiCreateWindowBladeBase(BfGuiCreateWindowContainer::wptrContainer root,
-                              bool is_target = true);
-};
 
 #endif

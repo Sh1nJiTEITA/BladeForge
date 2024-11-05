@@ -2657,6 +2657,21 @@ BfEvent bfLoadTextures(BfBase &base)
    return BfEvent();
 }
 
+BfEvent bfBindAllocatorToLayerHandler(BfBase &base)
+{
+   return base.layer_handler.bind_allocator(&base.allocator);
+}
+
+BfEvent bfBindTrianglePipelineToLayerHandler(BfBase &base)
+{
+   return base.layer_handler.bind_trianle_pipeline(&base.triangle_pipeline);
+}
+
+BfEvent bfBindLinePipelineToLayerHandler(BfBase &base)
+{
+   return base.layer_handler.bind_line_pipeline(&base.line_pipeline);
+}
+
 // void bfAllocateBuffersForDynamicMesh(BfBase& base)
 //{
 //	uint32_t MAX_VERTICES = 10000;

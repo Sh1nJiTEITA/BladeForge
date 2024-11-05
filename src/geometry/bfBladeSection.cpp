@@ -60,6 +60,34 @@ bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo &i_1,
            i_1.outlet_surface_angle == i_2.outlet_surface_angle};
 }
 
+void bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
+{
+   *info = {.layer_create_info    = {.allocator          = nullptr,
+                                     .vertex_size        = sizeof(BfVertex3),
+                                     .max_vertex_count   = 10000,
+                                     .max_reserved_count = 1000,
+                                     .is_nested          = false},
+            .width                = 1.0f,
+            .install_angle        = 102.0f,
+
+            .inlet_angle          = 25.0f,
+            .outlet_angle         = 42.0f,
+
+            .inlet_surface_angle  = 15.0f,
+            .outlet_surface_angle = 15.0f,
+
+            .inlet_radius         = 0.025f,
+            .outlet_radius        = 0.005f,
+
+            .border_length        = 20.0f,
+
+            .is_triangulate       = false,
+            .is_center            = true,
+
+            .l_pipeline           = nullptr,
+            .t_pipeline           = nullptr};
+}
+
 BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo *info)
     : BfDrawLayer(info->layer_create_info), __info{info}
 {

@@ -44,6 +44,7 @@ struct BfBladeSectionCreateInfo
 
 bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo& i_1,
                                            const BfBladeSectionCreateInfo& i_2);
+void bfFillBladeSectionStandart(BfBladeSectionCreateInfo* info);
 
 #define BF_BLADESECTION_AVE_COLOR glm::vec3(1.0, 0.5, 0.0)
 #define BF_BLADESECTION_BACK_COLOR glm::vec3(0.5, 0.0, 1.0)

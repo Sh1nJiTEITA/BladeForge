@@ -1,5 +1,8 @@
 #include "bfGuiCreateWindowContainer.h"
 
+#include <memory>
+
+#include "bfVariative.hpp"
 #include "imgui.h"
 
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
@@ -232,7 +235,11 @@ bool BfGuiCreateWindowContainer::__renderChildBorder()
    {
       __updateResizeButtonSize();
       __renderHeader();
-      if (!__is_collapsed) __renderChildContent();
+      if (!__is_collapsed)
+      {
+         ImGui::Separator();
+         __renderChildContent();
+      }
       __updatePosition();
       is_hovered = ImGui::IsWindowHovered();
    }
@@ -542,7 +549,6 @@ void BfGuiCreateWindowContainerObj::__renderHeader()
                            total_containers.c_str());
       }
    }
-   ImGui::Separator();
    __popButtonColorStyle();
 }
 
@@ -641,6 +647,11 @@ void BfGuiCreateWindowContainerObj::__processDragDropTarget()
    }
 }
 
+void BfGuiCreateWindowContainerObj::__createObj()
+{
+   __layer_obj = std::make_shared<BfDrawLayer>();
+}
+
 BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
     BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
     : BfGuiCreateWindowContainer{root}
@@ -649,164 +660,11 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 {
 }
 
-//
-//
-//
-//
-//
-
-BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
-    BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
-    : __section_name{"Section"}, BfGuiCreateWindowContainerObj(root, is_target)
+void BfGuiCreateWindowContainerObj::__addToLayer(
+    std::shared_ptr<BfDrawLayer> add_to)
 {
-   __window_size  = {300, 100};
-   __is_collapsed = false;
-}
-
-void BfGuiCreateWindowBladeSection::__renderHeaderName()
-{
-   float x = ImGui::GetWindowWidth() -
-             ImGui::GetStyle().WindowPadding.x * 2.0f -
-             ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-             ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
-             ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
-
-   static bool isEditing = false;
-   ImGui::PushID(name());
-   ImGui::Dummy({x, 20});
-   if (ImGui::IsItemHovered())
-   {
-      ImGui::SetTooltip("Change name...");
-   }
-
-   if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-   {
-      isEditing = true;
-   }
-   ImGui::SameLine();
-   ImGui::SetCursorPos(ImGui::GetCursorStartPos());
-   if (isEditing)
-   {
-      if (ImGui::InputText("##edit",
-                           __section_name.data(),
-                           ImGuiInputTextFlags_EnterReturnsTrue))
-      {
-      }
-
-      if (!ImGui::IsItemActive())
-      {
-         isEditing = false;
-      }
-   }
-   else
-   {
-      ImGui::Text("%s", __section_name.c_str());
-   }
-
-   ImGui::PopID();
-}
-
-void BfGuiCreateWindowBladeSection::__renderChildContent()
-{
-   if (ImGui::Button("Settings"))
-   {
-      __is_settings = !__is_settings;
-   }
-   if (__is_settings)
-   {
-      __renderSettingsWindow();
-   }
-   else
-   {
-      __renderSettings();
-   }
-}
-
-void BfGuiCreateWindowBladeSection::__renderSettingsWindow()
-{
-   ImGui::SetNextWindowPos({pos().x + 50.0f, pos().y + 50.0f},
-                           ImGuiCond_Appearing);
-   ImGui::Begin((std::string("Settings ") + __section_name + name()).c_str());
-   {
-      __renderSettings();
-   }
-   ImGui::End();
-}
-
-void BfGuiCreateWindowBladeSection::__renderSettings()
-{
-   auto renderRow = [&](const char* var_name,
-                        const char* des_name,
-                        const char* units_name,
-                        float*      value) {
-      ImGui::TableNextRow();
-      ImGui::TableSetColumnIndex(0);
-      ImGui::Text("%s", var_name);
-      ImGui::TableSetColumnIndex(1);
-      ImGui::Text("%s", des_name);
-      ImGui::TableSetColumnIndex(2);
-      ImGui::Text("%s", units_name);
-      ImGui::TableSetColumnIndex(3);
-
-      ImGui::PushID(var_name);
-      ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
-      {
-         ImGui::PushItemWidth(-FLT_MIN);
-         ImGui::InputFloat("##value", value);
-      }
-      ImGui::PopStyleColor();
-      ImGui::PopID();
-   };
-
-   ImGui::BeginTable("Section Settings",
-                     4,
-                     ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg);
-   {
-      ImGui::TableNextRow();
-      {  // HEADER BEGIN
-
-         ImGui::TableSetColumnIndex(0);
-         ImGui::TableHeader("Variable");
-
-         ImGui::TableSetColumnIndex(1);
-         ImGui::TableHeader("Designation");
-
-         ImGui::TableSetColumnIndex(2);
-         ImGui::TableHeader("Units");
-
-         ImGui::TableSetColumnIndex(3);
-         ImGui::TableHeader("Value");
-      }  // HEADER
-
-      renderRow("Width", "B", "[m]", &__create_info.width);
-
-      ImGui::EndTable();
-   }
-   ImGui::Text("Греческие буквы: α, β, γ, δ, ε");
-}
-
-void BfGuiCreateWindowBladeSection::__processDragDropTarget()
-{
-   if (ImGui::BeginDragDropTarget())
-   {
-      if (const ImGuiPayload* payload =
-              ImGui::AcceptDragDropPayload("Container"))
-      {
-         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
-             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
-
-         if (auto other_section =
-                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
-                     dropped_container))
-         {
-            __swapFunc(other_section->name(), this->name());
-         }
-         else
-         {
-         }
-      }
-      ImGui::EndDragDropTarget();
-   }
+   auto lh = BfLayerHandler::instance();
+   // lh->add(__ptr_section);
 }
 
 //
@@ -814,102 +672,10 @@ void BfGuiCreateWindowBladeSection::__processDragDropTarget()
 //
 //
 //
+
 //
-
-void BfGuiCreateWindowBladeBase::__setContainersPos()
-{
-   ImVec2 avail = size();
-   avail.x -= ImGui::GetStyle().WindowPadding.x * 2;
-   avail.y -= ImGui::GetStyle().WindowPadding.y * 2;
-
-   float next_container_h = ImGui::GetStyle().WindowPadding.y * 5;
-   for (auto& c : __containers)
-   {
-      c->pos().y = pos().y + next_container_h;
-      next_container_h += c->size().y - 25.0f;
-   }
-}
-
-void BfGuiCreateWindowBladeBase::__renderHeaderName()
-{
-   float x = ImGui::GetWindowWidth() -
-             ImGui::GetStyle().WindowPadding.x * 2.0f -
-             ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-             ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
-             ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
-
-   static bool isEditing = false;
-   ImGui::PushID(name());
-   ImGui::Dummy({x, 20});
-   if (ImGui::IsItemHovered())
-   {
-      ImGui::SetTooltip("Change name...");
-   }
-
-   if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-   {
-      isEditing = true;
-   }
-   ImGui::SameLine();
-   ImGui::SetCursorPos(ImGui::GetCursorStartPos());
-   if (isEditing)
-   {
-      if (ImGui::InputText("##edit",
-                           __base_name.data(),
-                           ImGuiInputTextFlags_EnterReturnsTrue))
-      {
-      }
-
-      if (!ImGui::IsItemActive())
-      {
-         isEditing = false;
-      }
-   }
-   else
-   {
-      ImGui::Text("%s", __base_name.c_str());
-   }
-
-   ImGui::PopID();
-}
-
-void BfGuiCreateWindowBladeBase::__renderChildContent()
-{
-   __setContainersPos();
-}
-
-BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
-    BfGuiCreateWindowContainer::wptrContainer root, bool is_target)
-    : __base_name{"Blade base"}, BfGuiCreateWindowContainerObj{root, is_target}
-{
-}
-
-void BfGuiCreateWindowBladeBase::__processDragDropTarget()
-{
-   if (ImGui::BeginDragDropTarget())
-   {
-      if (const ImGuiPayload* payload =
-              ImGui::AcceptDragDropPayload("Container"))
-      {
-         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
-             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
-
-         if (auto other_base =
-                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(
-                     dropped_container))
-         {
-            __swapFunc(other_base->name(), this->name());
-         }
-         else if (auto other_section =
-                      std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
-                          dropped_container))
-         {
-            __moveFunc(other_section->name(), this->name());
-         }
-         else
-         {
-         }
-      }
-      ImGui::EndDragDropTarget();
-   }
-}
+//
+//
+//
+//
+//

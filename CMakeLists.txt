@@ -238,7 +238,11 @@ set(BF_INTERACTION
     "include/interaction/bfGuiCreateWindow.h"
     "src/interaction/bfGuiCreateWindow.cpp"
     "include/interaction/bfGuiCreateWindowContainer.h"
-    "src/interaction/bfGuiCreateWindowContainer.cpp")
+    "src/interaction/bfGuiCreateWindowContainer.cpp"
+    "include/interaction/bfGuiCreateWindowBladeSection.h"
+    "src/interaction/bfGuiCreateWindowBladeSection.cpp"
+    "include/interaction/bfGuiCreateWindowBladeBase.h"
+    "src/interaction/bfGuiCreateWindowBladeBase.cpp")
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"

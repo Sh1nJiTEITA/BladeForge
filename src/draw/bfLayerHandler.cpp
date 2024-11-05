@@ -1,8 +1,15 @@
 #include "bfLayerHandler.h"
 
+#include "bfEvent.h"
+
 BfLayerHandler::BfLayerHandler(size_t reserved_layer_count)
     : __pDescriptor{nullptr}
 {
+   if (__pInstance)
+   {
+      throw std::runtime_error("Layer Handler already exists");
+   }
+   __pInstance = this;
    __layers.reserve(reserved_layer_count);
 }
 
@@ -23,6 +30,12 @@ void BfLayerHandler::kill()
 
 BfLayerHandler::~BfLayerHandler() { kill(); }
 
+BfLayerHandler* BfLayerHandler::__pInstance = nullptr;
+
+BfLayerHandler* BfLayerHandler::instance() noexcept { return __pInstance; }
+
+VmaAllocator* BfLayerHandler::allocator() noexcept { return __pAllocator; }
+
 BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
    BfSingleEvent event{};
@@ -39,6 +52,62 @@ BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
       event.action  = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS;
       event.success = true;
       __pDescriptor = desc;
+   }
+   return event;
+}
+
+BfEvent BfLayerHandler::bind_allocator(VmaAllocator* allocator)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (allocator)
+   {
+      event.action  = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_SUCCESS;
+      event.success = true;
+      __pAllocator  = allocator;
+   }
+   else
+   {
+      event.action  = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_FAILURE;
+      event.success = false;
+   }
+   return event;
+}
+
+BfEvent BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (pipeline)
+   {
+      event.action =
+          BF_ACTION_TYPE_BIND_TRIANGLE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
+      event.success       = true;
+      __pTrianglePipeline = pipeline;
+   }
+   else
+   {
+      event.action =
+          BF_ACTION_TYPE_BIND_TRIANGLE_PIPELINE_TO_LAYER_HANDLER_FAILURE;
+      event.success = false;
+   }
+   return event;
+}
+
+BfEvent BfLayerHandler::bind_line_pipeline(VkPipeline* pipeline)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   if (pipeline)
+   {
+      event.action = BF_ACTION_TYPE_BIND_LINE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
+      event.success   = true;
+      __pLinePipeline = pipeline;
+   }
+   else
+   {
+      event.action = BF_ACTION_TYPE_BIND_LINE_PIPELINE_TO_LAYER_HANDLER_FAILURE;
+      event.success = false;
    }
    return event;
 }

@@ -82,6 +82,10 @@ void BfMain::__init()
    bfCreatePhysicalDevice(__base);
    bfCreateLogicalDevice(__base);
    bfCreateAllocator(__base);
+   // TODO: REMAKE LOGIC ?
+   bfBindAllocatorToLayerHandler(__base);
+   bfBindTrianglePipelineToLayerHandler(__base);
+   bfBindLinePipelineToLayerHandler(__base);
 
    bfCreateSwapchain(__base);
 
@@ -632,20 +636,19 @@ void BfMain::__loop()
 //    }
 // }
 
+/*
+   Тут есть списочное объявление в конструкторе, чтобы
+   разные instance сгенеровались 1 раз, чтобы каждый раз
+   для каждого такого класса не прописывать bind
+*/
 BfMain::BfMain()
-// : __base{}, __holder{}
+    : __base{}, __holder{}
 {
-   std::cout << "HI_1\n";
-   __base = BfBase();
-   std::cout << "HI_2\n";
-   __holder = BfHolder();
-   std::cout << "HI_3\n";
 }
 
 void BfMain::run()
 {
    __init();
-   std::cout << "Aftet init\n";
    __loop();
    __kill();
 }

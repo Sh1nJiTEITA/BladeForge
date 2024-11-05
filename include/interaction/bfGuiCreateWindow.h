@@ -8,6 +8,7 @@
 #include <optional>
 #include <stack>
 
+#include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowContainer.h"
 
 class BfGuiCreateWindow
