@@ -82,10 +82,6 @@ void BfMain::__init()
    bfCreatePhysicalDevice(__base);
    bfCreateLogicalDevice(__base);
    bfCreateAllocator(__base);
-   // TODO: REMAKE LOGIC ?
-   bfBindAllocatorToLayerHandler(__base);
-   bfBindTrianglePipelineToLayerHandler(__base);
-   bfBindLinePipelineToLayerHandler(__base);
 
    bfCreateSwapchain(__base);
 
@@ -108,6 +104,12 @@ void BfMain::__init()
    bfCreateStandartCommandBuffers(__base);
    bfCreateGUICommandBuffers(__base);
    bfCreateSyncObjects(__base);
+
+   {  // TODO: REMAKE LOGIC ?
+      bfBindAllocatorToLayerHandler(__base);
+      bfBindTrianglePipelineToLayerHandler(__base);
+      bfBindLinePipelineToLayerHandler(__base);
+   }
 
    __gui.bindSettings("./scripts/guiconfig.lua");
    bfInitImGUI(__base);
