@@ -57,6 +57,7 @@ public:
 
    void removeByName(std::string);
    void render();
+   void toggleRender();
 };
 
 #endif

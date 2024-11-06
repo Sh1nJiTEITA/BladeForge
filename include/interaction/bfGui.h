@@ -86,6 +86,8 @@ public:
    void presentFileDialog();
    void presentCreateWindow();
 
+   void toggleRenderCreateWindow();
+
    void __presentOrthoSettings();
 };
 

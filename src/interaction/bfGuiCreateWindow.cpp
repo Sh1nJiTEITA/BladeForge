@@ -360,6 +360,8 @@ void BfGuiCreateWindow::render()
    __processEvents();
 }
 
+void BfGuiCreateWindow::toggleRender() { __is_render = !__is_render; }
+
 /*
    зарендерить все окна слоями! сначала на одном
    уровне потом на другом и тд

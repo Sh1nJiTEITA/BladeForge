@@ -11,9 +11,7 @@ void BfGuiCreateWindowBladeBase::__setContainersPos()
       c->pos().y =
           pos().y - (c->popupSize().y - c->size().y) + next_container_h;
       next_container_h += c->popupSize().y;
-      // next_container_h += c->popupSize().y - 25.0f;
    }
-   std::cout << "\n";
 }
 
 void BfGuiCreateWindowBladeBase::__renderHeaderName()

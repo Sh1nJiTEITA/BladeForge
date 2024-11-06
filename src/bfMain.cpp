@@ -2,6 +2,8 @@
 
 #include "bfBase.h"
 #include "bfConfigManager.h"
+#include "bfWindow.h"
+#include "imgui.h"
 
 #define VMA_IMPLEMENTATION
 
@@ -20,7 +22,8 @@ void BfMain::__process_keys()
       bfToggleCamParts(__base.window, 0, false);
    }
 
-   if ((glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
+   if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
+       (glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
         GLFW_PRESS) &&
        (glfwGetKey(__base.window->pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS))
    {
@@ -32,7 +35,8 @@ void BfMain::__process_keys()
       bfToggleCamParts(__base.window, 1, false);
    }
 
-   if (glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
+   if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
+       glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
        GLFW_PRESS)
    {
       bfToggleCamParts(__base.window, 2, true);
@@ -41,6 +45,13 @@ void BfMain::__process_keys()
    else
    {
       bfToggleCamParts(__base.window, 2, false);
+   }
+
+   if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
+        ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+       ImGui::IsKeyPressed(ImGuiKey_E, false))
+   {
+      __gui.toggleRenderCreateWindow();
    }
 }
 
@@ -75,6 +86,9 @@ void BfMain::__init()
    bfSetWindowSize(__base.window, BF_START_W, BF_START_H);
    bfSetWindowName(__base.window, BF_APP_NAME);
    bfCreateWindow(__base.window);
+   bfBindGuiWindowHoveringFunction(__base.window, []() {
+      return ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+   });
 
    bfCreateInstance(__base);
    bfCreateDebugMessenger(__base);
@@ -200,6 +214,8 @@ void BfMain::__loop()
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
+      // std::cout << ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) <<
+      // "\n";
       // __present_blade_base_create_window();
 
       __gui.presentTopDock();

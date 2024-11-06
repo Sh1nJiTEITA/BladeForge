@@ -172,6 +172,9 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
 void bfShowNestedLayersRecursiveWithSelectables(std::shared_ptr<BfDrawLayer> l,
                                                 int& selected_id);
 
+void bfShowNestedLayersRecursiveWithRadioButtons(std::shared_ptr<BfDrawLayer> l,
+                                                 int& selectedId);
+
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>

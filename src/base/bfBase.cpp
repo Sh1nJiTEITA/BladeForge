@@ -3594,6 +3594,7 @@ void bfUpdateUniformBuffer(BfBase &base)
          bfCalculateViewPartsS(base.window);
          break;
    }
+
    base.window->cam_mode = 99;
    bfUpdateView(base.window);
 
