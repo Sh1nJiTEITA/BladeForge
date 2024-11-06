@@ -27,6 +27,8 @@ public:
 
    static BfLayerHandler* instance() noexcept;
    VmaAllocator*          allocator() noexcept;
+   VkPipeline* trinagle_pipeline() noexcept;
+   VkPipeline* line_pipeline() noexcept;
 
    BfEvent bind_descriptor(BfDescriptor* desc);
    BfEvent bind_allocator(VmaAllocator* allocator);

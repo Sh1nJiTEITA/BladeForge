@@ -5,6 +5,7 @@
 #include <bfLayerHandler.h>
 
 #include <cstdint>
+#include <memory>
 
 #include "bfGuiCreateWindowContainer.h"
 

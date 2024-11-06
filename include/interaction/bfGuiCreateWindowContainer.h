@@ -137,6 +137,7 @@ protected:
    //
    bool   __is_current_moving;
    bool   __is_drop_target;
+   int    __selected_layer = -1;
    ImVec2 __old_size;
    //
    BfDrawLayerCreateInfo        __layer_create_info;
@@ -168,12 +169,17 @@ public:
 };
 
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
+void bfShowNestedLayersRecursiveWithSelectables(std::shared_ptr<BfDrawLayer> l,
+                                                int& selected_id);
 
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
 {
 public:
+   /*
+     TODO: Fix logic for top/bot window popups
+   */
    enum SIDE
    {
       LEFT,
@@ -186,13 +192,17 @@ private:
    void __assignButtons();
 
 protected:
-   virtual void __clampPosition() override;
-
    SIDE __side;
 
+   virtual void __clampPosition() override;
+   virtual void __renderChildContent() override;
+
 public:
+   std::function<void()> __renderPopupContentFunc;
+
    BfGuiCreateWindowContainerPopup(
-       BfGuiCreateWindowContainer::wptrContainer root);
+       BfGuiCreateWindowContainer::wptrContainer root,
+       std::function<void()>                     popup_func);
 
    SIDE side() noexcept;
 };

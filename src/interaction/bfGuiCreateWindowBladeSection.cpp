@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "bfBladeSection.h"
 #include "bfLayerHandler.h"
 #include "imgui.h"
 
@@ -11,6 +12,7 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
 {
    __window_size  = {300, 100};
    __is_collapsed = false;
+   bfFillBladeSectionStandart(&__create_info);
 }
 
 void BfGuiCreateWindowBladeSection::__renderHeaderName()
@@ -69,17 +71,11 @@ void BfGuiCreateWindowBladeSection::__renderChildContent()
    if (ImGui::Button("Add to layer"))
    {
       __is_popup_open = !__is_popup_open;
-      // if (auto ptr_root = __root_container.lock())
-      // {
-      // ptr_root->add(std::make_shared<BfGuiCreateWindowContainer>(ptr_root));
-      // }
-      //
-
-      // auto new_popup = std::make_shared<BfGuiCreateWindowContainerPopup>();
 
       this->add(std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(
           std::make_shared<BfGuiCreateWindowContainerPopup>(
-              shared_from_this())));
+              shared_from_this(),
+              [&]() { this->__renderAvailableLayers(); })));
    }
 
    if (__is_popup_open)
@@ -207,6 +203,7 @@ void BfGuiCreateWindowBladeSection::__renderSettings()
 
 void BfGuiCreateWindowBladeSection::__createObj()
 {
+   // __layer_obj = std::make_shared<BfBladeSection>(&__create_info);
    __ptr_section = std::make_shared<BfBladeSection>(&__create_info);
 }
 

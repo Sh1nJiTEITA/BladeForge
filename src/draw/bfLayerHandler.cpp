@@ -36,6 +36,12 @@ BfLayerHandler* BfLayerHandler::instance() noexcept { return __pInstance; }
 
 VmaAllocator* BfLayerHandler::allocator() noexcept { return __pAllocator; }
 
+VkPipeline* BfLayerHandler::trinagle_pipeline() noexcept
+{
+   return __pTrianglePipeline;
+}
+VkPipeline* BfLayerHandler::line_pipeline() noexcept { return __pLinePipeline; }
+
 BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
    BfSingleEvent event{};
@@ -263,6 +269,7 @@ std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_index(size_t index)
 }
 
 std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id)
+
 {
    for (auto& it : __layers)
    {
@@ -271,6 +278,7 @@ std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id)
          return it;
       }
    }
+   std::cout << "NO LAYER FOUND\n";
    abort();
 }
 

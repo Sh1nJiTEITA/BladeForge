@@ -722,7 +722,17 @@ void BfGuiCreateWindowContainerObj::__renderAvailableLayers()
    for (size_t i = 0; i < lh->get_layer_count(); i++)
    {
       auto layer = lh->get_layer_by_index(i);
-      bfShowNestedLayersRecursive(layer);
+      bfShowNestedLayersRecursiveWithSelectables(layer, __selected_layer);
+   }
+
+   if (ImGui::Button("Add this to layer") && __selected_layer != -1)
+   {
+      std::cout << "Creaing obj\n";
+      __createObj();
+      std::cout << "Adding obj\n";
+      __addToLayer(
+          BfLayerHandler::instance()->get_layer_by_id(__selected_layer));
+      std::cout << "Adding obj end\n";
    }
 }
 
@@ -786,8 +796,7 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 void BfGuiCreateWindowContainerObj::__addToLayer(
     std::shared_ptr<BfDrawLayer> add_to)
 {
-   auto lh = BfLayerHandler::instance();
-   // lh->add(__ptr_section);
+   // add_to->add(__layer_obj);
 }
 
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
@@ -800,7 +809,6 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
 
    std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
                           ") " + std::to_string(l->id.get());
-
    if (ImGui::TreeNode(lay_name.c_str()))
    {
       for (size_t i = 0; i < lay_count; ++i)
@@ -826,6 +834,72 @@ void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
                 ("\tIndices " + std::to_string(obj->get_indices_count()))
                     .c_str());
 
+            ImGui::Text(
+                ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
+                    .c_str());
+
+            ImGui::TreePop();
+         }
+         ImGui::PopStyleColor();
+      }
+      ImGui::TreePop();
+   }
+}
+
+void bfShowNestedLayersRecursiveWithSelectables(std::shared_ptr<BfDrawLayer> l,
+                                                int& selectedId)
+{
+#define BF_OBJ_NAME_LEN 30
+#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
+
+   size_t obj_count     = l->get_obj_count();
+   size_t lay_count     = l->get_layer_count();
+
+   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
+                          ") " + std::to_string(l->id.get());
+
+   // Отметим, что узел выбран, если его ID совпадает с выбранным ID
+   ImGuiTreeNodeFlags flags =
+       (selectedId == l->id.get() ? ImGuiTreeNodeFlags_Selected : 0);
+   if (ImGui::TreeNodeEx(lay_name.c_str(), flags))
+   {
+      // Проверяем, был ли узел кликнут
+      if (ImGui::IsItemClicked())
+      {
+         selectedId = l->id.get();  // Устанавливаем выбранный ID
+      }
+
+      // Рекурсивно отрисовываем дочерние слои
+      for (size_t i = 0; i < lay_count; ++i)
+      {
+         bfShowNestedLayersRecursiveWithSelectables(l->get_layer_by_index(i),
+                                                    selectedId);
+      }
+
+      // Отрисовываем объекты
+      for (size_t i = 0; i < obj_count; ++i)
+      {
+         std::shared_ptr<BfDrawObj> obj      = l->get_object_by_index(i);
+         std::string                obj_name = ICON_FA_BOX_ARCHIVE "(" +
+                                bfGetStrNameDrawObjType(obj->id.get_type()) +
+                                ") " + std::to_string(obj->id.get());
+
+         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
+         ImGuiTreeNodeFlags obj_flags =
+             (selectedId == obj->id.get() ? ImGuiTreeNodeFlags_Selected : 0);
+         if (ImGui::TreeNodeEx(obj_name.c_str(), obj_flags))
+         {
+            if (ImGui::IsItemClicked())
+            {
+               selectedId = obj->id.get();
+            }
+
+            ImGui::Text(
+                ("\tVertices " + std::to_string(obj->get_vertices_count()))
+                    .c_str());
+            ImGui::Text(
+                ("\tIndices " + std::to_string(obj->get_indices_count()))
+                    .c_str());
             ImGui::Text(
                 ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
                     .c_str());
@@ -979,10 +1053,20 @@ void BfGuiCreateWindowContainerPopup::__clampPosition()
    ImGui::SetNextWindowPos(new_pos);
 }
 
+void BfGuiCreateWindowContainerPopup::__renderChildContent()
+{
+   if (__renderPopupContentFunc)
+   {
+      __renderPopupContentFunc();
+   }
+}
+
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
-    BfGuiCreateWindowContainer::wptrContainer root)
+    BfGuiCreateWindowContainer::wptrContainer root,
+    std::function<void()>                     popup_func = nullptr)
     : BfGuiCreateWindowContainer{root}
-    , __side{BfGuiCreateWindowContainerPopup::TOP}
+    , __side{BfGuiCreateWindowContainerPopup::RIGHT}
+    , __renderPopupContentFunc{popup_func}
 {
    // __assignButtons();
 }
