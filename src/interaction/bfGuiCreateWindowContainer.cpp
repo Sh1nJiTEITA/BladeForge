@@ -729,7 +729,9 @@ void BfGuiCreateWindowContainerObj::__renderAvailableLayers()
 
    if (ImGui::Button("Add this to layer") && __selected_layer != -1)
    {
+      std::cout << "Creating begin\n";
       __createObj();
+      std::cout << "Creating end\n";
       __addToLayer(
           BfLayerHandler::instance()->get_layer_by_id(__selected_layer));
    }
@@ -787,7 +789,7 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 {
    __layer_create_info = {.allocator = *BfLayerHandler::instance()->allocator(),
                           .vertex_size        = sizeof(BfVertex3),
-                          .max_vertex_count   = 1000,
+                          .max_vertex_count   = 10000,
                           .max_reserved_count = 1000,
                           .is_nested          = true};
 }
@@ -795,7 +797,8 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 void BfGuiCreateWindowContainerObj::__addToLayer(
     std::shared_ptr<BfDrawLayer> add_to)
 {
-   // add_to->add(__layer_obj);
+   add_to->add(__layer_obj);
+   add_to->update_buffer();
 }
 
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)

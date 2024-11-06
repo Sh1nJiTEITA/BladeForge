@@ -269,17 +269,26 @@ std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_index(size_t index)
 }
 
 std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id)
-
 {
-   for (auto& it : __layers)
+   for (auto& l : __layers)
    {
-      if (it->id.get() == id)
+      if (l->id.get() == id)
       {
-         return it;
+         return l;
+      }
+      if (l->get_layer_count())
+      {
+         auto found = l->get_layer_by_id(id);
+         if (found) return found;
       }
    }
-   std::cout << "NO LAYER FOUND\n";
-   abort();
+   return nullptr;
+}
+
+std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id_recursive(
+    size_t id)
+{
+   return nullptr;
 }
 
 bool BfLayerHandler::__is_space_for_new_layer()

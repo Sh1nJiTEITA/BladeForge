@@ -631,6 +631,23 @@ std::shared_ptr<BfDrawLayer> BfDrawLayer::get_layer_by_index(size_t index)
       return __layers.at(index);
 }
 
+std::shared_ptr<BfDrawLayer> BfDrawLayer::get_layer_by_id(size_t id)
+{
+   for (auto &l : __layers)
+   {
+      if (l->id.get() == id)
+      {
+         return l;
+      }
+      if (l->get_layer_count())
+      {
+         auto found = l->get_layer_by_id(id);
+         if (found) return found;
+      }
+   }
+   return nullptr;
+}
+
 bool *BfGuiIntegration::get_pSelection() { return &__is_selected; }
 
 BfLayerKiller *BfLayerKiller::__p = nullptr;

@@ -13,6 +13,10 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
    __window_size  = {300, 100};
    __is_collapsed = false;
    bfFillBladeSectionStandart(&__create_info);
+
+   // FIX: Fix in future: doublign layer create infos here and inside
+   // BfGuiCreateWindowContainerObj
+   __create_info.layer_create_info = __layer_create_info;
 }
 
 void BfGuiCreateWindowBladeSection::__renderHeaderName()
@@ -203,15 +207,20 @@ void BfGuiCreateWindowBladeSection::__renderSettings()
 
 void BfGuiCreateWindowBladeSection::__createObj()
 {
-   // __layer_obj = std::make_shared<BfBladeSection>(&__create_info);
-   __ptr_section = std::make_shared<BfBladeSection>(&__create_info);
+   __layer_obj = std::make_shared<BfBladeSection>(&__create_info);
+   // __ptr_section = std::make_shared<BfBladeSection>(&__create_info);
 }
 
 void BfGuiCreateWindowBladeSection::__addToLayer(
     std::shared_ptr<BfDrawLayer> add_to)
 {
+   // std::cout << add_to->id.get() << "\n";
    auto lh = BfLayerHandler::instance();
-   lh->add(__ptr_section);
+   // lh->add(__layer_obj);
+   // std::cout << add_to->id.get() << "\n";
+   // add_to->add(__ptr_section);
+   add_to->add(__layer_obj);
+   add_to->update_buffer();
 }
 
 void BfGuiCreateWindowBladeSection::__processDragDropTarget()

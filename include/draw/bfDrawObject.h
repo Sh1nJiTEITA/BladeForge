@@ -119,6 +119,7 @@ public:
 
    std::shared_ptr<BfDrawObj>   get_object_by_index(size_t index);
    std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
+   std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t index);
 
    friend BfLayerHandler;
 };
