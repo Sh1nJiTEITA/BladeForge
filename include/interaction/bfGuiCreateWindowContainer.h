@@ -98,6 +98,10 @@ public:
 
    ImVec2 popupSize();
    ImVec2 popupPos();
+
+   void show();
+   void hide();
+   void toggleRender();
    // ----------------------------
    bool isEmpty() noexcept;
    bool isCollapsed() noexcept;
@@ -199,6 +203,7 @@ protected:
 
    virtual void __clampPosition() override;
    virtual void __renderChildContent() override;
+   virtual void __renderHeader() override;
 
 public:
    std::function<void()> __renderPopupContentFunc;

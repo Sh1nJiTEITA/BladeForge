@@ -19,6 +19,8 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    bool        __is_popup_open = false;
 
 protected:
+   std::shared_ptr<BfGuiCreateWindowContainerPopup> __layer_choser;
+
    void __renderSettingsWindow();
    void __renderSettings();
 

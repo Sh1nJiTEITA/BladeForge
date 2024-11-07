@@ -484,6 +484,10 @@ ImVec2 BfGuiCreateWindowContainer::popupPos()
    return outpos;
 }
 
+void BfGuiCreateWindowContainer::show() { __is_render = true; }
+void BfGuiCreateWindowContainer::hide() { __is_render = false; }
+void BfGuiCreateWindowContainer::toggleRender() { __is_render = !__is_render; }
+
 bool BfGuiCreateWindowContainer::isEmpty() noexcept
 {
    return __containers.empty();
@@ -1119,6 +1123,18 @@ void BfGuiCreateWindowContainerPopup::__renderChildContent()
    {
       __renderPopupContentFunc();
    }
+}
+
+void BfGuiCreateWindowContainerPopup::__renderHeader()
+{
+   ImGui::PushStyleColor(ImGuiCol_Button, {1.0f, 1.0f, 1.0f, 0.0f});
+   ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x -
+                        ImGui::CalcTextSize("\uf00d").x);
+   if (ImGui::Button("\uf00d"))
+   {
+      toggleRender();
+   }
+   ImGui::PopStyleColor();
 }
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(

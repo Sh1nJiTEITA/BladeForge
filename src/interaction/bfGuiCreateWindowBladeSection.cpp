@@ -17,6 +17,16 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
    // FIX: Fix in future: doublign layer create infos here and inside
    // BfGuiCreateWindowContainerObj
    __create_info.layer_create_info = __layer_create_info;
+
+   // __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+   //     shared_from_this(),
+   //     [&]() { this->__renderAvailableLayers(); });
+   // // __layer_choser->hide();
+   //
+   // // add(std::dynamic_pointer_cast<BfGuiCreateWindowContainer>());
+   // this->add(std::make_shared<BfGuiCreateWindowContainerPopup>(
+   //     shared_from_this(),
+   //     [&]() { this->__renderAvailableLayers(); }));
 }
 
 void BfGuiCreateWindowBladeSection::__renderHeaderName()
@@ -74,34 +84,18 @@ void BfGuiCreateWindowBladeSection::__renderChildContent()
 
    if (ImGui::Button("Add to layer"))
    {
-      __is_popup_open = !__is_popup_open;
-
-      this->add(std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(
-          std::make_shared<BfGuiCreateWindowContainerPopup>(
-              shared_from_this(),
-              [&]() { this->__renderAvailableLayers(); })));
-   }
-
-   if (__is_popup_open)
-   {
-      // ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-      // ImGui::SetNextWindowPos(ImGui::GetMousePos(), ImGuiCond_Always);
-      // ImGui::SetNextWindowPos(
-      //     {ImGui::GetWindowPos().x + ImGui::GetWindowSize().x,
-      //      ImGui::GetWindowPos().y});
-      // ImGui::SetNextWindowFocus();
-      // ImGui::Begin("Local layer observer",
-      //              &__is_popup_open,
-      //              ImGuiWindowFlags_AlwaysAutoResize |
-      //                  ImGuiWindowFlags_NoCollapse |
-      //                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-      //                  ImGuiWindowFlags_NoTitleBar |
-      //                  ImGuiWindowFlags_NoDecoration);
-      // {
-      //    __renderAvailableLayers();
-      //    if (ImGui::Button("Close")) __is_popup_open = false;
-      // }
-      // ImGui::End();
+      // __layer_choser->toggleRender();
+      if (!__layer_choser)
+      {
+         __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+             shared_from_this(),
+             [&]() { this->__renderAvailableLayers(); });
+         this->add(__layer_choser);
+      }
+      else
+      {
+         __layer_choser->toggleRender();
+      }
    }
 
    if (__is_settings)
@@ -208,17 +202,12 @@ void BfGuiCreateWindowBladeSection::__renderSettings()
 void BfGuiCreateWindowBladeSection::__createObj()
 {
    __layer_obj = std::make_shared<BfBladeSection>(&__create_info);
-   // __ptr_section = std::make_shared<BfBladeSection>(&__create_info);
 }
 
 void BfGuiCreateWindowBladeSection::__addToLayer(
     std::shared_ptr<BfDrawLayer> add_to)
 {
-   // std::cout << add_to->id.get() << "\n";
    auto lh = BfLayerHandler::instance();
-   // lh->add(__layer_obj);
-   // std::cout << add_to->id.get() << "\n";
-   // add_to->add(__ptr_section);
    add_to->add(__layer_obj);
    add_to->update_buffer();
 }
