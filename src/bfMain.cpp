@@ -10,7 +10,8 @@
 #include "BfMain.h"
 #include "vk_mem_alloc.h"
 
-void BfMain::__process_keys()
+void
+BfMain::__process_keys()
 {
    if (glfwGetKey(__base.window->pWindow, GLFW_KEY_C) == GLFW_PRESS)
    {
@@ -55,7 +56,8 @@ void BfMain::__process_keys()
    }
 }
 
-void BfMain::__poll_events()
+void
+BfMain::__poll_events()
 {
    glfwPollEvents();
    auto &io = ImGui::GetIO();
@@ -74,7 +76,8 @@ void BfMain::__poll_events()
    __gui.pollEvents();
 }
 
-void BfMain::__init()
+void
+BfMain::__init()
 {
    BfConfigManager::createInstance();
 
@@ -141,7 +144,8 @@ void BfMain::__init()
    __gui.bindHolder(&__holder);
 }
 
-void BfMain::__kill()
+void
+BfMain::__kill()
 {
    bfDestroyImGUI(__base);
    bfDestorySyncObjects(__base);
@@ -178,29 +182,34 @@ void BfMain::__kill()
    // std::cout << BfAllocationViewer::print_info();
 }
 
-void BfMain::__loop()
+void
+BfMain::__loop()
 {
    __base.current_frame = 0;
-   __base.is_resized    = true;
+   __base.is_resized = true;
 
    // BfLayerHandler
    {
-      auto otherLayer = std::make_shared<BfDrawLayer>(__base.allocator,
-                                                      sizeof(BfVertex3),
-                                                      100000,
-                                                      10,
-                                                      false);
-      __other_layer   = otherLayer.get();
+      auto otherLayer = std::make_shared<BfDrawLayer>(
+          __base.allocator,
+          sizeof(BfVertex3),
+          100000,
+          10,
+          false
+      );
+      __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
    }
    //
    {
-      auto bladeBases = std::make_shared<BfDrawLayer>(__base.allocator,
-                                                      sizeof(BfVertex3),
-                                                      1000,
-                                                      1000,
-                                                      false);
-      __blade_bases   = bladeBases.get();
+      auto bladeBases = std::make_shared<BfDrawLayer>(
+          __base.allocator,
+          sizeof(BfVertex3),
+          1000,
+          1000,
+          false
+      );
+      __blade_bases = bladeBases.get();
       __base.layer_handler.add(bladeBases);
    }
 
@@ -230,6 +239,7 @@ void BfMain::__loop()
       // __gui.presentLuaInteraction();
       __gui.presentFileDialog();
       __gui.presentCreateWindow();
+      __gui.presentSmartLayerObserver();
 
       // ImGui::ShowDemoWindow();
 
@@ -664,7 +674,8 @@ BfMain::BfMain()
 {
 }
 
-void BfMain::run()
+void
+BfMain::run()
 {
    __init();
    __loop();

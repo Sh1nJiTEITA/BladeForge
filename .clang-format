@@ -56,19 +56,21 @@ AllowAllParametersOfDeclarationOnNextLine: true
 BinPackArguments: false
 BinPackParameters: false
 PackConstructorInitializers: NextLineOnly
-AlignConsecutiveDeclarations: true
-AlignAfterOpenBracket: Align
+# AlignAfterOpenBracket: Align
 AllowShortBlocksOnASingleLine: false
 ColumnLimit: 80
 SpaceBeforeParens: ControlStatements
 BreakBeforeConceptDeclarations: Always
-BreakConstructorInitializers: BeforeComma
 RequiresClausePosition: SingleLine
 BreakBeforeTernaryOperators: true
 
-AlignConsecutiveAssignments:
-  Enabled: true
-  AcrossEmptyLines: true
-  AcrossComments: false
+AlignAfterOpenBracket: BlockIndent
 
+# AlignConsecutiveAssignments:
+#   Enabled: true
+#   AcrossEmptyLines: true
+#   AcrossComments: false
+#
 
+BreakConstructorInitializers: BeforeComma
+AlwaysBreakAfterReturnType: TopLevelDefinitions

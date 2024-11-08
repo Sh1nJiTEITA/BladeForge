@@ -18,6 +18,8 @@
 #include "bfGuiCreateWindow.h"
 #include "bfGuiFileDialog.h"
 #include "bfGuiLuaInteraction.h"
+#include "bfGuiSmartLayerObserverWindow.h"
+#include "bfGuiWindow.h"
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
@@ -28,23 +30,24 @@
 
 class BfGui
 {
-   BfBase*   __ptr_base   = nullptr;
+   BfBase* __ptr_base = nullptr;
    BfHolder* __ptr_holder = nullptr;
 
-   BfGuiFileDialog     __file_dialog;
+   BfGuiFileDialog __file_dialog;
    BfGuiLuaInteraction __lua_interaction;
-   BfGuiCreateWindow   __create_window;
+   BfGuiCreateWindow __create_window;
+   BfGuiSmartLayerObserver __smart_layer_observer;
 
-   ImFont* __default_font         = nullptr;
-   ImFont* __icon_font            = nullptr;
-   ImFont* __greek_font           = nullptr;
+   ImFont* __default_font = nullptr;
+   ImFont* __icon_font = nullptr;
+   ImFont* __greek_font = nullptr;
 
-   bool __is_info                 = true;
-   bool __is_event_log            = false;
-   bool __is_camera_info          = true;
-   bool __is_settings             = false;
-   bool __is_ortho_settings       = false;
-   bool __is_file_dialog          = true;
+   bool __is_info = true;
+   bool __is_event_log = false;
+   bool __is_camera_info = true;
+   bool __is_settings = false;
+   bool __is_ortho_settings = false;
+   bool __is_file_dialog = true;
 
    bool __is_left_dock_space_name = false;
 
@@ -85,6 +88,7 @@ public:
    void presentLuaInteraction();
    void presentFileDialog();
    void presentCreateWindow();
+   void presentSmartLayerObserver();
 
    void toggleRenderCreateWindow();
 
@@ -93,19 +97,19 @@ public:
 
 enum BfEnMenuStatus
 {
-   BF_MENU_STATUS_INFO_ENABLED             = 0x1,
-   BF_MENU_STATUS_INFO_DISABLED            = -0x1,
+   BF_MENU_STATUS_INFO_ENABLED = 0x1,
+   BF_MENU_STATUS_INFO_DISABLED = -0x1,
 
-   BF_MENU_STATUS_EVENT_LOG_ENABLED        = 0x2,
-   BF_MENU_STATUS_EVENT_LOG_DISABLED       = -0x2,
+   BF_MENU_STATUS_EVENT_LOG_ENABLED = 0x2,
+   BF_MENU_STATUS_EVENT_LOG_DISABLED = -0x2,
 
-   BF_MENU_STATUS_CAMERA_INFO_ENABLED      = 0x3,
-   BF_MENU_STATUS_CAMERA_INFO_DISABLED     = -0x3,
+   BF_MENU_STATUS_CAMERA_INFO_ENABLED = 0x3,
+   BF_MENU_STATUS_CAMERA_INFO_DISABLED = -0x3,
 
-   BF_MENU_STATUS_SETTINGS_ENABLED         = 0x4,
-   BF_MENU_STATUS_SETTINGS_DISABLED        = -0x4,
+   BF_MENU_STATUS_SETTINGS_ENABLED = 0x4,
+   BF_MENU_STATUS_SETTINGS_DISABLED = -0x4,
 
-   BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED  = 0x5,
+   BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED = 0x5,
    BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED = -0x5,
 };
 
@@ -128,9 +132,11 @@ const std::map<int, std::string> bfSetMenuStr{
 };
 
 void bfPresentLayerHandler(BfLayerHandler&);
-void bfPresentBladeSectionInside(BfBladeBase*              layer,
-                                 BfBladeSectionCreateInfo* info,
-                                 BfBladeSectionCreateInfo* old);
+void bfPresentBladeSectionInside(
+    BfBladeBase* layer,
+    BfBladeSectionCreateInfo* info,
+    BfBladeSectionCreateInfo* old
+);
 
 void ShowTestPlot();
 

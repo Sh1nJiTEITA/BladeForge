@@ -6,7 +6,8 @@ BfGui::BfGui()
    // __file_dialog.setRoot("./");
 }
 
-void BfGui::pollEvents()
+void
+BfGui::pollEvents()
 {
    while (!__queue_after_render.empty())
    {
@@ -17,13 +18,14 @@ void BfGui::pollEvents()
    __lua_interaction.pollEvents();
 }
 
-BfEvent BfGui::bindBase(BfBase *base)
+BfEvent
+BfGui::bindBase(BfBase *base)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    if (base)
    {
-      __ptr_base   = base;
+      __ptr_base = base;
       event.action = BF_ACTION_TYPE_BIND_BASE_TO_GUI_SUCCESS;
    }
    else
@@ -33,7 +35,8 @@ BfEvent BfGui::bindBase(BfBase *base)
    return event;
 }
 
-BfEvent BfGui::bindHolder(BfHolder *handler)
+BfEvent
+BfGui::bindHolder(BfHolder *handler)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -49,7 +52,8 @@ BfEvent BfGui::bindHolder(BfHolder *handler)
    return event;
 }
 
-BfEvent BfGui::bindSettings(std::filesystem::path path)
+BfEvent
+BfGui::bindSettings(std::filesystem::path path)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -68,20 +72,23 @@ BfEvent BfGui::bindSettings(std::filesystem::path path)
 
    sol::table settings_table = BfConfigManager::getLuaObj("guiconfig");
 
-   BfConfigManager::fillFormFontSettings(settings_table["fonts"],
-                                         &__settings_form);
+   BfConfigManager::fillFormFontSettings(
+       settings_table["fonts"],
+       &__settings_form
+   );
 
    event.action = BF_ACTION_TYPE_BIND_GUI_SETTINGS_SUCCESS;
    return event;
 }
 
-BfEvent BfGui::bindDefaultFont()
+BfEvent
+BfGui::bindDefaultFont()
 {
-   ImGuiIO     &io = ImGui::GetIO();
+   ImGuiIO &io = ImGui::GetIO();
    ImFontConfig config;
 
    config.GlyphOffset.y = __settings_form.standart_font.glypth_offset.second;
-   config.SizePixels    = __settings_form.standart_font.size;
+   config.SizePixels = __settings_form.standart_font.size;
 
    static const ImWchar ranges[] = {
        0x0020,
@@ -94,63 +101,70 @@ BfEvent BfGui::bindDefaultFont()
        0x03C1,  // Greek Small Letters
        0x03C3,
        0x03C9,  // Greek Small Letters (continued)
-       0};
+       0
+   };
 
    __default_font = io.Fonts->AddFontFromFileTTF(
        __settings_form.standart_font.name[__settings_form.standart_font.current]
            .c_str(),
        __settings_form.standart_font.size,
-       &config);
+       &config
+   );
 
    return BfEvent();
 }
 
-BfEvent BfGui::bindIconFont()
+BfEvent
+BfGui::bindIconFont()
 {
-   ImGuiIO     &io = ImGui::GetIO();
+   ImGuiIO &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y    = __settings_form.icon_font.glypth_offset.second;
-   config.SizePixels       = __settings_form.icon_font.size;
+   config.GlyphOffset.y = __settings_form.icon_font.glypth_offset.second;
+   config.SizePixels = __settings_form.icon_font.size;
 
-   config.MergeMode        = true;
+   config.MergeMode = true;
    config.GlyphMinAdvanceX = __settings_form.icon_font.glypth_min_advance_x;
    //
    static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
-   __icon_font                        = io.Fonts->AddFontFromFileTTF(
-       __settings_form.icon_font.name[__settings_form.icon_font.current]
-           .c_str(),
+   __icon_font = io.Fonts->AddFontFromFileTTF(
+       __settings_form.icon_font.name[__settings_form.icon_font.current].c_str(
+       ),
        __settings_form.icon_font.size,
        &config,
-       icon_ranges);
+       icon_ranges
+   );
 
    return BfEvent();
 }
 
-BfEvent BfGui::bindGreekFont()
+BfEvent
+BfGui::bindGreekFont()
 {
-   ImGuiIO     &io = ImGui::GetIO();
+   ImGuiIO &io = ImGui::GetIO();
    ImFontConfig config;
 
-   config.GlyphOffset.y    = __settings_form.greek_font.glypth_offset.second;
-   config.SizePixels       = __settings_form.greek_font.size;
+   config.GlyphOffset.y = __settings_form.greek_font.glypth_offset.second;
+   config.SizePixels = __settings_form.greek_font.size;
 
-   config.MergeMode        = true;
+   config.MergeMode = true;
    config.GlyphMinAdvanceX = __settings_form.greek_font.glypth_min_advance_x;
    //
    static const ImWchar greek_ranges[] = {0x0370, 0x03FF, 0};
 
-   __greek_font                        = io.Fonts->AddFontFromFileTTF(
-       __settings_form.greek_font.name[__settings_form.icon_font.current]
-           .c_str(),
+   __greek_font = io.Fonts->AddFontFromFileTTF(
+       __settings_form.greek_font.name[__settings_form.icon_font.current].c_str(
+       ),
        __settings_form.greek_font.size,
        &config,
-       greek_ranges);
+       greek_ranges
+   );
 
    return BfEvent();
 }
 
-void BfGui::updateFonts()
+void
+BfGui::updateFonts()
 {
    // if (!__default_font or !__icon_font)
    // {
@@ -165,7 +179,8 @@ void BfGui::updateFonts()
    // }
 }
 
-std::string BfGui::getMenuInfoStr()
+std::string
+BfGui::getMenuInfoStr()
 {
    if (__is_info)
       return bfSetMenuStr.at(BF_MENU_STATUS_INFO_ENABLED);
@@ -173,7 +188,8 @@ std::string BfGui::getMenuInfoStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_INFO_DISABLED);
 }
 
-std::string BfGui::getMenuEventLogStr()
+std::string
+BfGui::getMenuEventLogStr()
 {
    if (__is_event_log)
       return bfSetMenuStr.at(BF_MENU_STATUS_EVENT_LOG_ENABLED);
@@ -181,7 +197,8 @@ std::string BfGui::getMenuEventLogStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_EVENT_LOG_DISABLED);
 }
 
-std::string BfGui::getMenuCameraInfoStr()
+std::string
+BfGui::getMenuCameraInfoStr()
 {
    if (__is_camera_info)
       return bfSetMenuStr.at(BF_MENU_STATUS_CAMERA_INFO_ENABLED);
@@ -189,7 +206,8 @@ std::string BfGui::getMenuCameraInfoStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_CAMERA_INFO_DISABLED);
 }
 
-std::string BfGui::getMenuSettingsInfoStr()
+std::string
+BfGui::getMenuSettingsInfoStr()
 {
    if (__is_camera_info)
       return bfSetMenuStr.at(BF_MENU_STATUS_SETTINGS_ENABLED);
@@ -197,7 +215,8 @@ std::string BfGui::getMenuSettingsInfoStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_SETTINGS_DISABLED);
 }
 
-std::string BfGui::getMenuIsLeftDockTitleInfoStr()
+std::string
+BfGui::getMenuIsLeftDockTitleInfoStr()
 {
    if (__is_left_dock_space_name)
       return bfSetMenuStr.at(BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED);
@@ -205,7 +224,8 @@ std::string BfGui::getMenuIsLeftDockTitleInfoStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED);
 }
 
-void BfGui::presentLayerHandler()
+void
+BfGui::presentLayerHandler()
 {
    if (!ImGui::Begin("Layer observer", nullptr, ImGuiWindowFlags_None))
    {
@@ -222,7 +242,8 @@ void BfGui::presentLayerHandler()
    ImGui::End();
 }
 
-void BfGui::presentMenuBar()
+void
+BfGui::presentMenuBar()
 {
    if (ImGui::BeginMainMenuBar())
    {
@@ -272,27 +293,30 @@ void BfGui::presentMenuBar()
    }
 }
 
-void BfGui::presentCamera()
+void
+BfGui::presentCamera()
 {
    if (__is_camera_info)
    {
-      static bool is_per   = true;
-      static bool is_ort   = false;
+      static bool is_per = true;
+      static bool is_ort = false;
       static bool is_ortho = false;
 
       if (ImGui::Begin("Camera"))
       {
          ImVec2 table_size = ImGui::GetContentRegionAvail();
-         ImGui::BeginChild("##PresentcameraButtonsTableChild",
-                           {table_size.x - 130.0f, table_size.y});
+         ImGui::BeginChild(
+             "##PresentcameraButtonsTableChild",
+             {table_size.x - 130.0f, table_size.y}
+         );
          {
             if (ImGui::BeginTable(
                     "##PresentCameraButtonsTable",
                     3
                     // ,ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
-                    ))
+                ))
             {
-               float  row_h = table_size.y / 3.0f;
+               float row_h = table_size.y / 3.0f;
                ImVec2 dummy_size{0.1, 0.1};
 
                ImGui::TableNextRow(0, row_h);
@@ -348,15 +372,15 @@ void BfGui::presentCamera()
          {
             if (ImGui::RadioButton("Perspective", is_per))
             {
-               is_ort                        = false;
-               is_per                        = true;
+               is_ort = false;
+               is_per = true;
 
                __ptr_base->window->proj_mode = 0;
             }
             if (ImGui::RadioButton("Ortho", is_ort))
             {
-               is_ort                        = true;
-               is_per                        = false;
+               is_ort = true;
+               is_per = false;
 
                __ptr_base->window->proj_mode = 1;
             }
@@ -373,27 +397,30 @@ void BfGui::presentCamera()
    __presentOrthoSettings();
 }
 
-void BfGui::presentToolType()
+void
+BfGui::presentToolType()
 {
    if (__ptr_base->pos_id != 0)
    {
       ImGui::BeginTooltip();
 
       ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
-                       BfObjID::find_type(__ptr_base->pos_id))))
+                       BfObjID::find_type(__ptr_base->pos_id)
+                   )))
                       .c_str());
 
-      ImGui::Text((std::string("id=")
-                       .append(std::to_string(__ptr_base->pos_id))
-                       .c_str()));
+      ImGui::Text((
+          std::string("id=").append(std::to_string(__ptr_base->pos_id)).c_str()
+      ));
       ImGui::EndTooltip();
    }
 }
 
-void BfGui::presentLeftDock()
+void
+BfGui::presentLeftDock()
 {
-   float frame_h          = ImGui::GetFrameHeight();
-   float view_port_h      = ImGui::GetMainViewport()->Size.y;
+   float frame_h = ImGui::GetFrameHeight();
+   float view_port_h = ImGui::GetMainViewport()->Size.y;
    float top_dock_space_h = ImGui::FindWindowByName("Top dock space")->Size.y;
    ImGui::SetNextWindowPos({0, top_dock_space_h + frame_h});
 
@@ -403,27 +430,34 @@ void BfGui::presentLeftDock()
       flags |= ImGuiWindowFlags_NoTitleBar;
    }
 
-   ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, view_port_h),
-                                       ImVec2(FLT_MAX, view_port_h));
+   ImGui::SetNextWindowSizeConstraints(
+       ImVec2(0.0f, view_port_h),
+       ImVec2(FLT_MAX, view_port_h)
+   );
 
-   ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg,
-                         ImVec4(0.05f, 0.05f, 0.05f, 0.05f));
+   ImGui::PushStyleColor(
+       ImGuiCol_DockingEmptyBg,
+       ImVec4(0.05f, 0.05f, 0.05f, 0.05f)
+   );
    {
       ImGui::Begin("Left dock space", nullptr, flags);
       {
          ImGuiID left_dockspace_id = ImGui::GetID("LeftDockSpace");
-         ImGui::DockSpace(left_dockspace_id,
-                          ImVec2(0.0f, 0.0f),
-                          ImGuiDockNodeFlags_None);
+         ImGui::DockSpace(
+             left_dockspace_id,
+             ImVec2(0.0f, 0.0f),
+             ImGuiDockNodeFlags_None
+         );
       }
       ImGui::End();
    }
    ImGui::PopStyleColor();
 }
 
-void BfGui::presentTopDock()
+void
+BfGui::presentTopDock()
 {
-   float frame_h     = ImGui::GetFrameHeight();
+   float frame_h = ImGui::GetFrameHeight();
    float view_port_w = ImGui::GetMainViewport()->Size.x;
 
    ImGui::SetNextWindowPos({0, frame_h});
@@ -432,25 +466,32 @@ void BfGui::presentTopDock()
        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar;
    // ImGuiWindowFlags_NoResize;
 
-   ImGui::SetNextWindowSizeConstraints(ImVec2(view_port_w, 0.0f),
-                                       ImVec2(view_port_w, FLT_MAX));
+   ImGui::SetNextWindowSizeConstraints(
+       ImVec2(view_port_w, 0.0f),
+       ImVec2(view_port_w, FLT_MAX)
+   );
 
-   ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg,
-                         ImVec4(0.05f, 0.05f, 0.05f, 0.05f));
+   ImGui::PushStyleColor(
+       ImGuiCol_DockingEmptyBg,
+       ImVec4(0.05f, 0.05f, 0.05f, 0.05f)
+   );
    {
       ImGui::Begin("Top dock space", nullptr, flags);
       {
          ImGuiID top_dock_space_id = ImGui::GetID("TopDockSpace");
-         ImGui::DockSpace(top_dock_space_id,
-                          ImVec2(0.0f, 0.0f),
-                          ImGuiDockNodeFlags_None);
+         ImGui::DockSpace(
+             top_dock_space_id,
+             ImVec2(0.0f, 0.0f),
+             ImGuiDockNodeFlags_None
+         );
       }
       ImGui::End();
    }
    ImGui::PopStyleColor();
 }
 
-void BfGui::presentSettings()
+void
+BfGui::presentSettings()
 {
    if (__is_settings)
    {
@@ -466,9 +507,11 @@ void BfGui::presentSettings()
       ImGui::Begin("Settings");
       {
          ImGui::Text("Standart font settings");
-         if (ImGui::BeginTable("Standart Font",
-                               2,
-                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+         if (ImGui::BeginTable(
+                 "Standart Font",
+                 2,
+                 ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+             ))
          {
             {  // Standart font
                ImGui::TableNextRow();
@@ -481,10 +524,13 @@ void BfGui::presentSettings()
                           "##SETTINGS_FONTS_STANDART_COMBO",
                           &this->__settings_form.standart_font.current,
                           createVectorStr(
-                              this->__settings_form.standart_font.name)
+                              this->__settings_form.standart_font.name
+                          )
                               .data(),
                           static_cast<int>(
-                              this->__settings_form.standart_font.name.size())))
+                              this->__settings_form.standart_font.name.size()
+                          )
+                      ))
                   {
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
@@ -496,8 +542,10 @@ void BfGui::presentSettings()
                   ImGui::Text("Size");
                   ImGui::TableSetColumnIndex(1);
                   ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                  if (ImGui::InputInt("##SETTINGS_FONTS_STANDART_SIZE",
-                                      &__settings_form.standart_font.size))
+                  if (ImGui::InputInt(
+                          "##SETTINGS_FONTS_STANDART_SIZE",
+                          &__settings_form.standart_font.size
+                      ))
                   {
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
@@ -511,7 +559,8 @@ void BfGui::presentSettings()
                   ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                   if (ImGui::InputFloat(
                           "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_X",
-                          &__settings_form.standart_font.glypth_offset.first))
+                          &__settings_form.standart_font.glypth_offset.first
+                      ))
                   {
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
@@ -524,7 +573,8 @@ void BfGui::presentSettings()
                   ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                   if (ImGui::InputFloat(
                           "##SETTINGS_FONTS_STANDART_GLYPTH_OFFSET_Y",
-                          &__settings_form.standart_font.glypth_offset.second))
+                          &__settings_form.standart_font.glypth_offset.second
+                      ))
                   {
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
@@ -537,7 +587,8 @@ void BfGui::presentSettings()
                   ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                   if (ImGui::InputFloat(
                           "##SETTINGS_FONTS_STANDART_GLYPTH_MIN_ADVANCE_X",
-                          &__settings_form.standart_font.glypth_min_advance_x))
+                          &__settings_form.standart_font.glypth_min_advance_x
+                      ))
                   {
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
@@ -548,9 +599,11 @@ void BfGui::presentSettings()
          }
 
          ImGui::Text("Icon font settings");
-         if (ImGui::BeginTable("Icon Font",
-                               2,
-                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+         if (ImGui::BeginTable(
+                 "Icon Font",
+                 2,
+                 ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+             ))
          {  // Icon Font
             ImGui::TableNextRow();
             {
@@ -564,7 +617,9 @@ void BfGui::presentSettings()
                        createVectorStr(this->__settings_form.icon_font.name)
                            .data(),
                        static_cast<int>(
-                           this->__settings_form.icon_font.name.size())))
+                           this->__settings_form.icon_font.name.size()
+                       )
+                   ))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -576,8 +631,10 @@ void BfGui::presentSettings()
                ImGui::Text("Size");
                ImGui::TableSetColumnIndex(1);
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-               if (ImGui::InputInt("##SETTINGS_FONTS_ICON_SIZE",
-                                   &__settings_form.icon_font.size))
+               if (ImGui::InputInt(
+                       "##SETTINGS_FONTS_ICON_SIZE",
+                       &__settings_form.icon_font.size
+                   ))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -590,7 +647,8 @@ void BfGui::presentSettings()
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
                        "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_X",
-                       &__settings_form.icon_font.glypth_offset.first))
+                       &__settings_form.icon_font.glypth_offset.first
+                   ))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -603,7 +661,8 @@ void BfGui::presentSettings()
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
                        "##SETTINGS_FONTS_ICON_GLYPTH_OFFSET_Y",
-                       &__settings_form.icon_font.glypth_offset.second))
+                       &__settings_form.icon_font.glypth_offset.second
+                   ))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -616,7 +675,8 @@ void BfGui::presentSettings()
                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                if (ImGui::InputFloat(
                        "##SETTINGS_FONTS_ICON_GLYPTH_MIN_ADVANCE_X",
-                       &__settings_form.icon_font.glypth_min_advance_x))
+                       &__settings_form.icon_font.glypth_min_advance_x
+                   ))
                {
                   __queue_after_render.push([this]() { updateFonts(); });
                }
@@ -629,24 +689,37 @@ void BfGui::presentSettings()
    }
 }
 
-void BfGui::presentLuaInteraction() { __lua_interaction.draw(); }
+void
+BfGui::presentLuaInteraction()
+{
+   __lua_interaction.draw();
+}
 
-void BfGui::presentFileDialog() { __file_dialog.draw(); }
+void
+BfGui::presentFileDialog()
+{
+   __file_dialog.draw();
+}
 
-void BfGui::__presentOrthoSettings()
+void
+BfGui::__presentOrthoSettings()
 {
    if (__is_ortho_settings)
    {
       if (ImGui::Begin("Ortho settings", &__is_ortho_settings))
       {
          ImGui::InputFloat("Ortho-left", &__ptr_base->window->ortho_left, 0.1f);
-         ImGui::InputFloat("Ortho-right",
-                           &__ptr_base->window->ortho_right,
-                           0.1f);
+         ImGui::InputFloat(
+             "Ortho-right",
+             &__ptr_base->window->ortho_right,
+             0.1f
+         );
          ImGui::InputFloat("Ortho-top", &__ptr_base->window->ortho_top, 0.1f);
-         ImGui::InputFloat("Ortho-bottom",
-                           &__ptr_base->window->ortho_bottom,
-                           0.1f);
+         ImGui::InputFloat(
+             "Ortho-bottom",
+             &__ptr_base->window->ortho_bottom,
+             0.1f
+         );
          ImGui::InputFloat("Ortho-near", &__ptr_base->window->ortho_near, 0.1f);
          ImGui::InputFloat("Ortho-far", &__ptr_base->window->ortho_far, 0.1f);
          ImGui::Checkbox("is_asp", &__ptr_base->window->is_asp);
@@ -655,17 +728,34 @@ void BfGui::__presentOrthoSettings()
    }
 };
 
-void BfGui::presentCreateWindow() { __create_window.render(); }
+void
+BfGui::presentCreateWindow()
+{
+   __create_window.render();
+}
 
-void BfGui::toggleRenderCreateWindow() { __create_window.toggleRender(); }
+void
+BfGui::presentSmartLayerObserver()
+{
+   __smart_layer_observer.render();
+}
 
-void BfGui::presentEventLog()
+void
+BfGui::toggleRenderCreateWindow()
+{
+   __create_window.toggleRender();
+}
+
+void
+BfGui::presentEventLog()
 {
    if (__is_event_log)
    {
       ImVec2 size = {400, 600};
-      ImVec2 pos  = {__ptr_base->swap_chain_extent.width - size[0],
-                     (float)(__ptr_base->swap_chain_extent.height - size[1])};
+      ImVec2 pos = {
+          __ptr_base->swap_chain_extent.width - size[0],
+          (float)(__ptr_base->swap_chain_extent.height - size[1])
+      };
 
       ImGui::SetNextWindowPos(pos);
       ImGui::SetNextWindowSize(size);
@@ -678,16 +768,18 @@ void BfGui::presentEventLog()
 
       ImGui::Begin("Console", nullptr, windowFlags);
       {
-         auto it_event   = BfEventHandler::single_events.rbegin();
-         auto it_time    = BfEventHandler::single_event_time.rbegin();
+         auto it_event = BfEventHandler::single_events.rbegin();
+         auto it_time = BfEventHandler::single_event_time.rbegin();
          auto it_message = BfEventHandler::single_event_message.rbegin();
 
          while (it_event != BfEventHandler::single_events.rend() &&
                 it_time != BfEventHandler::single_event_time.rend() &&
                 it_message != BfEventHandler::single_event_message.rend())
          {
-            ImGui::TextColored(ImVec4{1.0f, 0.5f, 0.0f, 1.0f},
-                               it_time->c_str());
+            ImGui::TextColored(
+                ImVec4{1.0f, 0.5f, 0.0f, 1.0f},
+                it_time->c_str()
+            );
             ImGui::SameLine();
             ImGui::TextWrapped(it_message->c_str());
 
@@ -700,7 +792,8 @@ void BfGui::presentEventLog()
    }
 }
 
-void bfPresentLayerHandler(BfLayerHandler &layer_handler)
+void
+bfPresentLayerHandler(BfLayerHandler &layer_handler)
 {
    ImGui::Begin("Layer observer");
    {
@@ -713,18 +806,21 @@ void bfPresentLayerHandler(BfLayerHandler &layer_handler)
    ImGui::End();
 }
 
-void bfPresentBladeSectionInside(BfBladeBase              *layer,
-                                 BfBladeSectionCreateInfo *info,
-                                 BfBladeSectionCreateInfo *old)
+void
+bfPresentBladeSectionInside(
+    BfBladeBase *layer,
+    BfBladeSectionCreateInfo *info,
+    BfBladeSectionCreateInfo *old
+)
 {
    static int inputFloatMode = 0;
 
-   auto make_row             = [](std::string n,
+   auto make_row = [](std::string n,
                       std::string d,
                       std::string dim,
-                      float      *value,
-                      float       left,
-                      float       right) {
+                      float *value,
+                      float left,
+                      float right) {
       static int count = 0;
 
       ImGui::TableNextRow();
@@ -774,48 +870,62 @@ void bfPresentBladeSectionInside(BfBladeBase              *layer,
          ImGui::TableHeadersRow();
 
          make_row("Width", "B", "[m]##0", &info->width, 0.0f, 10.0f);
-         make_row("Install angle",
-                  "alpha_y",
-                  "[deg]##1",
-                  &info->install_angle,
-                  -180.0f,
-                  180.0f);
-         make_row("Inlet angle",
-                  "beta_1",
-                  "[deg]##2",
-                  &info->inlet_angle,
-                  -180.0f,
-                  180.0f);
-         make_row("Outlet angle",
-                  "beta_2",
-                  "[deg]##3",
-                  &info->outlet_angle,
-                  -180.0f,
-                  180.0f);
-         make_row("Inlet surface angle",
-                  "omega_1",
-                  "[deg]##4",
-                  &info->inlet_surface_angle,
-                  -45.0f,
-                  45.0f);
-         make_row("Outlet surface angle",
-                  "omega_2",
-                  "[deg]##5",
-                  &info->outlet_surface_angle,
-                  -45.0f,
-                  45.0f);
-         make_row("Inlet radius",
-                  "r_1",
-                  "[m]##6",
-                  &info->inlet_radius,
-                  0.00001,
-                  0.05);
-         make_row("Outlet radius",
-                  "r_2",
-                  "[m]##7",
-                  &info->outlet_radius,
-                  0.00001,
-                  0.05);
+         make_row(
+             "Install angle",
+             "alpha_y",
+             "[deg]##1",
+             &info->install_angle,
+             -180.0f,
+             180.0f
+         );
+         make_row(
+             "Inlet angle",
+             "beta_1",
+             "[deg]##2",
+             &info->inlet_angle,
+             -180.0f,
+             180.0f
+         );
+         make_row(
+             "Outlet angle",
+             "beta_2",
+             "[deg]##3",
+             &info->outlet_angle,
+             -180.0f,
+             180.0f
+         );
+         make_row(
+             "Inlet surface angle",
+             "omega_1",
+             "[deg]##4",
+             &info->inlet_surface_angle,
+             -45.0f,
+             45.0f
+         );
+         make_row(
+             "Outlet surface angle",
+             "omega_2",
+             "[deg]##5",
+             &info->outlet_surface_angle,
+             -45.0f,
+             45.0f
+         );
+         make_row(
+             "Inlet radius",
+             "r_1",
+             "[m]##6",
+             &info->inlet_radius,
+             0.00001,
+             0.05
+         );
+         make_row(
+             "Outlet radius",
+             "r_2",
+             "[m]##7",
+             &info->outlet_radius,
+             0.00001,
+             0.05
+         );
       }
       ImGui::EndTable();
 
@@ -864,13 +974,16 @@ void bfPresentBladeSectionInside(BfBladeBase              *layer,
    //}
    //*old = *info;
 };
-void ShowTestPlot()
+void
+ShowTestPlot()
 {
-   std::vector<glm::vec3> v{{0.0, 0.0, 0.0f},
-                            {1.0, 1.0f, 0.0f},
-                            {2.0f, 0.0f, 0.0f},
-                            {4.0f, 2.0f, 0.0f},
-                            {6.0f, -3.0f, 0.0f}};
+   std::vector<glm::vec3> v{
+       {0.0, 0.0, 0.0f},
+       {1.0, 1.0f, 0.0f},
+       {2.0f, 0.0f, 0.0f},
+       {4.0f, 2.0f, 0.0f},
+       {6.0f, -3.0f, 0.0f}
+   };
 
    std::vector<float> v_x;
    std::vector<float> v_y;
@@ -907,10 +1020,12 @@ void ShowTestPlot()
    ImGui::Begin("My Window");
    if (ImPlot::BeginPlot("My Plot"))
    {
-      ImPlot::SetupAxes("x",
-                        "y",
-                        ImPlotAxisFlags_NoGridLines,
-                        ImPlotAxisFlags_NoGridLines);
+      ImPlot::SetupAxes(
+          "x",
+          "y",
+          ImPlotAxisFlags_NoGridLines,
+          ImPlotAxisFlags_NoGridLines
+      );
 
       ImPlot::PlotLine("B(x)", x_.data(), y_.data(), spl.size());
       ImPlot::PlotScatter("fsdf", v_x.data(), v_y.data(), v.size());
