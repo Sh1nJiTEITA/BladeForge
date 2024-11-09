@@ -59,6 +59,6 @@ BfGuiWindow::toggleRender()
 }
 
 void
-BfGuiWindow::afterEvents()
+BfGuiWindow::pollEvents()
 {
 }

@@ -126,6 +126,10 @@ public:
    std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t index);
 
    friend BfLayerHandler;
+
+private:
+   std::shared_ptr<BfDrawObj> &__ref_find_obj_by_id(size_t id);
+   std::shared_ptr<BfDrawLayer> &__ref_find_layer_by_id(size_t id);
 };
 
 class BfLayerKiller

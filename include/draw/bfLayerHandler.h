@@ -13,9 +13,9 @@ class BfLayerHandler
 {
    std::vector<std::shared_ptr<BfDrawLayer>> __layers;
    //
-   BfDescriptor*          __pDescriptor;
+   BfDescriptor* __pDescriptor;
    static BfLayerHandler* __pInstance;
-   VmaAllocator*          __pAllocator;
+   VmaAllocator* __pAllocator;
 
    VkPipeline* __pTrianglePipeline;
    VkPipeline* __pLinePipeline;
@@ -26,9 +26,9 @@ public:
    ~BfLayerHandler();
 
    static BfLayerHandler* instance() noexcept;
-   VmaAllocator*          allocator() noexcept;
-   VkPipeline*            trinagle_pipeline() noexcept;
-   VkPipeline*            line_pipeline() noexcept;
+   VmaAllocator* allocator() noexcept;
+   VkPipeline* trinagle_pipeline() noexcept;
+   VkPipeline* line_pipeline() noexcept;
 
    BfEvent bind_descriptor(BfDescriptor* desc);
    BfEvent bind_allocator(VmaAllocator* allocator);
@@ -37,8 +37,12 @@ public:
    BfEvent bind_line_pipeline(VkPipeline* allocator);
 
    BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
-   void    del(size_t id);
-   void    kill();
+
+   BfEvent move_inner(size_t what_id, size_t where_id);
+   BfEvent swap_inner(size_t f_id, size_t s_id);
+
+   void del(size_t id);
+   void kill();
 
    const size_t get_whole_obj_count() const noexcept;
    const size_t get_layer_count() const noexcept;
@@ -48,8 +52,10 @@ public:
 
    std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
    std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t id);
-
    std::shared_ptr<BfDrawLayer> get_layer_by_id_recursive(size_t id);
+
+   std::shared_ptr<BfDrawLayer>& get_ref_find_layer(size_t id);
+   std::shared_ptr<BfDrawObj>& get_ref_find_obj(size_t id);
 
 private:
    bool __is_space_for_new_layer();

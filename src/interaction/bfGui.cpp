@@ -16,6 +16,7 @@ BfGui::pollEvents()
    }
 
    __lua_interaction.pollEvents();
+   __smart_layer_observer.pollEvents();
 }
 
 BfEvent

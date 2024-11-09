@@ -33,7 +33,7 @@ public:
    void show();
    void toggleRender();
 
-   virtual void afterEvents();
+   virtual void pollEvents();
 };
 
 #endif  // !BF_GUI_WINDOW_H

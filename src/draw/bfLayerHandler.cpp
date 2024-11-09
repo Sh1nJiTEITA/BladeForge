@@ -18,7 +18,8 @@ BfLayerHandler::BfLayerHandler()
 {
 }
 
-void BfLayerHandler::kill()
+void
+BfLayerHandler::kill()
 {
    auto killer = BfLayerKiller::get_root();
    for (auto& l : __layers)
@@ -32,55 +33,71 @@ BfLayerHandler::~BfLayerHandler() { kill(); }
 
 BfLayerHandler* BfLayerHandler::__pInstance = nullptr;
 
-BfLayerHandler* BfLayerHandler::instance() noexcept { return __pInstance; }
+BfLayerHandler*
+BfLayerHandler::instance() noexcept
+{
+   return __pInstance;
+}
 
-VmaAllocator* BfLayerHandler::allocator() noexcept { return __pAllocator; }
+VmaAllocator*
+BfLayerHandler::allocator() noexcept
+{
+   return __pAllocator;
+}
 
-VkPipeline* BfLayerHandler::trinagle_pipeline() noexcept
+VkPipeline*
+BfLayerHandler::trinagle_pipeline() noexcept
 {
    return __pTrianglePipeline;
 }
-VkPipeline* BfLayerHandler::line_pipeline() noexcept { return __pLinePipeline; }
+VkPipeline*
+BfLayerHandler::line_pipeline() noexcept
+{
+   return __pLinePipeline;
+}
 
-BfEvent BfLayerHandler::bind_descriptor(BfDescriptor* desc)
+BfEvent
+BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 
    if (desc == nullptr)
    {
-      event.action  = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE;
+      event.action = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE;
       event.success = false;
       __pDescriptor = nullptr;
    }
    else
    {
-      event.action  = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS;
+      event.action = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS;
       event.success = true;
       __pDescriptor = desc;
    }
    return event;
 }
 
-BfEvent BfLayerHandler::bind_allocator(VmaAllocator* allocator)
+BfEvent
+BfLayerHandler::bind_allocator(VmaAllocator* allocator)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    if (allocator)
    {
-      event.action  = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_SUCCESS;
+      event.action = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_SUCCESS;
       event.success = true;
-      __pAllocator  = allocator;
+      __pAllocator = allocator;
    }
    else
    {
-      event.action  = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_FAILURE;
+      event.action = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_FAILURE;
       event.success = false;
    }
    return event;
 }
 
-BfEvent BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
+BfEvent
+BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -88,7 +105,7 @@ BfEvent BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
    {
       event.action =
           BF_ACTION_TYPE_BIND_TRIANGLE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
-      event.success       = true;
+      event.success = true;
       __pTrianglePipeline = pipeline;
    }
    else
@@ -100,14 +117,15 @@ BfEvent BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
    return event;
 }
 
-BfEvent BfLayerHandler::bind_line_pipeline(VkPipeline* pipeline)
+BfEvent
+BfLayerHandler::bind_line_pipeline(VkPipeline* pipeline)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    if (pipeline)
    {
       event.action = BF_ACTION_TYPE_BIND_LINE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
-      event.success   = true;
+      event.success = true;
       __pLinePipeline = pipeline;
    }
    else
@@ -118,7 +136,8 @@ BfEvent BfLayerHandler::bind_line_pipeline(VkPipeline* pipeline)
    return event;
 }
 
-BfEvent BfLayerHandler::add(std::shared_ptr<BfDrawLayer> pLayer)
+BfEvent
+BfLayerHandler::add(std::shared_ptr<BfDrawLayer> pLayer)
 {
    if (pLayer->is_nested())
    {
@@ -143,7 +162,20 @@ BfEvent BfLayerHandler::add(std::shared_ptr<BfDrawLayer> pLayer)
    }
 }
 
-void BfLayerHandler::del(size_t id)
+BfEvent
+BfLayerHandler::move_inner(size_t what, size_t where)
+{
+   return BfEvent();
+}
+
+BfEvent
+BfLayerHandler::swap_inner(size_t f, size_t s)
+{
+   return BfEvent();
+}
+
+void
+BfLayerHandler::del(size_t id)
 {
    for (auto l = __layers.begin(); l != __layers.end(); l++)
    {
@@ -177,7 +209,8 @@ void BfLayerHandler::del(size_t id)
 //	}
 // }
 
-void BfLayerHandler::map_model_matrices(size_t frame_index)
+void
+BfLayerHandler::map_model_matrices(size_t frame_index)
 {
    size_t obj_count = this->get_whole_obj_count();
 
@@ -187,7 +220,8 @@ void BfLayerHandler::map_model_matrices(size_t frame_index)
    if (!__pDescriptor->is_usage(BfDescriptorModelMtxUsage))
    {
       throw std::runtime_error(
-          "No buffer for object data is ready in BfDescriptor");
+          "No buffer for object data is ready in BfDescriptor"
+      );
    }
 
    void* data;
@@ -218,7 +252,8 @@ void BfLayerHandler::map_model_matrices(size_t frame_index)
    __pDescriptor->unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);
 }
 
-const size_t BfLayerHandler::get_whole_obj_count() const noexcept
+const size_t
+BfLayerHandler::get_whole_obj_count() const noexcept
 {
    size_t size = 0;
    for (const auto& layer : __layers)
@@ -228,19 +263,21 @@ const size_t BfLayerHandler::get_whole_obj_count() const noexcept
    return size;
 }
 
-const size_t BfLayerHandler::get_layer_count() const noexcept
+const size_t
+BfLayerHandler::get_layer_count() const noexcept
 {
    return __layers.size();
 }
 
-void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
+void
+BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
 {
    size_t obj_data_offset = 0;
 
    for (const auto& layer : __layers)
    {
       size_t vertex_offset = 0;
-      size_t index_offset  = 0;
+      size_t index_offset = 0;
 
       layer->draw(command_buffer, obj_data_offset, index_offset, vertex_offset);
    }
@@ -261,14 +298,16 @@ void BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
    }*/
 }
 
-std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_index(size_t index)
+std::shared_ptr<BfDrawLayer>
+BfLayerHandler::get_layer_by_index(size_t index)
 {
    if (index > this->get_layer_count())
       throw std::runtime_error("Index > number of layers inside handler");
    return __layers.at(index);
 }
 
-std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id)
+std::shared_ptr<BfDrawLayer>
+BfLayerHandler::get_layer_by_id(size_t id)
 {
    for (auto& l : __layers)
    {
@@ -285,18 +324,20 @@ std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id(size_t id)
    return nullptr;
 }
 
-std::shared_ptr<BfDrawLayer> BfLayerHandler::get_layer_by_id_recursive(
-    size_t id)
+std::shared_ptr<BfDrawLayer>
+BfLayerHandler::get_layer_by_id_recursive(size_t id)
 {
    return nullptr;
 }
 
-bool BfLayerHandler::__is_space_for_new_layer()
+bool
+BfLayerHandler::__is_space_for_new_layer()
 {
    return __layers.size() < __layers.capacity();
 }
 
-bool BfLayerHandler::__is_layer_exists(uint32_t id)
+bool
+BfLayerHandler::__is_layer_exists(uint32_t id)
 {
    for (const auto& it : __layers)
    {
@@ -306,4 +347,39 @@ bool BfLayerHandler::__is_layer_exists(uint32_t id)
       }
    }
    return false;
+}
+
+std::shared_ptr<BfDrawLayer>&
+BfLayerHandler::get_ref_find_layer(size_t id)
+{
+   for (auto& l : __layers)
+   {
+      if (l->id.get() == id)
+      {
+         return l;
+      }
+      std::shared_ptr<BfDrawLayer>& found = l->__ref_find_layer_by_id(id);
+      if (found)
+      {
+         std::cout << "FOUND\n";
+         return found;
+      }
+   }
+   static std::shared_ptr<BfDrawLayer> null_obj = nullptr;
+   return null_obj;
+}
+
+std::shared_ptr<BfDrawObj>&
+BfLayerHandler::get_ref_find_obj(size_t id)
+{
+   for (auto& l : __layers)
+   {
+      std::shared_ptr<BfDrawObj>& found = l->__ref_find_obj_by_id(id);
+      if (found)
+      {
+         return found;
+      }
+   }
+   static std::shared_ptr<BfDrawObj> null_obj = nullptr;
+   return null_obj;
 }
