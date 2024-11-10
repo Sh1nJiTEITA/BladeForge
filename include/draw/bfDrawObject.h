@@ -46,11 +46,30 @@ struct BfDrawLayerCreateInfo
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class BfDrawLayer
+class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
 {
+   using ptrLayer_t = std::shared_ptr<BfDrawLayer>;
+   using ptrObj_t = std::shared_ptr<BfDrawObj>;
+   using ptrVar_t = std::variant<ptrLayer_t, ptrObj_t>;
+
+   using itptrLayer_t = std::vector<ptrLayer_t>::iterator;
+   using itptrObj_t = std::vector<ptrObj_t>::iterator;
+   using itptrVar_t = std::variant<itptrLayer_t, itptrObj_t>;
+
+   using layerPair = std::pair<ptrLayer_t, std::optional<itptrLayer_t>>;
+   using objPair = std::pair<ptrLayer_t, std::optional<itptrObj_t>>;
+   using varPair = std::pair<ptrLayer_t, std::optional<itptrVar_t>>;
+
+   // struct __varTransaction
+   // {
+   //    std::optional<itptrVar_t> what;
+   //    std::optional<itptrVar_t> where;
+   //    std::optional<ptrLayer_t> root;
+   // };
+
    uint32_t __reserved_n;
-   std::vector<std::shared_ptr<BfDrawObj>> __objects;
-   std::vector<std::shared_ptr<BfDrawLayer>> __layers;
+   std::vector<ptrObj_t> __objects;
+   std::vector<ptrLayer_t> __layers;
 
    // offset of index of vertex in vertex buffer
    std::vector<int32_t> __vertex_offsets;
@@ -77,8 +96,8 @@ public:
 
    bool is_nested() const noexcept;
 
-   std::vector<std::shared_ptr<BfDrawObj>>::iterator begin();
-   std::vector<std::shared_ptr<BfDrawObj>>::iterator end();
+   itptrObj_t begin();
+   itptrObj_t end();
 
    const size_t get_whole_vertex_count() const noexcept;
    const size_t get_whole_index_count() const noexcept;
@@ -89,13 +108,13 @@ public:
 
    const std::vector<BfObjectData> get_obj_model_matrices() const noexcept;
 
-   void add(std::shared_ptr<BfDrawObj> obj);
-   void add(std::shared_ptr<BfDrawLayer> layer);
-   void add_l(std::shared_ptr<BfDrawObj> obj);
+   void add(ptrObj_t obj);
+   void add(ptrLayer_t layer);
+   void add_l(ptrObj_t obj);
 
    virtual void generate_draw_data();
 
-   void del(uint32_t id);
+   void del(uint32_t id, bool total = true);
    void del(const std::vector<uint32_t> &id);
 
    virtual void del_all();
@@ -121,15 +140,19 @@ public:
 
    void map_model_matrices(size_t frame_index, size_t &offset, void *data);
 
-   std::shared_ptr<BfDrawObj> get_object_by_index(size_t index);
-   std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
-   std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t index);
+   ptrObj_t get_object_by_index(size_t index);
+   ptrLayer_t get_layer_by_index(size_t index);
+   ptrLayer_t get_layer_by_id(size_t index);
 
    friend BfLayerHandler;
 
 private:
-   std::shared_ptr<BfDrawObj> &__ref_find_obj_by_id(size_t id);
-   std::shared_ptr<BfDrawLayer> &__ref_find_layer_by_id(size_t id);
+   ptrObj_t &__ref_find_obj_by_id(size_t id);
+   ptrLayer_t &__ref_find_layer_by_id(size_t id);
+   objPair __it_find_obj_by_id(size_t id);
+   layerPair __it_find_layer_by_id(size_t id);
+   varPair __it_find_var_by_id(size_t id);
+   // __varTransaction __gen_transaction(size_t what_id, size_t where_id);
 };
 
 class BfLayerKiller

@@ -1,5 +1,7 @@
 #include "bfDrawObject.h"
 
+#include <optional>
+
 // BfDrawObj::BfDrawObj() :
 //	id()
 //{
@@ -383,7 +385,7 @@ generate_draw_data()
 }
 
 void
-BfDrawLayer::del(uint32_t id)
+BfDrawLayer::del(uint32_t id, bool total)
 {
    std::shared_ptr<BfDrawLayer> out_layer;
 
@@ -407,16 +409,18 @@ BfDrawLayer::del(uint32_t id)
    }
 
    // TODO: BE CAREFULL ABORT WAS NOT COMMENTED
-   if (out_layer.get() == nullptr)
+   if (total)
    {
-      // abort();
+      if (out_layer.get() == nullptr)
+      {
+         // abort();
+      }
+      else
+      {
+         auto root = BfLayerKiller::get_root();
+         root->add(out_layer);
+      }
    }
-   else
-   {
-      auto root = BfLayerKiller::get_root();
-      root->add(out_layer);
-   }
-
    //__layers.erase(
    //	std::remove_if(__layers.begin(), __layers.end(),
    //		[id](const auto& layer) { return layer->id.get() == id; }),
@@ -806,6 +810,112 @@ BfDrawLayer::__ref_find_layer_by_id(size_t id)
    static std::shared_ptr<BfDrawLayer> null_layer = nullptr;
    return null_layer;
 }
+
+BfDrawLayer::objPair
+BfDrawLayer::__it_find_obj_by_id(size_t id)
+{
+   for (auto it = __objects.begin(); it != __objects.end(); ++it)
+   {
+      if (id == (*it)->id.get())
+      {
+         return objPair(shared_from_this(), it);
+      }
+   }
+   for (auto &l : __layers)
+   {
+      auto obj = l->__it_find_obj_by_id(id);
+      if (obj.second.has_value())
+      {
+         return obj;
+      }
+   }
+   return objPair(shared_from_this(), std::nullopt);
+}
+
+BfDrawLayer::layerPair
+BfDrawLayer::__it_find_layer_by_id(size_t id)
+{
+   for (auto l = __layers.begin(); l != __layers.end(); ++l)
+   {
+      if (id == l->get()->id.get())
+      {
+         return layerPair(shared_from_this(), l);
+      }
+   }
+   for (auto l : __layers)
+   {
+      auto layer = l->__it_find_layer_by_id(id);
+      if (layer.second.has_value())
+      {
+         return layer;
+      }
+   }
+   return layerPair(nullptr, std::nullopt);
+}
+
+BfDrawLayer::varPair
+BfDrawLayer::__it_find_var_by_id(size_t id)
+{
+   for (auto o = __objects.begin(); o != __objects.end(); ++o)
+   {
+      if (id == o->get()->id.get())
+      {
+         return varPair(shared_from_this(), o);
+      }
+   }
+   for (auto l = __layers.begin(); l != __layers.end(); ++l)
+   {
+      if (id == l->get()->id.get())
+      {
+         return varPair(shared_from_this(), l);
+      }
+   }
+   for (auto l : __layers)
+   {
+      auto layer = l->__it_find_var_by_id(id);
+      if (layer.second.has_value())
+      {
+         return layer;
+      }
+   }
+   return layerPair(nullptr, std::nullopt);
+}
+
+// BfDrawLayer::__varTransaction
+// BfDrawLayer::__gen_transaction(size_t what_id, size_t where_id)
+// {
+//    __varTransaction t{};
+//    for (auto o = __objects.begin(); o != __objects.end(); ++o)
+//    {
+//       if (what_id == o->get()->id.get())
+//       {
+//          t.what = o;
+//       }
+//       if (where_id == o->get()->id.get())
+//       {
+//          t.where = o;
+//       }
+//    }
+//    for (auto l = __layers.begin(); l != __layers.end(); ++l)
+//    {
+//       if (what_id == l->get()->id.get())
+//       {
+//          t.what = l;
+//       }
+//       if (where_id == l->get()->id.get())
+//       {
+//          t.where = l;
+//       }
+//    }
+//    for (auto l : __layers)
+//    {
+//       auto tmp_tr = l->__it_find_var_by_id(id);
+//       if (layer.second.has_value())
+//       {
+//          return layer;
+//       }
+//    }
+// }
 
 bool *
 BfGuiIntegration::get_pSelection()

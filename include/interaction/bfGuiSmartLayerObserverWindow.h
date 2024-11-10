@@ -34,7 +34,6 @@ protected:
    std::queue<__sendingData_t> __transactionQueue;
    std::queue<std::string> __popups;
    __transaction_t __current_transaction_type;
-   bool __popup_1 = false;
    static uint32_t __current_moving_id;
 
    // ----------------------------------------------------------------

@@ -1,5 +1,10 @@
 #include "bfLayerHandler.h"
 
+#include <optional>
+#include <type_traits>
+#include <variant>
+
+#include "bfDrawObject.h"
 #include "bfEvent.h"
 
 BfLayerHandler::BfLayerHandler(size_t reserved_layer_count)
@@ -163,13 +168,73 @@ BfLayerHandler::add(std::shared_ptr<BfDrawLayer> pLayer)
 }
 
 BfEvent
-BfLayerHandler::move_inner(size_t what, size_t where)
+BfLayerHandler::move_inner(
+    size_t what, size_t where, std::function<void(int)> err_msg
+)
 {
-   return BfEvent();
+   BfSingleEvent event{.type = BF_SINGLE_EVENT_TYPE_USER_EVENT};
+
+   auto what_transaction = __gen_transaction_part(what);
+   auto where_transaction = __gen_transaction_part(where);
+
+   if (!where_transaction.what.has_value() ||
+       !what_transaction.what.has_value())
+   {
+      // Do no exist
+      if (err_msg) err_msg(0);
+      event.action =
+          BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_LAYER_OR_OBJ_NOT_EXISTS;
+      return event;
+   }
+   if (!what_transaction.above)
+   {
+      // Nested
+      if (err_msg) err_msg(1);
+      event.action = BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_LAYER_NOT_NESTED;
+      return event;
+   }
+
+   return std::visit(
+       [&](auto&& it_what, auto&& it_where) {
+          using what_t = std::decay_t<decltype(it_what)>;
+          using where_t = std::decay_t<decltype(it_where)>;
+
+          if constexpr (std::is_same_v<where_t, BfDrawLayer::itptrObj_t>)
+          {
+             if (err_msg) err_msg(1);
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_INSIDE_OBJ;
+             return event;
+          }
+
+          if constexpr (std::is_same_v<what_t, BfDrawLayer::itptrLayer_t> &&
+                        std::is_same_v<where_t, BfDrawLayer::itptrLayer_t>)
+          {
+             BfDrawLayer::ptrLayer_t tmp = *it_what;
+             what_transaction.above->get()->del(tmp->id.get(), false);
+             it_where->get()->add(tmp);
+             where_transaction.root->get()->update_buffer();
+
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_LAYER_TO_LAYER;
+             return event;
+          }
+
+          if constexpr (std::is_same_v<what_t, BfDrawLayer::itptrObj_t> &&
+                        std::is_same_v<where_t, BfDrawLayer::itptrLayer_t>)
+          {
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_OBJ_TO_LAYER;
+             return event;
+          }
+       },
+       what_transaction.what.value(),
+       where_transaction.what.value()
+   );
 }
 
 BfEvent
-BfLayerHandler::swap_inner(size_t f, size_t s)
+BfLayerHandler::swap_inner(size_t f, size_t s, std::function<void()> err_msg)
 {
    return BfEvent();
 }
@@ -324,12 +389,6 @@ BfLayerHandler::get_layer_by_id(size_t id)
    return nullptr;
 }
 
-std::shared_ptr<BfDrawLayer>
-BfLayerHandler::get_layer_by_id_recursive(size_t id)
-{
-   return nullptr;
-}
-
 bool
 BfLayerHandler::__is_space_for_new_layer()
 {
@@ -349,6 +408,32 @@ BfLayerHandler::__is_layer_exists(uint32_t id)
    return false;
 }
 
+BfLayerHandler::__varTransaction
+BfLayerHandler::__gen_transaction_part(size_t id)
+{
+   __varTransaction t{};
+   for (auto l = __layers.begin(); l != __layers.end(); l++)
+   {
+      if (l->get()->id.get() == id)
+      {
+         return {.what = l, .above = nullptr, .root = *l};
+      }
+      else
+      {
+         auto found = l->get()->__it_find_var_by_id(id);
+         if (found.second.has_value())
+         {
+            return {
+                .what = found.second.value(),
+                .above = found.first,
+                .root = *l
+            };
+         }
+      }
+   }
+   return {.what = std::nullopt, .above = nullptr, .root = nullptr};
+}
+
 std::shared_ptr<BfDrawLayer>&
 BfLayerHandler::get_ref_find_layer(size_t id)
 {
@@ -361,7 +446,6 @@ BfLayerHandler::get_ref_find_layer(size_t id)
       std::shared_ptr<BfDrawLayer>& found = l->__ref_find_layer_by_id(id);
       if (found)
       {
-         std::cout << "FOUND\n";
          return found;
       }
    }
@@ -382,4 +466,57 @@ BfLayerHandler::get_ref_find_obj(size_t id)
    }
    static std::shared_ptr<BfDrawObj> null_obj = nullptr;
    return null_obj;
+}
+
+BfDrawLayer::layerPair
+BfLayerHandler::get_it_layer(size_t id)
+{
+   for (auto l = __layers.begin(); l != __layers.end(); l++)
+   {
+      if (l->get()->id.get() == id)
+      {
+         return BfDrawLayer::layerPair(nullptr, l);
+      }
+      else
+      {
+         auto found = l->get()->__it_find_layer_by_id(id);
+         if (found.second.has_value())
+         {
+            return found;
+         }
+      }
+   }
+   return BfDrawLayer::layerPair(nullptr, std::nullopt);
+}
+
+BfDrawLayer::objPair
+BfLayerHandler::get_it_obj(size_t id)
+{
+   for (auto l = __layers.begin(); l != __layers.end(); ++l)
+   {
+      auto found = l->get()->__it_find_obj_by_id(id);
+      if (found.second.has_value())
+      {
+         return found;
+      }
+   }
+   return BfDrawLayer::objPair(nullptr, std::nullopt);
+}
+
+BfDrawLayer::varPair
+BfLayerHandler::get_it_var(size_t id)
+{
+   for (auto l = __layers.begin(); l != __layers.end(); ++l)
+   {
+      if (l->get()->id.get() == id)
+      {
+         return BfDrawLayer::varPair(nullptr, l);
+      }
+      auto found = l->get()->__it_find_var_by_id(id);
+      if (found.second.has_value())
+      {
+         return found;
+      }
+   }
+   return BfDrawLayer::varPair(nullptr, std::nullopt);
 }

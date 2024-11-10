@@ -1,5 +1,6 @@
 #include <bfGuiSmartLayerObserverWindow.h>
 
+#include <functional>
 #include <type_traits>
 
 #include "bfIconsFontAwesome6.h"
@@ -232,6 +233,40 @@ BfGuiSmartLayerObserver::pollEvents()
                 {
                    if (how == __transaction_t::MOVE)
                    {
+                      auto ref_what = lh->get_it_layer(what->id.get());
+                      auto ref_where = lh->get_it_layer(where->id.get());
+
+                      if (!ref_what.first)
+                      {
+                         // ImGui
+                         std::cout << "HERE\n";
+
+                         __popups.push("Not nested layer can't be moved");
+                      }
+                      else
+                      {
+                         // std::shared_ptr<BfDrawLayer> new_what =
+                         //     *ref_what.second.value();
+                         //
+                         // ref_what.first->del(
+                         //     ref_what.second.value()->get()->id.get(),
+                         //     false
+                         // );
+                         // ref_where.second.value()->get()->add(new_what);
+                         //
+                         lh->move_inner(what->id.get(), where->id.get());
+                      }
+
+                      //
+                      // if (!ref_what.second.has_value() ||
+                      //     !ref_where.second.has_value())
+                      // {
+                      //    std::cout << "NOT FOUND IT\n";
+                      // }
+                      // else
+                      // {
+                      //    std::cout << "FOUND IT\n";
+                      // }
                    }
                    else
                    {
@@ -239,12 +274,6 @@ BfGuiSmartLayerObserver::pollEvents()
                           lh->get_ref_find_layer(what->id.get());
                       ptrLayer& ref_where =
                           lh->get_ref_find_layer(where->id.get());
-                      std::cout << ref_what << "(" << ref_what.use_count()
-                                << ") : (" << ref_where << "(" << ref_where
-                                << ")\n";
-                      std::cout << "what: " << ref_what->id.get() << "\n";
-                      std::cout << "where: " << ref_where->id.get() << "\n";
-                      //
 
                       if ((!ref_where->is_nested() && ref_what->is_nested()) ||
                           (ref_where->is_nested() && !ref_what->is_nested()))
@@ -352,6 +381,22 @@ BfGuiSmartLayerObserver::__renderModularPopups()
    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
    if (ImGui::BeginPopupModal("Smart layer objserver nested/non nested layer"))
+   {
+      ImGui::Text("Swapping nested layer with not nested is not possible");
+      if (ImGui::Button("OK", ImVec2(120, 0)))
+      {
+         ImGui::CloseCurrentPopup();
+      }
+      ImGui::SetItemDefaultFocus();
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel", ImVec2(120, 0)))
+      {
+         ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+   }
+
+   if (ImGui::BeginPopupModal("Not nested layer can't be moved"))
    {
       ImGui::Text("Swapping nested layer with not nested is not possible");
       if (ImGui::Button("OK", ImVec2(120, 0)))
