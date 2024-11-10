@@ -262,6 +262,25 @@ BfGuiSmartLayerObserver::pollEvents()
                        }
                    );
                 }
+                else
+                {
+                   lh->swap_inner(
+                       what->id.get(),
+                       where->id.get(),
+                       [this](int mode) {
+                          switch (mode)
+                          {
+                             case 0:
+                                this->__popups.push(
+                                    "Source or target layer/object does not "
+                                    "exist"
+                                );
+                                break;
+                          }
+                       }
+
+                   );
+                }
              },
              transaction.what,
              transaction.where

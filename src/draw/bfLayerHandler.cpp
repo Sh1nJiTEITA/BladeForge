@@ -1,6 +1,8 @@
 #include "bfLayerHandler.h"
 
+#include <algorithm>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <variant>
 
@@ -238,9 +240,104 @@ BfLayerHandler::move_inner(
 }
 
 BfEvent
-BfLayerHandler::swap_inner(size_t f, size_t s, std::function<void()> err_msg)
+BfLayerHandler::swap_inner(size_t f, size_t s, std::function<void(int)> err_msg)
 {
-   return BfEvent();
+   BfSingleEvent event{.type = BF_SINGLE_EVENT_TYPE_USER_EVENT};
+
+   auto f_transaction = __gen_transaction_part(f);
+   auto s_transaction = __gen_transaction_part(s);
+
+   if (!f_transaction.what.has_value() || !s_transaction.what.has_value())
+   {
+      // Do no exist
+      if (err_msg) err_msg(0);
+      event.action =
+          BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_LAYER_OR_OBJ_NOT_EXISTS;
+      return event;
+   }
+   return std::visit(
+       [&](auto&& it_f, auto&& it_s) {
+          using f_t = std::decay_t<decltype(it_f)>;
+          using s_t = std::decay_t<decltype(it_s)>;
+
+          if constexpr (std::is_same_v<f_t, BfDrawLayer::itptrObj_t> &&
+                        std::is_same_v<s_t, BfDrawLayer::itptrObj_t>)
+          {
+             std::swap(*it_f, *it_s);
+             f_transaction.root->get()->update_buffer();
+             s_transaction.root->get()->update_buffer();
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_OBJ_WITH_OBJ;
+             event.info =
+                 "Swapping obj (" + std::to_string(it_f->get()->id.get()) +
+                 ") with obj (" + std::to_string(it_s->get()->id.get()) + ")";
+             return event;
+          }
+          else if constexpr (std::is_same_v<f_t, BfDrawLayer::itptrLayer_t> &&
+                             std::is_same_v<s_t, BfDrawLayer::itptrObj_t>)
+          {
+             BfDrawLayer::ptrLayer_t ptr_f = *it_f;
+             BfDrawLayer::ptrObj_t ptr_s = *it_s;
+             s_transaction.above->get()->add(ptr_f);
+             f_transaction.above->get()->add(ptr_s);
+             s_transaction.above->get()->del(ptr_s->id.get());
+             f_transaction.above->get()->del(ptr_f->id.get());
+             f_transaction.root->get()->update_buffer();
+             s_transaction.root->get()->update_buffer();
+
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_OBJ;
+             event.info = "Swapping layer (" +
+                          std::to_string(it_f->get()->id.get()) +
+                          ") with "
+                          "obj (" +
+                          std::to_string(it_s->get()->id.get()) + ")";
+             return event;
+          }
+          else if constexpr (std::is_same_v<f_t, BfDrawLayer::itptrObj_t> &&
+                             std::is_same_v<s_t, BfDrawLayer::itptrLayer_t>)
+          {
+             BfDrawLayer::ptrObj_t ptr_f = *it_f;
+             BfDrawLayer::ptrLayer_t ptr_s = *it_s;
+             s_transaction.above->get()->add(ptr_f);
+             f_transaction.above->get()->add(ptr_s);
+             s_transaction.above->get()->del(ptr_s->id.get());
+             f_transaction.above->get()->del(ptr_f->id.get());
+             f_transaction.root->get()->update_buffer();
+             s_transaction.root->get()->update_buffer();
+
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_OBJ_WITH_LAYER;
+             event.info = "Swapping obj (" +
+                          std::to_string(it_f->get()->id.get()) +
+                          ") with "
+                          "layer (" +
+                          std::to_string(it_s->get()->id.get()) + ")";
+             return event;
+          }
+          else if constexpr (std::is_same_v<f_t, BfDrawLayer::itptrLayer_t> &&
+                             std::is_same_v<s_t, BfDrawLayer::itptrLayer_t>)
+          {
+             std::swap(*it_f, *it_s);
+             f_transaction.root->get()->update_buffer();
+             s_transaction.root->get()->update_buffer();
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_LAYER;
+             event.info =
+                 "Swapping layer (" + std::to_string(it_f->get()->id.get()) +
+                 ") with layer (" + std::to_string(it_s->get()->id.get()) + ")";
+             return event;
+          }
+          else
+          {
+             event.action =
+                 BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_UNDERFINED;
+             return event;
+          }
+       },
+       f_transaction.what.value(),
+       s_transaction.what.value()
+   );
 }
 
 void

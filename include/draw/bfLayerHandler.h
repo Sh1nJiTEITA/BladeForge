@@ -52,7 +52,7 @@ public:
        std::function<void(int)> err_msg = nullptr
    );
    BfEvent swap_inner(
-       size_t f_id, size_t s_id, std::function<void()> err_msg = nullptr
+       size_t f_id, size_t s_id, std::function<void(int)> err_msg = nullptr
    );
 
    void del(size_t id);

@@ -254,6 +254,12 @@ enum BfEnActionType
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_INSIDE_OBJ = -0x73B,
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_LAYER_TO_LAYER = 0x73A,
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_OBJ_TO_LAYER = 0x73B,
+
+   BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_OBJ_WITH_OBJ = 0x73C,
+   BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_OBJ_WITH_LAYER = 0x73D,
+   BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_OBJ = 0x73E,
+   BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_LAYER = 0x73F,
+   BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_UNDERFINED = -0x73C,
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -501,6 +507,11 @@ const std::map<int, std::string> bfSetActionsStr{
     {-0x73B, "Moving smt inside obj"},
     {0x73A, "Moving layer inside layer"},
     {0x73B, "Moving obj inside layer"},
+    {0x73C, ""},
+    {0x73D, ""},
+    {0x73E, ""},
+    {0x73F, ""},
+    {-0x73C, "Underfined behaviour of swapping inside BfLayerHandler"},
 };
 
 enum BfEnSingleEventType
