@@ -31,10 +31,10 @@ class BfGuiCreateWindowContainer
 
    //
    bool __is_invisiable_buttons = true;
-   bool __is_first_render       = true;
-   bool __is_render             = true;
-   bool __is_dragging           = false;
-   bool __is_resizing           = false;
+   bool __is_first_render = true;
+   bool __is_render = true;
+   bool __is_dragging = false;
+   bool __is_resizing = false;
 
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
@@ -49,7 +49,7 @@ class BfGuiCreateWindowContainer
    bool __renderChildBorder();
 
 public:
-   using ptrContainer  = std::shared_ptr<BfGuiCreateWindowContainer>;
+   using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
    using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
    using swapFuncType =
        std::function<void(const std::string&, const std::string&)>;
@@ -57,18 +57,18 @@ public:
        std::function<void(const std::string&, const std::string&)>;
 
 protected:
-   bool __is_left_button           = true;
-   bool __is_right_button          = true;
-   bool __is_top_button            = true;
-   bool __is_bot_button            = true;
+   bool __is_left_button = true;
+   bool __is_right_button = true;
+   bool __is_top_button = true;
+   bool __is_bot_button = true;
 
-   ImVec2 __resize_button_size     = {10.0f, 10.0f};
+   ImVec2 __resize_button_size = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
 
-   std::string   __str_id;
-   ImVec2        __window_pos;
-   ImVec2        __window_size = {150, 150};
-   ImVec2        __old_outter_pos;
+   std::string __str_id;
+   ImVec2 __window_pos;
+   ImVec2 __window_size = {150, 150};
+   ImVec2 __old_outter_pos;
    wptrContainer __root_container;
    //
    static swapFuncType __swapFunc;
@@ -83,17 +83,17 @@ protected:
    virtual void __clampPosition();
    virtual void __renderHeader();
    virtual void __renderChildContent();
-   void         __updatePosition();
-   void         __updateResizeButtonSize();
+   void __updatePosition();
+   void __updateResizeButtonSize();
 
 public:
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
 
    // GETTERS --------------------
-   const char*    name() noexcept;
-   ImVec2&        pos() noexcept;
-   ImVec2&        size() noexcept;
+   const char* name() noexcept;
+   ImVec2& pos() noexcept;
+   ImVec2& size() noexcept;
    wptrContainer& root() noexcept;
 
    ImVec2 popupSize();
@@ -139,12 +139,12 @@ class BfGuiCreateWindowContainerObj
 protected:
    static bool __is_moving_container;
    //
-   bool   __is_current_moving;
-   bool   __is_drop_target;
-   int    __selected_layer = -1;
+   bool __is_current_moving;
+   bool __is_drop_target;
+   int __selected_layer = -1;
    ImVec2 __old_size;
    //
-   BfDrawLayerCreateInfo        __layer_create_info;
+   BfDrawLayerCreateInfo __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;
 
    virtual void __pushButtonColorStyle();
@@ -156,6 +156,7 @@ protected:
    virtual void __renderChangeName();
    virtual void __renderDragDropSource();
    virtual void __renderDragDropTarget();
+   virtual void __renderInfoTooltip();
 
    virtual void __renderAvailableLayers();
 
@@ -166,18 +167,21 @@ protected:
    virtual void __addToLayer(std::shared_ptr<BfDrawLayer> add_to);
 
 public:
-   BfGuiCreateWindowContainerObj(BfGuiCreateWindowContainer::wptrContainer root,
-                                 bool is_target = true);
+   BfGuiCreateWindowContainerObj(
+       BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
+   );
 
    static bool isAnyMoving() noexcept;
 };
 
 void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
-void bfShowNestedLayersRecursiveWithSelectables(std::shared_ptr<BfDrawLayer> l,
-                                                int& selected_id);
+void bfShowNestedLayersRecursiveWithSelectables(
+    std::shared_ptr<BfDrawLayer> l, int& selected_id
+);
 
-void bfShowNestedLayersRecursiveWithRadioButtons(std::shared_ptr<BfDrawLayer> l,
-                                                 int& selectedId);
+void bfShowNestedLayersRecursiveWithRadioButtons(
+    std::shared_ptr<BfDrawLayer> l, int& selectedId
+);
 
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
@@ -210,7 +214,8 @@ public:
 
    BfGuiCreateWindowContainerPopup(
        BfGuiCreateWindowContainer::wptrContainer root,
-       std::function<void()>                     popup_func);
+       std::function<void()> popup_func
+   );
 
    SIDE side() noexcept;
 };

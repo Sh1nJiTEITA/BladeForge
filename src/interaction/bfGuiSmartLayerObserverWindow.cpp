@@ -8,49 +8,65 @@
 #include "imgui_internal.h"
 
 uint32_t BfGuiSmartLayerObserver::__current_moving_id = 0;
+BfGuiSmartLayerObserver* BfGuiSmartLayerObserver::__instance = nullptr;
 
 BfGuiSmartLayerObserver::BfGuiSmartLayerObserver()
     : BfGuiWindow{{.name = "Smart layer observer", .isRender = true, .toggleRenderMapping = {ImGuiKey_LeftCtrl, ImGuiKey_T}}
       }
     , __current_transaction_type{__transaction_t::MOVE}
 {
+   if (!__instance) __instance = this;
 }
 
 void
 BfGuiSmartLayerObserver::__bodyRender()
 {
    __startModularPopups();
-
-   ImGui::Text("Handle function");
-   ImGui::SameLine();
-   if (ImGui::RadioButton(
-           "Move",
-           __current_transaction_type == __transaction_t::MOVE
-       ))
    {
-      __current_transaction_type = __transaction_t::MOVE;
+      if (__mode == viewMode::STD)
+      {
+         ImGui::Text("Handle function");
+         ImGui::SameLine();
+         if (ImGui::RadioButton(
+                 "Move",
+                 __current_transaction_type == __transaction_t::MOVE
+             ))
+         {
+            __current_transaction_type = __transaction_t::MOVE;
+         }
+         ImGui::SameLine();
+         if (ImGui::RadioButton(
+                 "Swap",
+                 __current_transaction_type == __transaction_t::SWAP
+             ))
+         {
+            __current_transaction_type = __transaction_t::SWAP;
+         }
+      }
+      else if (__mode == viewMode::CHOOSE)
+      {
+         if (ImGui::Button("Complete adding"))
+         {
+            if (__choose_func) __choose_func();
+         }
+      }
+      ImGui::Separator();
+
+      auto lh = BfLayerHandler::instance();
+      for (int i = 0; i < lh->get_layer_count(); ++i)
+      {
+         __renderSingleLayer(lh->get_layer_by_index(i));
+      }
+
+      if (!ImGui::IsDragDropActive())
+      {
+         __current_moving_id = 0;
+      }
    }
-   ImGui::SameLine();
-   if (ImGui::RadioButton(
-           "Swap",
-           __current_transaction_type == __transaction_t::SWAP
-       ))
+   // else if (__mode == viewMode::CHOOSE)
    {
-      __current_transaction_type = __transaction_t::SWAP;
    }
 
-   ImGui::Separator();
-
-   auto lh = BfLayerHandler::instance();
-   for (int i = 0; i < lh->get_layer_count(); ++i)
-   {
-      __renderSingleLayer(lh->get_layer_by_index(i));
-   }
-
-   if (!ImGui::IsDragDropActive())
-   {
-      __current_moving_id = 0;
-   }
    __renderModularPopups();
 }
 
@@ -60,20 +76,35 @@ BfGuiSmartLayerObserver::__renderSingleLayer(std::shared_ptr<BfDrawLayer> l)
    std::string l_name = layerName(l).c_str();
 
    __pushMovingHandleStyle();
-   ImGui::PushID(l_name.c_str());
+   if (__mode == viewMode::STD)
    {
-      if (!__current_moving_id || __current_moving_id == l->id.get())
+      ImGui::PushID(l_name.c_str());
       {
-         ImGui::Button("\uf256");
-         __renderDragDropSource(l, l_name.c_str());
+         if (!__current_moving_id || __current_moving_id == l->id.get())
+         {
+            ImGui::Button("\uf256");
+            __renderDragDropSource(l, l_name.c_str());
+         }
+         else
+         {
+            ImGui::Button(ICON_FA_TAG);
+            __renderDragDropTarget(l, l_name.c_str());
+         }
       }
-      else
-      {
-         ImGui::Button(ICON_FA_TAG);
-         __renderDragDropTarget(l, l_name.c_str());
-      }
+      ImGui::PopID();
    }
-   ImGui::PopID();
+   else
+   {
+      ImGui::PushID(l_name.c_str());
+      if (ImGui::RadioButton(
+              std::string("##" + l_name).c_str(),
+              __selected_id == l->id.get()
+          ))
+      {
+         __selected_id = l->id.get();
+      }
+      ImGui::PopID();
+   }
 
    ImGui::SameLine();
    // if (ImGui::TreeNodeEx(l_name.c_str(), ImGuiTreeNodeFlags_FramePadding))
@@ -92,20 +123,35 @@ BfGuiSmartLayerObserver::__renderSingleLayer(std::shared_ptr<BfDrawLayer> l)
          auto obj = l->get_object_by_index(i);
          std::string o_name = objName(obj);
 
-         ImGui::PushID(o_name.c_str());
+         if (__mode == viewMode::STD)
          {
-            if (!__current_moving_id || __current_moving_id == obj->id.get())
+            ImGui::PushID(o_name.c_str());
             {
-               ImGui::Button("\uf256");
-               __renderDragDropSource(obj, o_name.c_str());
+               if (!__current_moving_id || __current_moving_id == obj->id.get())
+               {
+                  ImGui::Button("\uf256");
+                  __renderDragDropSource(obj, o_name.c_str());
+               }
+               else
+               {
+                  ImGui::Button(ICON_FA_TAG);
+                  __renderDragDropTarget(obj, o_name.c_str());
+               }
             }
-            else
-            {
-               ImGui::Button(ICON_FA_TAG);
-               __renderDragDropTarget(obj, o_name.c_str());
-            }
+            ImGui::PopID();
          }
-         ImGui::PopID();
+         else
+         {
+            ImGui::PushID(o_name.c_str());
+            if (ImGui::RadioButton(
+                    std::string("##" + o_name).c_str(),
+                    __selected_id == obj->id.get()
+                ))
+            {
+               __selected_id = obj->id.get();
+            }
+            ImGui::PopID();
+         }
 
          ImGui::SameLine();
          if (ImGui::TreeNodeEx(o_name.c_str()))
@@ -187,6 +233,12 @@ BfGuiSmartLayerObserver::__renderDragDropTargetObj(ptrObj o, const char* name)
    }
 }
 
+BfGuiSmartLayerObserver*
+BfGuiSmartLayerObserver::instance()
+{
+   return __instance;
+}
+
 std::string
 BfGuiSmartLayerObserver::layerName(std::shared_ptr<BfDrawLayer> l)
 {
@@ -217,6 +269,31 @@ BfGuiSmartLayerObserver::objData(std::shared_ptr<BfDrawObj> o)
        ("\n\tIndices " + std::to_string(o->get_indices_count())) +
        ("\n\tDVertices " + std::to_string(o->get_dvertices_count()))
    );
+}
+
+void
+BfGuiSmartLayerObserver::renderBodyView(viewMode mode)
+{
+   auto old_mode = __mode;
+   __mode = mode;
+   {
+      __bodyRender();
+   }
+   __mode = old_mode;
+}
+
+void
+BfGuiSmartLayerObserver::renderChoser(std::function<void()> button)
+{
+   __choose_func = button;
+   this->renderBodyView(viewMode::CHOOSE);
+   __choose_func = nullptr;
+}
+
+size_t
+BfGuiSmartLayerObserver::selectedLayer() const noexcept
+{
+   return __selected_id;
 }
 
 void

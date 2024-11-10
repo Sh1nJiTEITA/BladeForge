@@ -7,11 +7,21 @@
 #include <bfLayerHandler.h>
 #include <imgui.h>
 
+#include <functional>
 #include <queue>
 #include <variant>
 
 class BfGuiSmartLayerObserver : public BfGuiWindow
 {
+   static BfGuiSmartLayerObserver* __instance;
+
+public:
+   enum viewMode
+   {
+      STD,
+      CHOOSE,
+   };
+
 protected:
    using ptrLayer = std::shared_ptr<BfDrawLayer>;
    using ptrObj = std::shared_ptr<BfDrawObj>;
@@ -35,6 +45,9 @@ protected:
    std::queue<std::string> __popups;
    __transaction_t __current_transaction_type;
    static uint32_t __current_moving_id;
+   viewMode __mode = viewMode::STD;
+   size_t __selected_id = 0;
+   std::function<void()> __choose_func = nullptr;
 
    // ----------------------------------------------------------------
 
@@ -61,10 +74,15 @@ protected:
 public:
    BfGuiSmartLayerObserver();
 
+   static BfGuiSmartLayerObserver* instance();
    static std::string layerName(std::shared_ptr<BfDrawLayer> l);
    static std::string objName(std::shared_ptr<BfDrawObj> o);
    static std::string objData(std::shared_ptr<BfDrawObj> o);
 
+   void renderBodyView(viewMode mode = viewMode::STD);
+   void renderChoser(std::function<void()> button);
+
+   size_t selectedLayer() const noexcept;
    void pollEvents() override;
 };
 
