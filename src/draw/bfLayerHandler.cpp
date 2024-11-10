@@ -186,14 +186,13 @@ BfLayerHandler::move_inner(
           BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_LAYER_OR_OBJ_NOT_EXISTS;
       return event;
    }
-   if (!what_transaction.above)
+   if (what_transaction.above == nullptr)
    {
       // Nested
       if (err_msg) err_msg(1);
       event.action = BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_LAYER_NOT_NESTED;
       return event;
    }
-
    return std::visit(
        [&](auto&& it_what, auto&& it_where) {
           using what_t = std::decay_t<decltype(it_what)>;
@@ -201,7 +200,7 @@ BfLayerHandler::move_inner(
 
           if constexpr (std::is_same_v<where_t, BfDrawLayer::itptrObj_t>)
           {
-             if (err_msg) err_msg(1);
+             if (err_msg) err_msg(2);
              event.action =
                  BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_INSIDE_OBJ;
              return event;
@@ -223,6 +222,11 @@ BfLayerHandler::move_inner(
           if constexpr (std::is_same_v<what_t, BfDrawLayer::itptrObj_t> &&
                         std::is_same_v<where_t, BfDrawLayer::itptrLayer_t>)
           {
+             BfDrawLayer::ptrObj_t tmp = *it_what;
+             what_transaction.above->get()->del(tmp->id.get(), false);
+             it_where->get()->add(tmp);
+             where_transaction.root->get()->update_buffer();
+
              event.action =
                  BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_MOVING_OBJ_TO_LAYER;
              return event;

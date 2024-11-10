@@ -65,13 +65,11 @@ BfGuiSmartLayerObserver::__renderSingleLayer(std::shared_ptr<BfDrawLayer> l)
       if (!__current_moving_id || __current_moving_id == l->id.get())
       {
          ImGui::Button("\uf256");
-         // __renderDragDropSourceLayer(l, l_name.c_str());
          __renderDragDropSource(l, l_name.c_str());
       }
       else
       {
          ImGui::Button(ICON_FA_TAG);
-         // __renderDragDropTargetLayer(l, l_name.c_str());
          __renderDragDropTarget(l, l_name.c_str());
       }
    }
@@ -96,8 +94,16 @@ BfGuiSmartLayerObserver::__renderSingleLayer(std::shared_ptr<BfDrawLayer> l)
 
          ImGui::PushID(o_name.c_str());
          {
-            ImGui::Button("\uf256");
-            // __renderDragDropSourceObj(obj, o_name.c_str());
+            if (!__current_moving_id || __current_moving_id == obj->id.get())
+            {
+               ImGui::Button("\uf256");
+               __renderDragDropSource(obj, o_name.c_str());
+            }
+            else
+            {
+               ImGui::Button(ICON_FA_TAG);
+               __renderDragDropTarget(obj, o_name.c_str());
+            }
          }
          ImGui::PopID();
 
@@ -224,87 +230,37 @@ BfGuiSmartLayerObserver::pollEvents()
       auto how = transaction.how;
       {
          std::visit(
-             [&](auto&& what, auto&& where) {
+             [this, &how, &transaction, &lh](auto&& what, auto&& where) {
                 using what_t = std::decay_t<decltype(what)>;
                 using where_t = std::decay_t<decltype(where)>;
 
-                if constexpr (std::is_same_v<what_t, ptrLayer> &&
-                              std::is_same_v<where_t, ptrLayer>)
+                if (how == __transaction_t::MOVE)
                 {
-                   if (how == __transaction_t::MOVE)
-                   {
-                      auto ref_what = lh->get_it_layer(what->id.get());
-                      auto ref_where = lh->get_it_layer(where->id.get());
-
-                      if (!ref_what.first)
-                      {
-                         // ImGui
-                         std::cout << "HERE\n";
-
-                         __popups.push("Not nested layer can't be moved");
-                      }
-                      else
-                      {
-                         // std::shared_ptr<BfDrawLayer> new_what =
-                         //     *ref_what.second.value();
-                         //
-                         // ref_what.first->del(
-                         //     ref_what.second.value()->get()->id.get(),
-                         //     false
-                         // );
-                         // ref_where.second.value()->get()->add(new_what);
-                         //
-                         lh->move_inner(what->id.get(), where->id.get());
-                      }
-
-                      //
-                      // if (!ref_what.second.has_value() ||
-                      //     !ref_where.second.has_value())
-                      // {
-                      //    std::cout << "NOT FOUND IT\n";
-                      // }
-                      // else
-                      // {
-                      //    std::cout << "FOUND IT\n";
-                      // }
-                   }
-                   else
-                   {
-                      ptrLayer& ref_what =
-                          lh->get_ref_find_layer(what->id.get());
-                      ptrLayer& ref_where =
-                          lh->get_ref_find_layer(where->id.get());
-
-                      if ((!ref_where->is_nested() && ref_what->is_nested()) ||
-                          (ref_where->is_nested() && !ref_what->is_nested()))
-                      {
-                         // ImGui
-                         std::cout << "HERE\n";
-                         // ImGui::OpenPopup(
-                         //     "Smart layer objserver nested/non nested layer"
-                         // );
-                         //
-                         __popups.push(
-                             "Smart layer objserver nested/non nested layer"
-                         );
-                      }
-                      else
-                      {
-                         std::swap(ref_what, ref_where);
-                      }
-                   }
-                }
-                if constexpr (std::is_same_v<what_t, ptrLayer> &&
-                              std::is_same_v<where_t, ptrObj>)
-                {
-                }
-                if constexpr (std::is_same_v<what_t, ptrObj> &&
-                              std::is_same_v<where_t, ptrLayer>)
-                {
-                }
-                if constexpr (std::is_same_v<what_t, ptrObj> &&
-                              std::is_same_v<where_t, ptrObj>)
-                {
+                   lh->move_inner(
+                       what->id.get(),
+                       where->id.get(),
+                       [this](int mode) {
+                          switch (mode)
+                          {
+                             case 0:
+                                this->__popups.push(
+                                    "Source or target layer/object does not "
+                                    "exist"
+                                );
+                                break;
+                             case 1:
+                                this->__popups.push(
+                                    "Not nested layer can't be moved"
+                                );
+                                break;
+                             case 2:
+                                this->__popups.push(
+                                    "Moving layer/object inside object"
+                                );
+                                break;
+                          }
+                       }
+                   );
                 }
              },
              transaction.what,
@@ -360,12 +316,12 @@ BfGuiSmartLayerObserver::__renderDragDropTarget(
          std::variant<ptrLayer, ptrObj> input =
              *(std::variant<ptrLayer, ptrObj>*)payload->Data;
 
-         std::cout
-             << "Moved "
-             << std::visit([](auto&& arg) { return arg->id.get(); }, input)
-             << " to "
-             << std::visit([](auto&& arg) { return arg->id.get(); }, ptr)
-             << "\n";
+         // std::cout
+         //     << "Moved "
+         //     << std::visit([](auto&& arg) { return arg->id.get(); }, input)
+         //     << " to "
+         //     << std::visit([](auto&& arg) { return arg->id.get(); }, ptr)
+         //     << "\n";
 
          __transactionQueue.push({input, ptr, __current_transaction_type});
 
@@ -380,37 +336,53 @@ BfGuiSmartLayerObserver::__renderModularPopups()
 {
    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-   if (ImGui::BeginPopupModal("Smart layer objserver nested/non nested layer"))
-   {
-      ImGui::Text("Swapping nested layer with not nested is not possible");
-      if (ImGui::Button("OK", ImVec2(120, 0)))
-      {
-         ImGui::CloseCurrentPopup();
-      }
-      ImGui::SetItemDefaultFocus();
-      ImGui::SameLine();
-      if (ImGui::Button("Cancel", ImVec2(120, 0)))
-      {
-         ImGui::CloseCurrentPopup();
-      }
-      ImGui::EndPopup();
-   }
 
-   if (ImGui::BeginPopupModal("Not nested layer can't be moved"))
-   {
-      ImGui::Text("Swapping nested layer with not nested is not possible");
-      if (ImGui::Button("OK", ImVec2(120, 0)))
+   auto show_modal_popup = [](const char* popup_name, const char* message) {
+      ImGui::SetNextWindowSize(ImVec2(350, 150), ImGuiCond_Always);
+
+      if (ImGui::BeginPopupModal(popup_name))
       {
-         ImGui::CloseCurrentPopup();
+         ImGui::TextWrapped("%s", message);
+
+         ImGui::Dummy(ImVec2(0.0f, 30.0f));
+
+         float windowWidth = ImGui::GetWindowSize().x;
+         float buttonWidth = 120.0f;
+         float spacing = ImGui::GetStyle().ItemSpacing.x;
+
+         ImGui::SetCursorPosX(
+             (windowWidth - (buttonWidth * 2.0f + spacing)) / 2.0f
+         );
+
+         if (ImGui::Button("OK", ImVec2(buttonWidth, 0)))
+         {
+            ImGui::CloseCurrentPopup();
+         }
+
+         ImGui::SameLine();
+
+         if (ImGui::Button("Cancel", ImVec2(buttonWidth, 0)))
+         {
+            ImGui::CloseCurrentPopup();
+         }
+
+         ImGui::EndPopup();
       }
-      ImGui::SetItemDefaultFocus();
-      ImGui::SameLine();
-      if (ImGui::Button("Cancel", ImVec2(120, 0)))
-      {
-         ImGui::CloseCurrentPopup();
-      }
-      ImGui::EndPopup();
-   }
+   };
+
+   show_modal_popup(  // 0
+       "Source or target layer/object does not exist",
+       "Unhandled strange exception, nothing you could do"
+   );
+   show_modal_popup(  // 1
+       "Not nested layer can't be moved",
+       "You cant move nested layers. These layers holds buffers for rendering"
+   );
+   show_modal_popup(  // 2
+       "Moving layer/object inside object",
+       "Obly layers can hold objects or another layers, "
+       "objects are single containers of vertices, simple geometry"
+   );
 }
 
 void
