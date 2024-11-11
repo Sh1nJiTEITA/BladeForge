@@ -14,10 +14,13 @@ protected:
    virtual void __renderHeaderName() override;
    virtual void __renderChildContent() override;
    virtual void __processDragDropTarget() override;
+   virtual void __prerender() override;
+   virtual void __postrender() override;
 
 public:
-   BfGuiCreateWindowBladeBase(BfGuiCreateWindowContainer::wptrContainer root,
-                              bool is_target = true);
+   BfGuiCreateWindowBladeBase(
+       BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
+   );
 };
 
 #endif

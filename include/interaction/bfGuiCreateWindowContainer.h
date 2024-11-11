@@ -83,6 +83,8 @@ protected:
    virtual void __clampPosition();
    virtual void __renderHeader();
    virtual void __renderChildContent();
+   virtual void __prerender();
+   virtual void __postrender();
    void __updatePosition();
    void __updateResizeButtonSize();
 

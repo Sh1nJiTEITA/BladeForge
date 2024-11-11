@@ -21,6 +21,11 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    std::string __section_name;
    bool __is_settings = false;
    bool __is_popup_open = false;
+   bool __is_selected = false;
+   std::string* __str_id_selected;
+
+   std::function<void()> __prerender_external_func = nullptr;
+   std::function<void()> __postrender_external_func = nullptr;
 
 protected:
    enum class viewMode
@@ -42,11 +47,15 @@ protected:
    virtual void __renderChildContent() override;
    virtual void __processDragDropTarget() override;
    virtual void __renderInfoTooltip() override;
+   virtual void __prerender() override;
+   virtual void __postrender() override;
 
 public:
    BfGuiCreateWindowBladeSection(
        BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
    );
+
+   void setView(viewMode) noexcept;
 
    friend BfGuiCreateWindowBladeBase;
 };

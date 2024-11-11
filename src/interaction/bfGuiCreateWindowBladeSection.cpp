@@ -1,8 +1,10 @@
 #include "bfGuiCreateWindowBladeSection.h"
 
 #include <memory>
+#include <type_traits>
 
 #include "bfBladeSection.h"
+#include "bfGuiCreateWindowBladeBase.h"
 #include "bfLayerHandler.h"
 #include "imgui.h"
 
@@ -28,42 +30,101 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
    // this->add(std::make_shared<BfGuiCreateWindowContainerPopup>(
    //     shared_from_this(),
    //     [&]() { this->__renderAvailableLayers(); }));
+   this->__is_collapsed = true;
+}
+
+void
+BfGuiCreateWindowBladeSection::setView(viewMode mode) noexcept
+{
+   __mode = mode;
 }
 
 void
 BfGuiCreateWindowBladeSection::__renderHeaderName()
 {
-   float x = ImGui::GetWindowWidth() -
-             ImGui::GetStyle().WindowPadding.x * 2.0f -
-             ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-             ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
-             ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
-
-   static bool isEditing = false;
-   ImGui::PushID(name());
-   ImGui::Dummy({x, 20});
-   if (ImGui::IsItemHovered())
+   if (auto shared_root = __root_container.lock())
    {
-      ImGui::SetTooltip("Change name...");
+      if (auto casted_root =
+              std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(shared_root
+              ))
+      {
+         __mode = viewMode::SHORT;
+      }
+      else
+      {
+         __mode = viewMode::STD;
+      }
+   }
+   else
+   {
+      __mode = viewMode::STD;
    }
 
-   // if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-   // // if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(1))
-   // {
-   //    isEditing = true;
-   // }
-   ImGui::SameLine();
-   ImGui::SetCursorPos(ImGui::GetCursorStartPos());
-   // if (isEditing)
-   // {
-   ImGui::SetNextItemWidth(x);
-   if (ImGui::InputText(
-           "##edit",
-           __section_name.data(),
-           ImGuiInputTextFlags_EnterReturnsTrue
-       ))
+   if (__mode == viewMode::SHORT)
    {
+      float x = ImGui::GetWindowWidth() -
+                ImGui::GetStyle().WindowPadding.x * 2.0f -
+                ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
+                ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
+                ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f - 30.0f;
+
+      static bool isEditing = false;
+      ImGui::PushID(__str_id.c_str());
+      {
+         ImGui::RadioButton((std::string("##") + __str_id).c_str(), false);
+      }
+      ImGui::PopID();
+
+      ImGui::SameLine();
+      ImGui::PushID(name());
+
+      float tmp_cursor_x = ImGui::GetCursorPosX();
+      ImGui::Dummy({x, 20});
+      if (ImGui::IsItemHovered())
+      {
+         ImGui::SetTooltip("Change name...");
+      }
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(tmp_cursor_x);
+      ImGui::SetNextItemWidth(x);
+      if (ImGui::InputText(
+              "##edit",
+              __section_name.data(),
+              ImGuiInputTextFlags_EnterReturnsTrue
+          ))
+      {
+      }
    }
+   else if (__mode == viewMode::STD)
+   {
+      float x = ImGui::GetWindowWidth() -
+                ImGui::GetStyle().WindowPadding.x * 2.0f -
+                ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
+                ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
+                ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
+
+      static bool isEditing = false;
+
+      ImGui::SameLine();
+      ImGui::PushID(name());
+
+      ImGui::Dummy({x, 20});
+      if (ImGui::IsItemHovered())
+      {
+         ImGui::SetTooltip("Change name...");
+      }
+      ImGui::SameLine();
+      ImGui::SetCursorPos(ImGui::GetCursorStartPos());
+      ImGui::SetNextItemWidth(x);
+      if (ImGui::InputText(
+              "##edit",
+              __section_name.data(),
+              ImGuiInputTextFlags_EnterReturnsTrue
+          ))
+      {
+      }
+   }
+
    //    {
    //    }
    //    if (!ImGui::IsItemActive())
@@ -307,4 +368,16 @@ BfGuiCreateWindowBladeSection::__renderInfoTooltip()
        total_containers.c_str(),
        root_layer_name.c_str()
    );
+}
+
+void
+BfGuiCreateWindowBladeSection::__prerender()
+{
+   if (__prerender_external_func) __prerender_external_func();
+}
+
+void
+BfGuiCreateWindowBladeSection::__postrender()
+{
+   if (__postrender_external_func) __postrender_external_func();
 }

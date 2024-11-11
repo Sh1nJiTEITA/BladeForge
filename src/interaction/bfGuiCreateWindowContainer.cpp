@@ -371,6 +371,14 @@ void
 BfGuiCreateWindowContainer::__renderChildContent()
 {
 }
+void
+BfGuiCreateWindowContainer::__prerender()
+{
+}
+void
+BfGuiCreateWindowContainer::__postrender()
+{
+}
 
 BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(wptrContainer root)
     : __root_container{root}
@@ -430,7 +438,7 @@ BfGuiCreateWindowContainer::render()
                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
                   ImGuiWindowFlags_NoScrollbar |
                   ImGuiWindowFlags_AlwaysAutoResize;
-
+      __prerender();
       if (ImGui::Begin(__str_id.c_str(), &__is_render, flags))
       {
          {
@@ -462,6 +470,7 @@ BfGuiCreateWindowContainer::render()
          }
       }
       ImGui::End();
+      __postrender();
    }
    return is_window_hovered;
 }
