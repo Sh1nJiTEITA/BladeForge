@@ -13,8 +13,8 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
 )
     : __section_name{"Section"}, BfGuiCreateWindowContainerObj(root, is_target)
 {
-   __window_size = {300, 100};
-   __is_collapsed = false;
+   __window_size = {500, 80};
+   __old_size = {500, 350};
    bfFillBladeSectionStandart(&__create_info);
 
    // FIX: Fix in future: doublign layer create infos here and inside
@@ -39,9 +39,16 @@ BfGuiCreateWindowBladeSection::setView(viewMode mode) noexcept
    __mode = mode;
 }
 
+BfBladeSectionCreateInfo
+BfGuiCreateWindowBladeSection::createInfo() const noexcept
+{
+   return __create_info;
+}
+
 void
 BfGuiCreateWindowBladeSection::__renderHeaderName()
 {
+   uint32_t* selected_id = nullptr;
    if (auto shared_root = __root_container.lock())
    {
       if (auto casted_root =
@@ -49,6 +56,7 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
               ))
       {
          __mode = viewMode::SHORT;
+         selected_id = casted_root->selectedId();
       }
       else
       {
@@ -71,7 +79,13 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
       static bool isEditing = false;
       ImGui::PushID(__str_id.c_str());
       {
-         ImGui::RadioButton((std::string("##") + __str_id).c_str(), false);
+         if (ImGui::RadioButton(
+                 (std::string("##") + __str_id).c_str(),
+                 __id == *selected_id
+             ))
+         {
+            *selected_id = __id;
+         }
       }
       ImGui::PopID();
 
@@ -142,35 +156,41 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
 void
 BfGuiCreateWindowBladeSection::__renderChildContent()
 {
-   if (ImGui::Button("Settings"))
+   if (__mode == viewMode::STD)
    {
-      __is_settings = !__is_settings;
-   }
-   ImGui::SameLine();
-
-   if (ImGui::Button("Add to layer"))
-   {
-      if (!__layer_choser)
+      if (ImGui::Button("Settings"))
       {
-         __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
-             shared_from_this(),
-             [&]() {
-                BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
-                   size_t selected_id =
-                       BfGuiSmartLayerObserver::instance()->selectedLayer();
-                   std::shared_ptr<BfDrawLayer> selected_layer =
-                       BfLayerHandler::instance()->get_layer_by_id(selected_id);
-                   // __createObj();
-                   __addToLayer(selected_layer);
-                   __layer_choser->hide();
-                });
-             }
-         );
-         this->add(__layer_choser);
+         __is_settings = !__is_settings;
       }
-      else
+      ImGui::SameLine();
+
+      if (ImGui::Button("Add to layer"))
       {
-         __layer_choser->toggleRender();
+         if (!__layer_choser)
+         {
+            __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+                shared_from_this(),
+                BfGuiCreateWindowContainerPopup::RIGHT,
+                [&]() {
+                   BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
+                      size_t selected_id =
+                          BfGuiSmartLayerObserver::instance()->selectedLayer();
+                      std::shared_ptr<BfDrawLayer> selected_layer =
+                          BfLayerHandler::instance()->get_layer_by_id(
+                              selected_id
+                          );
+                      // __createObj();
+                      __addToLayer(selected_layer);
+                      __layer_choser->hide();
+                   });
+                }
+            );
+            this->add(__layer_choser);
+         }
+         else
+         {
+            __layer_choser->toggleRender();
+         }
       }
    }
    if (__is_settings)
@@ -226,25 +246,21 @@ BfGuiCreateWindowBladeSection::__renderSettings()
    ImGui::BeginTable(
        "Section Settings",
        4,
-       ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
+       // ImGuiTableFlags_Borders |
+       // ImGuiTableFlags_RowBg |
+       // ImGuiTableFlags_Borders |
+       ImGuiTableFlags_SizingFixedFit
    );
    {
+      ImGui::TableSetupColumn("Variable", 0, 200.0f);
+      ImGui::TableSetupColumn("Designation", 0, 50.0f);
+      ImGui::TableSetupColumn("Units", 0, 50.0f);
+      ImGui::TableSetupColumn("Value", 0, 100.0f);
+
+      ImGui::TableHeadersRow();
+
       ImGui::TableNextRow();
-      {  // HEADER BEGIN
-
-         ImGui::TableSetColumnIndex(0);
-         ImGui::TableHeader("Variable");
-
-         ImGui::TableSetColumnIndex(1);
-         ImGui::TableHeader("Designation");
-
-         ImGui::TableSetColumnIndex(2);
-         ImGui::TableHeader("Units");
-
-         ImGui::TableSetColumnIndex(3);
-         ImGui::TableHeader("Value");
-      }  // HEADER
-
+      ImGui::TableNextRow();
       renderRow("Width", "B", "[m]", &__create_info.width);
       renderRow(
           "Install angle",
@@ -252,6 +268,9 @@ BfGuiCreateWindowBladeSection::__renderSettings()
           "[deg]",
           &__create_info.install_angle
       );
+
+      ImGui::TableNextRow();
+      ImGui::TableNextRow();
       renderRow(
           "Inlet angle",
           BF_GREEK_BETA "_1",
@@ -265,6 +284,8 @@ BfGuiCreateWindowBladeSection::__renderSettings()
           &__create_info.outlet_angle
       );
 
+      ImGui::TableNextRow();
+      ImGui::TableNextRow();
       renderRow(
           "Inlet surface angle",
           BF_GREEK_OMEGA "_1",
@@ -277,8 +298,14 @@ BfGuiCreateWindowBladeSection::__renderSettings()
           "[deg]",
           &__create_info.outlet_surface_angle
       );
+
+      ImGui::TableNextRow();
+      ImGui::TableNextRow();
       renderRow("Inlet radius", "r_1", "[m]", &__create_info.inlet_radius);
       renderRow("Outlet radius", "r_2", "[m]", &__create_info.outlet_radius);
+
+      ImGui::TableNextRow();
+      ImGui::TableNextRow();
       renderRow(
           "Border length",
           BF_GREEK_DELTA_,

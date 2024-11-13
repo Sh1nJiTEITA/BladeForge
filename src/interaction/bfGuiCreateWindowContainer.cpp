@@ -383,8 +383,9 @@ BfGuiCreateWindowContainer::__postrender()
 BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(wptrContainer root)
     : __root_container{root}
 {
-   static uint32_t growing_id = 0;
+   static uint32_t growing_id = 1;
    //
+   __id = growing_id;
    __str_id = std::format("##CreateWindow_{}", std::to_string(growing_id));
    __str_left_resize_button_id =
        std::format("##CreateWindowLeftResize_{}", std::to_string(growing_id));
@@ -475,6 +476,12 @@ BfGuiCreateWindowContainer::render()
    return is_window_hovered;
 }
 
+void
+BfGuiCreateWindowContainer::renderBodyView()
+{
+   __renderChildContent();
+}
+
 const char*
 BfGuiCreateWindowContainer::name() noexcept
 {
@@ -546,6 +553,12 @@ BfGuiCreateWindowContainer::popupPos()
       }
    }
    return outpos;
+}
+
+uint32_t
+BfGuiCreateWindowContainer::id() noexcept
+{
+   return __id;
 }
 
 void
@@ -1288,19 +1301,27 @@ BfGuiCreateWindowContainerPopup::__renderHeader()
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     BfGuiCreateWindowContainer::wptrContainer root,
+    BfGuiCreateWindowContainerPopup::SIDE side =
+        BfGuiCreateWindowContainerPopup::RIGHT,
     std::function<void()> popup_func = nullptr
 )
     : BfGuiCreateWindowContainer{root}
-    , __side{BfGuiCreateWindowContainerPopup::RIGHT}
+    , __side{side}
     , __renderPopupContentFunc{popup_func}
 {
-   // __assignButtons();
+   __assignButtons();
 }
 
 BfGuiCreateWindowContainerPopup::SIDE
 BfGuiCreateWindowContainerPopup::side() noexcept
 {
    return __side;
+}
+
+void
+BfGuiCreateWindowContainerPopup::setSize(ImVec2 size)
+{
+   __window_size = size;
 }
 
 //

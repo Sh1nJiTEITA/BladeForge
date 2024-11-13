@@ -2,27 +2,69 @@
 
 #include <memory>
 
+#include "bfGuiCreateWindowBladeSection.h"
+#include "imgui.h"
+
 void
 BfGuiCreateWindowBladeBase::__setContainersPos()
 {
    ImVec2 avail = size();
-   float next_container_h = ImGui::GetStyle().WindowPadding.y * 5;
+   float next_container_h = ImGui::GetStyle().WindowPadding.y * 9.5;
    for (auto& c : __containers)
    {
-      c->pos().y =
-          pos().y - (c->popupSize().y - c->size().y) + next_container_h;
-      next_container_h += c->popupSize().y;
-
-      // auto section =
-      //     std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c);
-      //
-      // section->__prerender_external_func = [&section]() {
-      //    section->setView(BfGuiCreateWindowBladeSection::viewMode::SHORT);
-      // };
-      // section->__postrender_external_func = [&section]() {
-      //    section->setView(BfGuiCreateWindowBladeSection::viewMode::STD);
-      // };
+      if (__isWindowContainerBladeSection(c))
+      {
+         c->pos().y = pos().y + next_container_h;
+         next_container_h += c->size().y * 0.5;
+      }
+      else
+      {
+      }
    }
+}
+
+void
+BfGuiCreateWindowBladeBase::__createObj()
+{
+   bfFillBladeBaseStandart(&__create_info);
+   __create_info.layer_create_info = __layer_create_info;
+   for (auto c : __containers)
+   {
+      // if (__isWindowContainerBladeSection(c))
+      if (auto section_container =
+              std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c))
+      {
+         __create_info.section_infos.push_back(
+             std::move(section_container->createInfo())
+         );
+      }
+   }
+   __layer_obj = std::make_shared<BfBladeBase>(__create_info);
+}
+
+void
+BfGuiCreateWindowBladeBase::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
+{
+   if (auto shared_root = __ptr_root.lock())
+   {
+      shared_root->del(__layer_obj->id.get(), true);
+   }
+
+   __createObj();
+   __ptr_root = add_to;
+   add_to->add(__layer_obj);
+   add_to->update_buffer();
+}
+
+bool
+BfGuiCreateWindowBladeBase::__isWindowContainerBladeSection(ptrContainer c)
+{
+   // return __settings_popup || __layer_choser
+   //            ? c->id() != __settings_popup->id() &&
+   //                  c->id() != __layer_choser->id()
+   //            : true;
+   //
+   return (bool)std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c);
 }
 
 void
@@ -56,7 +98,61 @@ BfGuiCreateWindowBladeBase::__renderHeaderName()
 void
 BfGuiCreateWindowBladeBase::__renderChildContent()
 {
-   // __setContainersPos();
+   if (__settings_popup)
+   {
+   }
+   if (ImGui::Button("Open section settings"))
+   {
+      if (!__settings_popup)
+      {
+         __settings_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
+             shared_from_this(),
+             BfGuiCreateWindowContainerPopup::LEFT,
+             [this]() {
+                for (auto c : this->__containers)
+                {
+                   if (c->id() == __selected_id)
+                   {
+                      c->renderBodyView();
+                   }
+                }
+             }
+         );
+         __settings_popup->setSize({500, 350});
+         this->add(__settings_popup);
+      }
+      else
+      {
+         __settings_popup->toggleRender();
+      }
+   }
+   ImGui::SameLine();
+   if (ImGui::Button("Add to layer"))
+   {
+      if (!__layer_choser)
+      {
+         __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+             shared_from_this(),
+             BfGuiCreateWindowContainerPopup::RIGHT,
+             [this]() {
+                BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
+                   size_t selected_id =
+                       BfGuiSmartLayerObserver::instance()->selectedLayer();
+                   std::shared_ptr<BfDrawLayer> selected_layer =
+                       BfLayerHandler::instance()->get_layer_by_id(selected_id);
+                   __addToLayer(selected_layer);
+                   __layer_choser->hide();
+                });
+             }
+         );
+         __layer_choser->setSize({400, 350});
+         this->add(__layer_choser);
+      }
+      else
+      {
+         __layer_choser->toggleRender();
+      }
+   }
 }
 
 BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
@@ -64,6 +160,16 @@ BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
 )
     : __base_name{"Blade base"}, BfGuiCreateWindowContainerObj{root, is_target}
 {
+   __window_size = {600, 400};
+
+   bfFillBladeBaseStandart(&__create_info);
+   __create_info.layer_create_info = __layer_create_info;
+}
+
+uint32_t*
+BfGuiCreateWindowBladeBase::selectedId() noexcept
+{
+   return &__selected_id;
 }
 
 void
@@ -110,10 +216,13 @@ BfGuiCreateWindowBladeBase::__postrender()
 {
    for (auto& c : __containers)
    {
-      auto section =
-          std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c);
+      if (__isWindowContainerBladeSection(c))
+      {
+         auto section =
+             std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c);
 
-      section->__prerender_external_func = nullptr;
-      section->__postrender_external_func = nullptr;
+         section->__prerender_external_func = nullptr;
+         section->__postrender_external_func = nullptr;
+      }
    }
 }

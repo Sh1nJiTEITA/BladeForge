@@ -22,7 +22,6 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    bool __is_settings = false;
    bool __is_popup_open = false;
    bool __is_selected = false;
-   std::string* __str_id_selected;
 
    std::function<void()> __prerender_external_func = nullptr;
    std::function<void()> __postrender_external_func = nullptr;
@@ -56,8 +55,10 @@ public:
    );
 
    void setView(viewMode) noexcept;
+   BfBladeSectionCreateInfo createInfo() const noexcept;
 
    friend BfGuiCreateWindowBladeBase;
+   friend BfGuiCreateWindowContainerPopup;
 };
 
 #endif

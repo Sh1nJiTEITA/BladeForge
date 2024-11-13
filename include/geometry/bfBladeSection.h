@@ -31,7 +31,7 @@ struct BfBladeSectionCreateInfo
    float border_length;
 
    bool is_triangulate = false;
-   bool is_center      = true;
+   bool is_center = true;
 
    // Other
    glm::vec3 start_vertex{0.0f, 0.0f, 0.0f};
@@ -42,8 +42,9 @@ struct BfBladeSectionCreateInfo
    VkPipeline t_pipeline = nullptr;
 };
 
-bool bfCheckBladeSectionCreateInfoEquality(const BfBladeSectionCreateInfo& i_1,
-                                           const BfBladeSectionCreateInfo& i_2);
+bool bfCheckBladeSectionCreateInfoEquality(
+    const BfBladeSectionCreateInfo& i_1, const BfBladeSectionCreateInfo& i_2
+);
 void bfFillBladeSectionStandart(BfBladeSectionCreateInfo* info);
 
 #define BF_BLADESECTION_AVE_COLOR glm::vec3(1.0, 0.5, 0.0)
@@ -81,8 +82,8 @@ public:
    std::shared_ptr<BfSingleLine> get_top_border();
    std::shared_ptr<BfSingleLine> get_bot_border();
    std::shared_ptr<BfSingleLine> get_chord();
-   std::shared_ptr<BfCircle>     get_inlet_edge();
-   std::shared_ptr<BfCircle>     get_outlet_edge();
+   std::shared_ptr<BfCircle> get_inlet_edge();
+   std::shared_ptr<BfCircle> get_outlet_edge();
    std::shared_ptr<BfSingleLine> get_inlet_vector();
    std::shared_ptr<BfSingleLine> get_outlet_vector();
 
@@ -98,7 +99,7 @@ public:
    std::shared_ptr<BfBezierCurveFrame> get_face_curve_frame();
 
    std::vector<std::shared_ptr<BfTriangle>> get_triangulated_shape();
-   BfVertex3                                get_center();
+   BfVertex3 get_center();
 
    virtual void remake(BfBladeSectionCreateInfo* info);
    virtual void del_all() override;
@@ -133,11 +134,14 @@ private:
 
 struct BfBladeBaseCreateInfo
 {
-   BfDrawLayerCreateInfo layer_create_info{.id_type =
-                                               BF_DRAW_LAYER_TYPE_BLADE_BASE};
+   BfDrawLayerCreateInfo layer_create_info{
+       .id_type = BF_DRAW_LAYER_TYPE_BLADE_BASE
+   };
 
    std::vector<BfBladeSectionCreateInfo> section_infos;
 };
+
+void bfFillBladeBaseStandart(BfBladeBaseCreateInfo* info);
 
 class BfBladeBaseSurface;
 
@@ -152,7 +156,7 @@ public:
    // void del_section(size_t id);
 
    // std::vector<BfBladeSectionCreateInfo*> get_pInfos();
-   const BfBladeBaseCreateInfo&        get_info();
+   const BfBladeBaseCreateInfo& get_info();
    std::shared_ptr<BfBladeBaseSurface> get_shape();
    std::shared_ptr<BfBladeBaseSurface> create_shape();
 
@@ -162,13 +166,15 @@ private:
 class BfBladeBaseSurface : public BfDrawObj
 {
    std::vector<std::shared_ptr<BfBladeSection>> __secs;
-   size_t                                       __slices_count;
-   size_t                                       __skip_vert;
+   size_t __slices_count;
+   size_t __skip_vert;
 
 public:
-   BfBladeBaseSurface(const std::vector<std::shared_ptr<BfBladeSection>>& secs,
-                      size_t inner_sections_count,
-                      size_t skip_vert = 0);
+   BfBladeBaseSurface(
+       const std::vector<std::shared_ptr<BfBladeSection>>& secs,
+       size_t inner_sections_count,
+       size_t skip_vert = 0
+   );
 
    virtual void create_vertices() override;
 };

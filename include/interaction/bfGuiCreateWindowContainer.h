@@ -28,8 +28,6 @@ class BfGuiCreateWindowContainer
    std::string __str_child_border_id;
 
    //
-
-   //
    bool __is_invisiable_buttons = true;
    bool __is_first_render = true;
    bool __is_render = true;
@@ -57,6 +55,8 @@ public:
        std::function<void(const std::string&, const std::string&)>;
 
 protected:
+   uint32_t __id;
+
    bool __is_left_button = true;
    bool __is_right_button = true;
    bool __is_top_button = true;
@@ -91,6 +91,7 @@ protected:
 public:
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
+   void renderBodyView();
 
    // GETTERS --------------------
    const char* name() noexcept;
@@ -100,6 +101,7 @@ public:
 
    ImVec2 popupSize();
    ImVec2 popupPos();
+   uint32_t id() noexcept;
 
    void show();
    void hide();
@@ -216,10 +218,12 @@ public:
 
    BfGuiCreateWindowContainerPopup(
        BfGuiCreateWindowContainer::wptrContainer root,
+       BfGuiCreateWindowContainerPopup::SIDE side,
        std::function<void()> popup_func
    );
 
    SIDE side() noexcept;
+   void setSize(ImVec2);
 };
 
 //
