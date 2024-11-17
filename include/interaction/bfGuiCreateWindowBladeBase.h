@@ -15,7 +15,7 @@ class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
    std::shared_ptr<BfGuiCreateWindowContainerPopup> __layer_choser;
 
    std::weak_ptr<BfDrawLayer> __ptr_root;
-   std::shared_ptr<BfBladeBase> __ptr_base;
+   std::shared_ptr<BfBladeBase> __ptr_;
 
    void __setContainersPos();
    void __createObj() override;

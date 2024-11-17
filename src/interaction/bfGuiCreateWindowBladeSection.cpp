@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 #include "bfBladeSection.h"
 #include "bfGuiCreateWindowBladeBase.h"
@@ -46,26 +47,34 @@ BfGuiCreateWindowBladeSection::createInfo() const noexcept
 }
 
 void
+BfGuiCreateWindowBladeSection::clearSinglePopup(uint32_t id)
+{
+   std::erase_if(__containers, [&id](auto c) { return c->id() == id; });
+}
+
+void
+BfGuiCreateWindowBladeSection::clearPopups()
+{
+   // NOTE: Not effective! by readeable
+   if (__layer_choser.get())
+   {
+      clearSinglePopup(__layer_choser->id());
+   }
+}
+
+void
 BfGuiCreateWindowBladeSection::__renderHeaderName()
 {
    uint32_t* selected_id = nullptr;
+
    if (auto shared_root = __root_container.lock())
    {
       if (auto casted_root =
               std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(shared_root
               ))
       {
-         __mode = viewMode::SHORT;
          selected_id = casted_root->selectedId();
       }
-      else
-      {
-         __mode = viewMode::STD;
-      }
-   }
-   else
-   {
-      __mode = viewMode::STD;
    }
 
    if (__mode == viewMode::SHORT)
@@ -76,12 +85,11 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
                 ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
                 ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f - 30.0f;
 
-      static bool isEditing = false;
       ImGui::PushID(__str_id.c_str());
       {
          if (ImGui::RadioButton(
                  (std::string("##") + __str_id).c_str(),
-                 __id == *selected_id
+                 __id == (selected_id ? *selected_id : false)
              ))
          {
             *selected_id = __id;
@@ -171,6 +179,7 @@ BfGuiCreateWindowBladeSection::__renderChildContent()
             __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
                 shared_from_this(),
                 BfGuiCreateWindowContainerPopup::RIGHT,
+                false,
                 [&]() {
                    BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
                       size_t selected_id =
@@ -355,6 +364,7 @@ BfGuiCreateWindowBladeSection::__processDragDropTarget()
                  ))
          {
             __swapFunc(other_section->name(), this->name());
+            clearPopups();
          }
          else
          {
@@ -390,10 +400,14 @@ BfGuiCreateWindowBladeSection::__renderInfoTooltip()
    }
 
    ImGui::SetTooltip(
-       "Root container: %s\nInner containers:\n%s\nRoot DrawLayer: %s",
+       "Root container: %s\n"
+       "Inner containers:\n%s\n"
+       "Root DrawLayer: %s\n"
+       "Is force render: %s",
        root_name.c_str(),
        total_containers.c_str(),
-       root_layer_name.c_str()
+       root_layer_name.c_str(),
+       std::to_string(__is_force_render).c_str()
    );
 }
 

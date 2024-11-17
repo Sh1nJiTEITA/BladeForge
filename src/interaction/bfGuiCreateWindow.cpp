@@ -1,8 +1,11 @@
 #include "bfGuiCreateWindow.h"
 
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
+
+#include "imgui.h"
 
 //
 //
@@ -20,7 +23,8 @@ BfGuiCreateWindow::BfGuiCreateWindow()
    {
       throw std::runtime_error(
           "Create window was already created, "
-          "could not be 2 at the same time");
+          "could not be 2 at the same time"
+      );
    }
 
    __instance = this;
@@ -30,23 +34,30 @@ BfGuiCreateWindow::BfGuiCreateWindow()
          Function below deletes cointeiner from this staring 'Create' window.
    */
 
-   BfGuiCreateWindowContainerObj::bindSwapFunction(
-       [&](const std::string& a, const std::string& b) {
-          __swap_pairs.push({a, b});
-       });
+   BfGuiCreateWindowContainerObj::bindSwapFunction([&](const std::string& a,
+                                                       const std::string& b) {
+      __swap_pairs.push({a, b});
+   });
 
    BfGuiCreateWindowContainerObj::bindMoveFunction(
        [&](const std::string& what, const std::string& where) {
           __move_pairs.push({what, where});
-       });
+       }
+   );
 }
 
-BfGuiCreateWindow* BfGuiCreateWindow::instance() noexcept { return __instance; }
+BfGuiCreateWindow*
+BfGuiCreateWindow::instance() noexcept
+{
+   return __instance;
+}
 
-BfGuiCreateWindow::foundContainer BfGuiCreateWindow::__findContainer(
+BfGuiCreateWindow::foundContainer
+BfGuiCreateWindow::__findContainer(
     std::list<ptrContainer>::iterator begin,
     std::list<ptrContainer>::iterator end,
-    const std::string&                name)
+    const std::string& name
+)
 {
    for (auto it = begin; it != end; ++it)
    {
@@ -67,8 +78,8 @@ BfGuiCreateWindow::foundContainer BfGuiCreateWindow::__findContainer(
    return std::nullopt;  // Not found
 }
 
-BfGuiCreateWindow::ptrPair BfGuiCreateWindow::__findAndCheckPair(
-    const pair& name)
+BfGuiCreateWindow::ptrPair
+BfGuiCreateWindow::__findAndCheckPair(const pair& name)
 {
    auto a =
        __findContainer(__containers.begin(), __containers.end(), name.first);
@@ -90,7 +101,8 @@ BfGuiCreateWindow::ptrPair BfGuiCreateWindow::__findAndCheckPair(
    return {a, b};
 }
 
-void BfGuiCreateWindow::__renderManagePanel()
+void
+BfGuiCreateWindow::__renderManagePanel()
 {
    ImGui::BeginChild("##CreateWindowManagePanel", {0.0, 37.0f}, true);
    {
@@ -120,7 +132,8 @@ void BfGuiCreateWindow::__renderManagePanel()
    ImGui::EndChild();
 }
 
-void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
+void
+BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
 {
    ImVec2 mouse_pos = ImGui::GetMousePos();
 
@@ -144,10 +157,11 @@ void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
    }
 }
 
-void BfGuiCreateWindow::__renderContainers()
+void
+BfGuiCreateWindow::__renderContainers()
 {
    std::stack<BfGuiCreateWindowContainer::ptrContainer> render_stack;
-   std::list<std::pair<std::string, int>>               l;
+   std::list<std::pair<std::string, int>> l;
 
    BfGuiCreateWindowContainer::resetResizeHover();
    int level = 0;
@@ -167,11 +181,19 @@ void BfGuiCreateWindow::__renderContainers()
          BfGuiCreateWindowContainer::changeCursorStyle();
          l.push_back({current_window->name(), level});
 
-         if (current_window->isCollapsed()) continue;
+         if (current_window->isCollapsed())
+         {
+         }
+
          for (auto child = current_window->begin();
               child != current_window->end();
               ++child)
          {
+            if (current_window->isCollapsed())
+            {
+               if (!child->get()->isForceRender()) continue;
+            }
+
             render_stack.push(*child);
             if (is_level)
             {
@@ -207,7 +229,8 @@ void BfGuiCreateWindow::__renderContainers()
 }
 
 // TODO: REMAKE -> to work with std::function ...
-void BfGuiCreateWindow::__renderDragDropZone()
+void
+BfGuiCreateWindow::__renderDragDropZone()
 {
    ImGui::Text("<=== Move here ===>");
    if (ImGui::BeginDragDropTarget())
@@ -255,36 +278,52 @@ void BfGuiCreateWindow::__renderDragDropZone()
          */
          (*__containers.rbegin())->root() =
              std::weak_ptr<BfGuiCreateWindowContainer>();
+
+         // Меняем режим отображения для 'BladeSection'-контейнера после дропа
+         if (auto casted =
+                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+                     dropped_container
+                 ))
+         {
+            casted->setView(BfGuiCreateWindowBladeSection::viewMode::STD);
+         }
       }
       ImGui::EndDragDropTarget();
    }
 }
 
-void BfGuiCreateWindow::__addBlankContainer()
+void
+BfGuiCreateWindow::__addBlankContainer()
 {
    __containers.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()));
+       std::weak_ptr<BfGuiCreateWindowContainer>()
+   ));
 }
 
-void BfGuiCreateWindow::__addSection()
+void
+BfGuiCreateWindow::__addSection()
 {
    __containers.push_back(std::make_shared<BfGuiCreateWindowBladeSection>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()));
+       std::weak_ptr<BfGuiCreateWindowContainer>()
+   ));
 }
 
-void BfGuiCreateWindow::__addBase()
+void
+BfGuiCreateWindow::__addBase()
 {
    __containers.push_back(std::make_shared<BfGuiCreateWindowBladeBase>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()));
+       std::weak_ptr<BfGuiCreateWindowContainer>()
+   ));
 }
 
-void BfGuiCreateWindow::__processSwaps()
+void
+BfGuiCreateWindow::__processSwaps()
 {
    while (!__swap_pairs.empty())
    {
       auto pair = __swap_pairs.top();
       //
-      auto [a, b]  = __findAndCheckPair(pair);
+      auto [a, b] = __findAndCheckPair(pair);
       ImVec2 pos_a = (*a)->get()->pos();
       ImVec2 pos_b = (*b)->get()->pos();
       //
@@ -303,15 +342,17 @@ void BfGuiCreateWindow::__processSwaps()
    }
 }
 
-void BfGuiCreateWindow::__processMoves()
+void
+BfGuiCreateWindow::__processMoves()
 {
    while (!__move_pairs.empty())
    {
+      std::cout << "MOVE__1\n";
       auto pair = __move_pairs.top();
       //
       auto optPair = __findAndCheckPair(pair);
-      auto what    = *(*optPair.first);
-      auto where   = *(*optPair.second);
+      auto what = *(*optPair.first);
+      auto where = *(*optPair.second);
 
       where->add(what);
 
@@ -322,8 +363,9 @@ void BfGuiCreateWindow::__processMoves()
       }
       else
       {
-         __containers.remove_if(
-             [&what](auto c) { return c->name() == what->name(); });
+         __containers.remove_if([&what](auto c) {
+            return c->name() == what->name();
+         });
       }
       what->root() = where;
 
@@ -331,27 +373,35 @@ void BfGuiCreateWindow::__processMoves()
    }
 }
 
-void BfGuiCreateWindow::__processEvents()
+void
+BfGuiCreateWindow::__processEvents()
 {
    __processSwaps();
    __processMoves();
 }
 
-void BfGuiCreateWindow::removeByName(std::string name)
+void
+BfGuiCreateWindow::removeByName(std::string name)
 {
-   std::erase_if(__containers,
-                 [&name](auto c) { return std::string(c->name()) == name; });
+   std::erase_if(__containers, [&name](auto c) {
+      return std::string(c->name()) == name;
+   });
 }
 
-void BfGuiCreateWindow::render()
+void
+BfGuiCreateWindow::render()
 {
    if (__is_render)
    {
-      if (ImGui::Begin("Create",
-                       &__is_render,
-                       ImGuiWindowFlags_NoBringToFrontOnFocus |
-                           ImGuiWindowFlags_NoDocking))
+      ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+      if (ImGui::Begin(
+              "Create",
+              &__is_render,
+              ImGuiWindowFlags_NoBringToFrontOnFocus |
+                  ImGuiWindowFlags_NoDocking
+          ))
       {
+         ImGui::PopStyleColor();
          __renderManagePanel();
          __renderContainers();
       }
@@ -360,7 +410,11 @@ void BfGuiCreateWindow::render()
    __processEvents();
 }
 
-void BfGuiCreateWindow::toggleRender() { __is_render = !__is_render; }
+void
+BfGuiCreateWindow::toggleRender()
+{
+   __is_render = !__is_render;
+}
 
 /*
    зарендерить все окна слоями! сначала на одном

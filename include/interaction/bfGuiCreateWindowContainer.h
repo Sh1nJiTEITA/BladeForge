@@ -61,6 +61,8 @@ protected:
    bool __is_right_button = true;
    bool __is_top_button = true;
    bool __is_bot_button = true;
+   bool __is_force_render = false;
+   bool __is_render_header = true;
 
    ImVec2 __resize_button_size = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
@@ -89,6 +91,14 @@ protected:
    void __updateResizeButtonSize();
 
 public:
+   enum BUTTON_TYPE
+   {
+      TOP,
+      BOT,
+      RIGHT,
+      LEFT
+   };
+
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
    void renderBodyView();
@@ -106,9 +116,23 @@ public:
    void show();
    void hide();
    void toggleRender();
+
+   void enableForceRender() noexcept;
+   void disableForceRender() noexcept;
+   void toggleForceRender() noexcept;
+
+   void enableButton(BUTTON_TYPE button_id);
+   void disableButton(BUTTON_TYPE button_id);
+   void toggleButton(BUTTON_TYPE button_id);
+
+   void hideHeader() noexcept;
+   void showHeader() noexcept;
+   void toggleHeader() noexcept;
+
    // ----------------------------
    bool isEmpty() noexcept;
    bool isCollapsed() noexcept;
+   bool isForceRender() noexcept;
    //
 
    static void bindSwapFunction(swapFuncType func) noexcept;
@@ -219,6 +243,7 @@ public:
    BfGuiCreateWindowContainerPopup(
        BfGuiCreateWindowContainer::wptrContainer root,
        BfGuiCreateWindowContainerPopup::SIDE side,
+       bool is_force_render,
        std::function<void()> popup_func
    );
 

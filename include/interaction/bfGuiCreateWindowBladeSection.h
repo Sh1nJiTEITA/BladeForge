@@ -14,6 +14,14 @@ class BfGuiCreateWindowBladeBase;
 
 class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
 {
+public:
+   enum class viewMode
+   {
+      STD,
+      SHORT
+   };
+
+private:
    BfBladeSectionCreateInfo __create_info;
    std::weak_ptr<BfDrawLayer> __ptr_root;
    std::shared_ptr<BfBladeSection> __ptr_section;
@@ -27,13 +35,9 @@ class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
    std::function<void()> __postrender_external_func = nullptr;
 
 protected:
-   enum class viewMode
-   {
-      STD,
-      SHORT
-   };
-
    std::shared_ptr<BfGuiCreateWindowContainerPopup> __layer_choser;
+   std::shared_ptr<BfGuiCreateWindowContainerPopup> __height_choser;
+
    viewMode __mode = viewMode::STD;
 
    void __renderSettingsWindow();
@@ -56,6 +60,9 @@ public:
 
    void setView(viewMode) noexcept;
    BfBladeSectionCreateInfo createInfo() const noexcept;
+
+   void clearSinglePopup(uint32_t id);
+   void clearPopups();
 
    friend BfGuiCreateWindowBladeBase;
    friend BfGuiCreateWindowContainerPopup;

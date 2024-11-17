@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "bfCurves2.h"
+#include "bfIconsFontAwesome6.h"
 #include "bfLayerHandler.h"
 #include "bfVariative.hpp"
 #include "imgui.h"
@@ -149,7 +150,7 @@ BfGuiCreateWindowContainer::__renderLeftResizeButton()
    {
    }
 
-   if (ImGui::IsItemHovered())
+   if (ImGui::IsItemHovered() && __is_left_button)
    {
       __is_resizing_hovered_h = true;
    }
@@ -198,7 +199,7 @@ BfGuiCreateWindowContainer::__renderRightResizeButton()
    {
    }
 
-   if (ImGui::IsItemHovered())
+   if (ImGui::IsItemHovered() && __is_right_button)
    {
       __is_resizing_hovered_h = true;
    }
@@ -248,7 +249,7 @@ BfGuiCreateWindowContainer::__renderBotResizeButton()
 
    if (__is_collapsed) return;
 
-   if (ImGui::IsItemHovered())
+   if (ImGui::IsItemHovered() && __is_bot_button)
    {
       __is_resizing_hovered_v = true;
    }
@@ -299,15 +300,11 @@ BfGuiCreateWindowContainer::__renderTopResizeButton()
 
    if (__is_collapsed) return;
 
-   if (ImGui::IsItemHovered())
+   if (ImGui::IsItemHovered() && __is_top_button)
    {
       __is_resizing_hovered_v = true;
    }
 
-   if (ImGui::IsItemHovered())
-   {
-      __is_resizing_hovered_v = true;
-   }
    if (ImGui::IsItemActive())
    {
       __is_resizing = true;
@@ -341,10 +338,10 @@ BfGuiCreateWindowContainer::__renderChildBorder()
    );
    {
       __updateResizeButtonSize();
-      __renderHeader();
+      if (__is_render_header) __renderHeader();
       if (!__is_collapsed)
       {
-         ImGui::Separator();
+         if (__is_render_header) ImGui::Separator();
          __renderChildContent();
       }
       __updatePosition();
@@ -577,6 +574,100 @@ BfGuiCreateWindowContainer::toggleRender()
    __is_render = !__is_render;
 }
 
+void
+BfGuiCreateWindowContainer::enableForceRender() noexcept
+{
+   __is_force_render = true;
+}
+void
+
+BfGuiCreateWindowContainer::disableForceRender() noexcept
+{
+   __is_force_render = false;
+}
+
+void
+BfGuiCreateWindowContainer::toggleForceRender() noexcept
+{
+   __is_force_render = !__is_force_render;
+}
+
+void
+BfGuiCreateWindowContainer::enableButton(BUTTON_TYPE button_id)
+{
+   switch (button_id)
+   {
+      case BUTTON_TYPE::LEFT:
+         __is_left_button = true;
+         break;
+      case BUTTON_TYPE::RIGHT:
+         __is_right_button = true;
+         break;
+      case BUTTON_TYPE::TOP:
+         __is_top_button = true;
+         break;
+      case BUTTON_TYPE::BOT:
+         __is_bot_button = true;
+         break;
+   }
+}
+
+void
+BfGuiCreateWindowContainer::disableButton(BUTTON_TYPE button_id)
+{
+   switch (button_id)
+   {
+      case BUTTON_TYPE::LEFT:
+         __is_left_button = false;
+         break;
+      case BUTTON_TYPE::RIGHT:
+         __is_right_button = false;
+         break;
+      case BUTTON_TYPE::TOP:
+         __is_top_button = false;
+         break;
+      case BUTTON_TYPE::BOT:
+         __is_bot_button = false;
+         break;
+   }
+}
+
+void
+BfGuiCreateWindowContainer::toggleButton(BUTTON_TYPE button_id)
+{
+   switch (button_id)
+   {
+      case BUTTON_TYPE::LEFT:
+         __is_left_button = !__is_left_button;
+         break;
+      case BUTTON_TYPE::RIGHT:
+         __is_right_button = !__is_right_button;
+         break;
+      case BUTTON_TYPE::TOP:
+         __is_top_button = !__is_top_button;
+         break;
+      case BUTTON_TYPE::BOT:
+         __is_bot_button = !__is_bot_button;
+         break;
+   }
+}
+
+void
+BfGuiCreateWindowContainer::hideHeader() noexcept
+{
+   __is_render_header = false;
+}
+void
+BfGuiCreateWindowContainer::showHeader() noexcept
+{
+   __is_render_header = true;
+}
+void
+BfGuiCreateWindowContainer::toggleHeader() noexcept
+{
+   __is_render_header = !__is_render_header;
+}
+
 bool
 BfGuiCreateWindowContainer::isEmpty() noexcept
 {
@@ -587,6 +678,12 @@ bool
 BfGuiCreateWindowContainer::isCollapsed() noexcept
 {
    return __is_collapsed;
+}
+
+bool
+BfGuiCreateWindowContainer::isForceRender() noexcept
+{
+   return __is_force_render;
 }
 
 bool
@@ -1288,6 +1385,14 @@ BfGuiCreateWindowContainerPopup::__renderChildContent()
 void
 BfGuiCreateWindowContainerPopup::__renderHeader()
 {
+   ImGui::Text(ICON_FA_INFO);
+   if (ImGui::IsItemHovered())
+      ImGui::SetTooltip(
+          "Render force status: %s",
+          std::to_string(__is_force_render).c_str()
+      );
+   ImGui::SameLine();
+
    ImGui::PushStyleColor(ImGuiCol_Button, {1.0f, 1.0f, 1.0f, 0.0f});
    ImGui::SetCursorPosX(
        ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("\uf00d").x
@@ -1303,6 +1408,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     BfGuiCreateWindowContainer::wptrContainer root,
     BfGuiCreateWindowContainerPopup::SIDE side =
         BfGuiCreateWindowContainerPopup::RIGHT,
+    bool is_force_render = false,
     std::function<void()> popup_func = nullptr
 )
     : BfGuiCreateWindowContainer{root}
@@ -1310,6 +1416,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     , __renderPopupContentFunc{popup_func}
 {
    __assignButtons();
+   __is_force_render = is_force_render;
 }
 
 BfGuiCreateWindowContainerPopup::SIDE

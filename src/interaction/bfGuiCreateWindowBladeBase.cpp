@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "bfGuiCreateWindowBladeSection.h"
+#include "bfGuiCreateWindowContainer.h"
 #include "imgui.h"
 
 void
@@ -108,6 +109,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
          __settings_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
              shared_from_this(),
              BfGuiCreateWindowContainerPopup::LEFT,
+             true,
              [this]() {
                 for (auto c : this->__containers)
                 {
@@ -134,6 +136,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
          __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
              shared_from_this(),
              BfGuiCreateWindowContainerPopup::RIGHT,
+             true,
              [this]() {
                 BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
                    size_t selected_id =
@@ -195,6 +198,34 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                           dropped_container
                       ))
          {
+            other_section.get()->__mode =
+                BfGuiCreateWindowBladeSection::viewMode::SHORT;
+
+            auto h_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
+                other_section,
+                BfGuiCreateWindowContainerPopup::SIDE::LEFT,
+                true,
+                [&]() {
+                   ImGui::PushID("InputSectionHeight");
+                   static std::string str = "";
+                   ImGui::InputText(
+                       "##InputSectionHeight",
+                       str.data(),
+                       10 * sizeof(char)
+                   );
+                   ImGui::PopID();
+                }
+            );
+            h_popup->disableButton(BUTTON_TYPE::BOT);
+            h_popup->disableButton(BUTTON_TYPE::TOP);
+            h_popup->disableButton(BUTTON_TYPE::RIGHT);
+            h_popup->disableButton(BUTTON_TYPE::LEFT);
+            h_popup->hideHeader();
+            h_popup->setSize({100, 80});
+
+            other_section->add(h_popup);
+            other_section->__height_choser = h_popup;
+
             __moveFunc(other_section->name(), this->name());
          }
          else
