@@ -110,7 +110,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
              shared_from_this(),
              BfGuiCreateWindowContainerPopup::LEFT,
              true,
-             [this]() {
+             [this](wptrContainer root) {
                 for (auto c : this->__containers)
                 {
                    if (c->id() == __selected_id)
@@ -137,7 +137,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
              shared_from_this(),
              BfGuiCreateWindowContainerPopup::RIGHT,
              true,
-             [this]() {
+             [this](wptrContainer root) {
                 BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
                    size_t selected_id =
                        BfGuiSmartLayerObserver::instance()->selectedLayer();
@@ -205,17 +205,26 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                 other_section,
                 BfGuiCreateWindowContainerPopup::SIDE::LEFT,
                 true,
-                [&]() {
-                   ImGui::PushID("InputSectionHeight");
-                   static std::string str = "";
-                   ImGui::InputText(
-                       "##InputSectionHeight",
-                       str.data(),
-                       10 * sizeof(char)
-                   );
-                   ImGui::PopID();
-                }
+                [](wptrContainer root) {}
             );
+
+            h_popup->__renderPopupContentFunc = [](wptrContainer root) {
+               if (auto shared_root = root.lock())
+               {
+                  if (auto casted_root = std::dynamic_pointer_cast<
+                          BfGuiCreateWindowBladeSection>(shared_root))
+                  {
+                     ImGui::PushID("InputSectionHeight");
+                     float a;
+                     ImGui::InputFloat(
+                         "##InputSectionHeight",
+                         &casted_root->zCoordinate()
+                     );
+                     ImGui::PopID();
+                  }
+               }
+            };
+
             h_popup->disableButton(BUTTON_TYPE::BOT);
             h_popup->disableButton(BUTTON_TYPE::TOP);
             h_popup->disableButton(BUTTON_TYPE::RIGHT);

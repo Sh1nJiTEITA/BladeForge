@@ -238,13 +238,13 @@ protected:
    virtual void __renderHeader() override;
 
 public:
-   std::function<void()> __renderPopupContentFunc;
+   std::function<void(wptrContainer root)> __renderPopupContentFunc;
 
    BfGuiCreateWindowContainerPopup(
        BfGuiCreateWindowContainer::wptrContainer root,
        BfGuiCreateWindowContainerPopup::SIDE side,
        bool is_force_render,
-       std::function<void()> popup_func
+       std::function<void(wptrContainer)> popup_func
    );
 
    SIDE side() noexcept;

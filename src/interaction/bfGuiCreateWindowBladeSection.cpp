@@ -62,6 +62,12 @@ BfGuiCreateWindowBladeSection::clearPopups()
    }
 }
 
+float&
+BfGuiCreateWindowBladeSection::zCoordinate()
+{
+   return __create_info.start_vertex.z;
+}
+
 void
 BfGuiCreateWindowBladeSection::__renderHeaderName()
 {
@@ -180,7 +186,7 @@ BfGuiCreateWindowBladeSection::__renderChildContent()
                 shared_from_this(),
                 BfGuiCreateWindowContainerPopup::RIGHT,
                 false,
-                [&]() {
+                [&](wptrContainer root) {
                    BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
                       size_t selected_id =
                           BfGuiSmartLayerObserver::instance()->selectedLayer();
@@ -324,6 +330,11 @@ BfGuiCreateWindowBladeSection::__renderSettings()
 
       ImGui::EndTable();
    }
+}
+
+void
+BfGuiCreateWindowBladeSection::__renderZCoordinate()
+{
 }
 
 // void BfGuiCreateWindowBladeSection::__renderAvailableLayers() {}

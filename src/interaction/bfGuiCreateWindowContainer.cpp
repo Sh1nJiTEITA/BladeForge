@@ -1378,7 +1378,7 @@ BfGuiCreateWindowContainerPopup::__renderChildContent()
 {
    if (__renderPopupContentFunc)
    {
-      __renderPopupContentFunc();
+      __renderPopupContentFunc(__root_container);
    }
 }
 
@@ -1409,7 +1409,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     BfGuiCreateWindowContainerPopup::SIDE side =
         BfGuiCreateWindowContainerPopup::RIGHT,
     bool is_force_render = false,
-    std::function<void()> popup_func = nullptr
+    std::function<void(wptrContainer)> popup_func = nullptr
 )
     : BfGuiCreateWindowContainer{root}
     , __side{side}

@@ -42,6 +42,7 @@ protected:
 
    void __renderSettingsWindow();
    void __renderSettings();
+   void __renderZCoordinate();
 
    void __createObj() override;
    void __addToLayer(std::shared_ptr<BfDrawLayer> add_to) override;
@@ -63,6 +64,7 @@ public:
 
    void clearSinglePopup(uint32_t id);
    void clearPopups();
+   float& zCoordinate();
 
    friend BfGuiCreateWindowBladeBase;
    friend BfGuiCreateWindowContainerPopup;
