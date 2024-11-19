@@ -745,6 +745,14 @@ BfGuiCreateWindowContainer::add(ptrContainer container)
    __containers.push_back(container);
 }
 
+void
+BfGuiCreateWindowContainer::rem(ptrContainer container)
+{
+   __containers.remove_if([&container](auto c) {
+      return (c->name() == container->name()) && (c->id() == container->id());
+   });
+}
+
 //
 //
 //

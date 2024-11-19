@@ -115,6 +115,10 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
       ImGui::SameLine();
       ImGui::SetCursorPosX(tmp_cursor_x);
       ImGui::SetNextItemWidth(x);
+
+      ImGui::PushStyleColor(ImGuiCol_FrameBg, {1.0, 1.0f, 1.0f, 0.0f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, {1.0, 1.0f, 1.0f, 0.2f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgActive, {1.0, 1.0f, 1.0f, 0.5f});
       if (ImGui::InputText(
               "##edit",
               __section_name.data(),
@@ -122,6 +126,7 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
           ))
       {
       }
+      ImGui::PopStyleColor(3);
    }
    else if (__mode == viewMode::STD)
    {
@@ -144,6 +149,9 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
       ImGui::SameLine();
       ImGui::SetCursorPos(ImGui::GetCursorStartPos());
       ImGui::SetNextItemWidth(x);
+      ImGui::PushStyleColor(ImGuiCol_FrameBg, {1.0, 1.0f, 1.0f, 0.0f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, {1.0, 1.0f, 1.0f, 0.2f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgActive, {1.0, 1.0f, 1.0f, 0.5f});
       if (ImGui::InputText(
               "##edit",
               __section_name.data(),
@@ -151,6 +159,7 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
           ))
       {
       }
+      ImGui::PopStyleColor(3);
    }
 
    //    {

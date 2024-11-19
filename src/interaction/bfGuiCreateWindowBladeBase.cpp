@@ -4,19 +4,21 @@
 
 #include "bfGuiCreateWindowBladeSection.h"
 #include "bfGuiCreateWindowContainer.h"
+#include "bfIconsFontAwesome6.h"
 #include "imgui.h"
 
 void
 BfGuiCreateWindowBladeBase::__setContainersPos()
 {
    ImVec2 avail = size();
+   // float next_container_h = ImGui::GetStyle().WindowPadding.y * 9.5;
    float next_container_h = ImGui::GetStyle().WindowPadding.y * 9.5;
    for (auto& c : __containers)
    {
       if (__isWindowContainerBladeSection(c))
       {
          c->pos().y = pos().y + next_container_h;
-         next_container_h += c->size().y * 0.5;
+         next_container_h += c->size().y * 0.8;
       }
       else
       {
@@ -215,12 +217,29 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                           BfGuiCreateWindowBladeSection>(shared_root))
                   {
                      ImGui::PushID("InputSectionHeight");
-                     float a;
+                     ImGui::PushStyleColor(
+                         ImGuiCol_FrameBg,
+                         {1.0, 1.0f, 1.0f, 0.0f}
+                     );
+                     ImGui::PushStyleColor(
+                         ImGuiCol_FrameBgHovered,
+                         {1.0, 1.0f, 1.0f, 0.2f}
+                     );
+                     ImGui::PushStyleColor(
+                         ImGuiCol_FrameBgActive,
+                         {1.0, 1.0f, 1.0f, 0.5f}
+                     );
+                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.5f);
+                     ImGui::Text(ICON_FA_RULER_VERTICAL);
+                     ImGui::SameLine();
+                     ImGui::SetCursorPosY(ImGui::GetCursorStartPos().y);
+                     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                      ImGui::InputFloat(
                          "##InputSectionHeight",
                          &casted_root->zCoordinate()
                      );
                      ImGui::PopID();
+                     ImGui::PopStyleColor(3);
                   }
                }
             };
@@ -230,7 +249,7 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
             h_popup->disableButton(BUTTON_TYPE::RIGHT);
             h_popup->disableButton(BUTTON_TYPE::LEFT);
             h_popup->hideHeader();
-            h_popup->setSize({100, 80});
+            h_popup->setSize({200, 80});
 
             other_section->add(h_popup);
             other_section->__height_choser = h_popup;

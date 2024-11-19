@@ -150,6 +150,7 @@ public:
 
    void clearEmptyContainersByName(std::string);
    void add(ptrContainer container);
+   void rem(ptrContainer container);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);

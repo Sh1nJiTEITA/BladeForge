@@ -66,6 +66,7 @@ public:
    void clearPopups();
    float& zCoordinate();
 
+   friend BfGuiCreateWindow;
    friend BfGuiCreateWindowBladeBase;
    friend BfGuiCreateWindowContainerPopup;
 };

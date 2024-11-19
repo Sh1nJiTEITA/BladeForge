@@ -286,6 +286,14 @@ BfGuiCreateWindow::__renderDragDropZone()
                  ))
          {
             casted->setView(BfGuiCreateWindowBladeSection::viewMode::STD);
+            if (casted->__layer_choser.get())
+            {
+               casted->rem(casted->__layer_choser);
+            }
+            if (casted->__height_choser.get())
+            {
+               casted->rem(casted->__height_choser);
+            }
          }
       }
       ImGui::EndDragDropTarget();
