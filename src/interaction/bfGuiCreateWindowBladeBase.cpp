@@ -244,10 +244,10 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                }
             };
 
-            h_popup->disableButton(BUTTON_TYPE::BOT);
-            h_popup->disableButton(BUTTON_TYPE::TOP);
-            h_popup->disableButton(BUTTON_TYPE::RIGHT);
-            h_popup->disableButton(BUTTON_TYPE::LEFT);
+            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Left);
+            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Top);
+            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Right);
+            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Bot);
             h_popup->hideHeader();
             h_popup->setSize({200, 80});
 

@@ -542,60 +542,60 @@ BfGuiCreateWindowContainer::toggleForceRender() noexcept
 }
 
 void
-BfGuiCreateWindowContainer::enableButton(BUTTON_TYPE button_id)
+BfGuiCreateWindowContainer::enableButton(int button_id)
 {
    switch (button_id)
    {
-      case BUTTON_TYPE::LEFT:
+      case BfGuiCreateWindowContainer_ButtonType_Left:
          __is_left_button = true;
          break;
-      case BUTTON_TYPE::RIGHT:
+      case BfGuiCreateWindowContainer_ButtonType_Right:
          __is_right_button = true;
          break;
-      case BUTTON_TYPE::TOP:
+      case BfGuiCreateWindowContainer_ButtonType_Top:
          __is_top_button = true;
          break;
-      case BUTTON_TYPE::BOT:
+      case BfGuiCreateWindowContainer_ButtonType_Bot:
          __is_bot_button = true;
          break;
    }
 }
 
 void
-BfGuiCreateWindowContainer::disableButton(BUTTON_TYPE button_id)
+BfGuiCreateWindowContainer::disableButton(int button_id)
 {
    switch (button_id)
    {
-      case BUTTON_TYPE::LEFT:
+      case BfGuiCreateWindowContainer_ButtonType_Left:
          __is_left_button = false;
          break;
-      case BUTTON_TYPE::RIGHT:
+      case BfGuiCreateWindowContainer_ButtonType_Right:
          __is_right_button = false;
          break;
-      case BUTTON_TYPE::TOP:
+      case BfGuiCreateWindowContainer_ButtonType_Top:
          __is_top_button = false;
          break;
-      case BUTTON_TYPE::BOT:
+      case BfGuiCreateWindowContainer_ButtonType_Bot:
          __is_bot_button = false;
          break;
    }
 }
 
 void
-BfGuiCreateWindowContainer::toggleButton(BUTTON_TYPE button_id)
+BfGuiCreateWindowContainer::toggleButton(int button_id)
 {
    switch (button_id)
    {
-      case BUTTON_TYPE::LEFT:
+      case BfGuiCreateWindowContainer_ButtonType_Left:
          __is_left_button = !__is_left_button;
          break;
-      case BUTTON_TYPE::RIGHT:
+      case BfGuiCreateWindowContainer_ButtonType_Right:
          __is_right_button = !__is_right_button;
          break;
-      case BUTTON_TYPE::TOP:
+      case BfGuiCreateWindowContainer_ButtonType_Top:
          __is_top_button = !__is_top_button;
          break;
-      case BUTTON_TYPE::BOT:
+      case BfGuiCreateWindowContainer_ButtonType_Bot:
          __is_bot_button = !__is_bot_button;
          break;
    }

@@ -23,7 +23,6 @@ class BfGuiCreateWindowContainer
 {
    std::string __str_child_border_id;
 
-   //
    bool __is_invisiable_buttons = false;
    bool __is_first_render = true;
    bool __is_render = true;
@@ -36,6 +35,7 @@ class BfGuiCreateWindowContainer
    void __pushStyle();
    void __popStyle();
    //
+   // void __renderResizeButton();
    void __renderLeftResizeButton();
    void __renderRightResizeButton();
    void __renderBotResizeButton();
@@ -87,13 +87,17 @@ protected:
    void __updateResizeButtonSize();
 
 public:
-   enum BUTTON_TYPE
-   {
-      TOP,
-      BOT,
-      RIGHT,
-      LEFT
-   };
+// enum BUTTON_TYPE
+// {
+//    TOP,
+//    BOT,
+//    RIGHT,
+//    LEFT
+// };
+#define BfGuiCreateWindowContainer_ButtonType_Left 0
+#define BfGuiCreateWindowContainer_ButtonType_Right 1
+#define BfGuiCreateWindowContainer_ButtonType_Top 2
+#define BfGuiCreateWindowContainer_ButtonType_Bot 3
 
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
@@ -117,9 +121,9 @@ public:
    void disableForceRender() noexcept;
    void toggleForceRender() noexcept;
 
-   void enableButton(BUTTON_TYPE button_id);
-   void disableButton(BUTTON_TYPE button_id);
-   void toggleButton(BUTTON_TYPE button_id);
+   void enableButton(int button_id);
+   void disableButton(int button_id);
+   void toggleButton(int button_id);
 
    void hideHeader() noexcept;
    void showHeader() noexcept;
