@@ -21,14 +21,10 @@ class BfGuiCreateWindowContainerPopup;
 
 class BfGuiCreateWindowContainer
 {
-   std::string __str_left_resize_button_id;
-   std::string __str_right_resize_button_id;
-   std::string __str_bot_resize_button_id;
-   std::string __str_top_resize_button_id;
    std::string __str_child_border_id;
 
    //
-   bool __is_invisiable_buttons = true;
+   bool __is_invisiable_buttons = false;
    bool __is_first_render = true;
    bool __is_render = true;
    bool __is_dragging = false;
@@ -175,6 +171,7 @@ protected:
    //
    BfDrawLayerCreateInfo __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;
+   std::weak_ptr<BfDrawLayer> __ptr_root;
 
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();

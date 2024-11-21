@@ -1,13 +1,5 @@
 #include "bfGuiCreateWindowContainer.h"
 
-#include <memory>
-
-#include "bfCurves2.h"
-#include "bfIconsFontAwesome6.h"
-#include "bfLayerHandler.h"
-#include "bfVariative.hpp"
-#include "imgui.h"
-
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_v = false;
 
@@ -44,16 +36,6 @@ BfGuiCreateWindowContainer::__clampPosition()
        outter_pos.y - __old_outter_pos.y
    };
 
-   // ImVec2 new_pos   = {std::clamp(popupPos().x + delta_pos.x,
-   //                              outter_pos.x,
-   //                              outter_pos.x + outter_size.x -
-   //                              popupSize().x),
-   //                     std::clamp(popupPos().y + delta_pos.y,
-   //                              outter_pos.y,
-   //                              outter_pos.y + outter_size.y -
-   //                              popupSize().y)};
-   //
-   //
    ImVec2 new_pos = {
        std::clamp(
            pos().x + delta_pos.x,
@@ -123,31 +105,22 @@ BfGuiCreateWindowContainer::changeCursorStyle()
 void
 BfGuiCreateWindowContainer::__renderLeftResizeButton()
 {
-   bool buttonClicked = false;
-
    if (!__is_left_button)
    {
       ImGui::Dummy(__resize_button_size);
    }
    else
    {
+      ImGui::PushID(__id);
       if (__is_invisiable_buttons)
       {
-         buttonClicked = ImGui::InvisibleButton(
-             __str_left_resize_button_id.c_str(),
-             __resize_button_size
-         );
+         ImGui::InvisibleButton("##left", __resize_button_size);
       }
       else
       {
-         buttonClicked = ImGui::Button(
-             __str_left_resize_button_id.c_str(),
-             __resize_button_size
-         );
+         ImGui::Button("##left", __resize_button_size);
       }
-   }
-   if (buttonClicked)
-   {
+      ImGui::PopID();
    }
 
    if (ImGui::IsItemHovered() && __is_left_button)
@@ -180,20 +153,17 @@ BfGuiCreateWindowContainer::__renderRightResizeButton()
    }
    else
    {
+      ImGui::PushID(__id);
       if (__is_invisiable_buttons)
       {
-         buttonClicked = ImGui::InvisibleButton(
-             __str_right_resize_button_id.c_str(),
-             __resize_button_size
-         );
+         buttonClicked =
+             ImGui::InvisibleButton("##right", __resize_button_size);
       }
       else
       {
-         buttonClicked = ImGui::Button(
-             __str_right_resize_button_id.c_str(),
-             __resize_button_size
-         );
+         buttonClicked = ImGui::Button("##right", __resize_button_size);
       }
+      ImGui::PopID();
    }
    if (buttonClicked)
    {
@@ -228,20 +198,17 @@ BfGuiCreateWindowContainer::__renderBotResizeButton()
    }
    else
    {
+      ImGui::PushID(__id);
       if (__is_invisiable_buttons)
       {
-         buttonClicked = ImGui::InvisibleButton(
-             __str_bot_resize_button_id.c_str(),
-             __bot_resize_button_size
-         );
+         buttonClicked =
+             ImGui::InvisibleButton("##bot", __bot_resize_button_size);
       }
       else
       {
-         buttonClicked = ImGui::Button(
-             __str_bot_resize_button_id.c_str(),
-             __bot_resize_button_size
-         );
+         buttonClicked = ImGui::Button("##bot", __bot_resize_button_size);
       }
+      ImGui::PopID();
    }
    if (buttonClicked)
    {
@@ -270,32 +237,22 @@ BfGuiCreateWindowContainer::__renderBotResizeButton()
 void
 BfGuiCreateWindowContainer::__renderTopResizeButton()
 {
-   bool buttonClicked = false;
-
    if (!__is_top_button)
    {
       ImGui::Dummy(__bot_resize_button_size);
    }
    else
    {
+      ImGui::PushID(__id);
       if (__is_invisiable_buttons)
       {
-         buttonClicked = ImGui::InvisibleButton(
-             __str_top_resize_button_id.c_str(),
-             __bot_resize_button_size
-         );
+         ImGui::InvisibleButton("##top", __bot_resize_button_size);
       }
       else
       {
-         buttonClicked = ImGui::Button(
-             __str_top_resize_button_id.c_str(),
-             __bot_resize_button_size
-         );
+         ImGui::Button("##top", __bot_resize_button_size);
       }
-   }
-
-   if (buttonClicked)
-   {
+      ImGui::PopID();
    }
 
    if (__is_collapsed) return;
@@ -384,18 +341,10 @@ BfGuiCreateWindowContainer::BfGuiCreateWindowContainer(wptrContainer root)
    //
    __id = growing_id;
    __str_id = std::format("##CreateWindow_{}", std::to_string(growing_id));
-   __str_left_resize_button_id =
-       std::format("##CreateWindowLeftResize_{}", std::to_string(growing_id));
-   __str_right_resize_button_id =
-       std::format("##CreateWindowRightResize_{}", std::to_string(growing_id));
-   __str_bot_resize_button_id =
-       std::format("##CreateWindowBotResize_{}", std::to_string(growing_id));
-   __str_top_resize_button_id =
-       std::format("##CreateWindowTopResize_{}", std::to_string(growing_id));
    __str_child_border_id =
        std::format("##CreateWindowChildBorder_{}", std::to_string(growing_id));
 
-   growing_id++;
+   growing_id += 4;
 }
 
 bool
@@ -845,13 +794,21 @@ BfGuiCreateWindowContainerObj::__renderHeader()
           ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2.0f -
           ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
           ImGui::CalcTextSize(ICON_FA_MINIMIZE).x - 15.0f -
-          -ImGui::CalcTextSize(ICON_FA_INFO).x - 35.0f
+          ImGui::CalcTextSize("\uf256").x -
+          ImGui::CalcTextSize(ICON_FA_INFO).x - 35.0f
       );
-
+      ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+      if (ImGui::Button("\uf256"))
+      {
+      }
+      ImGui::PopItemFlag();
+      ImGui::SameLine();
+      float last_y = ImGui::GetCursorPosY();
+      ImGui::SetCursorPosY(last_y - 1.0f);
       if (ImGui::Button(ICON_FA_INFO))
       {
       }
-
+      // ImGui::SetCursorPosY(last_y);
       if (ImGui::IsItemHovered())
       {
          __renderInfoTooltip();
@@ -1032,6 +989,12 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 void
 BfGuiCreateWindowContainerObj::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
 {
+   if (auto shared_root = __ptr_root.lock())
+   {
+      shared_root->del(__layer_obj->id.get(), true);
+   }
+   __createObj();
+   __ptr_root = add_to;
    add_to->add(__layer_obj);
    add_to->update_buffer();
 }
