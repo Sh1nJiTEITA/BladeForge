@@ -5,6 +5,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "bfGuiCreateWindowBladeBase.h"
+#include "bfGuiCreateWindowBladeSection.h"
 #include "imgui.h"
 
 //
@@ -110,17 +112,17 @@ BfGuiCreateWindow::__renderManagePanel()
       {
          if (ImGui::Button("Add Obj container"))
          {
-            __addBlankContainer();
+            __addContainerT<BfGuiCreateWindowContainer>();
          }
          ImGui::SameLine();
          if (ImGui::Button("Add Section"))
          {
-            __addSection();
+            __addContainerT<BfGuiCreateWindowBladeSection>();
          }
          ImGui::SameLine();
          if (ImGui::Button("Add Base"))
          {
-            __addBase();
+            __addContainerT<BfGuiCreateWindowBladeBase>();
          }
          ImGui::SameLine();
       }
@@ -298,30 +300,6 @@ BfGuiCreateWindow::__renderDragDropZone()
       }
       ImGui::EndDragDropTarget();
    }
-}
-
-void
-BfGuiCreateWindow::__addBlankContainer()
-{
-   __containers.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()
-   ));
-}
-
-void
-BfGuiCreateWindow::__addSection()
-{
-   __containers.push_back(std::make_shared<BfGuiCreateWindowBladeSection>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()
-   ));
-}
-
-void
-BfGuiCreateWindow::__addBase()
-{
-   __containers.push_back(std::make_shared<BfGuiCreateWindowBladeBase>(
-       std::weak_ptr<BfGuiCreateWindowContainer>()
-   ));
 }
 
 void

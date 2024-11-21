@@ -7,16 +7,21 @@
 #include <memory>
 #include <optional>
 #include <stack>
+#include <type_traits>
 
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowContainer.h"
+#include "bfGuiCreateWindowSingleLine.h"
 
 class BfGuiCreateWindow
 {
-   using pair           = std::pair<std::string, std::string>;
-   using ptrContainer   = BfGuiCreateWindowContainer::ptrContainer;
+   using pair = std::pair<std::string, std::string>;
+   using ptrContainer = BfGuiCreateWindowContainer::ptrContainer;
    using foundContainer = std::optional<std::list<ptrContainer>::iterator>;
-   using ptrPair        = std::pair<foundContainer, foundContainer>;
+   using ptrPair = std::pair<foundContainer, foundContainer>;
+
+   template <class T>
+   using ptrContainerT = std::shared_ptr<T>();
    // --------------------------------------------------------------------
 
    static BfGuiCreateWindow* __instance;
@@ -30,9 +35,11 @@ class BfGuiCreateWindow
 
    // --------------------------------------------------------------------
 
-   foundContainer __findContainer(std::list<ptrContainer>::iterator begin,
-                                  std::list<ptrContainer>::iterator end,
-                                  const std::string&                name);
+   foundContainer __findContainer(
+       std::list<ptrContainer>::iterator begin,
+       std::list<ptrContainer>::iterator end,
+       const std::string& name
+   );
    //
    ptrPair __findAndCheckPair(const pair& name);
 
@@ -41,9 +48,16 @@ class BfGuiCreateWindow
 
    void __renderDragDropZone();
 
-   void __addBlankContainer();
-   void __addSection();
-   void __addBase();
+   template <class T>
+   void __addContainerT()
+   {
+      if constexpr (std::is_base_of_v<BfGuiCreateWindowContainer, T>)
+      {
+         auto ptr =
+             std::make_shared<T>(std::weak_ptr<BfGuiCreateWindowContainer>());
+         __containers.push_back(ptr);
+      }
+   }
 
    void __processSwaps();
    void __processMoves();
