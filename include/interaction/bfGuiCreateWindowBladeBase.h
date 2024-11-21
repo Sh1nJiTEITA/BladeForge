@@ -30,9 +30,7 @@ protected:
    virtual void __postrender() override;
 
 public:
-   BfGuiCreateWindowBladeBase(
-       BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
-   );
+   BfGuiCreateWindowBladeBase(wptrContainer root, bool is_target = true);
    uint32_t* selectedId() noexcept;
 };
 

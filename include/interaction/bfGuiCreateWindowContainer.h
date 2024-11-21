@@ -8,7 +8,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include <format>
 #include <functional>
 #include <list>
 #include <memory>
@@ -17,6 +16,7 @@
 #include <vector>
 
 class BfGuiCreateWindow;
+class BfGuiCreateWindowContainer;
 class BfGuiCreateWindowContainerPopup;
 
 #define BfGuiCreateWindowContainer_ButtonType_All \
@@ -25,6 +25,13 @@ class BfGuiCreateWindowContainerPopup;
 #define BfGuiCreateWindowContainer_ButtonType_Right (1 << 1)
 #define BfGuiCreateWindowContainer_ButtonType_Top (1 << 2)
 #define BfGuiCreateWindowContainer_ButtonType_Bot (1 << 3)
+
+using swapFuncType =
+    std::function<void(const std::string&, const std::string&)>;
+using moveFuncType =
+    std::function<void(const std::string&, const std::string&)>;
+using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
+using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
 
 class BfGuiCreateWindowContainer
 {
@@ -45,13 +52,6 @@ class BfGuiCreateWindowContainer
    void __updateResizeButtonSize();
 
 public:
-   using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
-   using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
-   using swapFuncType =
-       std::function<void(const std::string&, const std::string&)>;
-   using moveFuncType =
-       std::function<void(const std::string&, const std::string&)>;
-
 protected:
    uint32_t __id;
    std::string __str_id;
@@ -60,6 +60,7 @@ protected:
 
    bool __is_force_render = false;
    bool __is_render_header = true;
+   bool __is_collapsed = false;
 
    ImVec2 __resize_button_size = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
@@ -67,16 +68,12 @@ protected:
    ImVec2 __window_pos;
    ImVec2 __window_size = {150, 150};
    ImVec2 __old_outter_pos;
-   wptrContainer __root_container;
-   //
-   static swapFuncType __swapFunc;
-   static swapFuncType __moveFunc;
-   //
-   bool __is_collapsed = false;
-   //
-   //
-   //
+
    std::list<ptrContainer> __containers;
+   wptrContainer __root_container;
+
+   static swapFuncType __swapFunc;
+   static moveFuncType __moveFunc;
 
    virtual void __clampPosition();
    virtual void __renderHeader();
@@ -94,30 +91,26 @@ public:
    ImVec2& pos() noexcept;
    ImVec2& size() noexcept;
    wptrContainer& root() noexcept;
-
    uint32_t id() noexcept;
 
-   void show();
-   void hide();
-   void toggleRender();
+#define BfGuiCreateWindowContainer_ToggleMode_Toggle -1
+#define BfGuiCreateWindowContainer_ToggleMode_On true
+#define BfGuiCreateWindowContainer_ToggleMode_Off false
 
-   void enableForceRender() noexcept;
-   void disableForceRender() noexcept;
-   void toggleForceRender() noexcept;
-
-   void enableButton(int button_id);
-   void disableButton(int button_id);
-   void toggleButton(int button_id);
-
-   void hideHeader() noexcept;
-   void showHeader() noexcept;
-   void toggleHeader() noexcept;
+   void toggleRender(
+       int mode = BfGuiCreateWindowContainer_ToggleMode_Toggle
+   ) noexcept;
+   void toggleButton(
+       int button_id, int mode = BfGuiCreateWindowContainer_ToggleMode_Toggle
+   ) noexcept;
+   void toggleHeader(
+       int mode = BfGuiCreateWindowContainer_ToggleMode_Toggle
+   ) noexcept;
 
    // ----------------------------
    bool isEmpty() noexcept;
    bool isCollapsed() noexcept;
    bool isForceRender() noexcept;
-   //
 
    static void bindSwapFunction(swapFuncType func) noexcept;
    static void bindMoveFunction(swapFuncType func) noexcept;
@@ -132,7 +125,6 @@ public:
    std::list<ptrContainer>::reverse_iterator rbegin();
    std::list<ptrContainer>::reverse_iterator rend();
 
-   void clearEmptyContainersByName(std::string);
    void add(ptrContainer container);
    void rem(ptrContainer container);
 };
@@ -181,9 +173,7 @@ protected:
    virtual void __addToLayer(std::shared_ptr<BfDrawLayer> add_to);
 
 public:
-   BfGuiCreateWindowContainerObj(
-       BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
-   );
+   BfGuiCreateWindowContainerObj(wptrContainer root, bool is_target = true);
 
    static bool isAnyMoving() noexcept;
 };
@@ -227,7 +217,7 @@ public:
    std::function<void(wptrContainer root)> __renderPopupContentFunc;
 
    BfGuiCreateWindowContainerPopup(
-       BfGuiCreateWindowContainer::wptrContainer root,
+       wptrContainer root,
        BfGuiCreateWindowContainerPopup::SIDE side,
        bool is_force_render,
        std::function<void(wptrContainer)> popup_func

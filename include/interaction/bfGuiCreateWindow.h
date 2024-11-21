@@ -16,7 +16,6 @@
 class BfGuiCreateWindow
 {
    using pair = std::pair<std::string, std::string>;
-   using ptrContainer = BfGuiCreateWindowContainer::ptrContainer;
    using foundContainer = std::optional<std::list<ptrContainer>::iterator>;
    using ptrPair = std::pair<foundContainer, foundContainer>;
 
@@ -28,7 +27,7 @@ class BfGuiCreateWindow
    //
    bool __is_render = true;
 
-   std::list<BfGuiCreateWindowContainer::ptrContainer> __containers;
+   std::list<ptrContainer> __containers;
    //
    std::stack<pair> __swap_pairs;
    std::stack<pair> __move_pairs;

@@ -76,18 +76,20 @@ BfGuiCreateWindowContainer::__updateResizeButtonSize()
 void
 BfGuiCreateWindowContainer::changeCursorStyle()
 {
-   if (__is_resizing_hovered_v || __is_resizing_hovered_h)
+   if (__is_resizing_hovered_v)
    {
-      if (__is_resizing_hovered_v)
-         ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-
-      if (__is_resizing_hovered_h)
-         ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-
+      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
       return;
    }
-
-   ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+   else if (__is_resizing_hovered_h)
+   {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+      return;
+   }
+   else
+   {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+   }
 }
 
 void
@@ -98,11 +100,11 @@ BfGuiCreateWindowContainer::__renderResizeButton(int side)
       if ((side == BfGuiCreateWindowContainer_ButtonType_Bot) ||
           (side == BfGuiCreateWindowContainer_ButtonType_Top))
       {
-         ImGui::Dummy(__resize_button_size);
+         ImGui::Dummy(__bot_resize_button_size);
       }
       else
       {
-         ImGui::Dummy(__bot_resize_button_size);
+         ImGui::Dummy(__resize_button_size);
       }
       return;
    }
@@ -351,7 +353,7 @@ BfGuiCreateWindowContainer::size() noexcept
    return __window_size;
 }
 
-BfGuiCreateWindowContainer::wptrContainer&
+wptrContainer&
 BfGuiCreateWindowContainer::root() noexcept
 {
    return __root_container;
@@ -362,118 +364,112 @@ BfGuiCreateWindowContainer::id() noexcept
 {
    return __id;
 }
+//
+// void
+// BfGuiCreateWindowContainer::show()
+// {
+//    __is_render = true;
+// }
+// void
+// BfGuiCreateWindowContainer::hide()
+// {
+//    __is_render = false;
+// }
+void
+BfGuiCreateWindowContainer::toggleRender(int mode) noexcept
+{
+   if (mode == BfGuiCreateWindowContainer_ToggleMode_Toggle)
+      __is_render = !__is_render;
+   else
+      __is_render = mode;
+}
+//
+// void
+// BfGuiCreateWindowContainer::enableForceRender() noexcept
+// {
+//    __is_force_render = true;
+// }
+// void
+//
+// BfGuiCreateWindowContainer::disableForceRender() noexcept
+// {
+//    __is_force_render = false;
+// }
+//
+// void
+// BfGuiCreateWindowContainer::toggleForceRender() noexcept
+// {
+//    __is_force_render = !__is_force_render;
+// }
+//
+// void
+// BfGuiCreateWindowContainer::enableButton(int button_id)
+// {
+//    __is_button |= button_id;
+//    // switch (button_id)
+//    // {
+//    //    case BfGuiCreateWindowContainer_ButtonType_Left:
+//    //       __is_button |= button_id;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Right:
+//    //       __is_right_button = true;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Top:
+//    //       __is_top_button = true;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Bot:
+//    //       __is_bot_button = true;
+//    //       break;
+//    // }
+// }
+
+// void
+// BfGuiCreateWindowContainer::disableButton(int button_id)
+// {
+//    __is_button &= ~(button_id);
+//    // switch (button_id)
+//    // {
+//    //    case BfGuiCreateWindowContainer_ButtonType_Left:
+//    //       __is_left_button = false;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Right:
+//    //       __is_right_button = false;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Top:
+//    //       __is_top_button = false;
+//    //       break;
+//    //    case BfGuiCreateWindowContainer_ButtonType_Bot:
+//    //       __is_bot_button = false;
+//    //       break;
+//    // }
+// }
 
 void
-BfGuiCreateWindowContainer::show()
+BfGuiCreateWindowContainer::toggleButton(int button_id, int mode) noexcept
 {
-   __is_render = true;
-}
-void
-BfGuiCreateWindowContainer::hide()
-{
-   __is_render = false;
-}
-void
-BfGuiCreateWindowContainer::toggleRender()
-{
-   __is_render = !__is_render;
+   if (mode == BfGuiCreateWindowContainer_ToggleMode_Toggle)
+      __is_button ^= button_id;
+   else
+      mode ? __is_button |= button_id : __is_button &= ~(button_id);
 }
 
+// void
+// BfGuiCreateWindowContainer::hideHeader() noexcept
+// {
+//    __is_render_header = false;
+// }
+// void
+// BfGuiCreateWindowContainer::showHeader() noexcept
+// {
+//    __is_render_header = true;
+// }
 void
-BfGuiCreateWindowContainer::enableForceRender() noexcept
+BfGuiCreateWindowContainer::toggleHeader(int mode) noexcept
 {
-   __is_force_render = true;
-}
-void
-
-BfGuiCreateWindowContainer::disableForceRender() noexcept
-{
-   __is_force_render = false;
-}
-
-void
-BfGuiCreateWindowContainer::toggleForceRender() noexcept
-{
-   __is_force_render = !__is_force_render;
-}
-
-void
-BfGuiCreateWindowContainer::enableButton(int button_id)
-{
-   __is_button |= button_id;
-   // switch (button_id)
-   // {
-   //    case BfGuiCreateWindowContainer_ButtonType_Left:
-   //       __is_button |= button_id;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Right:
-   //       __is_right_button = true;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Top:
-   //       __is_top_button = true;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
-   //       __is_bot_button = true;
-   //       break;
-   // }
-}
-
-void
-BfGuiCreateWindowContainer::disableButton(int button_id)
-{
-   __is_button &= ~(button_id);
-   // switch (button_id)
-   // {
-   //    case BfGuiCreateWindowContainer_ButtonType_Left:
-   //       __is_left_button = false;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Right:
-   //       __is_right_button = false;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Top:
-   //       __is_top_button = false;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
-   //       __is_bot_button = false;
-   //       break;
-   // }
-}
-
-void
-BfGuiCreateWindowContainer::toggleButton(int button_id)
-{
-   __is_button ^= button_id;
-   // switch (button_id)
-   // {
-   //    case BfGuiCreateWindowContainer_ButtonType_Left:
-   //       __is_left_button = !__is_left_button;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Right:
-   //       __is_right_button = !__is_right_button;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Top:
-   //       __is_top_button = !__is_top_button;
-   //       break;
-   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
-   //       __is_bot_button = !__is_bot_button;
-   //       break;
-   // }
-}
-
-void
-BfGuiCreateWindowContainer::hideHeader() noexcept
-{
-   __is_render_header = false;
-}
-void
-BfGuiCreateWindowContainer::showHeader() noexcept
-{
-   __is_render_header = true;
-}
-void
-BfGuiCreateWindowContainer::toggleHeader() noexcept
-{
-   __is_render_header = !__is_render_header;
+   if (mode == BfGuiCreateWindowContainer_ToggleMode_Toggle)
+      __is_render_header = !__is_render_header;
+   else
+      __is_render_header = mode;
 }
 
 bool
@@ -521,32 +517,32 @@ BfGuiCreateWindowContainer::bindMoveFunction(swapFuncType func) noexcept
    __moveFunc = func;
 }
 
-std::list<BfGuiCreateWindowContainer::ptrContainer>::iterator
+std::list<ptrContainer>::iterator
 BfGuiCreateWindowContainer::begin()
 {
    return __containers.begin();
 }
-std::list<BfGuiCreateWindowContainer::ptrContainer>::iterator
+std::list<ptrContainer>::iterator
 BfGuiCreateWindowContainer::end()
 {
    return __containers.end();
 }
 //
-std::list<BfGuiCreateWindowContainer::ptrContainer>::reverse_iterator
+std::list<ptrContainer>::reverse_iterator
 BfGuiCreateWindowContainer::rbegin()
 {
    return __containers.rbegin();
 }
-std::list<BfGuiCreateWindowContainer::ptrContainer>::reverse_iterator
+std::list<ptrContainer>::reverse_iterator
 BfGuiCreateWindowContainer::rend()
 {
    return __containers.rend();
 }
-void
-BfGuiCreateWindowContainer::clearEmptyContainersByName(std::string name)
-{
-   __containers.remove_if([&name](auto c) { return c->name() == name; });
-}
+// void
+// BfGuiCreateWindowContainer::clearEmptyContainersByName(std::string name)
+// {
+//    __containers.remove_if([&name](auto c) { return c->name() == name; });
+// }
 void
 BfGuiCreateWindowContainer::add(ptrContainer container)
 {
@@ -830,7 +826,7 @@ BfGuiCreateWindowContainerObj::__createObj()
 }
 
 BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
-    BfGuiCreateWindowContainer::wptrContainer root, bool is_target
+    wptrContainer root, bool is_target
 )
     : BfGuiCreateWindowContainer{root}
     , __old_size{__window_size}
@@ -1046,20 +1042,19 @@ bfShowNestedLayersRecursiveWithRadioButtons(
 void
 BfGuiCreateWindowContainerPopup::__assignButtons()
 {
-   // __is_button = BfGuiCreateWindowContainer_ButtonType_All;
    switch (__side)
    {
       case LEFT:
-         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Right);
+         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Right, false);
          break;
       case RIGHT:
-         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Left);
+         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Left, false);
          break;
       case TOP:
-         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Bot);
+         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Bot, false);
          break;
       case BOT:
-         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Top);
+         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Top, false);
          break;
    }
 }
@@ -1200,7 +1195,7 @@ BfGuiCreateWindowContainerPopup::__renderHeader()
 }
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
-    BfGuiCreateWindowContainer::wptrContainer root,
+    wptrContainer root,
     BfGuiCreateWindowContainerPopup::SIDE side =
         BfGuiCreateWindowContainerPopup::RIGHT,
     bool is_force_render = false,

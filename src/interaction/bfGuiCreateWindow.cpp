@@ -172,7 +172,7 @@ BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
 void
 BfGuiCreateWindow::__renderContainers()
 {
-   std::stack<BfGuiCreateWindowContainer::ptrContainer> render_stack;
+   std::stack<ptrContainer> render_stack;
    std::list<std::pair<std::string, int>> l;
 
    BfGuiCreateWindowContainer::resetResizeHover();
@@ -185,8 +185,7 @@ BfGuiCreateWindow::__renderContainers()
       {
          bool is_level = true;
          //
-         BfGuiCreateWindowContainer::ptrContainer current_window =
-             render_stack.top();
+         ptrContainer current_window = render_stack.top();
          render_stack.pop();
 
          current_window->render();
@@ -278,7 +277,8 @@ BfGuiCreateWindow::__renderDragDropZone()
          {
             // Удаляем из прошлого root-окна контейнер, который
             // был перемещен, чтобы он не дублировался
-            shared_obj->clearEmptyContainersByName(dropped_name);
+            // shared_obj->clearEmptyContainersByName(dropped_name);
+            shared_obj->rem(*__containers.rbegin());
          }
          else
          {
@@ -326,8 +326,8 @@ BfGuiCreateWindow::__processSwaps()
       (*a)->get()->pos() = pos_b;
       (*b)->get()->pos() = pos_a;
       //
-      BfGuiCreateWindowContainerObj::wptrContainer root_a = (*a)->get()->root();
-      BfGuiCreateWindowContainerObj::wptrContainer root_b = (*b)->get()->root();
+      wptrContainer root_a = (*a)->get()->root();
+      wptrContainer root_b = (*b)->get()->root();
       //
       (*a)->get()->root() = root_b;
       (*b)->get()->root() = root_a;
@@ -355,7 +355,8 @@ BfGuiCreateWindow::__processMoves()
       auto wptr_old_root = what->root();
       if (auto shared_old_root = wptr_old_root.lock())
       {
-         shared_old_root->clearEmptyContainersByName(what->name());
+         // shared_old_root->clearEmptyContainersByName(what->name());
+         shared_old_root->rem(what);
       }
       else
       {

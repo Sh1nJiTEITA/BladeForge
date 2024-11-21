@@ -146,7 +146,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
                    std::shared_ptr<BfDrawLayer> selected_layer =
                        BfLayerHandler::instance()->get_layer_by_id(selected_id);
                    __addToLayer(selected_layer);
-                   __layer_choser->hide();
+                   __layer_choser->toggleRender(false);
                 });
              }
          );
@@ -161,7 +161,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
 }
 
 BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
-    BfGuiCreateWindowContainer::wptrContainer root, bool is_target
+    wptrContainer root, bool is_target
 )
     : __base_name{"Blade base"}, BfGuiCreateWindowContainerObj{root, is_target}
 {
@@ -244,11 +244,23 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                }
             };
 
-            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Left);
-            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Top);
-            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Right);
-            h_popup->disableButton(BfGuiCreateWindowContainer_ButtonType_Bot);
-            h_popup->hideHeader();
+            h_popup->toggleButton(
+                BfGuiCreateWindowContainer_ButtonType_Left,
+                false
+            );
+            h_popup->toggleButton(
+                BfGuiCreateWindowContainer_ButtonType_Top,
+                false
+            );
+            h_popup->toggleButton(
+                BfGuiCreateWindowContainer_ButtonType_Right,
+                false
+            );
+            h_popup->toggleButton(
+                BfGuiCreateWindowContainer_ButtonType_Bot,
+                false
+            );
+            h_popup->toggleHeader(false);
             h_popup->setSize({200, 80});
 
             other_section->add(h_popup);

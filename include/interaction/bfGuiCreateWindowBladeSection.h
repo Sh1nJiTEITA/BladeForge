@@ -55,9 +55,7 @@ protected:
    virtual void __postrender() override;
 
 public:
-   BfGuiCreateWindowBladeSection(
-       BfGuiCreateWindowContainer::wptrContainer root, bool is_target = true
-   );
+   BfGuiCreateWindowBladeSection(wptrContainer root, bool is_target = true);
 
    void setView(viewMode) noexcept;
    BfBladeSectionCreateInfo createInfo() const noexcept;

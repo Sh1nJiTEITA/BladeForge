@@ -1,16 +1,12 @@
 #include "bfGuiCreateWindowBladeSection.h"
 
-#include <memory>
-#include <type_traits>
-#include <vector>
-
 #include "bfBladeSection.h"
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfLayerHandler.h"
 #include "imgui.h"
 
 BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
-    BfGuiCreateWindowContainer::wptrContainer root, bool is_target
+    wptrContainer root, bool is_target
 )
     : __section_name{"Section"}, BfGuiCreateWindowContainerObj(root, is_target)
 {
@@ -205,7 +201,7 @@ BfGuiCreateWindowBladeSection::__renderChildContent()
                           );
                       // __createObj();
                       __addToLayer(selected_layer);
-                      __layer_choser->hide();
+                      __layer_choser->toggleRender(false);
                    });
                 }
             );
