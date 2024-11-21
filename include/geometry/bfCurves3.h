@@ -31,18 +31,19 @@ class BfTriangle;
 glm::vec3 bfMathFindLinesIntersection(
     const BfSingleLine& line1,
     const BfSingleLine& line2,
-    int mode = BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES);
+    int mode = BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES
+);
 
 size_t bfMathGetFactorial(size_t n);
 size_t bfMathGetBinomialCoefficient(size_t n, size_t k);
 
-glm::vec3 bfMathGetNormal(const glm::vec3& p1,
-                          const glm::vec3& p2,
-                          const glm::vec3& p3);
+glm::vec3 bfMathGetNormal(
+    const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3
+);
 
-glm::vec4 bfMathGetPlaneCoeffs(const glm::vec3& p1,
-                               const glm::vec3& p2,
-                               const glm::vec3& p3);
+glm::vec4 bfMathGetPlaneCoeffs(
+    const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3
+);
 
 std::array<glm::vec3, 3> bfMathGetPlaneOrths(glm::vec4 plane);
 
@@ -50,19 +51,25 @@ std::array<glm::vec3, 2> bfMathGetOrthsByNormal(glm::vec3 normal);
 
 bool bfMathIsVertexInPlain(const glm::vec4& plane, const glm::vec3& p);
 
-bool bfMathIsVertexInPlain(const glm::vec3& np,
-                           const glm::vec3& f,
-                           const glm::vec3& s,
-                           const glm::vec3& t);
+bool bfMathIsVertexInPlain(
+    const glm::vec3& np,
+    const glm::vec3& f,
+    const glm::vec3& s,
+    const glm::vec3& t
+);
 
-bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np,
-                             const glm::vec3&              f,
-                             const glm::vec3&              s,
-                             const glm::vec3&              t);
+bool bfMathIsVerticesInPlain(
+    const std::vector<BfVertex3>& np,
+    const glm::vec3& f,
+    const glm::vec3& s,
+    const glm::vec3& t
+);
 
-bool bfMathFindLinesIntersection(glm::vec3&          intersection,
-                                 const BfSingleLine& line1,
-                                 const BfSingleLine& line2);
+bool bfMathFindLinesIntersection(
+    glm::vec3& intersection,
+    const BfSingleLine& line1,
+    const BfSingleLine& line2
+);
 
 bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np);
 bool bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np);
@@ -70,31 +77,35 @@ bool bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np);
 
 bool bfMathIsSingleLinesInPlain(const BfSingleLine& L1, const BfSingleLine& L2);
 
-float                  bfMathGetBezierCurveLength(BfBezierCurve* curve);
-std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
-    BfBezierCurve* curve);
+float bfMathGetBezierCurveLength(BfBezierCurve* curve);
+std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve
+);
 
-std::vector<BfCircle> bfMathGetInscribedCircles(size_t              m,
-                                                const BfSingleLine& L1,
-                                                const BfSingleLine& L2,
-                                                float               radius);
+std::vector<BfCircle> bfMathGetInscribedCircles(
+    size_t m, const BfSingleLine& L1, const BfSingleLine& L2, float radius
+);
 
 float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P);
 
 std::vector<BfVertex3> bfMathStickObjVertices(
-    std::initializer_list<std::shared_ptr<BfDrawObj>> objs);
+    std::initializer_list<std::shared_ptr<BfDrawObj>> objs
+);
 
 std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(
-    std::vector<BfVertex3> v);
+    std::vector<BfVertex3> v
+);
 glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
 
 std::vector<float> bfMathGetRelativeSplineArgument(
-    const std::vector<glm::vec3>& v);
-std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x,
-                                       const std::vector<float>& y);
+    const std::vector<glm::vec3>& v
+);
+std::vector<glm::vec2> bfMathSplineFit(
+    const std::vector<float>& x, const std::vector<float>& y
+);
 
 std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(
-    const std::vector<BfVertex3>& v);
+    const std::vector<BfVertex3>& v
+);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // //
@@ -160,7 +171,7 @@ public:
    const BfVertex3& get_second() const;
    const BfVertex3& get_third() const;
 
-   float     get_area() const;
+   float get_area() const;
    BfVertex3 get_center() const;
 
    virtual void create_vertices() override;
@@ -175,17 +186,19 @@ public:
 class BfCircle : public BfDrawObj
 {
 protected:
-   float  __radius;
+   float __radius;
    size_t __out_vertices_count;
 
    int __define_type;
 
 public:
    BfCircle(size_t m, const BfVertex3& center, float radius);
-   BfCircle(size_t           m,
-            const BfVertex3& P_1,
-            const BfVertex3& P_2,
-            const BfVertex3& P_3);
+   BfCircle(
+       size_t m,
+       const BfVertex3& P_1,
+       const BfVertex3& P_2,
+       const BfVertex3& P_3
+   );
 
    const BfVertex3& get_center() const noexcept;
    const BfVertex3& get_first() const noexcept;
@@ -202,10 +215,12 @@ public:
 class BfArc : public BfCircle
 {
 public:
-   BfArc(size_t           m,
-         const BfVertex3& P_1,
-         const BfVertex3& P_2,
-         const BfVertex3& P_3);
+   BfArc(
+       size_t m,
+       const BfVertex3& P_1,
+       const BfVertex3& P_2,
+       const BfVertex3& P_3
+   );
 
    virtual void create_vertices() override;
 };
@@ -217,7 +232,7 @@ public:
 class BfBezierCurve : public BfDrawObj
 {
    const size_t __n;
-   size_t       __out_vertices_count;
+   size_t __out_vertices_count;
 
 public:
    BfBezierCurve();
@@ -235,19 +250,21 @@ public:
    glm::vec3 get_single_derivative_1_analyt_v3(float t) const;
    BfVertex3 get_single_derivative_1_analyt_bfv3(float t) const;
    glm::vec3 get_single_derivative_1_numeric_v3(
-       float t, float step = BF_MATH_DEFAULT_DERIVATIVE_STEP) const;
+       float t, float step = BF_MATH_DEFAULT_DERIVATIVE_STEP
+   ) const;
 
    glm::vec3 get_single_derivative_2_analyt_v3(float t) const;
    BfVertex3 get_single_derivative_2_analyt_bfv3(float t) const;
 
    const size_t get_out_vertices_count() const noexcept;
-   void         set_out_vertices_count(size_t in_m);
+   void set_out_vertices_count(size_t in_m);
 
    virtual void create_vertices() override;
 
    friend float bfMathGetBezierCurveLength(BfBezierCurve* curve);
    friend std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
-       BfBezierCurve* curve);
+       BfBezierCurve* curve
+   );
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -263,13 +280,16 @@ class BfBezierCurveFrame : public BfDrawLayer
    VkPipeline __triangle_pipeline;
 
 public:
-   BfBezierCurveFrame(std::shared_ptr<BfBezierCurve> curve,
-                      VmaAllocator                   allocator,
-                      VkPipeline                     lines_pipeline,
-                      VkPipeline                     triangle_pipeline);
+   BfBezierCurveFrame(
+       std::shared_ptr<BfBezierCurve> curve,
+       VmaAllocator allocator,
+       VkPipeline lines_pipeline,
+       VkPipeline triangle_pipeline
+   );
 
-   void remake(std::shared_ptr<BfBezierCurve> curve,
-               glm::vec3                      c = {1.0f, 1.0f, 1.0f});
+   void remake(
+       std::shared_ptr<BfBezierCurve> curve, glm::vec3 c = {1.0f, 1.0f, 1.0f}
+   );
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

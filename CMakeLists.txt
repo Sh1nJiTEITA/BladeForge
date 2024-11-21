@@ -245,6 +245,8 @@ set(BF_INTERACTION
     "src/interaction/bfGuiCreateWindowBladeBase.cpp"
     "include/interaction/bfGuiSmartLayerObserverWindow.h"
     "src/interaction/bfGuiSmartLayerObserverWindow.cpp"
+    "include/interaction/bfGuiSmartLayerSingleLine.h"
+    "src/interaction/bfGuiSmartLayerSingleLine.cpp"
     "include/interaction/bfGuiWindow.h"
     "src/interaction/bfGuiWindow.cpp")
 

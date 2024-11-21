@@ -6,7 +6,8 @@ BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
    __dvertices = d_vertices;
 }
 
-void BfPlane::create_vertices()
+void
+BfPlane::create_vertices()
 {
    __vertices.reserve(__dvertices.size());
    for (const auto& dvert : __dvertices)
@@ -15,7 +16,8 @@ void BfPlane::create_vertices()
    }
 }
 
-void BfPlane::create_indices()
+void
+BfPlane::create_indices()
 {
    __indices.reserve(__vertices.size() * 2);
    for (size_t i = 0; i < __vertices.size(); ++i)
@@ -25,8 +27,10 @@ void BfPlane::create_indices()
 }
 
 BfSingleLine::BfSingleLine()
-    : BfSingleLine{{{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
-                   {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}}
+    : BfSingleLine{
+          {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
+          {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
+      }
 
 {
 }
@@ -40,12 +44,15 @@ BfSingleLine::BfSingleLine(const BfVertex3& fp, const BfVertex3& sp)
 }
 
 BfSingleLine::BfSingleLine(const glm::vec3& fp, const glm::vec3& sp)
-    : BfSingleLine({fp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
-                   {sp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}})
+    : BfSingleLine(
+          {fp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
+          {sp, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
+      )
 {
 }
 
-float BfSingleLine::get_k(int proj)
+float
+BfSingleLine::get_k(int proj)
 {
    glm::vec3 f{this->get_first().pos};
    glm::vec3 s{this->get_second().pos};
@@ -69,12 +76,14 @@ float BfSingleLine::get_k(int proj)
    }
 }
 
-float BfSingleLine::get_k_perpendicular(int proj)
+float
+BfSingleLine::get_k_perpendicular(int proj)
 {
    return -1.0f / this->get_k(proj);
 }
 
-float BfSingleLine::get_b(int proj)
+float
+BfSingleLine::get_b(int proj)
 {
    glm::vec3 f{this->get_first().pos};
    glm::vec3 s{this->get_second().pos};
@@ -98,7 +107,8 @@ float BfSingleLine::get_b(int proj)
    }
 }
 
-float BfSingleLine::get_b_perpendicular(glm::vec3 f, int proj)
+float
+BfSingleLine::get_b_perpendicular(glm::vec3 f, int proj)
 {
    float k_per{this->get_k_perpendicular(proj)};
 
@@ -118,35 +128,49 @@ float BfSingleLine::get_b_perpendicular(glm::vec3 f, int proj)
          return f.y - k_per * f.z;
       default:
          throw std::runtime_error(
-             "BfSingleLine::get_b_perpenduclar - invalid proj");
+             "BfSingleLine::get_b_perpenduclar - invalid proj"
+         );
    }
 }
 
-float BfSingleLine::get_single_proj(float ival, int proj)
+float
+BfSingleLine::get_single_proj(float ival, int proj)
 {
    return this->get_k(proj) * ival + this->get_b(proj);
 }
 
-float BfSingleLine::get_length()
+float
+BfSingleLine::get_length()
 {
    return glm::distance(get_first().pos, get_second().pos);
 }
 
-const BfVertex3& BfSingleLine::get_first() const { return __dvertices.at(0); }
+const BfVertex3&
+BfSingleLine::get_first() const
+{
+   return __dvertices.at(0);
+}
 
-const BfVertex3& BfSingleLine::get_second() const { return __dvertices.at(1); }
+const BfVertex3&
+BfSingleLine::get_second() const
+{
+   return __dvertices.at(1);
+}
 
-glm::vec3 BfSingleLine::get_direction_from_start() const
+glm::vec3
+BfSingleLine::get_direction_from_start() const
 {
    return glm::normalize(this->get_second().pos - this->get_first().pos);
 }
 
-glm::vec3 BfSingleLine::get_direction_from_end() const
+glm::vec3
+BfSingleLine::get_direction_from_end() const
 {
    return -this->get_direction_from_start();
 }
 
-void BfSingleLine::create_vertices()
+void
+BfSingleLine::create_vertices()
 {
    if (this->is_ok())
       throw std::runtime_error("BfSingleLine::create_vertices abort");
@@ -159,33 +183,50 @@ void BfSingleLine::create_vertices()
    __vertices.at(1).color = __main_color;
 }
 
-BfTriangle::BfTriangle(const BfVertex3& P_1,
-                       const BfVertex3& P_2,
-                       const BfVertex3& P_3)
+BfTriangle::BfTriangle(
+    const BfVertex3& P_1, const BfVertex3& P_2, const BfVertex3& P_3
+)
     : BfDrawObj({{P_1, P_2, P_3}}, BF_DRAW_OBJ_TYPE_TRIANGLE)
 {
    __vertices.reserve(4);
 }
 
-const BfVertex3& BfTriangle::get_first() const { return __dvertices[0]; }
-const BfVertex3& BfTriangle::get_second() const { return __dvertices[1]; }
-const BfVertex3& BfTriangle::get_third() const { return __dvertices[2]; }
+const BfVertex3&
+BfTriangle::get_first() const
+{
+   return __dvertices[0];
+}
+const BfVertex3&
+BfTriangle::get_second() const
+{
+   return __dvertices[1];
+}
+const BfVertex3&
+BfTriangle::get_third() const
+{
+   return __dvertices[2];
+}
 
-float BfTriangle::get_area() const
+float
+BfTriangle::get_area() const
 {
    glm::vec3 u = get_second().pos - get_first().pos;
    glm::vec3 v = get_third().pos - get_first().pos;
    return glm::length(glm::cross(u, v)) / 2.0f;
 }
 
-BfVertex3 BfTriangle::get_center() const
+BfVertex3
+BfTriangle::get_center() const
 {
-   return {(get_first().pos + get_second().pos + get_third().pos) / 3.0f,
-           get_first().color,
-           bfMathGetNormal(get_first().pos, get_second().pos, get_third().pos)};
+   return {
+       (get_first().pos + get_second().pos + get_third().pos) / 3.0f,
+       get_first().color,
+       bfMathGetNormal(get_first().pos, get_second().pos, get_third().pos)
+   };
 }
 
-void BfTriangle::create_vertices()
+void
+BfTriangle::create_vertices()
 {
    for (auto& it : __dvertices)
    {
@@ -194,14 +235,17 @@ void BfTriangle::create_vertices()
    __vertices.emplace_back(__dvertices[0]);
 }
 
-glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1,
-                                      const BfSingleLine& line2,
-                                      int                 mode)
+glm::vec3
+bfMathFindLinesIntersection(
+    const BfSingleLine& line1, const BfSingleLine& line2, int mode
+)
 {
-   if (bfMathIsVerticesInPlain({line1.get_first(),
-                                line1.get_second(),
-                                line2.get_first(),
-                                line2.get_second()}))
+   if (bfMathIsVerticesInPlain(
+           {line1.get_first(),
+            line1.get_second(),
+            line2.get_first(),
+            line2.get_second()}
+       ))
    {
       // a1.x + b1.x * t1 = a2.x + b2.x * t2
       // a1.y + b1.y * t1 = a2.y + b2.y * t2
@@ -211,7 +255,7 @@ glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1,
       glm::vec3 a2 = line2.get_first().pos;
       glm::vec3 b2 = line2.get_direction_from_start();
 
-      float frac   = b1.x * b2.y - b1.y * b2.x;
+      float frac = b1.x * b2.y - b1.y * b2.x;
 
       float t1 =
           (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
@@ -241,7 +285,8 @@ glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1,
       else
       {
          throw std::runtime_error(
-             "Invalid bfMathFindLinesIntersection mode inputed");
+             "Invalid bfMathFindLinesIntersection mode inputed"
+         );
       }
    }
    else
@@ -250,18 +295,21 @@ glm::vec3 bfMathFindLinesIntersection(const BfSingleLine& line1,
    }
 }
 
-size_t bfMathGetFactorial(size_t n)
+size_t
+bfMathGetFactorial(size_t n)
 {
-   const static std::map<uint32_t, uint32_t> __factorial{{1, 1},
-                                                         {2, 2},
-                                                         {3, 6},
-                                                         {4, 24},
-                                                         {5, 120},
-                                                         {6, 720},
-                                                         {7, 5040},
-                                                         {8, 40320},
-                                                         {9, 362880},
-                                                         {10, 3628800}};
+   const static std::map<uint32_t, uint32_t> __factorial{
+       {1, 1},
+       {2, 2},
+       {3, 6},
+       {4, 24},
+       {5, 120},
+       {6, 720},
+       {7, 5040},
+       {8, 40320},
+       {9, 362880},
+       {10, 3628800}
+   };
 
    if (n < 1)
       return 1;
@@ -273,15 +321,15 @@ size_t bfMathGetFactorial(size_t n)
    }
 }
 
-size_t bfMathGetBinomialCoefficient(size_t n, size_t k)
+size_t
+bfMathGetBinomialCoefficient(size_t n, size_t k)
 {
    return bfMathGetFactorial(n) / bfMathGetFactorial(k) /
           bfMathGetFactorial(n - k);
 }
 
-glm::vec3 bfMathGetNormal(const glm::vec3& p1,
-                          const glm::vec3& p2,
-                          const glm::vec3& p3)
+glm::vec3
+bfMathGetNormal(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)
 {
    glm::vec3 _v1{p2 - p1};
    glm::vec3 _v2{p3 - p1};
@@ -293,26 +341,28 @@ glm::vec3 bfMathGetNormal(const glm::vec3& p1,
       return normal / glm::length(normal);
 }
 
-glm::vec4 bfMathGetPlaneCoeffs(const glm::vec3& f,
-                               const glm::vec3& s,
-                               const glm::vec3& t)
+glm::vec4
+bfMathGetPlaneCoeffs(const glm::vec3& f, const glm::vec3& s, const glm::vec3& t)
 {
-   glm::mat3 xd   = {f.y, f.z, 1, s.y, s.z, 1, t.y, t.z, 1};
+   glm::mat3 xd = {f.y, f.z, 1, s.y, s.z, 1, t.y, t.z, 1};
 
-   glm::mat3 yd   = {f.x, f.z, 1, s.x, s.z, 1, t.x, t.z, 1};
+   glm::mat3 yd = {f.x, f.z, 1, s.x, s.z, 1, t.x, t.z, 1};
 
-   glm::mat3 zd   = {f.x, f.y, 1, s.x, s.y, 1, t.x, t.y, 1};
+   glm::mat3 zd = {f.x, f.y, 1, s.x, s.y, 1, t.x, t.y, 1};
 
-   auto direction = glm::vec3(glm::determinant(xd),
-                              -glm::determinant(yd),
-                              glm::determinant(zd));
+   auto direction = glm::vec3(
+       glm::determinant(xd),
+       -glm::determinant(yd),
+       glm::determinant(zd)
+   );
 
-   glm::mat3 D    = {f.x, f.y, f.z, s.x, s.y, s.z, t.x, t.y, t.z};
+   glm::mat3 D = {f.x, f.y, f.z, s.x, s.y, s.z, t.x, t.y, t.z};
 
    return {direction, -glm::determinant(D)};
 }
 
-std::array<glm::vec3, 3> bfMathGetPlaneOrths(glm::vec4 plane)
+std::array<glm::vec3, 3>
+bfMathGetPlaneOrths(glm::vec4 plane)
 {
    std::array<glm::vec3, 3> orths;
    orths[0] = {plane.x, plane.y, plane.z};  // normal
@@ -322,7 +372,8 @@ std::array<glm::vec3, 3> bfMathGetPlaneOrths(glm::vec4 plane)
    return orths;
 }
 
-std::array<glm::vec3, 2> bfMathGetOrthsByNormal(glm::vec3 normal)
+std::array<glm::vec3, 2>
+bfMathGetOrthsByNormal(glm::vec3 normal)
 {
    std::array<glm::vec3, 2> orths;
    orths[0] = glm::normalize(glm::cross(normal, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -331,7 +382,8 @@ std::array<glm::vec3, 2> bfMathGetOrthsByNormal(glm::vec3 normal)
    return orths;
 }
 
-bool bfMathIsVertexInPlain(const glm::vec4& plane, const glm::vec3& p)
+bool
+bfMathIsVertexInPlain(const glm::vec4& plane, const glm::vec3& p)
 {
    if (plane.x * p.x + plane.y * p.y + plane.z * p.z + plane.w <=
        BF_MATH_ABS_ACCURACY)
@@ -340,10 +392,13 @@ bool bfMathIsVertexInPlain(const glm::vec4& plane, const glm::vec3& p)
       return false;
 }
 
-bool bfMathIsVertexInPlain(const glm::vec3& np,
-                           const glm::vec3& f,
-                           const glm::vec3& s,
-                           const glm::vec3& t)
+bool
+bfMathIsVertexInPlain(
+    const glm::vec3& np,
+    const glm::vec3& f,
+    const glm::vec3& s,
+    const glm::vec3& t
+)
 {
    // Вычисляем векторы между точками
    glm::vec3 fs = s - f;
@@ -400,10 +455,13 @@ bool bfMathIsVertexInPlain(const glm::vec3& np,
    //	return false;
 }
 
-bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np,
-                             const glm::vec3&              f,
-                             const glm::vec3&              s,
-                             const glm::vec3&              t)
+bool
+bfMathIsVerticesInPlain(
+    const std::vector<BfVertex3>& np,
+    const glm::vec3& f,
+    const glm::vec3& s,
+    const glm::vec3& t
+)
 {
    bool decision = true;
    for (const auto& vert : np)
@@ -414,9 +472,12 @@ bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np,
    return decision;
 }
 
-bool bfMathFindLinesIntersection(glm::vec3&          intersection,
-                                 const BfSingleLine& line1,
-                                 const BfSingleLine& line2)
+bool
+bfMathFindLinesIntersection(
+    glm::vec3& intersection,
+    const BfSingleLine& line1,
+    const BfSingleLine& line2
+)
 {
    glm::vec3 P1_first{line1.get_first().pos};
    glm::vec3 P1_second{line1.get_second().pos};
@@ -431,7 +492,7 @@ bool bfMathFindLinesIntersection(glm::vec3&          intersection,
       glm::vec3 a2 = P2_first;
       glm::vec3 b2 = line2.get_direction_from_start();
 
-      float frac   = b1.x * b2.y - b1.y * b2.x;
+      float frac = b1.x * b2.y - b1.y * b2.x;
 
       float t1 =
           (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
@@ -460,7 +521,8 @@ bool bfMathFindLinesIntersection(glm::vec3&          intersection,
    }
 }
 
-bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
+bool
+bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
 {
    if (np.size() <= 3) return true;
 
@@ -474,7 +536,8 @@ bool bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
    return decision;
 }
 
-bool bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np)
+bool
+bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np)
 {
    std::vector<BfVertex3> _np;
    _np.reserve(np.size());
@@ -485,7 +548,8 @@ bool bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np)
    return bfMathIsVerticesInPlain(_np);
 }
 
-bool bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np)
+bool
+bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np)
 {
    std::vector<glm::vec3> _np;
    _np.reserve(np.size());
@@ -497,13 +561,16 @@ bool bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np)
    return bfMathIsVerticesInPlain(_np);
 }
 
-bool bfMathIsSingleLinesInPlain(const BfSingleLine& L1, const BfSingleLine& L2)
+bool
+bfMathIsSingleLinesInPlain(const BfSingleLine& L1, const BfSingleLine& L2)
 {
    return bfMathIsVerticesInPlain(
-       {L1.get_first(), L1.get_second(), L2.get_first(), L2.get_second()});
+       {L1.get_first(), L1.get_second(), L2.get_first(), L2.get_second()}
+   );
 }
 
-float bfMathGetBezierCurveLength(BfBezierCurve* curve)
+float
+bfMathGetBezierCurveLength(BfBezierCurve* curve)
 {
    if (curve->__vertices.empty())
       throw std::runtime_error("BfBezierCurve vertices vector are empty");
@@ -522,8 +589,8 @@ float bfMathGetBezierCurveLength(BfBezierCurve* curve)
    return len;
 }
 
-std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
-    BfBezierCurve* curve)
+std::vector<glm::vec3>
+bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
 {
    std::vector<glm::vec3> d;
    d.reserve(curve->get_dvertices_count());
@@ -535,19 +602,23 @@ std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
       {
          std::vector<BfVertex3> right_dvert = curve->get_rdVertices();
          right_dvert[i].pos[j] += BF_MATH_ABS_ACCURACY;
-         BfBezierCurve right_curve{curve->get_n(),
-                                   curve->get_dvertices_count(),
-                                   right_dvert};
+         BfBezierCurve right_curve{
+             curve->get_n(),
+             curve->get_dvertices_count(),
+             right_dvert
+         };
          right_curve.create_vertices();
          float right = bfMathGetBezierCurveLength(&right_curve);
 
          std::vector<BfVertex3> left_dvert = curve->get_rdVertices();
          left_dvert[i].pos[j] -= BF_MATH_ABS_ACCURACY;
-         BfBezierCurve left_curve{curve->get_n(),
-                                  curve->get_dvertices_count(),
-                                  left_dvert};
+         BfBezierCurve left_curve{
+             curve->get_n(),
+             curve->get_dvertices_count(),
+             left_dvert
+         };
          left_curve.create_vertices();
-         float left        = bfMathGetBezierCurveLength(&left_curve);
+         float left = bfMathGetBezierCurveLength(&left_curve);
 
          axe_derivative[j] = (right - left) / 2.0f / BF_MATH_ABS_ACCURACY;
       }
@@ -556,10 +627,10 @@ std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
    return d;
 }
 
-std::vector<BfCircle> bfMathGetInscribedCircles(size_t              m,
-                                                const BfSingleLine& L1,
-                                                const BfSingleLine& L2,
-                                                float               radius)
+std::vector<BfCircle>
+bfMathGetInscribedCircles(
+    size_t m, const BfSingleLine& L1, const BfSingleLine& L2, float radius
+)
 {
    glm::vec3 line_intersection =
        bfMathFindLinesIntersection(L1, L2, BF_MATH_FIND_LINES_INTERSECTION_ANY);
@@ -567,25 +638,31 @@ std::vector<BfCircle> bfMathGetInscribedCircles(size_t              m,
    glm::vec3 L1_dir = L1.get_direction_from_start();
    glm::vec3 L2_dir = L2.get_direction_from_start();
 
-   float angle_1    = glm::degrees(glm::angle(L1_dir, L2_dir));
-   float angle_2    = 180.0f - angle_1;
+   float angle_1 = glm::degrees(glm::angle(L1_dir, L2_dir));
+   float angle_2 = 180.0f - angle_1;
 
-   glm::vec3 normal = bfMathGetNormal(L1.get_first().pos,
-                                      L1.get_second().pos,
-                                      L2.get_first().pos);
+   glm::vec3 normal = bfMathGetNormal(
+       L1.get_first().pos,
+       L1.get_second().pos,
+       L2.get_first().pos
+   );
    if (normal == glm::vec3(0.0f))
    {
-      normal = bfMathGetNormal(L1.get_first().pos,
-                               L2.get_second().pos,
-                               L2.get_first().pos);
+      normal = bfMathGetNormal(
+          L1.get_first().pos,
+          L2.get_second().pos,
+          L2.get_first().pos
+      );
    }
 
    L1_dir = glm::vec3(
        glm::rotate(glm::mat4(1.0f), -glm::radians(angle_1 / 2.0f), normal) *
-       glm::vec4(L1_dir, 1.0f));
+       glm::vec4(L1_dir, 1.0f)
+   );
    L2_dir = glm::vec3(
        glm::rotate(glm::mat4(1.0f), -glm::radians(angle_2 / 2.0f), normal) *
-       glm::vec4(L2_dir, 1.0f));
+       glm::vec4(L2_dir, 1.0f)
+   );
 
    auto c1 = line_intersection + glm::normalize(L1_dir) * radius /
                                      glm::sin(glm::radians(angle_1) / 2.0f);
@@ -604,7 +681,8 @@ std::vector<BfCircle> bfMathGetInscribedCircles(size_t              m,
    };
 }
 
-float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P)
+float
+bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P)
 {
    /*glm::vec3 lineVector = L.get_second().pos - L.get_first().pos;
 
@@ -635,16 +713,17 @@ float bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P)
 
    BfSingleLine line(P, P.pos + dir_to_line);
 
-   glm::vec3 intersection =
-       bfMathFindLinesIntersection(L,
-                                   line,
-                                   BF_MATH_FIND_LINES_INTERSECTION_ANY);
+   glm::vec3 intersection = bfMathFindLinesIntersection(
+       L,
+       line,
+       BF_MATH_FIND_LINES_INTERSECTION_ANY
+   );
 
    return glm::distance(intersection, P.pos);
 }
 
-std::vector<BfVertex3> bfMathStickObjVertices(
-    std::initializer_list<std::shared_ptr<BfDrawObj>> objs)
+std::vector<BfVertex3>
+bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs)
 {
    size_t total_size = 0;
    for (auto& obj : objs)
@@ -657,16 +736,18 @@ std::vector<BfVertex3> bfMathStickObjVertices(
 
    for (auto& obj : objs)
    {
-      out.insert(out.end(),
-                 obj->get_rVertices().begin(),
-                 obj->get_rVertices().end());
+      out.insert(
+          out.end(),
+          obj->get_rVertices().begin(),
+          obj->get_rVertices().end()
+      );
    }
 
    return out;
 }
 
-std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(
-    std::vector<BfVertex3> v)
+std::vector<std::shared_ptr<BfTriangle>>
+bfMathGenerateTriangleField(std::vector<BfVertex3> v)
 {
    // auto get_triangle_count = [](size_t current) {
    //	/*if (current <= 5)
@@ -746,13 +827,14 @@ std::vector<std::shared_ptr<BfTriangle>> bfMathGenerateTriangleField(
    return std::vector<std::shared_ptr<BfTriangle>>();
 }
 
-glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v)
+glm::vec3
+bfMathFindMassCenter(std::vector<BfVertex3> v)
 {
    return glm::vec3(0.0f);
 }
 
-std::vector<float> bfMathGetRelativeSplineArgument(
-    const std::vector<glm::vec3>& v)
+std::vector<float>
+bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v)
 {
    size_t n = v.size() - 1;
 
@@ -778,12 +860,12 @@ std::vector<float> bfMathGetRelativeSplineArgument(
    return t;
 }
 
-std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x,
-                                       const std::vector<float>& y)
+std::vector<glm::vec2>
+bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y)
 {
    if (x.size() != y.size()) abort();
    std::vector<SplineLib::Vec2f> p;
-   std::vector<glm::vec2>        p2;
+   std::vector<glm::vec2> p2;
    p.reserve(x.size());
    p2.reserve(x.size());
    for (size_t i = 0; i < x.size(); i++)
@@ -813,8 +895,8 @@ std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x,
    return out;
 }
 
-std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(
-    const std::vector<BfVertex3>& v)
+std::vector<SplineLib::cSpline3>
+bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
 {
    std::vector<SplineLib::Vec3f> spl_df_v;
    spl_df_v.reserve(v.size());
@@ -822,15 +904,18 @@ std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(
    for (auto vert = v.begin(); vert != v.end(); ++vert)
    {
       spl_df_v.emplace_back(
-          SplineLib::Vec3f(vert->pos.x, vert->pos.y, vert->pos.z));
+          SplineLib::Vec3f(vert->pos.x, vert->pos.y, vert->pos.z)
+      );
    }
 
    SplineLib::cSpline3 splines[v.size()];
 
-   size_t splines_count = SplineLib::SplinesFromPoints(v.size(),
-                                                       spl_df_v.data(),
-                                                       v.size() + 1,
-                                                       splines);
+   size_t splines_count = SplineLib::SplinesFromPoints(
+       v.size(),
+       spl_df_v.data(),
+       v.size() + 1,
+       splines
+   );
 
    std::vector<SplineLib::cSpline3> o;
    o.reserve(splines_count);
@@ -868,16 +953,17 @@ std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(
 //	return splinePoints;
 // }
 
-BfBezierCurve::BfBezierCurve(size_t                   in_n,
-                             size_t                   in_m,
-                             std::vector<BfVertex3>&& dvert)
+BfBezierCurve::BfBezierCurve(
+    size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert
+)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
     , __n{in_n}
     , __out_vertices_count{in_m}
 {
    if (in_n + 1 != dvert.size())
       throw std::runtime_error(
-          "Input bezier data is incorrect: vec.size() != in_n");
+          "Input bezier data is incorrect: vec.size() != in_n"
+      );
 
    if (!bfMathIsVerticesInPlain(dvert))
       throw std::runtime_error("Not all vertices in one plane of Bezier curve");
@@ -885,16 +971,17 @@ BfBezierCurve::BfBezierCurve(size_t                   in_n,
    __dvertices = std::move(dvert);
 }
 
-BfBezierCurve::BfBezierCurve(size_t                  in_n,
-                             size_t                  in_m,
-                             std::vector<BfVertex3>& dvert)
+BfBezierCurve::BfBezierCurve(
+    size_t in_n, size_t in_m, std::vector<BfVertex3>& dvert
+)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
     , __n{in_n}
     , __out_vertices_count{in_m}
 {
    if (in_n + 1 != dvert.size())
       throw std::runtime_error(
-          "Input bezier data is incorrect: vec.size() != in_n");
+          "Input bezier data is incorrect: vec.size() != in_n"
+      );
 
    if (!bfMathIsVerticesInPlain(dvert))
       throw std::runtime_error("Not all vertices in one plane of Bezier curve");
@@ -907,40 +994,51 @@ BfBezierCurve::BfBezierCurve(BfBezierCurve&& ncurve) noexcept
     , __n{ncurve.__n}
     , __out_vertices_count{ncurve.__out_vertices_count}
 {
-   this->__dvertices  = std::move(ncurve.__dvertices);
+   this->__dvertices = std::move(ncurve.__dvertices);
    this->__main_color = ncurve.__main_color;
-   this->__pPipeline  = ncurve.__pPipeline;
+   this->__pPipeline = ncurve.__pPipeline;
 }
 
-const size_t BfBezierCurve::get_n() const noexcept { return __n; }
+const size_t
+BfBezierCurve::get_n() const noexcept
+{
+   return __n;
+}
 
-glm::vec3 BfBezierCurve::get_single_vertex_v3(float t) const
+glm::vec3
+BfBezierCurve::get_single_vertex_v3(float t) const
 {
    glm::vec3 _v{0.0f, 0.0f, 0.0f};
    for (size_t i = 0; i <= __n; i++)
    {
-      _v += static_cast<float>(bfMathGetBinomialCoefficient(__n, i) *
-                               std::pow(1 - t, __n - i) * std::pow(t, i)) *
+      _v += static_cast<float>(
+                bfMathGetBinomialCoefficient(__n, i) *
+                std::pow(1 - t, __n - i) * std::pow(t, i)
+            ) *
             __dvertices[i].pos;
    }
    return _v;
 }
 
-BfVertex3 BfBezierCurve::get_single_vertex_bfv3(float t) const
+BfVertex3
+BfBezierCurve::get_single_vertex_bfv3(float t) const
 {
    BfVertex3 _v{};
-   _v.pos     = this->get_single_vertex_v3(t);
-   _v.color   = __main_color;
-   _v.normals = bfMathGetNormal(__dvertices[0].pos,
-                                __dvertices[1].pos,
-                                __dvertices[2].pos);
+   _v.pos = this->get_single_vertex_v3(t);
+   _v.color = __main_color;
+   _v.normals = bfMathGetNormal(
+       __dvertices[0].pos,
+       __dvertices[1].pos,
+       __dvertices[2].pos
+   );
 
    return _v;
 }
 
-BfBezierCurve BfBezierCurve::get_derivative()
+BfBezierCurve
+BfBezierCurve::get_derivative()
 {
-   uint32_t               k = __n - 1;
+   uint32_t k = __n - 1;
    std::vector<BfVertex3> new_define_vertices;
    new_define_vertices.reserve(k + 1);
 
@@ -950,7 +1048,8 @@ BfBezierCurve BfBezierCurve::get_derivative()
           static_cast<float>(__n) *
               (__dvertices[i + 1].pos - __dvertices[i].pos),
           this->__main_color,
-          __dvertices[0].normals);
+          __dvertices[0].normals
+      );
    }
 
    BfBezierCurve curve(k, this->__out_vertices_count, new_define_vertices);
@@ -958,9 +1057,10 @@ BfBezierCurve BfBezierCurve::get_derivative()
    return curve;
 }
 
-glm::vec3 BfBezierCurve::get_single_derivative_1_analyt_v3(float t) const
+glm::vec3
+BfBezierCurve::get_single_derivative_1_analyt_v3(float t) const
 {
-   int       k = __n - 1;
+   int k = __n - 1;
    glm::vec3 _v{0.0f};
    for (int i = 0; i <= k; i++)
    {
@@ -971,29 +1071,33 @@ glm::vec3 BfBezierCurve::get_single_derivative_1_analyt_v3(float t) const
    return _v;
 }
 
-BfVertex3 BfBezierCurve::get_single_derivative_1_analyt_bfv3(float t) const
+BfVertex3
+BfBezierCurve::get_single_derivative_1_analyt_bfv3(float t) const
 {
    BfVertex3 _v{};
-   _v.pos     = this->get_single_derivative_1_analyt_v3(t);
-   _v.color   = __main_color;
-   _v.normals = bfMathGetNormal(__dvertices[0].pos,
-                                __dvertices[1].pos,
-                                __dvertices[2].pos);
+   _v.pos = this->get_single_derivative_1_analyt_v3(t);
+   _v.color = __main_color;
+   _v.normals = bfMathGetNormal(
+       __dvertices[0].pos,
+       __dvertices[1].pos,
+       __dvertices[2].pos
+   );
    return _v;
 }
 
-glm::vec3 BfBezierCurve::get_single_derivative_1_numeric_v3(float t,
-                                                            float step) const
+glm::vec3
+BfBezierCurve::get_single_derivative_1_numeric_v3(float t, float step) const
 {
-   glm::vec3 left  = this->get_single_vertex_v3(t - step);
+   glm::vec3 left = this->get_single_vertex_v3(t - step);
    glm::vec3 right = this->get_single_vertex_v3(t + step);
 
    return (right - left) / 2.0f / step;
 }
 
-glm::vec3 BfBezierCurve::get_single_derivative_2_analyt_v3(float t) const
+glm::vec3
+BfBezierCurve::get_single_derivative_2_analyt_v3(float t) const
 {
-   int       k = __n - 2;
+   int k = __n - 2;
    glm::vec3 _v{0.0f};
    for (int i = 0; i <= k; i++)
    {
@@ -1006,28 +1110,34 @@ glm::vec3 BfBezierCurve::get_single_derivative_2_analyt_v3(float t) const
    return _v;
 }
 
-BfVertex3 BfBezierCurve::get_single_derivative_2_analyt_bfv3(float t) const
+BfVertex3
+BfBezierCurve::get_single_derivative_2_analyt_bfv3(float t) const
 {
    BfVertex3 _v{};
-   _v.pos     = this->get_single_derivative_2_analyt_v3(t);
-   _v.color   = __main_color;
-   _v.normals = bfMathGetNormal(__dvertices[0].pos,
-                                __dvertices[1].pos,
-                                __dvertices[2].pos);
+   _v.pos = this->get_single_derivative_2_analyt_v3(t);
+   _v.color = __main_color;
+   _v.normals = bfMathGetNormal(
+       __dvertices[0].pos,
+       __dvertices[1].pos,
+       __dvertices[2].pos
+   );
    return _v;
 }
 
-const size_t BfBezierCurve::get_out_vertices_count() const noexcept
+const size_t
+BfBezierCurve::get_out_vertices_count() const noexcept
 {
    return __out_vertices_count;
 }
 
-void BfBezierCurve::set_out_vertices_count(size_t in_m)
+void
+BfBezierCurve::set_out_vertices_count(size_t in_m)
 {
    __out_vertices_count = in_m;
 }
 
-void BfBezierCurve::create_vertices()
+void
+BfBezierCurve::create_vertices()
 {
    __vertices.clear();
 
@@ -1050,10 +1160,9 @@ BfCircle::BfCircle(size_t m, const BfVertex3& center, float radius)
    __indices.reserve(__out_vertices_count * 2);
 }
 
-BfCircle::BfCircle(size_t           m,
-                   const BfVertex3& P_1,
-                   const BfVertex3& P_2,
-                   const BfVertex3& P_3)
+BfCircle::BfCircle(
+    size_t m, const BfVertex3& P_1, const BfVertex3& P_2, const BfVertex3& P_3
+)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE)
     , __out_vertices_count{m}
     , __define_type{BF_CIRCLE_DEFINE_TYPE_3_VERTICES}
@@ -1066,23 +1175,24 @@ BfCircle::BfCircle(size_t           m,
    glm::vec3 ave_23 = (P_2.pos + P_3.pos) / 2.0f;
    glm::vec3 ave_31 = (P_3.pos + P_1.pos) / 2.0f;
 
-   glm::vec3 v_12   = l_12.get_direction_from_start();
-   glm::vec3 v_23   = l_23.get_direction_from_start();
-   glm::vec3 v_31   = l_31.get_direction_from_start();
+   glm::vec3 v_12 = l_12.get_direction_from_start();
+   glm::vec3 v_23 = l_23.get_direction_from_start();
+   glm::vec3 v_31 = l_31.get_direction_from_start();
 
-   glm::vec3 n_12   = glm::cross(glm::cross(v_12, v_23), v_12);
-   glm::vec3 n_23   = glm::cross(glm::cross(v_23, v_12), v_23);
-   glm::vec3 n_31   = glm::cross(glm::cross(v_31, v_23), v_31);
+   glm::vec3 n_12 = glm::cross(glm::cross(v_12, v_23), v_12);
+   glm::vec3 n_23 = glm::cross(glm::cross(v_23, v_12), v_23);
+   glm::vec3 n_31 = glm::cross(glm::cross(v_31, v_23), v_31);
 
    BfSingleLine per_l_12(ave_12, ave_12 + n_12);
    BfSingleLine per_l_23(ave_23, ave_23 + n_23);
    BfSingleLine per_l_31(ave_31, ave_31 + n_31);
 
    BfVertex3 center;
-   center.pos =
-       bfMathFindLinesIntersection(per_l_12,
-                                   per_l_23,
-                                   BF_MATH_FIND_LINES_INTERSECTION_ANY);
+   center.pos = bfMathFindLinesIntersection(
+       per_l_12,
+       per_l_23,
+       BF_MATH_FIND_LINES_INTERSECTION_ANY
+   );
    // TODO
    if (glm::isnan(center.pos.x) || glm::isnan(center.pos.y) ||
        glm::isnan(center.pos.z))
@@ -1090,35 +1200,41 @@ BfCircle::BfCircle(size_t           m,
       // throw std::runtime_error("Circle define points are invalid");
       if (P_1.equal(P_2))
       {
-         center      = BfVertex3({P_1.pos.x + P_2.pos.x / 2.0f,
-                                  P_1.pos.y + P_2.pos.y / 2.0f,
-                                  P_1.pos.z + P_2.pos.z / 2.0f},
+         center = BfVertex3(
+             {P_1.pos.x + P_2.pos.x / 2.0f,
+              P_1.pos.y + P_2.pos.y / 2.0f,
+              P_1.pos.z + P_2.pos.z / 2.0f},
 
-                            P_1.color,
-                            P_1.normals);
-         __radius    = glm::distance(P_1.pos, P_2.pos) / 2.0f;
+             P_1.color,
+             P_1.normals
+         );
+         __radius = glm::distance(P_1.pos, P_2.pos) / 2.0f;
          __dvertices = {center, P_1, P_2, P_3};
       }
       else if (P_2.equal(P_3))
       {
-         center      = BfVertex3({P_3.pos.x + P_2.pos.x / 2.0f,
-                                  P_3.pos.y + P_2.pos.y / 2.0f,
-                                  P_3.pos.z + P_2.pos.z / 2.0f},
+         center = BfVertex3(
+             {P_3.pos.x + P_2.pos.x / 2.0f,
+              P_3.pos.y + P_2.pos.y / 2.0f,
+              P_3.pos.z + P_2.pos.z / 2.0f},
 
-                            P_3.color,
-                            P_3.normals);
-         __radius    = glm::distance(P_2.pos, P_3.pos) / 2.0f;
+             P_3.color,
+             P_3.normals
+         );
+         __radius = glm::distance(P_2.pos, P_3.pos) / 2.0f;
          __dvertices = {center, P_1, P_2, P_3};
       }
       else if (P_3.equal(P_1))
       {
-         center      = BfVertex3({P_1.pos.x + P_3.pos.x / 2.0f,
-                                  P_1.pos.y + P_3.pos.y / 2.0f,
-                                  P_1.pos.z + P_3.pos.z / 2.0f},
+         center = BfVertex3(
+             {P_1.pos.x + P_3.pos.x / 2.0f,
+              P_1.pos.y + P_3.pos.y / 2.0f,
+              P_1.pos.z + P_3.pos.z / 2.0f},
 
-                            P_1.color,
-                            P_1.normals);
-         __radius    = glm::distance(P_3.pos, P_1.pos) / 2.0f;
+             P_1.color,
+             P_1.normals
+         );
+         __radius = glm::distance(P_3.pos, P_1.pos) / 2.0f;
          __dvertices = {center, P_1, P_2, P_3};
       }
       return;
@@ -1137,60 +1253,89 @@ BfCircle::BfCircle(size_t           m,
 
    center.normals = bfMathGetPlaneCoeffs(P_1.pos, P_2.pos, P_3.pos);
 
-   __radius       = rad_1;
-   __dvertices    = {center, P_1, P_2, P_3};
+   __radius = rad_1;
+   __dvertices = {center, P_1, P_2, P_3};
 }
 
-const BfVertex3& BfCircle::get_center() const noexcept
+const BfVertex3&
+BfCircle::get_center() const noexcept
 {
    return __dvertices[0];
 }
-const BfVertex3& BfCircle::get_first() const noexcept { return __dvertices[1]; }
-const BfVertex3& BfCircle::get_second() const noexcept
+const BfVertex3&
+BfCircle::get_first() const noexcept
+{
+   return __dvertices[1];
+}
+const BfVertex3&
+BfCircle::get_second() const noexcept
 {
    return __dvertices[2];
 }
-const BfVertex3& BfCircle::get_third() const noexcept { return __dvertices[3]; }
-
-const float BfCircle::get_radius() const noexcept { return __radius; }
-
-std::array<BfVertex3, 2> BfCircle::get_tangent_vert(const BfVertex3& P) const
+const BfVertex3&
+BfCircle::get_third() const noexcept
 {
-   glm::vec4 plane{this->get_center().normals,
-                   -(this->get_center().normals.x * P.pos.x +
-                     this->get_center().normals.y * P.pos.y +
-                     this->get_center().normals.z * P.pos.z)};
+   return __dvertices[3];
+}
+
+const float
+BfCircle::get_radius() const noexcept
+{
+   return __radius;
+}
+
+std::array<BfVertex3, 2>
+BfCircle::get_tangent_vert(const BfVertex3& P) const
+{
+   glm::vec4 plane{
+       this->get_center().normals,
+       -(this->get_center().normals.x * P.pos.x +
+         this->get_center().normals.y * P.pos.y +
+         this->get_center().normals.z * P.pos.z)
+   };
 
    if (!bfMathIsVertexInPlain(plane, P.pos))
    {
       throw std::runtime_error(
-          "BfCircle::get_tangent_vert - point not in the same plane as circle");
+          "BfCircle::get_tangent_vert - point not in the same plane as circle"
+      );
    }
 
    BfSingleLine dist{P, this->get_center()};
    float distance = glm::distance(dist.get_first().pos, dist.get_second().pos);
 
-   glm::vec3 dir  = dist.get_direction_from_start();
+   glm::vec3 dir = dist.get_direction_from_start();
 
-   glm::vec3 c1   = glm::rotate(glm::mat4(1.0f),
-                              glm::acos(this->get_radius() / distance),
-                              this->get_center().normals) *
+   glm::vec3 c1 = glm::rotate(
+                      glm::mat4(1.0f),
+                      glm::acos(this->get_radius() / distance),
+                      this->get_center().normals
+                  ) *
                   glm::vec4(dir, 1.0f);
 
-   glm::vec3 c2 = glm::rotate(glm::mat4(1.0f),
-                              -glm::acos(this->get_radius() / distance),
-                              this->get_center().normals) *
+   glm::vec3 c2 = glm::rotate(
+                      glm::mat4(1.0f),
+                      -glm::acos(this->get_radius() / distance),
+                      this->get_center().normals
+                  ) *
                   glm::vec4(dir, 1.0f);
 
-   return {BfVertex3{{this->get_center().pos - glm::normalize(c1) * __radius},
-                     {1.0f, 1.0f, 1.0f},
-                     this->get_center().normals},
-           BfVertex3{{this->get_center().pos - glm::normalize(c2) * __radius},
-                     {1.0f, 1.0f, 1.0f},
-                     this->get_center().normals}};
+   return {
+       BfVertex3{
+           {this->get_center().pos - glm::normalize(c1) * __radius},
+           {1.0f, 1.0f, 1.0f},
+           this->get_center().normals
+       },
+       BfVertex3{
+           {this->get_center().pos - glm::normalize(c2) * __radius},
+           {1.0f, 1.0f, 1.0f},
+           this->get_center().normals
+       }
+   };
 }
 
-void BfCircle::create_vertices()
+void
+BfCircle::create_vertices()
 {
    if (!__vertices.empty()) __vertices.clear();
 
@@ -1208,45 +1353,51 @@ void BfCircle::create_vertices()
    }
    orth_2 = glm::normalize(glm::cross(normal, orth_1));
 
-   float     theta;
+   float theta;
    glm::vec3 center = this->get_center().pos;
    for (size_t i = 0; i < __out_vertices_count + 1; ++i)
    {
       theta = 2 * BF_PI * i / __out_vertices_count;
-      __vertices.emplace_back(center + __radius * cosf(theta) * orth_1 +
-                                  __radius * sinf(theta) * orth_2,
+      __vertices.emplace_back(
+          center + __radius * cosf(theta) * orth_1 +
+              __radius * sinf(theta) * orth_2,
 
-                              this->__main_color,
-                              normal);
+          this->__main_color,
+          normal
+      );
    }
 }
 
-BfArc::BfArc(size_t           m,
-             const BfVertex3& P_1,
-             const BfVertex3& P_2,
-             const BfVertex3& P_3)
+BfArc::BfArc(
+    size_t m, const BfVertex3& P_1, const BfVertex3& P_2, const BfVertex3& P_3
+)
     : BfCircle(m, P_1, P_2, P_3)
 {
 }
 
-void BfArc::create_vertices()
+void
+BfArc::create_vertices()
 {
    if (!__vertices.empty()) __vertices.clear();
 
-   glm::vec3 center      = this->get_center().pos;
-   glm::vec3 firstPoint  = this->get_first().pos;
+   glm::vec3 center = this->get_center().pos;
+   glm::vec3 firstPoint = this->get_first().pos;
    glm::vec3 secondPoint = this->get_second().pos;
-   glm::vec3 thirdPoint  = this->get_third().pos;
+   glm::vec3 thirdPoint = this->get_third().pos;
 
-   glm::vec3 vecToFirst  = firstPoint - center;
+   glm::vec3 vecToFirst = firstPoint - center;
    glm::vec3 vecToSecond = secondPoint - center;
-   glm::vec3 vecToThird  = thirdPoint - center;
+   glm::vec3 vecToThird = thirdPoint - center;
 
-   float angle_12        = acos(glm::dot(vecToFirst, vecToSecond) /
-                         (glm::length(vecToFirst) * glm::length(vecToSecond)));
+   float angle_12 = acos(
+       glm::dot(vecToFirst, vecToSecond) /
+       (glm::length(vecToFirst) * glm::length(vecToSecond))
+   );
 
-   float angle_23        = acos(glm::dot(vecToSecond, vecToThird) /
-                         (glm::length(vecToSecond) * glm::length(vecToThird)));
+   float angle_23 = acos(
+       glm::dot(vecToSecond, vecToThird) /
+       (glm::length(vecToSecond) * glm::length(vecToThird))
+   );
 
    float theta;
    // glm::vec3 center = this->get_center().pos;
@@ -1255,26 +1406,35 @@ void BfArc::create_vertices()
       float theta = (angle_12 + angle_23) * i / (__out_vertices_count);
 
       __vertices.emplace_back(
-          center - glm::vec3(glm::rotate(glm::mat4(1.0f),
-                                         theta,
-                                         this->get_center().normals) *
-                             glm::vec4((center - firstPoint), 1.0f)),
+          center - glm::vec3(
+                       glm::rotate(
+                           glm::mat4(1.0f),
+                           theta,
+                           this->get_center().normals
+                       ) *
+                       glm::vec4((center - firstPoint), 1.0f)
+                   ),
 
           this->__main_color,
-          glm::vec3(0.0f, 0.0f, 0.0f));
+          glm::vec3(0.0f, 0.0f, 0.0f)
+      );
    }
 }
 
-BfBezierCurveFrame::BfBezierCurveFrame(std::shared_ptr<BfBezierCurve> curve,
-                                       VmaAllocator                   allocator,
-                                       VkPipeline lines_pipeline,
-                                       VkPipeline triangle_pipeline)
-    : BfDrawLayer(allocator,
-                  sizeof(BfVertex3),
-                  50,
-                  20,
-                  true,
-                  BF_DRAW_LAYER_TYPE_BEZIER_FRAME)
+BfBezierCurveFrame::BfBezierCurveFrame(
+    std::shared_ptr<BfBezierCurve> curve,
+    VmaAllocator allocator,
+    VkPipeline lines_pipeline,
+    VkPipeline triangle_pipeline
+)
+    : BfDrawLayer(
+          allocator,
+          sizeof(BfVertex3),
+          50,
+          20,
+          true,
+          BF_DRAW_LAYER_TYPE_BEZIER_FRAME
+      )
     , __curve{curve}
     , __lines_pipeline{lines_pipeline}
     , __triangle_pipeline{triangle_pipeline}
@@ -1282,10 +1442,11 @@ BfBezierCurveFrame::BfBezierCurveFrame(std::shared_ptr<BfBezierCurve> curve,
 {
    for (size_t i = 0; i < curve->get_dvertices_count(); i++)
    {
-      auto handle =
-          std::make_shared<BfCircle>(20,
-                                     curve->get_rdVertices()[i],
-                                     BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS);
+      auto handle = std::make_shared<BfCircle>(
+          20,
+          curve->get_rdVertices()[i],
+          BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+      );
       handle->bind_pipeline(&__lines_pipeline);
       this->add_l(handle);
    }
@@ -1294,17 +1455,18 @@ BfBezierCurveFrame::BfBezierCurveFrame(std::shared_ptr<BfBezierCurve> curve,
    this->update_buffer();
 }
 
-void BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve,
-                                glm::vec3                      c)
+void
+BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 c)
 {
    this->del_all();
    __curve = curve;
    for (size_t i = 0; i < curve->get_dvertices_count(); i++)
    {
-      auto handle =
-          std::make_shared<BfCircle>(20,
-                                     curve->get_rdVertices()[i],
-                                     BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS);
+      auto handle = std::make_shared<BfCircle>(
+          20,
+          curve->get_rdVertices()[i],
+          BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+      );
       handle->bind_pipeline(&__lines_pipeline);
       handle->set_color(c);
       this->add_l(handle);
@@ -1314,35 +1476,38 @@ void BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve,
    this->update_buffer();
 }
 
-BfCubicSplineCurve::BfCubicSplineCurve(size_t out_vertices_count,
-                                       std::vector<BfVertex3>& dp)
+BfCubicSplineCurve::BfCubicSplineCurve(
+    size_t out_vertices_count, std::vector<BfVertex3>& dp
+)
     : BfDrawObj{dp}, __out_vertices_count{out_vertices_count}
 {
 }
 
-BfCubicSplineCurve::BfCubicSplineCurve(size_t out_vertices_count,
-                                       std::vector<glm::vec3>& dp)
+BfCubicSplineCurve::BfCubicSplineCurve(
+    size_t out_vertices_count, std::vector<glm::vec3>& dp
+)
     : __out_vertices_count{out_vertices_count}
 {
    __dvertices.reserve(dp.size());
    for (auto& it : dp)
    {
       __dvertices.emplace_back(
-          BfVertex3{it, {1.0, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}});
+          BfVertex3{it, {1.0, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
+      );
    }
 }
 
-void BfCubicSplineCurve::create_vertices()
+void
+BfCubicSplineCurve::create_vertices()
 {
    auto calculateSplinePoint = [](const std::vector<glm::vec3>& a,
                                   const std::vector<glm::vec3>& b,
                                   const std::vector<glm::vec3>& c,
                                   const std::vector<glm::vec3>& d,
-                                  float                         t) {
-      size_t n       = a.size();
+                                  float t) {
+      size_t n = a.size();
       size_t segment = 0;
 
-      // Найдите индекс сегмента сплайна, в который попадает значение t
       for (size_t i = 1; i < n; ++i)
       {
          if (t < static_cast<float>(i) / static_cast<float>(n - 1))
@@ -1352,12 +1517,10 @@ void BfCubicSplineCurve::create_vertices()
          }
       }
 
-      // Нормализуйте t для текущего сегмента
       float tSegment =
           (t - static_cast<float>(segment) / static_cast<float>(n - 1)) *
           (n - 1);
 
-      // Вычислите точку сплайна с использованием коэффициентов сегмента
       glm::vec3 splinePoint = a[segment] + b[segment] * tSegment +
                               c[segment] * tSegment * tSegment +
                               d[segment] * tSegment * tSegment * tSegment;
@@ -1416,9 +1579,9 @@ void BfCubicSplineCurve::create_vertices()
 
    for (size_t i = 1; i <= n - 1; i++)
    {
-      l[i]  = 2.0f * (t[i + 1] - t[i - 1]) - h[i - 1] * mu[i - 1];
+      l[i] = 2.0f * (t[i + 1] - t[i - 1]) - h[i - 1] * mu[i - 1];
       mu[i] = h[i] / l[i];
-      z[i]  = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+      z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
    }
 
    l[n] = glm::vec3(1.0f);
@@ -1441,10 +1604,9 @@ void BfCubicSplineCurve::create_vertices()
    {
       float t =
           static_cast<float>(i) / static_cast<float>(__out_vertices_count - 1);
-      // Вычислить точку сплайна для текущего значения параметра t
       glm::vec3 splinePoint = calculateSplinePoint(a, b, c, d, t);
-      // Добавить точку в вектор __vertices
       __vertices.emplace_back(
-          BfVertex3{splinePoint, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}});
+          BfVertex3{splinePoint, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
+      );
    }
 }
