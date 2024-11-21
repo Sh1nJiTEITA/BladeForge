@@ -110,19 +110,29 @@ BfGuiCreateWindow::__renderManagePanel()
    {
       if (!BfGuiCreateWindowContainerObj::isAnyMoving())
       {
-         if (ImGui::Button("Add Obj container"))
+         if (ImGui::Button("Container"))
          {
             __addContainerT<BfGuiCreateWindowContainer>();
          }
          ImGui::SameLine();
-         if (ImGui::Button("Add Section"))
+         if (ImGui::Button("ContainerObj"))
+         {
+            __addContainerT<BfGuiCreateWindowContainerObj>();
+         }
+         ImGui::SameLine();
+         if (ImGui::Button("BladeSection"))
          {
             __addContainerT<BfGuiCreateWindowBladeSection>();
          }
          ImGui::SameLine();
-         if (ImGui::Button("Add Base"))
+         if (ImGui::Button("BladeBase"))
          {
             __addContainerT<BfGuiCreateWindowBladeBase>();
+         }
+         ImGui::SameLine();
+         if (ImGui::Button("SingleLine"))
+         {
+            __addContainerT<BfGuiCreateWindowSingleLine>();
          }
          ImGui::SameLine();
       }

@@ -45,7 +45,6 @@ class BfGuiCreateWindow
 
    void __renderManagePanel();
    void __renderContainers();
-
    void __renderDragDropZone();
 
    template <class T>
