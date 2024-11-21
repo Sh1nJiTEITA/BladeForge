@@ -4,18 +4,6 @@ bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_v = false;
 
 void
-BfGuiCreateWindowContainer::__pushStyle()
-{
-   ImGui::PushStyleVarX(ImGuiStyleVar_ItemSpacing, 2.0f);
-   ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 2.0f);
-}
-void
-BfGuiCreateWindowContainer::__popStyle()
-{
-   ImGui::PopStyleVar(2);
-}
-
-void
 BfGuiCreateWindowContainer::__clampPosition()
 {
    ImVec2 outter_pos;
@@ -43,7 +31,7 @@ BfGuiCreateWindowContainer::__clampPosition()
            outter_pos.x + outter_size.x - size().x
        ),
        std::clamp(
-           popupPos().y + delta_pos.y,
+           pos().y + delta_pos.y,
            outter_pos.y,
            outter_pos.y + outter_size.y - size().y
        )
@@ -302,7 +290,8 @@ BfGuiCreateWindowContainer::render()
       if (ImGui::Begin(__str_id.c_str(), &__is_render, flags))
       {
          {
-            __pushStyle();
+            ImGui::PushStyleVarX(ImGuiStyleVar_ItemSpacing, 2.0f);
+            ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 2.0f);
             {
                ImGui::SetCursorPosX(
                    ImGui::GetCursorPosX() + __resize_button_size.x +
@@ -312,9 +301,12 @@ BfGuiCreateWindowContainer::render()
                __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Left);
                ImGui::SameLine();
             }
-            __popStyle();
+            ImGui::PopStyleVar(2);
+
             is_window_hovered = __renderChildBorder();
-            __pushStyle();
+
+            ImGui::PushStyleVarX(ImGuiStyleVar_ItemSpacing, 2.0f);
+            ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 2.0f);
             {
                ImGui::SameLine();
 
@@ -328,7 +320,7 @@ BfGuiCreateWindowContainer::render()
 
                __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Bot);
             }
-            __popStyle();
+            ImGui::PopStyleVar(2);
          }
       }
       ImGui::End();
@@ -363,57 +355,6 @@ BfGuiCreateWindowContainer::wptrContainer&
 BfGuiCreateWindowContainer::root() noexcept
 {
    return __root_container;
-}
-
-ImVec2
-BfGuiCreateWindowContainer::popupSize()
-{
-   ImVec2 outsize = this->size();
-   float max_x = 0;
-   float max_y = 0;
-   for (auto c : __containers)
-   {
-      if (auto potential_popup =
-              std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(c))
-      {
-         switch (potential_popup->side())
-         {
-            case BfGuiCreateWindowContainerPopup::LEFT:
-               max_x = std::max(max_x, potential_popup->size().x);
-               break;
-            case BfGuiCreateWindowContainerPopup::RIGHT:
-               max_x = std::max(max_x, potential_popup->size().x);
-               break;
-            case BfGuiCreateWindowContainerPopup::TOP:
-               max_y = std::max(max_y, potential_popup->size().y);
-               break;
-            case BfGuiCreateWindowContainerPopup::BOT:
-               max_y = std::max(max_y, potential_popup->size().y);
-               break;
-         }
-      }
-   }
-   outsize.x += max_x;
-   outsize.y += max_y;
-   return outsize;
-}
-
-ImVec2
-BfGuiCreateWindowContainer::popupPos()
-{
-   ImVec2 outpos = pos();
-   for (auto c : __containers)
-   {
-      if (auto potential_popup =
-              std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(c))
-      {
-         if (potential_popup->side() == BfGuiCreateWindowContainerPopup::TOP)
-         {
-            outpos.y += c->size().y;
-         }
-      }
-   }
-   return outpos;
 }
 
 uint32_t
@@ -459,61 +400,64 @@ BfGuiCreateWindowContainer::toggleForceRender() noexcept
 void
 BfGuiCreateWindowContainer::enableButton(int button_id)
 {
-   switch (button_id)
-   {
-      case BfGuiCreateWindowContainer_ButtonType_Left:
-         __is_left_button = true;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Right:
-         __is_right_button = true;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Top:
-         __is_top_button = true;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Bot:
-         __is_bot_button = true;
-         break;
-   }
+   __is_button |= button_id;
+   // switch (button_id)
+   // {
+   //    case BfGuiCreateWindowContainer_ButtonType_Left:
+   //       __is_button |= button_id;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Right:
+   //       __is_right_button = true;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Top:
+   //       __is_top_button = true;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
+   //       __is_bot_button = true;
+   //       break;
+   // }
 }
 
 void
 BfGuiCreateWindowContainer::disableButton(int button_id)
 {
-   switch (button_id)
-   {
-      case BfGuiCreateWindowContainer_ButtonType_Left:
-         __is_left_button = false;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Right:
-         __is_right_button = false;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Top:
-         __is_top_button = false;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Bot:
-         __is_bot_button = false;
-         break;
-   }
+   __is_button &= ~(button_id);
+   // switch (button_id)
+   // {
+   //    case BfGuiCreateWindowContainer_ButtonType_Left:
+   //       __is_left_button = false;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Right:
+   //       __is_right_button = false;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Top:
+   //       __is_top_button = false;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
+   //       __is_bot_button = false;
+   //       break;
+   // }
 }
 
 void
 BfGuiCreateWindowContainer::toggleButton(int button_id)
 {
-   switch (button_id)
-   {
-      case BfGuiCreateWindowContainer_ButtonType_Left:
-         __is_left_button = !__is_left_button;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Right:
-         __is_right_button = !__is_right_button;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Top:
-         __is_top_button = !__is_top_button;
-         break;
-      case BfGuiCreateWindowContainer_ButtonType_Bot:
-         __is_bot_button = !__is_bot_button;
-         break;
-   }
+   __is_button ^= button_id;
+   // switch (button_id)
+   // {
+   //    case BfGuiCreateWindowContainer_ButtonType_Left:
+   //       __is_left_button = !__is_left_button;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Right:
+   //       __is_right_button = !__is_right_button;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Top:
+   //       __is_top_button = !__is_top_button;
+   //       break;
+   //    case BfGuiCreateWindowContainer_ButtonType_Bot:
+   //       __is_bot_button = !__is_bot_button;
+   //       break;
+   // }
 }
 
 void
@@ -1102,19 +1046,20 @@ bfShowNestedLayersRecursiveWithRadioButtons(
 void
 BfGuiCreateWindowContainerPopup::__assignButtons()
 {
+   // __is_button = BfGuiCreateWindowContainer_ButtonType_All;
    switch (__side)
    {
       case LEFT:
-         __is_right_button = false;
+         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Right);
          break;
       case RIGHT:
-         __is_left_button = false;
+         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Left);
          break;
       case TOP:
-         __is_bot_button = false;
+         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Bot);
          break;
       case BOT:
-         __is_top_button = false;
+         this->enableButton(BfGuiCreateWindowContainer_ButtonType_Top);
          break;
    }
 }
@@ -1193,42 +1138,6 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
          }
          break;
       }
-
-      // draw_list->AddLine({left_x, pos().y + 50.0f},
-      //                    {right_x, pos().y + 50.0f},
-      //                    IM_COL32(255, 0, 0, 255),
-      //                    2.0f);
-
-      // if (outter_pos.x - __window_size.x <= x_clamp && x_clamp <=
-      // outter_pos.x)
-      // {
-      //    x_clamp =
-      //        std::clamp(x_clamp, outter_pos.x - __window_size.x,
-      //        outter_pos.x);
-      // }
-      // else if (outter_pos.x + outter_size.x <= x_clamp &&
-      //          x_clamp <= outter_pos.x + outter_size.x +
-      //          __window_size.x)
-      // {
-      //    float left_x  = outter_pos.x + outter_size.x;
-      //    float right_x = outter_pos.x + outter_size.x +
-      //    __window_size.x;
-      //
-      //    x_clamp       = std::clamp(x_clamp, left_x, right_x);
-      //
-      //    draw_list->AddLine({left_x, pos().y + 50.0f},
-      //                       {right_x, pos().y + 50.0f},
-      //                       IM_COL32(255, 0, 0, 255),
-      //                       2.0f);
-      // }
-      // else
-      // {
-      //    std::cout << outter_pos.x + outter_size.x << "<=" << x_clamp
-      //    << "<="
-      //              << outter_pos.x + outter_size.x + __window_size.x -
-      //                     ImGui::GetStyle().WindowPadding.x * 2
-      //              << "\n";
-      // }
    }
    else
    {

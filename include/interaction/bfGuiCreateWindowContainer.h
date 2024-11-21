@@ -39,11 +39,10 @@ class BfGuiCreateWindowContainer
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
 
-   void __pushStyle();
-   void __popStyle();
-
    void __renderResizeButton(int side);
    bool __renderChildBorder();
+   void __updatePosition();
+   void __updateResizeButtonSize();
 
 public:
    using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
@@ -55,11 +54,8 @@ public:
 
 protected:
    uint32_t __id;
+   std::string __str_id;
 
-   bool __is_left_button = true;
-   bool __is_right_button = true;
-   bool __is_top_button = true;
-   bool __is_bot_button = true;
    uint8_t __is_button = BfGuiCreateWindowContainer_ButtonType_All;
 
    bool __is_force_render = false;
@@ -68,7 +64,6 @@ protected:
    ImVec2 __resize_button_size = {10.0f, 10.0f};
    ImVec2 __bot_resize_button_size = {10.0f, 10.0f};
 
-   std::string __str_id;
    ImVec2 __window_pos;
    ImVec2 __window_size = {150, 150};
    ImVec2 __old_outter_pos;
@@ -88,8 +83,6 @@ protected:
    virtual void __renderChildContent();
    virtual void __prerender();
    virtual void __postrender();
-   void __updatePosition();
-   void __updateResizeButtonSize();
 
 public:
    BfGuiCreateWindowContainer(wptrContainer root);
@@ -102,8 +95,6 @@ public:
    ImVec2& size() noexcept;
    wptrContainer& root() noexcept;
 
-   ImVec2 popupSize();
-   ImVec2 popupPos();
    uint32_t id() noexcept;
 
    void show();
