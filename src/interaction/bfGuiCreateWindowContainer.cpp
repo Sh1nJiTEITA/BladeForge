@@ -103,170 +103,83 @@ BfGuiCreateWindowContainer::changeCursorStyle()
 }
 
 void
-BfGuiCreateWindowContainer::__renderLeftResizeButton()
+BfGuiCreateWindowContainer::__renderResizeButton(int side)
 {
-   if (!__is_left_button)
+   if (!(__is_button & side))
    {
-      ImGui::Dummy(__resize_button_size);
+      if ((side == BfGuiCreateWindowContainer_ButtonType_Bot) ||
+          (side == BfGuiCreateWindowContainer_ButtonType_Top))
+      {
+         ImGui::Dummy(__resize_button_size);
+      }
+      else
+      {
+         ImGui::Dummy(__bot_resize_button_size);
+      }
+      return;
    }
    else
    {
       ImGui::PushID(__id);
-      if (__is_invisiable_buttons)
       {
-         ImGui::InvisibleButton("##left", __resize_button_size);
-      }
-      else
-      {
-         ImGui::Button("##left", __resize_button_size);
+         if ((side == BfGuiCreateWindowContainer_ButtonType_Bot) ||
+             (side == BfGuiCreateWindowContainer_ButtonType_Top))
+         {
+            __is_invisiable_buttons ? ImGui::InvisibleButton(
+                                          std::to_string(side).c_str(),
+                                          __bot_resize_button_size
+                                      )
+                                    : ImGui::Button(
+                                          std::to_string(side).c_str(),
+                                          __bot_resize_button_size
+                                      );
+         }
+         else
+         {
+            __is_invisiable_buttons ? ImGui::InvisibleButton(
+                                          std::to_string(side).c_str(),
+                                          __resize_button_size
+                                      )
+                                    : ImGui::Button(
+                                          std::to_string(side).c_str(),
+                                          __resize_button_size
+                                      );
+         }
       }
       ImGui::PopID();
    }
 
-   if (ImGui::IsItemHovered() && __is_left_button)
+   if (ImGui::IsItemHovered() && (__is_button & side))
    {
-      __is_resizing_hovered_h = true;
+      if ((side == BfGuiCreateWindowContainer_ButtonType_Bot) ||
+          (side == BfGuiCreateWindowContainer_ButtonType_Top))
+         __is_resizing_hovered_v = true;
+      else
+         __is_resizing_hovered_h = true;
    }
 
    if (ImGui::IsItemActive())
    {
       __is_resizing = true;
-      __window_size.x -= ImGui::GetIO().MouseDelta.x;
-      __window_pos.x += ImGui::GetIO().MouseDelta.x;
-
-      ImGui::SetWindowSize(__window_size);
-   }
-   else
-   {
-      __is_resizing = false;
-   }
-}
-
-void
-BfGuiCreateWindowContainer::__renderRightResizeButton()
-{
-   bool buttonClicked = false;
-
-   if (!__is_right_button)
-   {
-      ImGui::Dummy(__resize_button_size);
-   }
-   else
-   {
-      ImGui::PushID(__id);
-      if (__is_invisiable_buttons)
+      switch (side)
       {
-         buttonClicked =
-             ImGui::InvisibleButton("##right", __resize_button_size);
+         case BfGuiCreateWindowContainer_ButtonType_Left:
+            __window_size.x -= ImGui::GetIO().MouseDelta.x;
+            __window_pos.x += ImGui::GetIO().MouseDelta.x;
+            break;
+         case BfGuiCreateWindowContainer_ButtonType_Right:
+            __window_size.x += ImGui::GetIO().MouseDelta.x;
+
+            break;
+         case BfGuiCreateWindowContainer_ButtonType_Top:
+            __window_pos.y += ImGui::GetIO().MouseDelta.y;
+            __window_size.y -= ImGui::GetIO().MouseDelta.y;
+            break;
+         case BfGuiCreateWindowContainer_ButtonType_Bot:
+            __window_size.y += ImGui::GetIO().MouseDelta.y;
+
+            break;
       }
-      else
-      {
-         buttonClicked = ImGui::Button("##right", __resize_button_size);
-      }
-      ImGui::PopID();
-   }
-   if (buttonClicked)
-   {
-   }
-
-   if (ImGui::IsItemHovered() && __is_right_button)
-   {
-      __is_resizing_hovered_h = true;
-   }
-
-   if (ImGui::IsItemActive())
-   {
-      __is_resizing = true;
-      __window_size.x += ImGui::GetIO().MouseDelta.x;
-
-      ImGui::SetWindowSize(__window_size);
-   }
-   else
-   {
-      __is_resizing = false;
-   }
-}
-
-void
-BfGuiCreateWindowContainer::__renderBotResizeButton()
-{
-   bool buttonClicked = false;
-
-   if (!__is_bot_button)
-   {
-      ImGui::Dummy(__resize_button_size);
-   }
-   else
-   {
-      ImGui::PushID(__id);
-      if (__is_invisiable_buttons)
-      {
-         buttonClicked =
-             ImGui::InvisibleButton("##bot", __bot_resize_button_size);
-      }
-      else
-      {
-         buttonClicked = ImGui::Button("##bot", __bot_resize_button_size);
-      }
-      ImGui::PopID();
-   }
-   if (buttonClicked)
-   {
-   }
-
-   if (__is_collapsed) return;
-
-   if (ImGui::IsItemHovered() && __is_bot_button)
-   {
-      __is_resizing_hovered_v = true;
-   }
-
-   if (ImGui::IsItemActive())
-   {
-      __is_resizing = true;
-      __window_size.y += ImGui::GetIO().MouseDelta.y;
-
-      ImGui::SetWindowSize(__window_size);
-   }
-   else
-   {
-      __is_resizing = false;
-   }
-}
-
-void
-BfGuiCreateWindowContainer::__renderTopResizeButton()
-{
-   if (!__is_top_button)
-   {
-      ImGui::Dummy(__bot_resize_button_size);
-   }
-   else
-   {
-      ImGui::PushID(__id);
-      if (__is_invisiable_buttons)
-      {
-         ImGui::InvisibleButton("##top", __bot_resize_button_size);
-      }
-      else
-      {
-         ImGui::Button("##top", __bot_resize_button_size);
-      }
-      ImGui::PopID();
-   }
-
-   if (__is_collapsed) return;
-
-   if (ImGui::IsItemHovered() && __is_top_button)
-   {
-      __is_resizing_hovered_v = true;
-   }
-
-   if (ImGui::IsItemActive())
-   {
-      __is_resizing = true;
-      __window_pos.y += ImGui::GetIO().MouseDelta.y;
-      __window_size.y -= ImGui::GetIO().MouseDelta.y;
 
       ImGui::SetWindowSize(__window_size);
    }
@@ -395,8 +308,8 @@ BfGuiCreateWindowContainer::render()
                    ImGui::GetCursorPosX() + __resize_button_size.x +
                    ImGui::GetStyle().ItemSpacing.x
                );
-               __renderTopResizeButton();
-               __renderLeftResizeButton();
+               __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Top);
+               __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Left);
                ImGui::SameLine();
             }
             __popStyle();
@@ -404,14 +317,16 @@ BfGuiCreateWindowContainer::render()
             __pushStyle();
             {
                ImGui::SameLine();
-               __renderRightResizeButton();
+
+               __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Right
+               );
 
                ImGui::SetCursorPosX(
                    ImGui::GetCursorPosX() + __resize_button_size.x +
                    ImGui::GetStyle().ItemSpacing.x
                );
 
-               __renderBotResizeButton();
+               __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Bot);
             }
             __popStyle();
          }

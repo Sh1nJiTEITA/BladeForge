@@ -19,6 +19,13 @@
 class BfGuiCreateWindow;
 class BfGuiCreateWindowContainerPopup;
 
+#define BfGuiCreateWindowContainer_ButtonType_All \
+   (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)
+#define BfGuiCreateWindowContainer_ButtonType_Left (1 << 0)
+#define BfGuiCreateWindowContainer_ButtonType_Right (1 << 1)
+#define BfGuiCreateWindowContainer_ButtonType_Top (1 << 2)
+#define BfGuiCreateWindowContainer_ButtonType_Bot (1 << 3)
+
 class BfGuiCreateWindowContainer
 {
    std::string __str_child_border_id;
@@ -31,15 +38,11 @@ class BfGuiCreateWindowContainer
 
    static bool __is_resizing_hovered_h;
    static bool __is_resizing_hovered_v;
-   //
+
    void __pushStyle();
    void __popStyle();
-   //
-   // void __renderResizeButton();
-   void __renderLeftResizeButton();
-   void __renderRightResizeButton();
-   void __renderBotResizeButton();
-   void __renderTopResizeButton();
+
+   void __renderResizeButton(int side);
    bool __renderChildBorder();
 
 public:
@@ -57,6 +60,8 @@ protected:
    bool __is_right_button = true;
    bool __is_top_button = true;
    bool __is_bot_button = true;
+   uint8_t __is_button = BfGuiCreateWindowContainer_ButtonType_All;
+
    bool __is_force_render = false;
    bool __is_render_header = true;
 
@@ -87,18 +92,6 @@ protected:
    void __updateResizeButtonSize();
 
 public:
-// enum BUTTON_TYPE
-// {
-//    TOP,
-//    BOT,
-//    RIGHT,
-//    LEFT
-// };
-#define BfGuiCreateWindowContainer_ButtonType_Left 0
-#define BfGuiCreateWindowContainer_ButtonType_Right 1
-#define BfGuiCreateWindowContainer_ButtonType_Top 2
-#define BfGuiCreateWindowContainer_ButtonType_Bot 3
-
    BfGuiCreateWindowContainer(wptrContainer root);
    bool render();
    void renderBodyView();
