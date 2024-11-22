@@ -755,18 +755,10 @@ BfGuiCreateWindowContainerObj::__renderInfoTooltip()
 }
 
 void
-BfGuiCreateWindowContainerObj::__renderAvailableLayers()
-{
-}
-
-void
 BfGuiCreateWindowContainerObj::__processDragDropSource()
 {
    if (ImGui::BeginDragDropSource())
    {
-      // pos().x += ImGui::GetMouseDragDelta().x;
-      // pos().y += ImGui::GetMouseDragDelta().y;
-      // ImGui::ResetMouseDragDelta();
       /*
          Так как перемещается именно этот КОНКРЕТНЫЙ КОНТЕЙНЕР, который
          щас рендерится, то мы получаем указатель на себя самого, так как

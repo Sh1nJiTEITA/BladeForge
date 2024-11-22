@@ -342,25 +342,10 @@ BfGuiCreateWindowBladeSection::__renderZCoordinate()
 {
 }
 
-// void BfGuiCreateWindowBladeSection::__renderAvailableLayers() {}
-
 void
 BfGuiCreateWindowBladeSection::__createObj()
 {
    __layer_obj = std::make_shared<BfBladeSection>(&__create_info);
-}
-
-void
-BfGuiCreateWindowBladeSection::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
-{
-   if (auto shared_root = __ptr_root.lock())
-   {
-      shared_root->del(__layer_obj->id.get(), true);
-   }
-   __createObj();
-   __ptr_root = add_to;
-   add_to->add(__layer_obj);
-   add_to->update_buffer();
 }
 
 void

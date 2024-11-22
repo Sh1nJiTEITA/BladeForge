@@ -45,7 +45,6 @@ protected:
    void __renderZCoordinate();
 
    void __createObj() override;
-   void __addToLayer(std::shared_ptr<BfDrawLayer> add_to) override;
 
    virtual void __renderHeaderName() override;
    virtual void __renderChildContent() override;
