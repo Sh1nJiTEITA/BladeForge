@@ -189,7 +189,7 @@ BfGuiCreateWindowBladeSection::__renderChildContent()
          {
             __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
                 shared_from_this(),
-                BfGuiCreateWindowContainerPopup::RIGHT,
+                BfGuiCreateWindowContainerPopup_Side_Right,
                 false,
                 [&](wptrContainer root) {
                    BfGuiSmartLayerObserver::instance()->renderChoser([&]() {

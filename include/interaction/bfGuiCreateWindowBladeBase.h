@@ -19,7 +19,6 @@ class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 
    void __setContainersPos();
    void __createObj() override;
-   // void __addToLayer(std::shared_ptr<BfDrawLayer> add_to) override;
    bool __isWindowContainerBladeSection(ptrContainer c);
 
 protected:

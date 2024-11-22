@@ -832,16 +832,16 @@ BfGuiCreateWindowContainerPopup::__assignButtons()
 {
    switch (__side)
    {
-      case LEFT:
+      case BfGuiCreateWindowContainerPopup_Side_Left:
          this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Right, false);
          break;
-      case RIGHT:
+      case BfGuiCreateWindowContainerPopup_Side_Right:
          this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Left, false);
          break;
-      case TOP:
+      case BfGuiCreateWindowContainerPopup_Side_Top:
          this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Bot, false);
          break;
-      case BOT:
+      case BfGuiCreateWindowContainerPopup_Side_Bot:
          this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Top, false);
          break;
    }
@@ -875,7 +875,7 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
 
       switch (__side)
       {
-         case LEFT: {
+         case BfGuiCreateWindowContainerPopup_Side_Left: {
             float top = shared_root->pos().y;
             float bot = shared_root->pos().y + shared_root->size().y - size().y;
 
@@ -886,7 +886,7 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
             };
          }
          break;
-         case RIGHT: {
+         case BfGuiCreateWindowContainerPopup_Side_Right: {
             float top = shared_root->pos().y;
             float bot = shared_root->pos().y + shared_root->size().y - size().y;
 
@@ -897,7 +897,7 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
             };
          }
          break;
-         case TOP: {
+         case BfGuiCreateWindowContainerPopup_Side_Top: {
             float left = shared_root->pos().x;
             float right =
                 shared_root->pos().x + shared_root->size().x - size().x;
@@ -908,7 +908,7 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
             };
          }
          break;
-         case BOT: {
+         case BfGuiCreateWindowContainerPopup_Side_Bot: {
             float left = shared_root->pos().x;
             float right =
                 shared_root->pos().x + shared_root->size().x - size().x;
@@ -984,8 +984,7 @@ BfGuiCreateWindowContainerPopup::__renderHeader()
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     wptrContainer root,
-    BfGuiCreateWindowContainerPopup::SIDE side =
-        BfGuiCreateWindowContainerPopup::RIGHT,
+    uint8_t side = BfGuiCreateWindowContainerPopup_Side_Right,
     bool is_force_render = false,
     std::function<void(wptrContainer)> popup_func = nullptr
 )
@@ -997,7 +996,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
    __is_force_render = is_force_render;
 }
 
-BfGuiCreateWindowContainerPopup::SIDE
+uint8_t
 BfGuiCreateWindowContainerPopup::side() noexcept
 {
    return __side;

@@ -96,7 +96,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
       {
          __settings_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
              shared_from_this(),
-             BfGuiCreateWindowContainerPopup::LEFT,
+             BfGuiCreateWindowContainerPopup_Side_Left,
              true,
              [this](wptrContainer root) {
                 for (auto c : this->__containers)
@@ -123,7 +123,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
       {
          __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
              shared_from_this(),
-             BfGuiCreateWindowContainerPopup::RIGHT,
+             BfGuiCreateWindowContainerPopup_Side_Right,
              true,
              [this](wptrContainer root) {
                 BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
@@ -191,7 +191,7 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
 
             auto h_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
                 other_section,
-                BfGuiCreateWindowContainerPopup::SIDE::LEFT,
+                BfGuiCreateWindowContainerPopup_Side_Left,
                 true,
                 [](wptrContainer root) {}
             );

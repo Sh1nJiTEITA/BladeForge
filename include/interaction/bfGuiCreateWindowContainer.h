@@ -183,27 +183,19 @@ public:
 //
 //
 
+#define BfGuiCreateWindowContainerPopup_Side_Left 0
+#define BfGuiCreateWindowContainerPopup_Side_Right 1
+#define BfGuiCreateWindowContainerPopup_Side_Top 2
+#define BfGuiCreateWindowContainerPopup_Side_Bot 3
+
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
 {
-public:
-   /*
-     TODO: Fix logic for top/bot window popups
-   */
-   enum SIDE
-   {
-      LEFT,
-      RIGHT,
-      TOP,
-      BOT
-   };
-
-private:
    void __assignButtons();
 
 protected:
-   SIDE __side;
+   uint8_t __side;
 
    virtual void __clampPosition() override;
    virtual void __renderChildContent() override;
@@ -214,12 +206,12 @@ public:
 
    BfGuiCreateWindowContainerPopup(
        wptrContainer root,
-       BfGuiCreateWindowContainerPopup::SIDE side,
+       uint8_t side,
        bool is_force_render,
        std::function<void(wptrContainer)> popup_func
    );
 
-   SIDE side() noexcept;
+   uint8_t side() noexcept;
    void setSize(ImVec2);
 };
 
