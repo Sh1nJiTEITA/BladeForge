@@ -226,21 +226,22 @@ BfGui::getMenuIsLeftDockTitleInfoStr()
 }
 
 void
-BfGui::presentLayerHandler()
+BfGui::presentLayerHandler()  // FIXME: deprecate
 {
-   if (!ImGui::Begin("Layer observer", nullptr, ImGuiWindowFlags_None))
-   {
-      ImGui::End();
-      return;
-   }
-   {
-      for (size_t i = 0; i < __ptr_base->layer_handler.get_layer_count(); i++)
-      {
-         auto layer = __ptr_base->layer_handler.get_layer_by_index(i);
-         bfShowNestedLayersRecursive(layer);
-      }
-   }
-   ImGui::End();
+   // if (!ImGui::Begin("Layer observer", nullptr, ImGuiWindowFlags_None))
+   // {
+   //    ImGui::End();
+   //    return;
+   // }
+   // {
+   //    for (size_t i = 0; i < __ptr_base->layer_handler.get_layer_count();
+   //    i++)
+   //    {
+   //       auto layer = __ptr_base->layer_handler.get_layer_by_index(i);
+   //       // bfShowNestedLayersRecursive(layer);
+   //    }
+   // }
+   // ImGui::End();
 }
 
 void
@@ -793,18 +794,18 @@ BfGui::presentEventLog()
    }
 }
 
-void
+void  // FIXME: deprecate
 bfPresentLayerHandler(BfLayerHandler &layer_handler)
 {
-   ImGui::Begin("Layer observer");
-   {
-      for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
-      {
-         auto layer = layer_handler.get_layer_by_index(i);
-         bfShowNestedLayersRecursive(layer);
-      }
-   }
-   ImGui::End();
+   // ImGui::Begin("Layer observer");
+   // {
+   //    for (size_t i = 0; i < layer_handler.get_layer_count(); i++)
+   //    {
+   //       auto layer = layer_handler.get_layer_by_index(i);
+   //       bfShowNestedLayersRecursive(layer);
+   //    }
+   // }
+   // ImGui::End();
 }
 
 void

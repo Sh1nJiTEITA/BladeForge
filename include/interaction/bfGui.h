@@ -77,7 +77,7 @@ public:
    std::string getMenuSettingsInfoStr();
    std::string getMenuIsLeftDockTitleInfoStr();
 
-   void presentLayerHandler();
+   void presentLayerHandler();  // FIXME: deprecate
    void presentMenuBar();
    void presentCamera();
    void presentEventLog();
@@ -131,7 +131,7 @@ const std::map<int, std::string> bfSetMenuStr{
 
 };
 
-void bfPresentLayerHandler(BfLayerHandler&);
+void bfPresentLayerHandler(BfLayerHandler&);  // FIXME: deprecate
 void bfPresentBladeSectionInside(
     BfBladeBase* layer,
     BfBladeSectionCreateInfo* info,

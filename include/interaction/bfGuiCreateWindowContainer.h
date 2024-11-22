@@ -114,14 +114,12 @@ public:
 
    static void bindSwapFunction(swapFuncType func) noexcept;
    static void bindMoveFunction(swapFuncType func) noexcept;
-
    static void resetResizeHover();
    static void changeCursorStyle();
 
    // ITER
    std::list<ptrContainer>::iterator begin();
    std::list<ptrContainer>::iterator end();
-   //
    std::list<ptrContainer>::reverse_iterator rbegin();
    std::list<ptrContainer>::reverse_iterator rend();
 
@@ -165,7 +163,6 @@ protected:
    virtual void __renderInfoTooltip();
 
    virtual void __renderAvailableLayers();
-
    virtual void __processDragDropSource();
    virtual void __processDragDropTarget();
 
@@ -178,14 +175,11 @@ public:
    static bool isAnyMoving() noexcept;
 };
 
-void bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l);
-void bfShowNestedLayersRecursiveWithSelectables(
-    std::shared_ptr<BfDrawLayer> l, int& selected_id
-);
-
-void bfShowNestedLayersRecursiveWithRadioButtons(
-    std::shared_ptr<BfDrawLayer> l, int& selectedId
-);
+//
+//
+//
+//
+//
 
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,

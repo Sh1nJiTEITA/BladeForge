@@ -495,7 +495,7 @@ BfGuiCreateWindowContainerObj::isAnyMoving() noexcept
 {
    return BfGuiCreateWindowContainerObj::__is_moving_container;
 }
-
+//
 void
 BfGuiCreateWindowContainer::resetResizeHover()
 {
@@ -516,7 +516,7 @@ BfGuiCreateWindowContainer::bindMoveFunction(swapFuncType func) noexcept
 {
    __moveFunc = func;
 }
-
+//
 std::list<ptrContainer>::iterator
 BfGuiCreateWindowContainer::begin()
 {
@@ -527,22 +527,19 @@ BfGuiCreateWindowContainer::end()
 {
    return __containers.end();
 }
-//
+
 std::list<ptrContainer>::reverse_iterator
 BfGuiCreateWindowContainer::rbegin()
 {
    return __containers.rbegin();
 }
+
 std::list<ptrContainer>::reverse_iterator
 BfGuiCreateWindowContainer::rend()
 {
    return __containers.rend();
 }
-// void
-// BfGuiCreateWindowContainer::clearEmptyContainersByName(std::string name)
-// {
-//    __containers.remove_if([&name](auto c) { return c->name() == name; });
-// }
+
 void
 BfGuiCreateWindowContainer::add(ptrContainer container)
 {
@@ -760,22 +757,6 @@ BfGuiCreateWindowContainerObj::__renderInfoTooltip()
 void
 BfGuiCreateWindowContainerObj::__renderAvailableLayers()
 {
-   auto lh = BfLayerHandler::instance();
-   for (size_t i = 0; i < lh->get_layer_count(); i++)
-   {
-      auto layer = lh->get_layer_by_index(i);
-      // bfShowNestedLayersRecursiveWithSelectables(layer, __selected_layer);
-      bfShowNestedLayersRecursiveWithRadioButtons(layer, __selected_layer);
-   }
-
-   if (ImGui::Button("Add this to layer") && __selected_layer != -1)
-   {
-      std::cout << "Creating begin\n";
-      __createObj();
-      std::cout << "Creating end\n";
-      __addToLayer(BfLayerHandler::instance()->get_layer_by_id(__selected_layer)
-      );
-   }
 }
 
 void
@@ -852,191 +833,6 @@ BfGuiCreateWindowContainerObj::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
    __ptr_root = add_to;
    add_to->add(__layer_obj);
    add_to->update_buffer();
-}
-
-void
-bfShowNestedLayersRecursive(std::shared_ptr<BfDrawLayer> l)
-{
-#define BF_OBJ_NAME_LEN 30
-#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
-
-   size_t obj_count = l->get_obj_count();
-   size_t lay_count = l->get_layer_count();
-
-   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
-                          ") " + std::to_string(l->id.get());
-   if (ImGui::TreeNode(lay_name.c_str()))
-   {
-      for (size_t i = 0; i < lay_count; ++i)
-      {
-         bfShowNestedLayersRecursive(l->get_layer_by_index(i));
-      }
-      for (size_t i = 0; i < obj_count; ++i)
-      {
-         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
-         //
-         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
-                                bfGetStrNameDrawObjType(obj->id.get_type()) +
-                                ") " + std::to_string(obj->id.get());
-
-         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
-         if (ImGui::TreeNode(obj_name.c_str()))
-         {
-            ImGui::Text(("\tVertices " +
-                         std::to_string(obj->get_vertices_count()))
-                            .c_str());
-
-            ImGui::Text(("\tIndices " + std::to_string(obj->get_indices_count())
-            )
-                            .c_str());
-
-            ImGui::Text(("\tDVertices " +
-                         std::to_string(obj->get_dvertices_count()))
-                            .c_str());
-
-            ImGui::TreePop();
-         }
-         ImGui::PopStyleColor();
-      }
-      ImGui::TreePop();
-   }
-}
-
-void
-bfShowNestedLayersRecursiveWithSelectables(
-    std::shared_ptr<BfDrawLayer> l, int& selectedId
-)
-{
-#define BF_OBJ_NAME_LEN 30
-#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
-
-   size_t obj_count = l->get_obj_count();
-   size_t lay_count = l->get_layer_count();
-
-   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
-                          ") " + std::to_string(l->id.get());
-
-   ImGuiTreeNodeFlags flags =
-       (selectedId == l->id.get() ? ImGuiTreeNodeFlags_Selected : 0);
-   if (ImGui::TreeNodeEx(lay_name.c_str(), flags))
-   {
-      if (ImGui::IsItemClicked())
-      {
-         selectedId = l->id.get();
-      }
-
-      for (size_t i = 0; i < lay_count; ++i)
-      {
-         bfShowNestedLayersRecursiveWithSelectables(
-             l->get_layer_by_index(i),
-             selectedId
-         );
-      }
-
-      for (size_t i = 0; i < obj_count; ++i)
-      {
-         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
-         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
-                                bfGetStrNameDrawObjType(obj->id.get_type()) +
-                                ") " + std::to_string(obj->id.get());
-
-         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
-         ImGuiTreeNodeFlags obj_flags =
-             (selectedId == obj->id.get() ? ImGuiTreeNodeFlags_Selected : 0);
-
-         if (ImGui::TreeNode(obj_name.c_str()))
-         {
-            ImGui::Text(
-                "%s",
-                ("\tVertices " + std::to_string(obj->get_vertices_count()))
-                    .c_str()
-            );
-            ImGui::Text(
-                "%s",
-                ("\tIndices " + std::to_string(obj->get_indices_count()))
-                    .c_str()
-            );
-            ImGui::Text(
-                "%s",
-                ("\tDVertices " + std::to_string(obj->get_dvertices_count()))
-                    .c_str()
-            );
-
-            ImGui::TreePop();
-         }
-         ImGui::PopStyleColor();
-      }
-      ImGui::TreePop();
-   }
-}
-
-void
-bfShowNestedLayersRecursiveWithRadioButtons(
-    std::shared_ptr<BfDrawLayer> l, int& selectedId
-)
-{
-#define BF_OBJ_NAME_LEN 30
-#define BF_LAYER_COLOR 1.0f, 0.55f, 0.1f, 1.0f
-
-   size_t obj_count = l->get_obj_count();
-   size_t lay_count = l->get_layer_count();
-
-   std::string lay_name = "L (" + bfGetStrNameDrawObjType(l->id.get_type()) +
-                          ") " + std::to_string(l->id.get());
-
-   ImGuiTreeNodeFlags flags =
-       ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-
-   // Радиокнопка перед нодой слоя
-   if (ImGui::RadioButton(
-           ("##radio" + lay_name).c_str(),
-           selectedId == l->id.get()
-       ))
-   {
-      selectedId = l->id.get();
-   }
-   ImGui::SameLine();  // Перемещаемся на ту же строку для отображения названия
-                       // слоя
-
-   if (ImGui::TreeNodeEx(lay_name.c_str(), flags))
-   {
-      for (size_t i = 0; i < lay_count; ++i)
-      {
-         bfShowNestedLayersRecursiveWithRadioButtons(
-             l->get_layer_by_index(i),
-             selectedId
-         );
-      }
-
-      for (size_t i = 0; i < obj_count; ++i)
-      {
-         std::shared_ptr<BfDrawObj> obj = l->get_object_by_index(i);
-         //
-         std::string obj_name = ICON_FA_BOX_ARCHIVE "(" +
-                                bfGetStrNameDrawObjType(obj->id.get_type()) +
-                                ") " + std::to_string(obj->id.get());
-
-         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(BF_LAYER_COLOR));
-         if (ImGui::TreeNode(obj_name.c_str()))
-         {
-            ImGui::Text(("\tVertices " +
-                         std::to_string(obj->get_vertices_count()))
-                            .c_str());
-
-            ImGui::Text(("\tIndices " + std::to_string(obj->get_indices_count())
-            )
-                            .c_str());
-
-            ImGui::Text(("\tDVertices " +
-                         std::to_string(obj->get_dvertices_count()))
-                            .c_str());
-
-            ImGui::TreePop();
-         }
-         ImGui::PopStyleColor();
-      }
-      ImGui::TreePop();
-   }
 }
 
 void
