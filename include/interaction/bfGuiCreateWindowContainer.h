@@ -143,10 +143,12 @@ class BfGuiCreateWindowContainerObj
    bool __is_current_moving;
    bool __is_drop_target;
    int __selected_layer = -1;
+   ImVec2 __header_button_size = {20.0f, 20.0f};
 
 protected:
    // For changing initial size (mb)
    ImVec2 __old_size;
+   std::string __name;
    //
    BfDrawLayerCreateInfo __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;
@@ -156,10 +158,11 @@ protected:
    virtual void __popButtonColorStyle();
 
    virtual void __renderChildContent() override;
-   virtual void __renderHeader() override;
 
+   virtual void __renderHeader() override;
    virtual void __renderHeaderName();
    virtual void __renderChangeName();
+
    virtual void __renderInfoTooltip();
 
    virtual void __renderDragDropSource();
@@ -170,6 +173,7 @@ protected:
 
    virtual void __createObj();
    void __addToLayer(std::shared_ptr<BfDrawLayer> add_to);
+   ImVec2 __totalHeaderButtonsSize();
 
 public:
    BfGuiCreateWindowContainerObj(wptrContainer root, bool is_target = true);

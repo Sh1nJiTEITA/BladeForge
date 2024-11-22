@@ -1,5 +1,8 @@
 #include "bfGuiCreateWindowContainer.h"
 
+#include "bfIconsFontAwesome6.h"
+#include "imgui.h"
+
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_h = false;
 bool BfGuiCreateWindowContainer::__is_resizing_hovered_v = false;
 
@@ -610,22 +613,12 @@ BfGuiCreateWindowContainerObj::__renderHeader()
 {
    __pushButtonColorStyle();
    {
-      ImGui::SetCursorPosX(
-          ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2.0f -
-          ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x
-      );
-
-      __renderDragDropSource();
       __renderDragDropTarget();
-
       ImGui::SameLine();
-      ImGui::SetCursorPosX(
-          ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2.0f -
-          ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-          ImGui::CalcTextSize(ICON_FA_MINIMIZE).x - 15.0f
-      );
-
-      if (ImGui::Button(ICON_FA_MINIMIZE))
+      if (ImGui::Button(
+              __is_collapsed ? ICON_FA_EXPAND : ICON_FA_COMPRESS,
+              __header_button_size
+          ))
       {
          __is_collapsed = !__is_collapsed;
          if (__is_collapsed)
@@ -637,34 +630,17 @@ BfGuiCreateWindowContainerObj::__renderHeader()
          {
             __window_size.y = __old_size.y;
          }
-
          ImGui::SetWindowSize(__str_id.c_str(), __window_size);
       }
 
       ImGui::SameLine();
-      ImGui::SetCursorPosX(
-          ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2.0f -
-          ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-          ImGui::CalcTextSize(ICON_FA_MINIMIZE).x - 15.0f -
-          ImGui::CalcTextSize("\uf256").x -
-          ImGui::CalcTextSize(ICON_FA_INFO).x - 35.0f
-      );
       ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-      if (ImGui::Button("\uf256"))
+      if (ImGui::Button("\uf256", __header_button_size))
       {
       }
       ImGui::PopItemFlag();
       ImGui::SameLine();
-      float last_y = ImGui::GetCursorPosY();
-      ImGui::SetCursorPosY(last_y - 1.0f);
-      if (ImGui::Button(ICON_FA_INFO))
-      {
-      }
-      // ImGui::SetCursorPosY(last_y);
-      if (ImGui::IsItemHovered())
-      {
-         __renderInfoTooltip();
-      }
+      __renderDragDropSource();
    }
    __popButtonColorStyle();
 }
@@ -672,13 +648,39 @@ BfGuiCreateWindowContainerObj::__renderHeader()
 void
 BfGuiCreateWindowContainerObj::__renderHeaderName()
 {
-   ImGui::Text("%s", name());
+   ImGui::SameLine();
+
+   ImGui::PushID(name());
+   {
+      ImGui::SetNextItemWidth(
+          ImGui::GetContentRegionAvail().x - __totalHeaderButtonsSize().x
+      );
+      if (ImGui::InputText(
+              "##edit",
+              __name.data(),
+              ImGuiInputTextFlags_EnterReturnsTrue
+          ))
+      {
+      }
+   }
+   ImGui::PopID();
 }
 
 void
 BfGuiCreateWindowContainerObj::__renderChangeName()
 {
-   ImGui::Text("<---> Add here <--->");
+   ImGui::SameLine();
+   ImGui::PushID(name());
+   {
+      if (ImGui::Button(
+              "<==> Add \uf140 here <==>",
+              {ImGui::GetContentRegionAvail().x - __totalHeaderButtonsSize().x,
+               __header_button_size.y}
+          ))
+      {
+      }
+   }
+   ImGui::PopID();
 }
 
 void
@@ -715,8 +717,18 @@ void
 BfGuiCreateWindowContainerObj::__renderDragDropTarget()
 {
    if (!__is_drop_target) return;
-   // Where to drop
+
+   ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1.0f);
+   if (ImGui::Button(ICON_FA_INFO))
+   {
+   }
+   if (ImGui::IsItemHovered())
+   {
+      __renderInfoTooltip();
+   }
+
    ImGui::SameLine();
+
    ImGui::SetCursorPosX(ImGui::GetStyle().WindowPadding.x);
    if (__is_moving_container && !__is_current_moving)
    {
@@ -825,6 +837,15 @@ BfGuiCreateWindowContainerObj::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
    __ptr_root = add_to;
    add_to->add(__layer_obj);
    add_to->update_buffer();
+}
+
+ImVec2
+BfGuiCreateWindowContainerObj::__totalHeaderButtonsSize()
+{
+   return {
+       (__header_button_size.x + ImGui::GetStyle().ItemSpacing.x) * 3,
+       __header_button_size.y
+   };
 }
 
 void

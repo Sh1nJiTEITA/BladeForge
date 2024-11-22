@@ -157,19 +157,6 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
       }
       ImGui::PopStyleColor(3);
    }
-
-   //    {
-   //    }
-   //    if (!ImGui::IsItemActive())
-   //    {
-   //       isEditing = false;
-   //    }
-   // }
-   // else
-   // {
-   //    ImGui::Text("%s", __section_name.c_str());
-   // }
-
    ImGui::PopID();
 }
 void
