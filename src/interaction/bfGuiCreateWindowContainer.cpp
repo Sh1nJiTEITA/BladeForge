@@ -259,7 +259,6 @@ BfGuiCreateWindowContainer::render()
    bool is_window_hovered = false;
    if (__is_render)
    {
-      // std::cout << __window_size.x << " " << __window_size.y << "\n";
       __clampPosition();
 
       if (__is_first_render)
@@ -621,6 +620,8 @@ BfGuiCreateWindowContainerObj::__renderHeader()
           ))
       {
          __is_collapsed = !__is_collapsed;
+         __is_button ^= (BfGuiCreateWindowContainer_ButtonType_Top);
+         __is_button ^= (BfGuiCreateWindowContainer_ButtonType_Bot);
          if (__is_collapsed)
          {
             __old_size = size();

@@ -37,7 +37,7 @@ class BfGuiCreateWindowContainer
 {
    std::string __str_child_border_id;
 
-   bool __is_invisiable_buttons = false;
+   bool __is_invisiable_buttons = true;
    bool __is_first_render = true;
    bool __is_render = true;
    bool __is_dragging = false;
@@ -143,12 +143,12 @@ class BfGuiCreateWindowContainerObj
    bool __is_current_moving;
    bool __is_drop_target;
    int __selected_layer = -1;
-   ImVec2 __header_button_size = {20.0f, 20.0f};
 
 protected:
    // For changing initial size (mb)
    ImVec2 __old_size;
    std::string __name;
+   ImVec2 __header_button_size = {20.0f, 20.0f};
    //
    BfDrawLayerCreateInfo __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;

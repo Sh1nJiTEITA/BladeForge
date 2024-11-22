@@ -17,7 +17,8 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
    // FIX: Fix in future: doublign layer create infos here and inside
    // BfGuiCreateWindowContainerObj
    __create_info.layer_create_info = __layer_create_info;
-
+   __is_button &= ~BfGuiCreateWindowContainer_ButtonType_Top;
+   __is_button &= ~BfGuiCreateWindowContainer_ButtonType_Bot;
    // __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
    //     shared_from_this(),
    //     [&]() { this->__renderAvailableLayers(); });
@@ -123,41 +124,27 @@ BfGuiCreateWindowBladeSection::__renderHeaderName()
       {
       }
       ImGui::PopStyleColor(3);
+
+      ImGui::PopID();
    }
    else if (__mode == viewMode::STD)
    {
-      float x = ImGui::GetWindowWidth() -
-                ImGui::GetStyle().WindowPadding.x * 2.0f -
-                ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-                ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
-                ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
-
-      static bool isEditing = false;
-
       ImGui::SameLine();
       ImGui::PushID(name());
-
-      ImGui::Dummy({x, 20});
-      if (ImGui::IsItemHovered())
       {
-         ImGui::SetTooltip("Change name...");
+         ImGui::SetNextItemWidth(
+             ImGui::GetContentRegionAvail().x - __totalHeaderButtonsSize().x
+         );
+         if (ImGui::InputText(
+                 "##edit",
+                 __name.data(),
+                 ImGuiInputTextFlags_EnterReturnsTrue
+             ))
+         {
+         }
       }
-      ImGui::SameLine();
-      ImGui::SetCursorPos(ImGui::GetCursorStartPos());
-      ImGui::SetNextItemWidth(x);
-      ImGui::PushStyleColor(ImGuiCol_FrameBg, {1.0, 1.0f, 1.0f, 0.0f});
-      ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, {1.0, 1.0f, 1.0f, 0.2f});
-      ImGui::PushStyleColor(ImGuiCol_FrameBgActive, {1.0, 1.0f, 1.0f, 0.5f});
-      if (ImGui::InputText(
-              "##edit",
-              __section_name.data(),
-              ImGuiInputTextFlags_EnterReturnsTrue
-          ))
-      {
-      }
-      ImGui::PopStyleColor(3);
+      ImGui::PopID();
    }
-   ImGui::PopID();
 }
 void
 BfGuiCreateWindowBladeSection::__renderChildContent()
