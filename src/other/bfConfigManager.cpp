@@ -18,7 +18,8 @@ std::shared_ptr<BfConfigManager> BfConfigManager::__instance = nullptr;
 //    return BfLuaTable::convert(v[key_str]);
 // }
 
-std::string BfLuaTable::convert(const BfLuaValue& v)
+std::string
+BfLuaTable::convert(const BfLuaValue& v)
 {
    std::string o;
    std::visit(
@@ -45,13 +46,17 @@ std::string BfLuaTable::convert(const BfLuaValue& v)
              o = std::to_string(arg);
           }
        },
-       v);
+       v
+   );
    return o;
 }
 
-void BfConfigManager::__findFilesInDir(std::filesystem::path               root,
-                                       std::string                         ext,
-                                       std::vector<std::filesystem::path>& out)
+void
+BfConfigManager::__findFilesInDir(
+    std::filesystem::path root,
+    std::string ext,
+    std::vector<std::filesystem::path>& out
+)
 {
    for (const auto& entry : std::filesystem::directory_iterator(root))
    {
@@ -75,7 +80,43 @@ void BfConfigManager::__findFilesInDir(std::filesystem::path               root,
 
 BfConfigManager::BfConfigManager() {}
 
-void BfConfigManager::createInstance()
+std::filesystem::path
+BfConfigManager::exePath()
+{
+#ifdef _WIN32
+   char buffer[MAX_PATH];
+   GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+   return std::filesystem::path(buffer).remove_filename();
+#elif __linux__
+   char buffer[1024];
+   ssize_t count = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+   if (count != -1)
+   {
+      buffer[count] = '\0';
+      return std::filesystem::path(buffer).remove_filename();
+   }
+   else
+   {
+      throw std::runtime_error("Failed to resolve executable path");
+   }
+#elif __APPLE__
+   char buffer[1024];
+   uint32_t size = sizeof(buffer);
+   if (_NSGetExecutablePath(buffer, &size) == 0)
+   {
+      return std::filesystem::path(buffer).remove_filename();
+   }
+   else
+   {
+      throw std::runtime_error("Buffer too small; increase its size");
+   }
+#else
+   throw std::runtime_error("Unsupported platform");
+#endif
+}
+
+void
+BfConfigManager::createInstance()
 {
    if (!__instance)
    {
@@ -86,7 +127,8 @@ void BfConfigManager::createInstance()
    }
 }
 
-void BfConfigManager::destroyInstance()
+void
+BfConfigManager::destroyInstance()
 {
    if (__instance)
    {
@@ -94,15 +136,21 @@ void BfConfigManager::destroyInstance()
    }
 }
 
-void BfConfigManager::recreateInstance()
+void
+BfConfigManager::recreateInstance()
 {
    BFCM::destroyInstance();
    BFCM::createInstance();
 }
 
-BfConfigManager* BfConfigManager::getInstance() { return __instance.get(); }
+BfConfigManager*
+BfConfigManager::getInstance()
+{
+   return __instance.get();
+}
 
-BfEvent BfConfigManager::loadStdLibrary(sol::lib lib)
+BfEvent
+BfConfigManager::loadStdLibrary(sol::lib lib)
 {
    static std::map<sol::lib, std::string> std_lib_names = {
        {sol::lib::base, "base"},
@@ -125,23 +173,24 @@ BfEvent BfConfigManager::loadStdLibrary(sol::lib lib)
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    if (std_lib_names.find(lib) == std_lib_names.end())
    {
-      event.action  = BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_FAILURE;
+      event.action = BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_FAILURE;
       event.success = false;
-      event.info    = "underfined";
+      event.info = "underfined";
    }
    else
    {
       auto inst = getInstance();
       inst->__lua.open_libraries(lib);
 
-      event.action  = BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_SUCCESS;
+      event.action = BF_ACTION_TYPE_LOAD_STD_LUA_LIBRARY_SUCCESS;
       event.success = true;
-      event.info    = std_lib_names[lib];
+      event.info = std_lib_names[lib];
    }
    return event;
 }
 
-BfEvent BfConfigManager::addPackagePath(std::filesystem::path path)
+BfEvent
+BfConfigManager::addPackagePath(std::filesystem::path path)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -150,17 +199,17 @@ BfEvent BfConfigManager::addPackagePath(std::filesystem::path path)
 
       if (!std::filesystem::exists(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path does not exist";
+         event.info = " input path does not exist";
          return event;
       }
 
       if (!std::filesystem::is_directory(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path is not directory path";
+         event.info = " input path is not directory path";
          return event;
       }
 
@@ -179,12 +228,13 @@ BfEvent BfConfigManager::addPackagePath(std::filesystem::path path)
       BfConfigManager::getInstance()->__lua.script(command_msg);
 
       event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_SUCCESS;
-      event.info   = "path is " + tmp_path.string();
+      event.info = "path is " + tmp_path.string();
    }
    return event;
 }
 
-BfEvent BfConfigManager::loadScript(std::filesystem::path path)
+BfEvent
+BfConfigManager::loadScript(std::filesystem::path path)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
@@ -193,23 +243,23 @@ BfEvent BfConfigManager::loadScript(std::filesystem::path path)
       std::filesystem::path tmp_path = std::filesystem::absolute(path);
       if (!std::filesystem::exists(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path does not exist";
+         event.info = " input path does not exist";
          return event;
       }
       if (!std::filesystem::is_regular_file(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path is not file path";
+         event.info = " input path is not file path";
          return event;
       }
       if (tmp_path.extension() != ".lua")
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input file path extension is not .lua";
+         event.info = " input file path extension is not .lua";
          return event;
       }
 
@@ -219,16 +269,18 @@ BfEvent BfConfigManager::loadScript(std::filesystem::path path)
    }
    catch (std::exception& e)
    {
-      event.action  = BF_ACTION_TYPE_LOAD_LUA_SCRIPT_FAILURE;
+      event.action = BF_ACTION_TYPE_LOAD_LUA_SCRIPT_FAILURE;
       event.success = false;
-      event.info    = " external error -> " + std::string(e.what());
+      event.info = " external error -> " + std::string(e.what());
       return event;
    }
    return event;
 }
 
-BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
-                                           std::string           varname)
+BfEvent
+BfConfigManager::loadRequireScript(
+    std::filesystem::path path, std::string varname
+)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
@@ -237,23 +289,23 @@ BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
       std::filesystem::path tmp_path = std::filesystem::absolute(path);
       if (!std::filesystem::exists(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path does not exist";
+         event.info = " input path does not exist";
          return event;
       }
       if (!std::filesystem::is_regular_file(tmp_path))
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input path is not file path";
+         event.info = " input path is not file path";
          return event;
       }
       if (tmp_path.extension() != ".lua")
       {
-         event.action  = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
+         event.action = BF_ACTION_TYPE_ADD_LUA_PACKAGE_PATH_FAILURE;
          event.success = false;
-         event.info    = " input file path extension is not .lua";
+         event.info = " input file path extension is not .lua";
          return event;
       }
 
@@ -263,17 +315,18 @@ BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
       }
 
       BfConfigManager::getInstance()->__lua.script(
-          varname + " = " + "require(\"" + tmp_path.stem().string() + "\")");
+          varname + " = " + "require(\"" + tmp_path.stem().string() + "\")"
+      );
 
       event.action = BF_ACTION_TYPE_LOAD_LUA_SCRIPT_SUCCESS;
-      event.info   = " lua file with path " + tmp_path.string() +
+      event.info = " lua file with path " + tmp_path.string() +
                    " was loaded as " + varname;
    }
    catch (std::exception& e)
    {
-      event.action  = BF_ACTION_TYPE_LOAD_LUA_SCRIPT_FAILURE;
+      event.action = BF_ACTION_TYPE_LOAD_LUA_SCRIPT_FAILURE;
       event.success = false;
-      event.info    = " external error -> " + std::string(e.what());
+      event.info = " external error -> " + std::string(e.what());
       return event;
    }
    return event;
@@ -281,12 +334,13 @@ BfEvent BfConfigManager::loadRequireScript(std::filesystem::path path,
 
 std::string BfConfigManager::__indent_separator = "   ";
 
-std::string BfConfigManager::getLuaTableStr(sol::table table, int level)
+std::string
+BfConfigManager::getLuaTableStr(sol::table table, int level)
 {
    std::string str = "{\n";
    for (const auto& pair : table)
    {
-      sol::object key   = pair.first;
+      sol::object key = pair.first;
       sol::object value = pair.second;
 
       std::string indent(level * __indent_separator.size(), ' ');
@@ -328,17 +382,19 @@ std::string BfConfigManager::getLuaTableStr(sol::table table, int level)
    return str;
 }
 
-sol::object BfConfigManager::getLuaObj(const std::string& key)
+sol::object
+BfConfigManager::getLuaObj(const std::string& key)
 {
    return BfConfigManager::getInstance()->__lua[key];
 }
 
-BfLuaTable BfConfigManager::convertLuaTable(sol::table* obj)
+BfLuaTable
+BfConfigManager::convertLuaTable(sol::table* obj)
 {
    BfLuaTable table;
    for (const auto& pair : *obj)
    {
-      sol::object key   = pair.first;
+      sol::object key = pair.first;
       sol::object value = pair.second;
       std::string key_str;
 
@@ -353,7 +409,7 @@ BfLuaTable BfConfigManager::convertLuaTable(sol::table* obj)
 
       if (value.is<sol::table>())
       {
-         sol::table t   = value;
+         sol::table t = value;
          table[key_str] = std::make_shared<BfLuaTable>(convertLuaTable(&t));
       }
       else
@@ -383,7 +439,8 @@ BfLuaTable BfConfigManager::convertLuaTable(sol::table* obj)
    return table;
 };
 
-BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
+BfEvent
+BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
@@ -414,18 +471,20 @@ BfEvent BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
          event.action = BF_ACTION_TYPE_FILL_FORM_FONT_NAME_INVALID_TYPE_FAILURE;
          return event;
       }
-      form->current              = obj.get_or("current", 0);
-      form->size                 = obj.get<int>("size");
-      form->glypth_offset        = {obj.get<sol::table>("glypth_offset")[1],
-                                    obj.get<sol::table>("glypth_offset")[2]};
+      form->current = obj.get_or("current", 0);
+      form->size = obj.get<int>("size");
+      form->glypth_offset = {
+          obj.get<sol::table>("glypth_offset")[1],
+          obj.get<sol::table>("glypth_offset")[2]
+      };
       form->glypth_min_advance_x = obj.get_or("glypth_offset", 0.0f);
    }
    event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
    return event;
 }
 
-BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
-                                              BfFormFontSettings* form)
+BfEvent
+BfConfigManager::fillFormFontSettings(sol::table obj, BfFormFontSettings* form)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_READ_DATA_EVENT;
@@ -435,7 +494,8 @@ BfEvent BfConfigManager::fillFormFontSettings(sol::table          obj,
       for (const auto& font_path : font_paths)
       {
          form->font_directory_paths.push_back(
-             fs::path(font_path.second.as<std::string>()));
+             fs::path(font_path.second.as<std::string>())
+         );
       }
       BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);
       BfConfigManager::fillFormFont(obj["icon_font"], &form->icon_font);

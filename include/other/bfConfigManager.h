@@ -37,31 +37,36 @@ class BfConfigManager
    using BFCM = BfConfigManager;
 
    static std::shared_ptr<BfConfigManager> __instance;
-   static std::string                      __indent_separator;
-   sol::state                              __lua;
+   static std::string __indent_separator;
+   sol::state __lua;
 
 public:
-   static void __findFilesInDir(std::filesystem::path               root,
-                                std::string                         ext,
-                                std::vector<std::filesystem::path>& out);
+   static void __findFilesInDir(
+       std::filesystem::path root,
+       std::string ext,
+       std::vector<std::filesystem::path>& out
+   );
 
    BfConfigManager();
 
-   BfConfigManager(const BfConfigManager&)            = delete;
+   BfConfigManager(const BfConfigManager&) = delete;
    BfConfigManager& operator=(const BfConfigManager&) = delete;
 
+   static std::filesystem::path exePath();
+
    // Instance manipulation
-   static void             createInstance();
-   static void             destroyInstance();
-   static void             recreateInstance();
+   static void createInstance();
+   static void destroyInstance();
+   static void recreateInstance();
    static BfConfigManager* getInstance();
 
    // Lua manipulation
    static BfEvent loadStdLibrary(sol::lib lib);
    static BfEvent addPackagePath(std::filesystem::path path);
    static BfEvent loadScript(std::filesystem::path path);
-   static BfEvent loadRequireScript(std::filesystem::path path,
-                                    std::string           varname = "");
+   static BfEvent loadRequireScript(
+       std::filesystem::path path, std::string varname = ""
+   );
 
    static std::string getLuaTableStr(sol::table table, int indent_level = 0);
 
@@ -70,8 +75,9 @@ public:
    static BfLuaTable convertLuaTable(sol::table* obj);
 
    static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
-   static BfEvent fillFormFontSettings(sol::table          obs,
-                                       BfFormFontSettings* form);
+   static BfEvent fillFormFontSettings(
+       sol::table obs, BfFormFontSettings* form
+   );
 };
 
 #endif

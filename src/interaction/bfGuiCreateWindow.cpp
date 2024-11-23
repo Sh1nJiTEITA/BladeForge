@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "bfConfigManager.h"
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowBladeSection.h"
 #include "imgui.h"
@@ -106,6 +107,17 @@ BfGuiCreateWindow::__findAndCheckPair(const pair& name)
 void
 BfGuiCreateWindow::__renderManagePanel()
 {
+   ImGui::BeginChild("##CreateWindowManagePanel2", {0.0, 37.0f}, true);
+   {
+      if (ImGui::Button("Dsadasdas"))
+      {
+         BfConfigManager::loadStdLibrary(sol::lib::base);
+         BfConfigManager::loadStdLibrary(sol::lib::package);
+         BfConfigManager::loadRequireScript("./scripts/guiconfig.lua");
+      }
+   }
+   ImGui::EndChild();
+
    ImGui::BeginChild("##CreateWindowManagePanel", {0.0, 37.0f}, true);
    {
       if (!BfGuiCreateWindowContainerObj::isAnyMoving())
