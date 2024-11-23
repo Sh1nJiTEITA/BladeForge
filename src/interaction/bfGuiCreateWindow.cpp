@@ -132,7 +132,7 @@ BfGuiCreateWindow::__renderManagePanel()
          ImGui::SameLine();
          if (ImGui::Button("SingleLine"))
          {
-            __addContainerT<BfGuiCreateWindowSingleLine>();
+            // __addContainerT<BfGuiCreateWindowSingleLine>();
          }
          ImGui::SameLine();
       }
