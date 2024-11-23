@@ -366,17 +366,7 @@ BfGuiCreateWindowContainer::id() noexcept
 {
    return __id;
 }
-//
-// void
-// BfGuiCreateWindowContainer::show()
-// {
-//    __is_render = true;
-// }
-// void
-// BfGuiCreateWindowContainer::hide()
-// {
-//    __is_render = false;
-// }
+
 void
 BfGuiCreateWindowContainer::toggleRender(int mode) noexcept
 {
@@ -385,66 +375,6 @@ BfGuiCreateWindowContainer::toggleRender(int mode) noexcept
    else
       __is_render = mode;
 }
-//
-// void
-// BfGuiCreateWindowContainer::enableForceRender() noexcept
-// {
-//    __is_force_render = true;
-// }
-// void
-//
-// BfGuiCreateWindowContainer::disableForceRender() noexcept
-// {
-//    __is_force_render = false;
-// }
-//
-// void
-// BfGuiCreateWindowContainer::toggleForceRender() noexcept
-// {
-//    __is_force_render = !__is_force_render;
-// }
-//
-// void
-// BfGuiCreateWindowContainer::enableButton(int button_id)
-// {
-//    __is_button |= button_id;
-//    // switch (button_id)
-//    // {
-//    //    case BfGuiCreateWindowContainer_ButtonType_Left:
-//    //       __is_button |= button_id;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Right:
-//    //       __is_right_button = true;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Top:
-//    //       __is_top_button = true;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Bot:
-//    //       __is_bot_button = true;
-//    //       break;
-//    // }
-// }
-
-// void
-// BfGuiCreateWindowContainer::disableButton(int button_id)
-// {
-//    __is_button &= ~(button_id);
-//    // switch (button_id)
-//    // {
-//    //    case BfGuiCreateWindowContainer_ButtonType_Left:
-//    //       __is_left_button = false;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Right:
-//    //       __is_right_button = false;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Top:
-//    //       __is_top_button = false;
-//    //       break;
-//    //    case BfGuiCreateWindowContainer_ButtonType_Bot:
-//    //       __is_bot_button = false;
-//    //       break;
-//    // }
-// }
 
 void
 BfGuiCreateWindowContainer::toggleButton(int button_id, int mode) noexcept
@@ -455,16 +385,6 @@ BfGuiCreateWindowContainer::toggleButton(int button_id, int mode) noexcept
       mode ? __is_button |= button_id : __is_button &= ~(button_id);
 }
 
-// void
-// BfGuiCreateWindowContainer::hideHeader() noexcept
-// {
-//    __is_render_header = false;
-// }
-// void
-// BfGuiCreateWindowContainer::showHeader() noexcept
-// {
-//    __is_render_header = true;
-// }
 void
 BfGuiCreateWindowContainer::toggleHeader(int mode) noexcept
 {
