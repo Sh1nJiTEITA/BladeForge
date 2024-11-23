@@ -88,7 +88,7 @@ BfConfigManager::exePath()
    GetModuleFileNameA(nullptr, buffer, MAX_PATH);
    return std::filesystem::path(buffer).remove_filename();
 #elif __linux__
-   char buffer[1024];
+   char buffer[2048];
    ssize_t count = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
    if (count != -1)
    {
@@ -100,7 +100,7 @@ BfConfigManager::exePath()
       throw std::runtime_error("Failed to resolve executable path");
    }
 #elif __APPLE__
-   char buffer[1024];
+   char buffer[2048];
    uint32_t size = sizeof(buffer);
    if (_NSGetExecutablePath(buffer, &size) == 0)
    {

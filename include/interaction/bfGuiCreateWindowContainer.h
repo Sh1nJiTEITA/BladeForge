@@ -92,6 +92,7 @@ public:
    ImVec2& size() noexcept;
    wptrContainer& root() noexcept;
    uint32_t id() noexcept;
+   virtual std::string genTable();
 
 #define BfGuiCreateWindowContainer_ToggleMode_Toggle -1
 #define BfGuiCreateWindowContainer_ToggleMode_On true

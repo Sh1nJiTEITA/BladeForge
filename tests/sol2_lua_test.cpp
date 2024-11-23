@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <sol/sol.hpp>
 
+#include "bfStringTables.h"
+
 TEST_CASE("sol2->standart test", "[single-file]")
 {
    struct vars
@@ -15,10 +17,11 @@ TEST_CASE("sol2->standart test", "[single-file]")
    lua.new_usertype<vars>("vars", "boop", &vars::boop);
    lua.script(
        "beep = vars.new()\n"
-       "beep.boop = 1");
+       "beep.boop = 1"
+   );
 
    REQUIRE(lua.get<vars>("beep").boop == 1);
-   std::cout << "Lua-tests ended\n";
+   // std::cout << "Lua-tests ended\n";
 };
 
 // TEST_CASE("sol2->executing simple lua script", "[single-file]")
@@ -36,20 +39,22 @@ TEST_CASE("sol2->standart test", "[single-file]")
 //    REQUIRE(option3[3].get<int>() == 3);
 // }
 
-TEST_CASE("sol2->executing multiple lua scripts in different tables",
-          "[multi-file]")
+TEST_CASE(
+    "sol2->executing multiple lua scripts in different tables", "[multi-file]"
+)
 {
    sol::state lua;
    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table);
    lua.script(
        R"( package.path = package.path ..
-   ";/home/snj/Code/BladeForge/build/scripts/?.lua")");
+   ";/home/snj/Code/BladeForge/build/scripts/?.lua")"
+   );
    lua.script("m = require(\"test0\")");
 }
 
 TEST_CASE("bfConfigManager -> lua init", "[single-file]")
 {
-   BfEventHandler::funcPtr    = &BfConsole::print_single_single_event;
+   BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
    BfEventHandler::funcPtrStr = &BfConsole::print_single_single_event_to_string;
 
    BfConfigManager::createInstance();
@@ -72,11 +77,355 @@ TEST_CASE("find files")
    // auto abs = std::filesystem::current_path();
 
    std::vector<std::filesystem::path> out;
-   BfConfigManager::getInstance()->__findFilesInDir("./resources/",
-                                                    ".png",
-                                                    out);
+   BfConfigManager::getInstance()
+       ->__findFilesInDir("./resources/", ".png", out);
    // for (int i = 0; i < out.size(); ++i)
    // {
    //    std::cout << out[i].string() << "\n";
    // }
+}
+
+TEST_CASE("bfStringTablesGenPair")
+{
+   SECTION("int")
+   {
+      std::string n = "name";
+      REQUIRE(bfStringTablesGenPair(n, 10) == "name = 10\n");
+      REQUIRE(bfStringTablesGenPair(n, 10, true) == "name = 10,\n");
+      REQUIRE(bfStringTablesGenPair(n, 10, true, true, 1) == "\tname = 10,\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, 10, true, true, 2) == "\t\tname = 10,\n"
+      );
+
+      REQUIRE(bfStringTablesGenPair(n, 10, false) == "name = 10\n");
+      REQUIRE(bfStringTablesGenPair(n, 10, false, true, 1) == "\tname = 10\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, 10, false, true, 2) == "\t\tname = 10\n"
+      );
+
+      REQUIRE(bfStringTablesGenPair(n, 10, false, false) == "name = 10");
+      REQUIRE(bfStringTablesGenPair(n, 10, false, false, 1) == "\tname = 10");
+      REQUIRE(bfStringTablesGenPair(n, 10, false, false, 2) == "\t\tname = 10");
+   }
+
+   SECTION("float")
+   {
+      std::string n = "name";
+      REQUIRE(bfStringTablesGenPair(n, 10.0005) == "name = 10.0005\n");
+      REQUIRE(bfStringTablesGenPair(n, 10.0005, true) == "name = 10.0005,\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, true, true, 1) ==
+          "\tname = 10.0005,\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, true, true, 2) ==
+          "\t\tname = 10.0005,\n"
+      );
+
+      REQUIRE(bfStringTablesGenPair(n, 10.0005, false) == "name = 10.0005\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, false, true, 1) ==
+          "\tname = 10.0005\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, false, true, 2) ==
+          "\t\tname = 10.0005\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, false, false) == "name = 10.0005"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, false, false, 1) ==
+          "\tname = 10.0005"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, 10.0005, false, false, 2) ==
+          "\t\tname = 10.0005"
+      );
+   }
+
+   SECTION("std::string")
+   {
+      std::string n = "name";
+      REQUIRE(bfStringTablesGenPair(n, "apple") == "name = \"apple\"\n");
+      REQUIRE(bfStringTablesGenPair(n, "apple", true) == "name = \"apple\",\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", true, true, 1) ==
+          "\tname = \"apple\",\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", true, true, 2) ==
+          "\t\tname = \"apple\",\n"
+      );
+
+      REQUIRE(bfStringTablesGenPair(n, "apple", false) == "name = \"apple\"\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", false, true, 1) ==
+          "\tname = \"apple\"\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", false, true, 2) ==
+          "\t\tname = \"apple\"\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", false, false) == "name = \"apple\""
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", false, false, 1) ==
+          "\tname = \"apple\""
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, "apple", false, false, 2) ==
+          "\t\tname = \"apple\""
+      );
+   }
+
+   SECTION("ImVec2-float")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005)) ==
+          "name = { 1.0005, 1.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), true) ==
+          "name = { 1.0005, 1.0005 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), true, true, 1) ==
+          "\tname = { 1.0005, 1.0005 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), true, true, 2) ==
+          "\t\tname = { 1.0005, 1.0005 },\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false) ==
+          "name = { 1.0005, 1.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false, true, 1) ==
+          "\tname = { 1.0005, 1.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false, true, 2) ==
+          "\t\tname = { 1.0005, 1.0005 }\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false, false) ==
+          "name = { 1.0005, 1.0005 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false, false, 1) ==
+          "\tname = { 1.0005, 1.0005 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1.0005, 1.0005), false, false, 2) ==
+          "\t\tname = { 1.0005, 1.0005 }"
+      );
+   }
+
+   SECTION("ImVec4-float")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1.0005, 2.0005, 3.0005, 4.0005)) ==
+          "name = { 1.0005, 2.0005, 3.0005, 4.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              true
+          ) == "name = { 1.0005, 2.0005, 3.0005, 4.0005 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              true,
+              true,
+              1
+          ) == "\tname = { 1.0005, 2.0005, 3.0005, 4.0005 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              true,
+              true,
+              2
+          ) == "\t\tname = { 1.0005, 2.0005, 3.0005, 4.0005 },\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false
+          ) == "name = { 1.0005, 2.0005, 3.0005, 4.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false,
+              true,
+              1
+          ) == "\tname = { 1.0005, 2.0005, 3.0005, 4.0005 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false,
+              true,
+              2
+          ) == "\t\tname = { 1.0005, 2.0005, 3.0005, 4.0005 }\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false,
+              false
+          ) == "name = { 1.0005, 2.0005, 3.0005, 4.0005 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false,
+              false,
+              1
+          ) == "\tname = { 1.0005, 2.0005, 3.0005, 4.0005 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(
+              n,
+              ImVec4(1.0005, 2.0005, 3.0005, 4.0005),
+              false,
+              false,
+              2
+          ) == "\t\tname = { 1.0005, 2.0005, 3.0005, 4.0005 }"
+      );
+   }
+
+   SECTION("ImVec2-int")
+   {
+      std::string n = "name";
+      REQUIRE(bfStringTablesGenPair(n, ImVec2(1, 2)) == "name = { 1, 2 }\n");
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), true) == "name = { 1, 2 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), true, true, 1) ==
+          "\tname = { 1, 2 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), true, true, 2) ==
+          "\t\tname = { 1, 2 },\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false) == "name = { 1, 2 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false, true, 1) ==
+          "\tname = { 1, 2 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false, true, 2) ==
+          "\t\tname = { 1, 2 }\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false, false) ==
+          "name = { 1, 2 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false, false, 1) ==
+          "\tname = { 1, 2 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec2(1, 2), false, false, 2) ==
+          "\t\tname = { 1, 2 }"
+      );
+   }
+
+   SECTION("ImVec4-int")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4)) ==
+          "name = { 1, 2, 3, 4 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), true) ==
+          "name = { 1, 2, 3, 4 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), true, true, 1) ==
+          "\tname = { 1, 2, 3, 4 },\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), true, true, 2) ==
+          "\t\tname = { 1, 2, 3, 4 },\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false) ==
+          "name = { 1, 2, 3, 4 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false, true, 1) ==
+          "\tname = { 1, 2, 3, 4 }\n"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false, true, 2) ==
+          "\t\tname = { 1, 2, 3, 4 }\n"
+      );
+
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false, false) ==
+          "name = { 1, 2, 3, 4 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false, false, 1) ==
+          "\tname = { 1, 2, 3, 4 }"
+      );
+      REQUIRE(
+          bfStringTablesGenPair(n, ImVec4(1, 2, 3, 4), false, false, 2) ==
+          "\t\tname = { 1, 2, 3, 4 }"
+      );
+   }
+
+   SECTION("glm::vec2")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, glm::vec2(10, 20)) == "name = { 10, 20 }\n"
+      );
+   }
+   SECTION("glm::vec3")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, glm::vec3(10, 20, 30)) ==
+          "name = { 10, 20, 30 }\n"
+      );
+   }
+   SECTION("glm::vec4")
+   {
+      std::string n = "name";
+      REQUIRE(
+          bfStringTablesGenPair(n, glm::vec4(10, 20, 30, 40)) ==
+          "name = { 10, 20, 30, 40 }\n"
+      );
+   }
 }

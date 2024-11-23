@@ -1,5 +1,7 @@
 #include "bfGuiCreateWindowContainer.h"
 
+#include <sstream>
+
 #include "bfIconsFontAwesome6.h"
 #include "imgui.h"
 
@@ -366,6 +368,34 @@ BfGuiCreateWindowContainer::id() noexcept
 {
    return __id;
 }
+
+// clang-format off
+std::string
+BfGuiCreateWindowContainer::genTable()
+{
+   // std::stringstream ss;
+   //
+   // ss << "{\n"
+   //       << "__is_force_render = "  << __is_force_render  << ","
+   //       << "__is_render_header = " << __is_render_header << ","
+   //       << "__is_collapsed = "     << __is_collapsed     << ","
+   //
+   //       << "__resize_button_size = {" 
+   //          << __resize_button_size.x
+   //          << ", "
+   //          << __resize_button_size.y
+   //       << "},"
+   //
+   //       << "__bot_resize_button_size" << __bot_resize_button_size
+   //       << "__window_pos" << __window_pos << "__window_size" << __window_size
+   //
+   //       << "__id" << __id 
+   //       << "__str_id" << __str_id
+   //       << "__is_button" << __is_button
+   //    << "}\n";
+   return "";
+}
+// clang-format on
 
 void
 BfGuiCreateWindowContainer::toggleRender(int mode) noexcept

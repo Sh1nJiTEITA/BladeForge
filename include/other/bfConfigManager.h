@@ -69,7 +69,6 @@ public:
    );
 
    static std::string getLuaTableStr(sol::table table, int indent_level = 0);
-
    static sol::object getLuaObj(const std::string& key);
 
    static BfLuaTable convertLuaTable(sol::table* obj);

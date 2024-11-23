@@ -113,7 +113,13 @@ BfGuiCreateWindow::__renderManagePanel()
       {
          BfConfigManager::loadStdLibrary(sol::lib::base);
          BfConfigManager::loadStdLibrary(sol::lib::package);
-         BfConfigManager::loadRequireScript("./scripts/guiconfig.lua");
+         BfConfigManager::loadRequireScript(
+             BfConfigManager::exePath() / "./scripts/guiconfig.lua"
+         );
+
+         sol::table settings_table = BfConfigManager::getLuaObj("guiconfig");
+
+         std::cout << BfConfigManager::getLuaTableStr(settings_table) << "\n";
       }
    }
    ImGui::EndChild();
