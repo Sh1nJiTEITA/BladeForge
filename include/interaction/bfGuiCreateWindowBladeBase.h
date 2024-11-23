@@ -22,7 +22,6 @@ class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
    bool __isWindowContainerBladeSection(ptrContainer c);
 
 protected:
-   virtual void __renderHeaderName() override;
    virtual void __renderChildContent() override;
    virtual void __processDragDropTarget() override;
    virtual void __prerender() override;

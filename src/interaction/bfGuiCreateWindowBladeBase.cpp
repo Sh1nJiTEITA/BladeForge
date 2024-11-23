@@ -57,34 +57,6 @@ BfGuiCreateWindowBladeBase::__isWindowContainerBladeSection(ptrContainer c)
 }
 
 void
-BfGuiCreateWindowBladeBase::__renderHeaderName()
-{
-   float x = ImGui::GetWindowWidth() -
-             ImGui::GetStyle().WindowPadding.x * 2.0f -
-             ImGui::CalcTextSize(ICON_FA_WINDOW_RESTORE).x -
-             ImGui::CalcTextSize(ICON_FA_MINIMIZE).x -
-             ImGui::CalcTextSize(ICON_FA_INFO).x - 50.0f;
-   static bool isEditing = false;
-   ImGui::PushID(name());
-   ImGui::Dummy({x, 20});
-   if (ImGui::IsItemHovered())
-   {
-      ImGui::SetTooltip("Change name...");
-   }
-   ImGui::SameLine();
-   ImGui::SetCursorPos(ImGui::GetCursorStartPos());
-   ImGui::SetNextItemWidth(x);
-   if (ImGui::InputText(
-           "##edit",
-           __base_name.data(),
-           ImGuiInputTextFlags_EnterReturnsTrue
-       ))
-   {
-   }
-   ImGui::PopID();
-}
-
-void
 BfGuiCreateWindowBladeBase::__renderChildContent()
 {
    if (__settings_popup)
