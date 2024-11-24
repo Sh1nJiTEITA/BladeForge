@@ -17,7 +17,16 @@
 
 class BfGuiCreateWindow;
 class BfGuiCreateWindowContainer;
+class BfGuiCreateWindowContainerObj;
 class BfGuiCreateWindowContainerPopup;
+
+namespace std
+{
+// string to_string(const BfGuiCreateWindowContainer&);
+string to_string(const BfGuiCreateWindowContainer&, int);
+// string to_string(const BfGuiCreateWindowContainerObj&);
+string to_string(const BfGuiCreateWindowContainerObj&, int);
+}  // namespace std
 
 #define BfGuiCreateWindowContainer_ButtonType_All \
    (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)
@@ -56,7 +65,7 @@ protected:
    uint32_t __id;
    std::string __str_id;
 
-   uint8_t __is_button = BfGuiCreateWindowContainer_ButtonType_All;
+   int __is_button = BfGuiCreateWindowContainer_ButtonType_All;
 
    bool __is_force_render = false;
    bool __is_render_header = true;
@@ -126,6 +135,9 @@ public:
 
    void add(ptrContainer container);
    void rem(ptrContainer container);
+
+   // friend std::string std::to_string(const BfGuiCreateWindowContainer&);
+   friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -180,6 +192,8 @@ public:
    BfGuiCreateWindowContainerObj(wptrContainer root, bool is_target = true);
 
    static bool isAnyMoving() noexcept;
+
+   friend std::string std::to_string(const BfGuiCreateWindowContainerObj&, int);
 };
 
 //
@@ -200,7 +214,7 @@ class BfGuiCreateWindowContainerPopup
    void __assignButtons();
 
 protected:
-   uint8_t __side;
+   int __side;
 
    virtual void __clampPosition() override;
    virtual void __renderChildContent() override;
@@ -211,12 +225,12 @@ public:
 
    BfGuiCreateWindowContainerPopup(
        wptrContainer root,
-       uint8_t side,
+       int side,
        bool is_force_render,
        std::function<void(wptrContainer)> popup_func
    );
 
-   uint8_t side() noexcept;
+   int side() noexcept;
    void setSize(ImVec2);
 };
 

@@ -769,7 +769,9 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
     , __is_drop_target{is_target}
 {
    __layer_create_info = {
-       .allocator = *BfLayerHandler::instance()->allocator(),
+       .allocator = BfLayerHandler::instance()
+                        ? *BfLayerHandler::instance()->allocator()
+                        : nullptr,
        .vertex_size = sizeof(BfVertex3),
        .max_vertex_count = 10000,
        .max_reserved_count = 1000,
@@ -956,7 +958,7 @@ BfGuiCreateWindowContainerPopup::__renderHeader()
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     wptrContainer root,
-    uint8_t side = BfGuiCreateWindowContainerPopup_Side_Right,
+    int side = BfGuiCreateWindowContainerPopup_Side_Right,
     bool is_force_render = false,
     std::function<void(wptrContainer)> popup_func = nullptr
 )
@@ -968,7 +970,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
    __is_force_render = is_force_render;
 }
 
-uint8_t
+int
 BfGuiCreateWindowContainerPopup::side() noexcept
 {
    return __side;
