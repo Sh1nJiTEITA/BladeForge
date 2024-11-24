@@ -6,6 +6,8 @@
 #include <memory>
 #include <sol/sol.hpp>
 
+#include "bfBladeSection.h"
+#include "bfGuiCreateWindowBladeSection.h"
 #include "bfGuiCreateWindowContainer.h"
 #include "bfStringTables.h"
 
@@ -450,10 +452,8 @@ TEST_CASE("bfStringTablesGenPair")
           std::weak_ptr<BfGuiCreateWindowContainer>()
       );
 
-      // std::cout << std::to_string(*ptr, 0);
-
       std::list<ptrContainer> v;
-      for (int i = 0; i < 1; ++i)
+      for (int i = 0; i < 3; ++i)
       {
          v.push_back(std::make_shared<BfGuiCreateWindowContainerObj>(
              std::weak_ptr<BfGuiCreateWindowContainer>()
@@ -468,9 +468,14 @@ TEST_CASE("bfStringTablesGenPair")
          v.push_back(std::make_shared<BfGuiCreateWindowContainer>(
              std::weak_ptr<BfGuiCreateWindowContainer>()
          ));
+         (*v.rbegin())
+             ->add(std::make_shared<BfGuiCreateWindowContainer>(
+                 std::weak_ptr<BfGuiCreateWindowContainer>()
+             ));
       }
 
-      // std::cout << bfStringTablesGenPair("name", v) << "\n";
+      auto containers_str = std::to_string(v, 0);
+      containers_str = "localdata = " + containers_str + "\n";
 
       BfEventHandler::funcPtr = &BfConsole::print_single_single_event;
       BfEventHandler::funcPtrStr =
@@ -479,15 +484,82 @@ TEST_CASE("bfStringTablesGenPair")
       BfConfigManager::createInstance();
       REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
       REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
-      REQUIRE_NOTHROW(BfConfigManager::addPackagePath("./scripts"));
-      REQUIRE_NOTHROW(BfConfigManager::loadRequireScript("./scripts/test3.lua")
+      REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(containers_str));
+
+      sol::table table = BfConfigManager::getLuaObj("localdata");
+      // std::cout << BfConfigManager::getLuaTableStr(table);
+      // REQUIRE_NOTHROW(sol::table(table.get<sol::table>(0)));
+      // REQUIRE(
+      //     sol::table(table[0]).get<std::string>("type") ==
+      //     "BfGuiCreateWindowContainer"
+      // );
+
+      // for (auto& it : table)
+      // {
+      //    auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
+      //        std::weak_ptr<BfGuiCreateWindowContainer>()
+      //    );
+      //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
+      //
+      //    // std::cout << BfConfigManager::getLuaTableStr(it.second);
+      // }
+      std::list<ptrContainer> new_c;
+      REQUIRE_NOTHROW(BfConfigManager::loadContainers(table, new_c));
+   }
+}
+
+TEST_CASE("CREATE-INFOS")
+{
+   SECTION("BLADE-SECTION")
+   {
+      BfBladeSectionCreateInfo info;
+      REQUIRE_NOTHROW(bfFillBladeSectionStandart(&info));
+      // std::cout << std::to_string(info) << "\n";
+   }
+   SECTION("BLADE-BASE")
+   {
+      BfBladeBaseCreateInfo info;
+      // REQUIRE_NOTHROW(bfFillBladeBaseStandart(&info));
+      for (int i = 0; i < 3; ++i)
+      {
+         BfBladeSectionCreateInfo __;
+         REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
+         info.section_infos.push_back(std::move(__));
+      }
+      // std::cout << std::to_string(info) << "\n";
+   }
+}
+
+TEST_CASE("Blade-base-section-windows")
+{
+   SECTION("BLADE-SECTION")
+   {
+      auto ptr = std::make_shared<BfGuiCreateWindowBladeSection>(
+          std::weak_ptr<BfGuiCreateWindowContainer>()
       );
-      sol::table table = BfConfigManager::getLuaObj("test3");
-      std::cout << BfConfigManager::getLuaTableStr(table) << "\n";
-      // REQUIRE(table.get<std::string>("option1") == "value83939393");
-      // REQUIRE(table.get<int>("option2") == 39123123);
-      // REQUIRE(table.get<sol::table>("option3")[1] == 9);
-      // REQUIRE(table.get<sol::table>("option3")[2] == 10);
-      // REQUIRE(table.get<sol::table>("option3")[3] == 12);
+      // std::cout << std::to_string(*ptr, 3) << "\n";
+      // std::cout << "___________________________________________________\n";
+      // std::to_string(*ptr, 0);
+      // std::cout << "___________________________________________________\n";
+   }
+   SECTION("BLADE-BASE")
+   {
+      auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
+          std::weak_ptr<BfGuiCreateWindowContainer>()
+      );
+
+      // BfBladeBaseCreateInfo info;
+      // // REQUIRE_NOTHROW(bfFillBladeBaseStandart(&info));
+      for (int i = 0; i < 3; ++i)
+      {
+         ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
+             std::weak_ptr<BfGuiCreateWindowContainer>()
+         ));
+
+         // BfBladeSectionCreateInfo __;
+         // REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
+         // info.section_infos.push_back(std::move(__));
+      }
+      std::cout << std::to_string(*ptr) << "\n";
    }
 }

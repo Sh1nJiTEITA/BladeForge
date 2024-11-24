@@ -10,6 +10,9 @@
 #include <string>
 #include <type_traits>
 
+#include "bfBladeSection.h"
+#include "bfGuiCreateWindowBladeBase.h"
+#include "bfGuiCreateWindowBladeSection.h"
 #include "bfGuiCreateWindowContainer.h"
 #include "bfVertex2.hpp"
 
@@ -125,10 +128,10 @@ to_string(const BfGuiCreateWindowContainer& o, int indent = 0)
 {
    auto indent_str = std::string(indent, '\t');
    return std::format(
-       "{}{{\n"
+       "{{\n"
        "{}{}{}{}{}{}{}{}{}{}{}{}\n"
        "{}}}",
-        indent_str,
+        // indent_str,
 	bfStringTablesGenPair("type", "BfGuiCreateWindowContainer", false, true, indent + 1),
 	bfStringTablesGenPair("__id", o.__id, false, true, indent + 1),
 	bfStringTablesGenPair("__str_id", o.__str_id, false, true, indent + 1),
@@ -141,7 +144,6 @@ to_string(const BfGuiCreateWindowContainer& o, int indent = 0)
 	bfStringTablesGenPair("__window_pos", o.__window_pos, false, true, indent + 1),
 	bfStringTablesGenPair("__window_size", o.__window_size, false, true, indent + 1),
 	bfStringTablesGenPair("__containers", o.__containers, true, false, indent + 1),
-	// bfStringTablesGenPair("__containers", o.__containers, false, true, indent + 1),
         indent_str
    );
 }
@@ -153,10 +155,10 @@ to_string(const BfGuiCreateWindowContainerObj& o, int indent = 0)
 {
    auto indent_str = std::string(indent, '\t');
    return std::format(
-       "{}{{\n"
+       "{{\n"
        "{}{}{}{}{}{}\n"
        "{}}}",
-        indent_str,
+        // indent_str,
 	bfStringTablesGenPair("type", "BfGuiCreateWindowContainerObj", false, true, indent + 1),
 	bfStringTablesGenPair("__selected_layer", o.__selected_layer, false, true, indent + 1),
 	bfStringTablesGenPair("__name", o.__name, false, true, indent + 1),
@@ -166,6 +168,90 @@ to_string(const BfGuiCreateWindowContainerObj& o, int indent = 0)
         indent_str
    );
 }
+// clang-format on
+
+// clang-format off
+inline string
+to_string(const BfBladeSectionCreateInfo& o, int indent = 0)
+{
+   auto indent_str = std::string(indent, '\t');
+   return std::format(
+       "{{\n"
+       "{}{}{}{}{}{}{}{}{}{}{}{}{}\n"
+       "{}}}",
+	bfStringTablesGenPair("type", "BfBladeSectionCreateInfo", false, true, indent + 1),
+	bfStringTablesGenPair("width", o.width, false, true, indent + 1),
+	bfStringTablesGenPair("install_angle", o.install_angle, false, true, indent + 1),
+
+	bfStringTablesGenPair("inlet_angle", o.inlet_angle, false, true, indent + 1),
+	bfStringTablesGenPair("outlet_angle", o.outlet_angle, false, true, indent + 1),
+	bfStringTablesGenPair("inlet_surface_angle", o.inlet_surface_angle, false, true, indent + 1),
+
+	bfStringTablesGenPair("outlet_surface_angle", o.outlet_surface_angle, false, true, indent + 1),
+	bfStringTablesGenPair("inlet_radius", o.inlet_radius, false, true, indent + 1),
+	bfStringTablesGenPair("outlet_radius", o.outlet_radius, false, true, indent + 1),
+
+	bfStringTablesGenPair("border_length", o.border_length, false, true, indent + 1),
+	bfStringTablesGenPair("start_vertex", o.start_vertex, false, true, indent + 1),
+	bfStringTablesGenPair("grow_direction", o.grow_direction, false, true, indent + 1),
+
+	bfStringTablesGenPair("up_direction", o.up_direction, true, false, indent + 1),
+        indent_str
+   );
+}
+
+inline string
+to_string(const BfBladeBaseCreateInfo& o, int indent = 0)
+{
+   auto indent_str = std::string(indent, '\t');
+   std::ostringstream ss;
+   ss << std::format("{}{{\n", indent_str);
+   // ss << "{\n";
+   for (auto info = o.section_infos.begin(); info != o.section_infos.end(); ++info) { 
+      ss << std::to_string(*info, indent + 1);
+      if (info != o.section_infos.end()) { 
+	 ss << std::format(", -- {}\n", (int)(info - o.section_infos.begin()));
+      }
+      else {
+	 ss << "\n";
+      }
+   }
+   ss << indent_str << "}";
+   return ss.str();
+}
+
+inline string
+to_string(const BfGuiCreateWindowBladeSection& o, int indent = 0)
+{
+   auto indent_str = std::string(indent, '\t');
+   return std::format(
+       "{}{{\n"
+       "{}{}{}{}\n"
+       "{}}}",
+        indent_str,
+	bfStringTablesGenPair("type", "BfGuiCreateWindowBladeSection", false, true, indent + 1),
+	bfStringTablesGenPair("__create_info", o.__create_info, false, true, indent + 1),
+	bfStringTablesGenPair("__mode", (int)o.__mode, false, true, indent + 1),
+	bfStringTablesGenPair("base", static_cast<const BfGuiCreateWindowContainerObj&>(o), true, false, indent + 1),
+        indent_str
+   );
+}
+
+inline string
+to_string(const BfGuiCreateWindowBladeBase& o, int indent = 0)
+{
+   auto indent_str = std::string(indent, '\t');
+   return std::format(
+       "{}{{\n"
+       "{}{}\n"
+       "{}}}",
+        indent_str,
+	bfStringTablesGenPair("type", "BfGuiCreateWindowBladeBase", false, true, indent + 1),
+	bfStringTablesGenPair("base", static_cast<const BfGuiCreateWindowContainerObj&>(o), true, false, indent + 1),
+        indent_str
+   );
+}
+
 // clang-format on
 
 // clang-format off
@@ -211,7 +297,19 @@ to_string(const std::list<ptrContainer> o, int indent = 0)
    for (auto it = std::begin(o); it != std::end(o); ++it)
    {
       if (auto casted =
-              std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(*it))
+              std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(*it))
+      {
+         format_str += std::to_string(*casted, indent + 1);
+      }
+      else if (auto casted =
+                   std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(*it
+                   ))
+      {
+         format_str += std::to_string(*casted, indent + 1);
+      }
+      else if (auto casted =
+                   std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(*it
+                   ))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
@@ -237,6 +335,7 @@ bfStringTablesGenPair(
 )
 {
    auto indent_str = std::string(indent, '\t');
+   // auto indent_str = std::string(indent, '');
    std::ostringstream ss;
 
    if constexpr (std::is_same_v<std::decay_t<T>, std::string> ||
@@ -263,10 +362,31 @@ bfStringTablesGenPair(
       for (const auto& elem : v)
       {
          if (auto casted =
-                 std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(elem))
+                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(elem))
          {
             ss << std::to_string(*casted, indent + 1);
          }
+         else if (auto casted =
+                      std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+                          elem
+                      ))
+         {
+            ss << std::to_string(*casted, indent + 1);
+         }
+         else if (auto casted =
+                      std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(
+                          elem
+                      ))
+         {
+            ss << std::to_string(*casted, indent + 1);
+         }
+         else if (auto casted =
+                      std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(elem
+                      ))
+         {
+            ss << std::to_string(*casted, indent + 1);
+         }
+
          else if (auto casted =
                       std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(elem
                       ))
@@ -286,9 +406,13 @@ bfStringTablesGenPair(
       }
       ss << indent_str << "}";
       ss << (last ? "" : ",") << (next_row ? "\n" : "");
-      return ss.str();
+      // return ss.str();
    }
-   else if constexpr (has_to_string_with_int<T>::value)
+   else if constexpr (std::is_same_v<BfBladeSectionCreateInfo, std::decay_t<T>>)
+   {
+      ss << indent_str << name << " = " << std::to_string(v, indent);
+   }
+   else if constexpr (has_to_string_with_int<std::decay_t<T>>::value)
    {
       ss << indent_str << name << " = " << std::to_string(v, indent);
    }

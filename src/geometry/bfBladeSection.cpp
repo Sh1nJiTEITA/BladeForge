@@ -71,7 +71,9 @@ bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
 {
    *info = {
        .layer_create_info =
-           {.allocator = *BfLayerHandler::instance()->allocator(),
+           {.allocator = BfLayerHandler::instance()
+                             ? *BfLayerHandler::instance()->allocator()
+                             : nullptr,
             .vertex_size = sizeof(BfVertex3),
             .max_vertex_count = 10000,
             .max_reserved_count = 1000,
@@ -95,8 +97,12 @@ bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
        .is_triangulate = false,
        .is_center = true,
 
-       .l_pipeline = *BfLayerHandler::instance()->line_pipeline(),
-       .t_pipeline = *BfLayerHandler::instance()->trinagle_pipeline()
+       .l_pipeline = BfLayerHandler::instance()
+                         ? *BfLayerHandler::instance()->line_pipeline()
+                         : nullptr,
+       .t_pipeline = BfLayerHandler::instance()
+                         ? *BfLayerHandler::instance()->trinagle_pipeline()
+                         : nullptr
    };
 };
 
@@ -1166,7 +1172,9 @@ bfFillBladeBaseStandart(BfBladeBaseCreateInfo *info)
 {
    *info = {
        .layer_create_info =
-           {.allocator = *BfLayerHandler::instance()->allocator(),
+           {.allocator = BfLayerHandler::instance()
+                             ? *BfLayerHandler::instance()->allocator()
+                             : nullptr,
             .vertex_size = sizeof(BfVertex3),
             .max_vertex_count = 10000,
             .max_reserved_count = 1000,

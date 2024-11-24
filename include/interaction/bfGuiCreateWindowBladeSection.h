@@ -10,7 +10,13 @@
 
 #include "bfGuiCreateWindowContainer.h"
 
+class BfGuiCreateWindowBladeSection;
 class BfGuiCreateWindowBladeBase;
+
+namespace std
+{
+string to_string(const BfGuiCreateWindowBladeSection&, int);
+}  // namespace std
 
 class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
 {
@@ -66,6 +72,8 @@ public:
    friend BfGuiCreateWindow;
    friend BfGuiCreateWindowBladeBase;
    friend BfGuiCreateWindowContainerPopup;
+   friend std::string std::to_string(const BfGuiCreateWindowBladeSection&, int);
+   friend class BfConfigManager;
 };
 
 #endif

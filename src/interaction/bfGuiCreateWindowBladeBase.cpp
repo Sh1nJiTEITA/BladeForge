@@ -121,7 +121,7 @@ BfGuiCreateWindowBladeBase::__renderChildContent()
 BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
     wptrContainer root, bool is_target
 )
-    : __base_name{"Blade base"}, BfGuiCreateWindowContainerObj{root, is_target}
+    : __base_name{"Blade base"}, BfGuiCreateWindowContainerObj(root, is_target)
 {
    __window_size = {600, 400};
 

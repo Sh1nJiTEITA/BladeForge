@@ -2,6 +2,7 @@
 #define BF_CONFIG_MANAGER_H
 
 #include <bfEvent.h>
+#include <bfGuiCreateWindowContainer.h>
 #include <config_forms/bfFormGui.h>
 
 #include <filesystem>
@@ -63,6 +64,7 @@ public:
    // Lua manipulation
    static BfEvent loadStdLibrary(sol::lib lib);
    static BfEvent addPackagePath(std::filesystem::path path);
+   static BfEvent loadScriptStr(const std::string& script);
    static BfEvent loadScript(std::filesystem::path path);
    static BfEvent loadRequireScript(
        std::filesystem::path path, std::string varname = ""
@@ -77,6 +79,14 @@ public:
    static BfEvent fillFormFontSettings(
        sol::table obs, BfFormFontSettings* form
    );
+
+   static BfEvent loadBfGuiCreateWindowContainer(
+       sol::table obj, std::shared_ptr<BfGuiCreateWindowContainer> c
+   );
+   static BfEvent loadBfGuiCreateWindowContainer(
+       sol::table obj, std::shared_ptr<BfGuiCreateWindowContainerObj> c
+   );
+   static BfEvent loadContainers(sol::table obj, std::list<ptrContainer>& c);
 };
 
 #endif

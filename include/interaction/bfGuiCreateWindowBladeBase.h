@@ -5,6 +5,13 @@
 #include "bfGuiCreateWindowBladeSection.h"
 #include "bfGuiCreateWindowContainer.h"
 
+class BfGuiCreateWindowBladeBase;
+
+namespace std
+{
+string to_string(const BfGuiCreateWindowBladeBase&, int);
+}  // namespace std
+
 class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 {
    BfBladeBaseCreateInfo __create_info;
@@ -30,6 +37,9 @@ protected:
 public:
    BfGuiCreateWindowBladeBase(wptrContainer root, bool is_target = true);
    uint32_t* selectedId() noexcept;
+
+   friend std::string std::to_string(const BfGuiCreateWindowBladeBase&, int);
+   friend class BfConfigManager;
 };
 
 #endif

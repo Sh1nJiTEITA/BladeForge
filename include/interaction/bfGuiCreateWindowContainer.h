@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+class BfConfigManager;
+
 class BfGuiCreateWindow;
 class BfGuiCreateWindowContainer;
 class BfGuiCreateWindowContainerObj;
@@ -138,6 +140,7 @@ public:
 
    // friend std::string std::to_string(const BfGuiCreateWindowContainer&);
    friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
+   friend class BfConfigManager;
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -194,6 +197,7 @@ public:
    static bool isAnyMoving() noexcept;
 
    friend std::string std::to_string(const BfGuiCreateWindowContainerObj&, int);
+   friend class BfConfigManager;
 };
 
 //
