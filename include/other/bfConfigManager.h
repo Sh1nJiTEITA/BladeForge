@@ -98,34 +98,15 @@ public:
        sol::table obj, std::shared_ptr<T> c
    )
    {
+      // clang-format off
       static std::map<std::type_index, std::string> s{
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainerPopup)),
-           "BfGuiCreateWindowContainer"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainerObj)),
-           "BfGuiCreateWindowContainer"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainer)),
-           "BfGuiCreateWindowContainer"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowBladeBase)),
-           "BfGuiCreateWindowContainerObj"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowBladeSection)),
-           "BfGuiCreateWindowContainerObj"}
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+          {std::type_index(typeid(BfGuiCreateWindowContainerPopup)), "BfGuiCreateWindowContainer"},
+          {std::type_index(typeid(BfGuiCreateWindowContainerObj)),   "BfGuiCreateWindowContainer"},
+          {std::type_index(typeid(BfGuiCreateWindowContainer)),	     "BfGuiCreateWindowContainer"},
+          {std::type_index(typeid(BfGuiCreateWindowBladeBase)),	     "BfGuiCreateWindowContainerObj"},
+          {std::type_index(typeid(BfGuiCreateWindowBladeSection)),   "BfGuiCreateWindowContainerObj"}
       };
+      // clang-format on
       auto found = s.find(std::type_index(typeid(T)));
       if (found != s.end())
       {
@@ -141,46 +122,27 @@ public:
       }
       return BfEvent();
    }
+
+#define BFCONFIG_ASSERT_TYPE_PAIR(T) {std::type_index(typeid(T)), #T}
 
    template <class T>
    static BfEvent assertLoadingContainerType(
        sol::table obj, std::shared_ptr<T> c
    )
    {
+      // clang-format off
       static std::map<std::type_index, std::string> s{
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainerPopup)),
-           "BfGuiCreateWindowContainerPopup"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainerObj)),
-           "BfGuiCreateWindowContainerObj"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowContainer)),
-           "BfGuiCreateWindowContainer"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowBladeBase)),
-           "BfGuiCreateWindowBladeBase"},
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-          //
-          {std::type_index(typeid(BfGuiCreateWindowBladeSection)),
-           "BfGuiCreateWindowBladeSection"}
-          //
-          // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainerPopup),
+	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainerObj),
+	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainer),
+	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowBladeBase),
+	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowBladeSection)
       };
+      // clang-format on
 
       auto found = s.find(std::type_index(typeid(T)));
       if (found != s.end())
       {
-         std::cout << obj.get<std::string>("type") << " : " << found->second
-                   << "\n";
          assert(obj.get<std::string>("type") == found->second);
       }
       else
@@ -194,6 +156,9 @@ public:
 
       return BfEvent();
    }
+
+#define BFCONFIG_MAKE_NEEDED(T, OBJ) \
+   {#T, [&OBJ]() { return make(std::make_shared<T>(wptr())); }}
 
    template <class T>
    static std::shared_ptr<T> makeNeededWindowByLuaTable(sol::table obj)
@@ -207,11 +172,11 @@ public:
       // clang-format off
       static std::map<std::string, std::function<std::shared_ptr<BfGuiCreateWindowContainer>()>> s
       {
-	    {"BfGuiCreateWindowContainerPopup", [&obj]() { return make(std::make_shared<BfGuiCreateWindowContainerPopup>(wptr())); }},
-            {"BfGuiCreateWindowContainerObj",   [&obj]() { return make(std::make_shared<BfGuiCreateWindowContainerObj>  (wptr())); }},
-            {"BfGuiCreateWindowContainer",      [&obj]() { return make(std::make_shared<BfGuiCreateWindowContainer>     (wptr())); }},
-            {"BfGuiCreateWindowBladeBase",      [&obj]() { return make(std::make_shared<BfGuiCreateWindowBladeBase>     (wptr())); }},
-            {"BfGuiCreateWindowBladeSection",   [&obj]() { return make(std::make_shared<BfGuiCreateWindowBladeSection>  (wptr())); }}
+	    BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowContainerPopup, obj),
+            BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowContainerObj, obj),
+            BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowContainer, obj),
+            BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowBladeBase, obj),
+            BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowBladeSection, obj),
       };
       // clang-format on
       auto key = obj.get<std::string>("type");
