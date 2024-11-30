@@ -3,7 +3,7 @@
 BfGui::BfGui()
 {
    BfGuiFileDialog::bindInstance(&__file_dialog);
-   // __file_dialog.setRoot("./");
+   BfConfigManager::createConfigData();
 }
 
 void

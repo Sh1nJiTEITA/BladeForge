@@ -85,14 +85,10 @@ public:
    static BfEvent fillFormFontSettings(
        sol::table obs, BfFormFontSettings* form
    );
-   //
-   // static BfEvent loadBfGuiCreateWindowContainer(
-   //     sol::table obj, std::shared_ptr<BfGuiCreateWindowContainer> c
-   // );
-   // static BfEvent loadBfGuiCreateWindowContainer(
-   //     sol::table obj, std::shared_ptr<BfGuiCreateWindowContainerObj> c
-   // );
-   //
+
+   static std::filesystem::path getConfigPath();
+   static BfEvent createConfigData();
+
    template <class T>
    static BfEvent assertLoadingContainerParent(
        sol::table obj, std::shared_ptr<T> c
