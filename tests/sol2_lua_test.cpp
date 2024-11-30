@@ -1,3 +1,4 @@
+#include <type_traits>
 #define BF_CONFIG_MANAGER_TESTING
 
 #include <bfConfigManager.h>
@@ -532,6 +533,19 @@ TEST_CASE("CREATE-INFOS")
    }
 }
 
+void checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowContainerObj> l,
+    std::shared_ptr<BfGuiCreateWindowContainerObj> r
+);
+void checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowBladeSection> l,
+    std::shared_ptr<BfGuiCreateWindowBladeSection> r
+);
+void checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowBladeBase> l,
+    std::shared_ptr<BfGuiCreateWindowBladeBase> r
+);
+
 void
 checkBaseContainer(ptrContainer l, ptrContainer r)
 {
@@ -549,6 +563,26 @@ checkBaseContainer(ptrContainer l, ptrContainer r)
    REQUIRE(l->__window_pos.y == r->__window_pos.y);
    REQUIRE(l->__window_size.x == r->__window_size.x);
    REQUIRE(l->__window_size.y == r->__window_size.y);
+   REQUIRE(l->__containers.size() == r->__containers.size());
+
+   auto l_it = l->__containers.begin();
+   auto r_it = r->__containers.begin();
+
+#define BFCONFIG_TEST_DYNAMIC_CAST(T, l, r)     \
+   do                                           \
+   {                                            \
+      auto a = std::dynamic_pointer_cast<T>(l); \
+      auto b = std::dynamic_pointer_cast<T>(r); \
+      if (a && b) checkBaseContainer(a, b);     \
+   } while (0)
+
+   for (int i = 0; i < l->__containers.size(); ++i, l_it++, r_it++)
+   {
+      BFCONFIG_TEST_DYNAMIC_CAST(BfGuiCreateWindowContainer, *l_it, *l_it);
+      BFCONFIG_TEST_DYNAMIC_CAST(BfGuiCreateWindowContainerObj, *l_it, *r_it);
+      BFCONFIG_TEST_DYNAMIC_CAST(BfGuiCreateWindowBladeSection, *l_it, *r_it);
+      BFCONFIG_TEST_DYNAMIC_CAST(BfGuiCreateWindowBladeBase, *l_it, *r_it);
+   }
 }
 
 void
@@ -600,6 +634,18 @@ checkBaseContainer(
    );
 }
 
+void
+checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowBladeBase> l,
+    std::shared_ptr<BfGuiCreateWindowBladeBase> r
+)
+{
+   checkBaseContainer(
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(l),
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(r)
+   );
+}
+
 TEST_CASE("Blade-base-section-windows")
 {
    SECTION("BLADE-SECTION")
@@ -637,50 +683,76 @@ TEST_CASE("Blade-base-section-windows")
    }
    SECTION("BLADE-BASE")
    {
-      auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
-          std::weak_ptr<BfGuiCreateWindowContainer>()
-      );
+      SECTION("SINGLE")
+      {
+         auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
+             std::weak_ptr<BfGuiCreateWindowContainer>()
+         );
 
-      ptr->toggleHeader();
-      std::string str_ptr = "Data = " + std::to_string(*ptr);
-      std::cout << str_ptr << "\n";
-      auto ptr_back = std::make_shared<BfGuiCreateWindowBladeBase>(
-          std::weak_ptr<BfGuiCreateWindowContainer>()
-          // *ptr
-      );
+         ptr->toggleHeader();
+         std::string str_ptr = "Data = " + std::to_string(*ptr);
+         std::cout << str_ptr << "\n";
+         auto ptr_back = std::make_shared<BfGuiCreateWindowBladeBase>(
+             std::weak_ptr<BfGuiCreateWindowContainer>()
+             // *ptr
+         );
 
-      BfConfigManager::createInstance();
-      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
-      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
-      REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(str_ptr));
-      sol::table table = BfConfigManager::getLuaObj("Data");
-      //
-      REQUIRE_NOTHROW(
-          BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
-      );
-      checkBaseContainer(
-          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
-          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
-      );
-      checkBaseContainer(
-          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr),
-          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr_back)
-      );
+         BfConfigManager::createInstance();
+         REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
+         REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
+         REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(str_ptr));
+         sol::table table = BfConfigManager::getLuaObj("Data");
+         //
+         REQUIRE_NOTHROW(
+             BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
+         );
+         checkBaseContainer(
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+         );
+         checkBaseContainer(
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr),
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr_back)
+         );
+      }
 
-      // auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
-      //     std::weak_ptr<BfGuiCreateWindowContainer>()
-      // );
-      //
-      // for (int i = 0; i < 3; ++i)
-      // {
-      //    ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
-      //        std::weak_ptr<BfGuiCreateWindowContainer>()
-      //    ));
-      //
-      //    BfBladeSectionCreateInfo __;
-      //    REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
-      //    // info.section_infos.push_back(std::move(__));
-      // }
-      // std::cout << std::to_string(*ptr) << "\n";
+      SECTION("MULTIPLE")
+      {
+         auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
+             std::weak_ptr<BfGuiCreateWindowContainer>()
+         );
+
+         for (int i = 0; i < 3; ++i)
+         {
+            ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
+                std::weak_ptr<BfGuiCreateWindowContainer>()
+            ));
+         }
+
+         ptr->toggleHeader();
+         std::string str_ptr = "Data = " + std::to_string(*ptr);
+         std::cout << str_ptr << "\n";
+         auto ptr_back = std::make_shared<BfGuiCreateWindowBladeBase>(
+             std::weak_ptr<BfGuiCreateWindowContainer>()
+         );
+
+         BfConfigManager::createInstance();
+         REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
+         REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
+         REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(str_ptr));
+         sol::table table = BfConfigManager::getLuaObj("Data");
+         //
+         REQUIRE_NOTHROW(
+             BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
+         );
+         checkBaseContainer(
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+         );
+         checkBaseContainer(
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+         );
+      }
    }
 }

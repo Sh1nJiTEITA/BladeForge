@@ -318,9 +318,11 @@ public:
             if (v.is<sol::table>())
             {
                sol::table table = v.as<sol::table>();
-               c->add(
-                   makeNeededWindowByLuaTable<BfGuiCreateWindowContainer>(table)
-               );
+               auto newPtr =
+                   makeNeededWindowByLuaTable<BfGuiCreateWindowContainer>(table
+                   );
+               newPtr->__root_container = c;
+               c->add(newPtr);
             }
          }
       }
