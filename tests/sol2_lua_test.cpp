@@ -556,10 +556,10 @@ TEST_CASE("Blade-base-section-windows")
              std::weak_ptr<BfGuiCreateWindowContainer>()
          ));
 
-         // BfBladeSectionCreateInfo __;
-         // REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
+         BfBladeSectionCreateInfo __;
+         REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
          // info.section_infos.push_back(std::move(__));
       }
-      std::cout << std::to_string(*ptr) << "\n";
+      // std::cout << std::to_string(*ptr) << "\n";
    }
 }

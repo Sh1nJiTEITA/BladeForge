@@ -548,103 +548,103 @@ BfConfigManager::fillFormFontSettings(sol::table obj, BfFormFontSettings* form)
    event.action = BF_ACTION_TYPE_FILL_FORM_SUCCESS;
    return event;
 }
-
-BfEvent
-BfConfigManager::loadBfGuiCreateWindowContainer(
-    sol::table obj, std::shared_ptr<BfGuiCreateWindowContainer> c
-)
-{
-   std::cout << obj.get<std::string>("type") << "\n";
-   // type = "BfGuiCreateWindowContainer",
-   if (obj.get<std::string>("type") != "BfGuiCreateWindowContainer")
-   {
-      std::cout << obj.get<std::string>("type") << "\n";
-      throw std::runtime_error(
-          "Input data type is invalid (loadBfGuiCreateWindowContainer)"
-      );
-   }
-   c->__id = obj.get<int>("__id");
-   c->__str_id = obj.get<std::string>("__str_id");
-   c->__is_button = obj.get<int>("__is_button");
-   c->__is_force_render = obj.get<int>("__is_force_render");
-   c->__is_render_header = obj.get<int>("__is_render_header");
-   c->__is_collapsed = obj.get<int>("__is_collapsed");
-   c->__resize_button_size.x =
-       sol::table(obj["__resize_button_size"]).get<float>(1);
-   c->__resize_button_size.y =
-       sol::table(obj["__resize_button_size"]).get<float>(2);
-   c->__bot_resize_button_size.x =
-       sol::table(obj["__bot_resize_button_size"]).get<float>(1);
-   c->__bot_resize_button_size.y =
-       sol::table(obj["__bot_resize_button_size"]).get<float>(2);
-
-   c->__window_pos.x = sol::table(obj["__window_pos"]).get<float>(1);
-   c->__window_pos.y = sol::table(obj["__window_pos"]).get<float>(2);
-
-   c->__window_size.x = sol::table(obj["__window_size"]).get<float>(1);
-   c->__window_size.y = sol::table(obj["__window_size"]).get<float>(2);
-   // // Load containers
-   obj.for_each([&](sol::object key, sol::object value) {
-      if (value.is<sol::table>())
-      {
-         auto tmp_value = sol::table(value);
-         if (tmp_value["type"] == "BfGuiCreateWindowContainer")
-         {
-            auto tmp_container =
-                std::make_shared<BfGuiCreateWindowContainer>(c);
-            loadBfGuiCreateWindowContainer(tmp_value, tmp_container);
-            c->add(tmp_container);
-         }
-         else if (tmp_value["type"] == "BfGuiCreateWindowContainerObj")
-         {
-            auto tmp_container =
-                std::make_shared<BfGuiCreateWindowContainerObj>(c);
-            loadBfGuiCreateWindowContainer(tmp_value, tmp_container);
-            c->add(tmp_container);
-         }
-      }
-   });
-   return BfEvent();
-}
-
-BfEvent
-BfConfigManager::loadBfGuiCreateWindowContainer(
-    sol::table obj, std::shared_ptr<BfGuiCreateWindowContainerObj> c
-)
-{
-   std::cout << obj.get<std::string>("type") << "\n";
-   if (obj.get<std::string>("type") != "BfGuiCreateWindowContainerObj")
-   {
-      std::cout << obj.get<std::string>("type") << "\n";
-      throw std::runtime_error(
-          "Input data type is invalid (loadBfGuiCreateWindowContainerObj)"
-      );
-   }
-
-   c->__selected_layer = obj.get<int>("__selected_layer");
-   c->__name = obj.get<std::string>("__name");
-   c->__old_size.x = sol::table(obj["__old_size"]).get<float>(1);
-   c->__old_size.y = sol::table(obj["__old_size"]).get<float>(2);
-   c->__header_button_size.x =
-       sol::table(obj["__header_button_size"]).get<float>(1);
-   c->__header_button_size.y =
-       sol::table(obj["__header_button_size"]).get<float>(2);
-
-   if (sol::table(obj["base"]).get<std::string>("type") !=
-       "BfGuiCreateWindowContainer")
-   {
-      std::runtime_error(
-          "Input base data type is invalid"
-          "(loadBfGuiCreateWindowContainerObj)"
-      );
-   }
-   BfConfigManager::loadBfGuiCreateWindowContainer(
-       obj["base"],
-       std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(c)
-   );
-
-   return BfEvent();
-}
+//
+// BfEvent
+// BfConfigManager::loadBfGuiCreateWindowContainer(
+//     sol::table obj, std::shared_ptr<BfGuiCreateWindowContainer> c
+// )
+// {
+//    std::cout << obj.get<std::string>("type") << "\n";
+//    // type = "BfGuiCreateWindowContainer",
+//    if (obj.get<std::string>("type") != "BfGuiCreateWindowContainer")
+//    {
+//       std::cout << obj.get<std::string>("type") << "\n";
+//       throw std::runtime_error(
+//           "Input data type is invalid (loadBfGuiCreateWindowContainer)"
+//       );
+//    }
+//    c->__id = obj.get<int>("__id");
+//    c->__str_id = obj.get<std::string>("__str_id");
+//    c->__is_button = obj.get<int>("__is_button");
+//    c->__is_force_render = obj.get<int>("__is_force_render");
+//    c->__is_render_header = obj.get<int>("__is_render_header");
+//    c->__is_collapsed = obj.get<int>("__is_collapsed");
+//    c->__resize_button_size.x =
+//        sol::table(obj["__resize_button_size"]).get<float>(1);
+//    c->__resize_button_size.y =
+//        sol::table(obj["__resize_button_size"]).get<float>(2);
+//    c->__bot_resize_button_size.x =
+//        sol::table(obj["__bot_resize_button_size"]).get<float>(1);
+//    c->__bot_resize_button_size.y =
+//        sol::table(obj["__bot_resize_button_size"]).get<float>(2);
+//
+//    c->__window_pos.x = sol::table(obj["__window_pos"]).get<float>(1);
+//    c->__window_pos.y = sol::table(obj["__window_pos"]).get<float>(2);
+//
+//    c->__window_size.x = sol::table(obj["__window_size"]).get<float>(1);
+//    c->__window_size.y = sol::table(obj["__window_size"]).get<float>(2);
+//    // // Load containers
+//    obj.for_each([&](sol::object key, sol::object value) {
+//       if (value.is<sol::table>())
+//       {
+//          auto tmp_value = sol::table(value);
+//          if (tmp_value["type"] == "BfGuiCreateWindowContainer")
+//          {
+//             auto tmp_container =
+//                 std::make_shared<BfGuiCreateWindowContainer>(c);
+//             loadBfGuiCreateWindowContainer(tmp_value, tmp_container);
+//             c->add(tmp_container);
+//          }
+//          else if (tmp_value["type"] == "BfGuiCreateWindowContainerObj")
+//          {
+//             auto tmp_container =
+//                 std::make_shared<BfGuiCreateWindowContainerObj>(c);
+//             loadBfGuiCreateWindowContainer(tmp_value, tmp_container);
+//             c->add(tmp_container);
+//          }
+//       }
+//    });
+//    return BfEvent();
+// }
+//
+// BfEvent
+// BfConfigManager::loadBfGuiCreateWindowContainer(
+//     sol::table obj, std::shared_ptr<BfGuiCreateWindowContainerObj> c
+// )
+// {
+//    std::cout << obj.get<std::string>("type") << "\n";
+//    if (obj.get<std::string>("type") != "BfGuiCreateWindowContainerObj")
+//    {
+//       std::cout << obj.get<std::string>("type") << "\n";
+//       throw std::runtime_error(
+//           "Input data type is invalid (loadBfGuiCreateWindowContainerObj)"
+//       );
+//    }
+//
+//    c->__selected_layer = obj.get<int>("__selected_layer");
+//    c->__name = obj.get<std::string>("__name");
+//    c->__old_size.x = sol::table(obj["__old_size"]).get<float>(1);
+//    c->__old_size.y = sol::table(obj["__old_size"]).get<float>(2);
+//    c->__header_button_size.x =
+//        sol::table(obj["__header_button_size"]).get<float>(1);
+//    c->__header_button_size.y =
+//        sol::table(obj["__header_button_size"]).get<float>(2);
+//
+//    if (sol::table(obj["base"]).get<std::string>("type") !=
+//        "BfGuiCreateWindowContainer")
+//    {
+//       std::runtime_error(
+//           "Input base data type is invalid"
+//           "(loadBfGuiCreateWindowContainerObj)"
+//       );
+//    }
+//    BfConfigManager::loadBfGuiCreateWindowContainer(
+//        obj["base"],
+//        std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(c)
+//    );
+//
+//    return BfEvent();
+// }
 
 BfEvent
 BfConfigManager::loadContainers(sol::table obj, std::list<ptrContainer>& c)
@@ -655,29 +655,36 @@ BfConfigManager::loadContainers(sol::table obj, std::list<ptrContainer>& c)
       {
          throw std::runtime_error("Input table cell is not lua-table");
       }
-      //
-      std::string type_str = sol::table(it.second).get<std::string>("type");
-      //
-      if (type_str == "BfGuiCreateWindowContainer")
-      {
-         auto tmp = std::make_shared<BfGuiCreateWindowContainer>(
-             std::weak_ptr<BfGuiCreateWindowContainer>()
-         );
-         BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
-         c.push_back(tmp);
-      }
-      else if (type_str == "BfGuiCreateWindowContainerObj")
-      {
-         auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
-             std::weak_ptr<BfGuiCreateWindowContainer>()
-         );
+      auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
+          std::weak_ptr<BfGuiCreateWindowContainer>()
+      );
 
-         BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
-         c.push_back(tmp);
-      }
-      else
-      {
-      }
+      BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
+      c.push_back(tmp);
+
+      // //
+      // std::string type_str = sol::table(it.second).get<std::string>("type");
+      // //
+      // if (type_str == "BfGuiCreateWindowContainer")
+      // {
+      //    auto tmp = std::make_shared<BfGuiCreateWindowContainer>(
+      //        std::weak_ptr<BfGuiCreateWindowContainer>()
+      //    );
+      //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
+      //    c.push_back(tmp);
+      // }
+      // else if (type_str == "BfGuiCreateWindowContainerObj")
+      // {
+      //    auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
+      //        std::weak_ptr<BfGuiCreateWindowContainer>()
+      //    );
+      //
+      //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
+      //    c.push_back(tmp);
+      // }
+      // else
+      // {
+      // }
    }
    return BfEvent();
 }

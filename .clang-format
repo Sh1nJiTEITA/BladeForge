@@ -36,6 +36,7 @@ Language: Cpp
 PointerAlignment: Left 
 ReferenceAlignment: Left 
 AccessModifierOffset: -3
+DisableFormat: false
 
 BreakBeforeBraces: Custom
 BraceWrapping:

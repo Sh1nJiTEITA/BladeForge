@@ -12,6 +12,7 @@
 
 class BfGuiCreateWindowBladeSection;
 class BfGuiCreateWindowBladeBase;
+class BfConfigManager;
 
 namespace std
 {
