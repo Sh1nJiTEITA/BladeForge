@@ -958,9 +958,9 @@ BfGuiCreateWindowContainerPopup::__renderHeader()
 
 BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     wptrContainer root,
-    int side = BfGuiCreateWindowContainerPopup_Side_Right,
-    bool is_force_render = false,
-    std::function<void(wptrContainer)> popup_func = nullptr
+    int side,
+    bool is_force_render,
+    std::function<void(wptrContainer)> popup_func
 )
     : BfGuiCreateWindowContainer{root}
     , __side{side}

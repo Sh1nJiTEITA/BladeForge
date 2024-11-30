@@ -15,7 +15,6 @@ string to_string(const BfGuiCreateWindowBladeBase&, int);
 class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 {
    BfBladeBaseCreateInfo __create_info;
-   std::string __base_name;
    uint32_t __selected_id = 0;
 
    std::shared_ptr<BfGuiCreateWindowContainerPopup> __settings_popup;

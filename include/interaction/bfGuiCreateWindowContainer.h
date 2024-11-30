@@ -139,8 +139,13 @@ public:
    void rem(ptrContainer container);
 
    // friend std::string std::to_string(const BfGuiCreateWindowContainer&);
-   friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
+
    friend class BfConfigManager;
+
+#if defined(BF_CONFIG_MANAGER_TESTING)
+   friend void checkBaseContainer(ptrContainer, ptrContainer);
+#endif
+   friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
 };
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
@@ -197,6 +202,14 @@ public:
    static bool isAnyMoving() noexcept;
 
    friend std::string std::to_string(const BfGuiCreateWindowContainerObj&, int);
+
+#if defined(BF_CONFIG_MANAGER_TESTING)
+   friend void checkBaseContainer(
+       std::shared_ptr<BfGuiCreateWindowContainerObj>,
+       std::shared_ptr<BfGuiCreateWindowContainerObj> r
+   );
+#endif
+
    friend class BfConfigManager;
 };
 
@@ -229,9 +242,9 @@ public:
 
    BfGuiCreateWindowContainerPopup(
        wptrContainer root,
-       int side,
-       bool is_force_render,
-       std::function<void(wptrContainer)> popup_func
+       int side = BfGuiCreateWindowContainerPopup_Side_Right,
+       bool is_force_render = false,
+       std::function<void(wptrContainer)> popup_func = nullptr
    );
 
    int side() noexcept;

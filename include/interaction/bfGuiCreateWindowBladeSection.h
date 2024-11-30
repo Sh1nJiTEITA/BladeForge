@@ -73,8 +73,16 @@ public:
    friend BfGuiCreateWindow;
    friend BfGuiCreateWindowBladeBase;
    friend BfGuiCreateWindowContainerPopup;
+   friend BfConfigManager;
+
    friend std::string std::to_string(const BfGuiCreateWindowBladeSection&, int);
-   friend class BfConfigManager;
+
+#if defined(BF_CONFIG_MANAGER_TESTING)
+   friend void checkBaseContainer(
+       std::shared_ptr<BfGuiCreateWindowBladeSection> l,
+       std::shared_ptr<BfGuiCreateWindowBladeSection> r
+   );
+#endif
 };
 
 #endif

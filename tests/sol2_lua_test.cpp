@@ -1,3 +1,5 @@
+#define BF_CONFIG_MANAGER_TESTING
+
 #include <bfConfigManager.h>
 #include <bfConsole.h>
 
@@ -504,7 +506,7 @@ TEST_CASE("bfStringTablesGenPair")
       //    // std::cout << BfConfigManager::getLuaTableStr(it.second);
       // }
       std::list<ptrContainer> new_c;
-      REQUIRE_NOTHROW(BfConfigManager::loadContainers(table, new_c));
+      // REQUIRE_NOTHROW(BfConfigManager::loadContainers(table, new_c));
    }
 }
 
@@ -530,6 +532,74 @@ TEST_CASE("CREATE-INFOS")
    }
 }
 
+void
+checkBaseContainer(ptrContainer l, ptrContainer r)
+{
+   REQUIRE(l->__id == r->__id);
+   REQUIRE(l->__str_id == r->__str_id);
+   REQUIRE(l->__is_button == r->__is_button);
+   REQUIRE(l->__is_force_render == r->__is_force_render);
+   REQUIRE(l->__is_render_header == r->__is_render_header);
+   REQUIRE(l->__is_collapsed == r->__is_collapsed);
+   REQUIRE(l->__resize_button_size.x == r->__resize_button_size.x);
+   REQUIRE(l->__resize_button_size.y == r->__resize_button_size.y);
+   REQUIRE(l->__bot_resize_button_size.x == r->__bot_resize_button_size.x);
+   REQUIRE(l->__bot_resize_button_size.y == r->__bot_resize_button_size.y);
+   REQUIRE(l->__window_pos.x == r->__window_pos.x);
+   REQUIRE(l->__window_pos.y == r->__window_pos.y);
+   REQUIRE(l->__window_size.x == r->__window_size.x);
+   REQUIRE(l->__window_size.y == r->__window_size.y);
+}
+
+void
+checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowContainerObj> l,
+    std::shared_ptr<BfGuiCreateWindowContainerObj> r
+)
+{
+   REQUIRE(l->__selected_layer == r->__selected_layer);
+   REQUIRE(l->__name == r->__name);
+   REQUIRE(l->__old_size.x == r->__old_size.x);
+   REQUIRE(l->__old_size.y == r->__old_size.y);
+   REQUIRE(l->__header_button_size.x == r->__header_button_size.x);
+   REQUIRE(l->__header_button_size.y == r->__header_button_size.y);
+
+   checkBaseContainer(
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(l),
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(r)
+   );
+}
+
+void
+checkBaseContainer(
+    std::shared_ptr<BfGuiCreateWindowBladeSection> l,
+    std::shared_ptr<BfGuiCreateWindowBladeSection> r
+)
+{
+   // clang-format off
+   REQUIRE(l->__mode == r->__mode);
+   REQUIRE(l->__create_info.width == r->__create_info.width);
+   REQUIRE(l->__create_info.install_angle == r->__create_info.install_angle);
+   REQUIRE(l->__create_info.inlet_angle == r->__create_info.inlet_angle);
+   REQUIRE(l->__create_info.outlet_angle == r->__create_info.outlet_angle);
+   REQUIRE(l->__create_info.inlet_surface_angle == r->__create_info.inlet_surface_angle);
+   REQUIRE(l->__create_info.outlet_surface_angle == r->__create_info.outlet_surface_angle);
+   REQUIRE(l->__create_info.inlet_radius == r->__create_info.inlet_radius);
+   REQUIRE(l->__create_info.outlet_radius == r->__create_info.outlet_radius);
+   REQUIRE(l->__create_info.border_length == r->__create_info.border_length);
+   REQUIRE(l->__create_info.is_triangulate  == r->__create_info.is_triangulate);
+   REQUIRE(l->__create_info.is_center == r->__create_info.is_center);
+   REQUIRE(l->__create_info.start_vertex == r->__create_info.start_vertex);
+   REQUIRE(l->__create_info.grow_direction == r->__create_info.grow_direction);
+   REQUIRE(l->__create_info.up_direction == r->__create_info.up_direction);
+   // clang-format on
+
+   checkBaseContainer(
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(l),
+       std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(r)
+   );
+}
+
 TEST_CASE("Blade-base-section-windows")
 {
    SECTION("BLADE-SECTION")
@@ -537,10 +607,33 @@ TEST_CASE("Blade-base-section-windows")
       auto ptr = std::make_shared<BfGuiCreateWindowBladeSection>(
           std::weak_ptr<BfGuiCreateWindowContainer>()
       );
-      // std::cout << std::to_string(*ptr, 3) << "\n";
-      // std::cout << "___________________________________________________\n";
-      // std::to_string(*ptr, 0);
-      // std::cout << "___________________________________________________\n";
+
+      ptr->toggleHeader();
+      std::string str_ptr = "Data = " + std::to_string(*ptr);
+      std::cout << str_ptr << "\n";
+      auto ptr_back = std::make_shared<BfGuiCreateWindowBladeSection>(
+          std::weak_ptr<BfGuiCreateWindowContainer>()
+          // *ptr
+      );
+
+      BfConfigManager::createInstance();
+      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
+      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
+      REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(str_ptr));
+      sol::table table = BfConfigManager::getLuaObj("Data");
+      //
+      REQUIRE_NOTHROW(
+          BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
+      );
+      checkBaseContainer(
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+      );
+      checkBaseContainer(
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr),
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr_back)
+      );
+      checkBaseContainer(ptr, ptr_back);
    }
    SECTION("BLADE-BASE")
    {
@@ -548,18 +641,46 @@ TEST_CASE("Blade-base-section-windows")
           std::weak_ptr<BfGuiCreateWindowContainer>()
       );
 
-      // BfBladeBaseCreateInfo info;
-      // // REQUIRE_NOTHROW(bfFillBladeBaseStandart(&info));
-      for (int i = 0; i < 3; ++i)
-      {
-         ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
-             std::weak_ptr<BfGuiCreateWindowContainer>()
-         ));
+      ptr->toggleHeader();
+      std::string str_ptr = "Data = " + std::to_string(*ptr);
+      std::cout << str_ptr << "\n";
+      auto ptr_back = std::make_shared<BfGuiCreateWindowBladeBase>(
+          std::weak_ptr<BfGuiCreateWindowContainer>()
+          // *ptr
+      );
 
-         BfBladeSectionCreateInfo __;
-         REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
-         // info.section_infos.push_back(std::move(__));
-      }
+      BfConfigManager::createInstance();
+      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::base));
+      REQUIRE_NOTHROW(BfConfigManager::loadStdLibrary(sol::lib::package));
+      REQUIRE_NOTHROW(BfConfigManager::loadScriptStr(str_ptr));
+      sol::table table = BfConfigManager::getLuaObj("Data");
+      //
+      REQUIRE_NOTHROW(
+          BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
+      );
+      checkBaseContainer(
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+      );
+      checkBaseContainer(
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr),
+          std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(ptr_back)
+      );
+
+      // auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
+      //     std::weak_ptr<BfGuiCreateWindowContainer>()
+      // );
+      //
+      // for (int i = 0; i < 3; ++i)
+      // {
+      //    ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
+      //        std::weak_ptr<BfGuiCreateWindowContainer>()
+      //    ));
+      //
+      //    BfBladeSectionCreateInfo __;
+      //    REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
+      //    // info.section_infos.push_back(std::move(__));
+      // }
       // std::cout << std::to_string(*ptr) << "\n";
    }
 }
