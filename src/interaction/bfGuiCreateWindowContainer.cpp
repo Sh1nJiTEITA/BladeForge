@@ -597,13 +597,18 @@ BfGuiCreateWindowContainerObj::__renderHeaderName()
       ImGui::SetNextItemWidth(
           ImGui::GetContentRegionAvail().x - __totalHeaderButtonsSize().x
       );
+      ImGui::PushStyleColor(ImGuiCol_FrameBg, {1.0, 1.0f, 1.0f, 0.0f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, {1.0, 1.0f, 1.0f, 0.2f});
+      ImGui::PushStyleColor(ImGuiCol_FrameBgActive, {1.0, 1.0f, 1.0f, 0.5f});
       if (ImGui::InputText(
               "##edit",
               __name.data(),
               ImGuiInputTextFlags_EnterReturnsTrue
           ))
       {
+         __name = std::string(__name.c_str());
       }
+      ImGui::PopStyleColor(3);
    }
    ImGui::PopID();
 }

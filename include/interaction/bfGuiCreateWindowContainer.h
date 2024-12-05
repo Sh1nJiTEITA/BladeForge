@@ -149,8 +149,6 @@ public:
    friend std::string bfGetContainerStr(ptrContainer c, int indent);
 };
 
-std::string bfGetContainerStr(ptrContainer c, int indent = 0);
-
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
 
 //

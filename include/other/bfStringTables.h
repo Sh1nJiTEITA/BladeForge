@@ -161,7 +161,7 @@ to_string(const BfGuiCreateWindowContainerObj& o, int indent = 0)
         // indent_str,
 	bfStringTablesGenPair("type", "BfGuiCreateWindowContainerObj", false, true, indent + 1),
 	bfStringTablesGenPair("__selected_layer", o.__selected_layer, false, true, indent + 1),
-	bfStringTablesGenPair("__name", o.__name, false, true, indent + 1),
+	bfStringTablesGenPair("__name", std::string(o.__name.c_str()), false, true, indent + 1),
 	bfStringTablesGenPair("__old_size", o.__old_size, false, true, indent + 1),
 	bfStringTablesGenPair("__header_button_size", o.__header_button_size, false, true, indent + 1),
 	bfStringTablesGenPair("base", static_cast<const BfGuiCreateWindowContainer&>(o), false, true, indent + 1),
@@ -346,11 +346,14 @@ bfStringTablesGenPair(
    // auto indent_str = std::string(indent, '');
    std::ostringstream ss;
 
-   if constexpr (std::is_same_v<std::decay_t<T>, std::string> ||
-                 std::is_same_v<std::decay_t<T>, const char*> ||
-                 std::is_same_v<std::decay_t<T>, char*>)
+   if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
    {
-      ss << indent_str << name << " = \"" << v << "\"";
+      ss << indent_str << name << " = \"" << std::string(v.c_str()) << "\"";
+   }
+   else if constexpr (std::is_same_v<std::decay_t<T>, const char*> ||
+                      std::is_same_v<std::decay_t<T>, char*>)
+   {
+      ss << indent_str << name << " = \"" << std::string(v) << "\"";
    }
    else if constexpr (std::is_floating_point_v<std::decay_t<T>>)
    {
@@ -431,6 +434,36 @@ bfStringTablesGenPair(
    ss << (last ? "" : ",") << (next_row ? "\n" : "");
 
    return ss.str();
+}
+
+inline std::string
+bfCastAndGetUpperContainerStr(ptrContainer c)
+{
+   // clang-format off
+   if (auto _c = std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(c))
+   {
+      return std::to_string(*_c);
+   }
+   else if (auto _c = std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(c))
+   {
+      return std::to_string(*_c);
+   }
+   else if (auto _c = std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(c))
+   {
+      return std::to_string(*_c);
+   }
+   else if (auto _c = std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(c))
+   {
+      return std::to_string(*_c);
+   }
+   else if (auto _c = std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(c))
+   {
+      return std::to_string(*_c);
+   }
+   else { 
+      return "";
+   }
+   // clang-format on
 }
 
 #endif

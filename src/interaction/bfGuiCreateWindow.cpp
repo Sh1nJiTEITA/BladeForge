@@ -122,7 +122,7 @@ BfGuiCreateWindow::__renderManagePanel()
          BfConfigManager::loadContainers(__containers, path);
          for (auto& c : __containers)
          {
-            std::cout << bfGetContainerStr(c) << "\n";
+            std::cout << bfCastAndGetUpperContainerStr(c) << "\n";
          }
       }
       ImGui::EndChild();
@@ -164,19 +164,6 @@ BfGuiCreateWindow::__renderManagePanel()
       }
       ImGui::EndChild();
    }
-}
-
-std::string
-bfGetContainerStr(ptrContainer c, int indent)
-{
-   std::stringstream ss;
-   std::string indent_str("\t", indent);
-   ss << indent_str << c->name() << "\n";
-   for (auto& it : c->__containers)
-   {
-      ss << bfGetContainerStr(it, indent + 1);
-   }
-   return ss.str();
 }
 
 void

@@ -124,6 +124,7 @@ BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
     : BfGuiCreateWindowContainerObj(root, is_target)
 {
    __window_size = {600, 400};
+   __name = "Blade base";
 
    bfFillBladeBaseStandart(&__create_info);
    __create_info.layer_create_info = __layer_create_info;
