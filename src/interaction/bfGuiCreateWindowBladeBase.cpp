@@ -129,6 +129,64 @@ BfGuiCreateWindowBladeBase::BfGuiCreateWindowBladeBase(
    __create_info.layer_create_info = __layer_create_info;
 }
 
+void
+BfGuiCreateWindowBladeBase::addHeightPopup(
+    std::shared_ptr<BfGuiCreateWindowBladeSection> s
+)
+{
+   s.get()->__mode = BfGuiCreateWindowBladeSection::viewMode::SHORT;
+
+   auto h_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
+       s,
+       BfGuiCreateWindowContainerPopup_Side_Left,
+       true,
+       [](wptrContainer root) {}
+   );
+
+   h_popup->__renderPopupContentFunc = [](wptrContainer root) {
+      if (auto shared_root = root.lock())
+      {
+         if (auto casted_root =
+                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+                     shared_root
+                 ))
+         {
+            ImGui::PushID("InputSectionHeight");
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, {1.0, 1.0f, 1.0f, 0.0f});
+            ImGui::PushStyleColor(
+                ImGuiCol_FrameBgHovered,
+                {1.0, 1.0f, 1.0f, 0.2f}
+            );
+            ImGui::PushStyleColor(
+                ImGuiCol_FrameBgActive,
+                {1.0, 1.0f, 1.0f, 0.5f}
+            );
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.5f);
+            ImGui::Text(ICON_FA_RULER_VERTICAL);
+            ImGui::SameLine();
+            ImGui::SetCursorPosY(ImGui::GetCursorStartPos().y);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::InputFloat(
+                "##InputSectionHeight",
+                &casted_root->zCoordinate()
+            );
+            ImGui::PopID();
+            ImGui::PopStyleColor(3);
+         }
+      }
+   };
+
+   h_popup->toggleButton(BfGuiCreateWindowContainer_ButtonType_Left, false);
+   h_popup->toggleButton(BfGuiCreateWindowContainer_ButtonType_Top, false);
+   h_popup->toggleButton(BfGuiCreateWindowContainer_ButtonType_Right, false);
+   h_popup->toggleButton(BfGuiCreateWindowContainer_ButtonType_Bot, false);
+   h_popup->toggleHeader(false);
+   h_popup->setSize({200, 80});
+
+   s->add(h_popup);
+   s->__height_choser = h_popup;
+}
+
 uint32_t*
 BfGuiCreateWindowBladeBase::selectedId() noexcept
 {
@@ -158,72 +216,7 @@ BfGuiCreateWindowBladeBase::__processDragDropTarget()
                           dropped_container
                       ))
          {
-            other_section.get()->__mode =
-                BfGuiCreateWindowBladeSection::viewMode::SHORT;
-
-            auto h_popup = std::make_shared<BfGuiCreateWindowContainerPopup>(
-                other_section,
-                BfGuiCreateWindowContainerPopup_Side_Left,
-                true,
-                [](wptrContainer root) {}
-            );
-
-            h_popup->__renderPopupContentFunc = [](wptrContainer root) {
-               if (auto shared_root = root.lock())
-               {
-                  if (auto casted_root = std::dynamic_pointer_cast<
-                          BfGuiCreateWindowBladeSection>(shared_root))
-                  {
-                     ImGui::PushID("InputSectionHeight");
-                     ImGui::PushStyleColor(
-                         ImGuiCol_FrameBg,
-                         {1.0, 1.0f, 1.0f, 0.0f}
-                     );
-                     ImGui::PushStyleColor(
-                         ImGuiCol_FrameBgHovered,
-                         {1.0, 1.0f, 1.0f, 0.2f}
-                     );
-                     ImGui::PushStyleColor(
-                         ImGuiCol_FrameBgActive,
-                         {1.0, 1.0f, 1.0f, 0.5f}
-                     );
-                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.5f);
-                     ImGui::Text(ICON_FA_RULER_VERTICAL);
-                     ImGui::SameLine();
-                     ImGui::SetCursorPosY(ImGui::GetCursorStartPos().y);
-                     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                     ImGui::InputFloat(
-                         "##InputSectionHeight",
-                         &casted_root->zCoordinate()
-                     );
-                     ImGui::PopID();
-                     ImGui::PopStyleColor(3);
-                  }
-               }
-            };
-
-            h_popup->toggleButton(
-                BfGuiCreateWindowContainer_ButtonType_Left,
-                false
-            );
-            h_popup->toggleButton(
-                BfGuiCreateWindowContainer_ButtonType_Top,
-                false
-            );
-            h_popup->toggleButton(
-                BfGuiCreateWindowContainer_ButtonType_Right,
-                false
-            );
-            h_popup->toggleButton(
-                BfGuiCreateWindowContainer_ButtonType_Bot,
-                false
-            );
-            h_popup->toggleHeader(false);
-            h_popup->setSize({200, 80});
-
-            other_section->add(h_popup);
-            other_section->__height_choser = h_popup;
-
+            addHeightPopup(other_section);
             __moveFunc(other_section->name(), this->name());
          }
          else

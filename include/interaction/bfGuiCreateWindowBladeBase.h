@@ -37,6 +37,8 @@ public:
    BfGuiCreateWindowBladeBase(wptrContainer root, bool is_target = true);
    uint32_t* selectedId() noexcept;
 
+   void addHeightPopup(std::shared_ptr<BfGuiCreateWindowBladeSection> s);
+
    friend std::string std::to_string(const BfGuiCreateWindowBladeBase&, int);
    friend class BfConfigManager;
 };

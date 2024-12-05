@@ -146,7 +146,10 @@ public:
    friend void checkBaseContainer(ptrContainer, ptrContainer);
 #endif
    friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
+   friend std::string bfGetContainerStr(ptrContainer c, int indent);
 };
+
+std::string bfGetContainerStr(ptrContainer c, int indent = 0);
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
 

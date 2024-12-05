@@ -29,6 +29,18 @@ BfGuiCreateWindowBladeSection::BfGuiCreateWindowBladeSection(
    //     shared_from_this(),
    //     [&]() { this->__renderAvailableLayers(); }));
    this->__is_collapsed = true;
+   // if (auto unlock = root.lock())
+   // {
+   //    if (auto casted =
+   //            std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(unlock))
+   //    {
+   //       casted->addHeightPopup(
+   //           std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+   //               shared_from_this()
+   //           )
+   //       );
+   //    }
+   // }
 }
 
 void

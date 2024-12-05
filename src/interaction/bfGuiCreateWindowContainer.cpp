@@ -545,15 +545,6 @@ BfGuiCreateWindowContainerObj::__renderChildContent()
 {
    if (!__is_collapsed)
    {
-      // if (ImGui::Button("Add container"))
-      // {
-      //    auto new_container =
-      //    std::make_shared<BfGuiCreateWindowContainerObj>(
-      //        shared_from_this()->weak_from_this());
-      //    new_container->__window_size.x -= 20.0f;
-      //    new_container->__window_size.y -= 20.0f;
-      //    __containers.push_back(std::move(new_container));
-      // }
    }
 }
 

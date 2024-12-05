@@ -3,30 +3,19 @@
 
 #include <bfEvent.h>
 #include <bfGuiCreateWindowContainer.h>
+#include <bfStringTables.h>
 #include <config_forms/bfFormGui.h>
 
 #include <cassert>
 #include <filesystem>
 #include <memory>
 #include <sol/sol.hpp>
+#include <sstream>
 #include <type_traits>
 #include <typeindex>
 
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowBladeSection.h"
-
-// class BfLuaTable
-// {
-// public:
-//    using _type = std::map<BfLuaValue, BfLuaValue>;
-//
-//    _type v;
-//
-//    BfLuaValue& operator[](BfLuaValue);
-//    std::string get(BfLuaValue);
-//    //
-//    static std::string convert(const BfLuaValue&);
-// };
 
 class BfLuaTable;
 
@@ -87,7 +76,17 @@ public:
    );
 
    static std::filesystem::path getConfigPath();
+   static std::filesystem::path getSavePath();
    static BfEvent createConfigData();
+   static BfEvent createSavedFilesDir();
+
+   static std::string createContainersSaveFileString(
+       const std::list<ptrContainer>& cs
+   );
+   static BfEvent saveContainers(
+       const std::list<ptrContainer>& cs, fs::path path
+   );
+   static BfEvent loadContainers(std::list<ptrContainer>& cs, fs::path path);
 
    template <class T>
    static BfEvent assertLoadingContainerParent(
@@ -189,11 +188,50 @@ public:
       }
    }
 
+#define BFCONFIG_MAKE_NEEDED_NULL(TT, OBJ) \
+   {#TT, [&OBJ]() { return make(std::make_shared<TT>(wptr())); }}
+
+   template <class T>
+   static std::shared_ptr<T> makeNeededNullWindowByLuaTable(sol::table obj)
+   {
+      static auto make = [&obj](auto ptr) {
+         loadBfGuiCreateWindowContainer(obj, ptr);
+         return std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr);
+      };
+
+      using wptr = std::weak_ptr<BfGuiCreateWindowContainer>;
+      // clang-format off
+      static std::map<std::string, std::function<std::shared_ptr<BfGuiCreateWindowContainer>()>> s
+      {
+	    BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowContainerPopup, obj),
+            BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowContainerObj, obj),
+            BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowContainer, obj),
+            BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowBladeBase, obj),
+            BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowBladeSection, obj),
+      };
+      // clang-format on
+      auto key = obj.get<std::string>("type");
+      auto found = s.find(key);
+
+      if (found != s.end())
+      {
+         return std::dynamic_pointer_cast<T>(found->second());
+      }
+      else
+      {
+         std::cout << "Invalid type: " << key << "\n";
+         throw std::runtime_error("Input data type is invalid");
+      }
+   }
+
    template <class T>
    static BfEvent loadBfGuiCreateWindowContainer(
        sol::table obj, std::shared_ptr<T> c
    )
    {
+      std::cout << "Loading inner" << sol::table(obj).get<std::string>("type")
+                << "\n";
+
       using dT = std::decay_t<T>;
 
       if constexpr (std::is_same_v<dT, BfGuiCreateWindowContainerPopup>)
@@ -318,6 +356,17 @@ public:
                    makeNeededWindowByLuaTable<BfGuiCreateWindowContainer>(table
                    );
                newPtr->__root_container = c;
+
+               if (auto casted_bladebase =
+                       std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(c))
+               {
+                  if (auto casted_bladesection = std::dynamic_pointer_cast<
+                          BfGuiCreateWindowBladeSection>(newPtr))
+                  {
+                     casted_bladebase->addHeightPopup(casted_bladesection);
+                  }
+               }
+
                c->add(newPtr);
             }
          }
@@ -328,6 +377,17 @@ public:
       }
       return BfEvent();
    }
+
+   static ptrContainer loadBfGuiCreateWindowContainerSmart(sol::table obj)
+   {
+      // std::cout << BfConfigManager::getLuaTableStr(obj);
+      // clang-format off
+      auto c = BfConfigManager::makeNeededNullWindowByLuaTable<BfGuiCreateWindowContainer>(obj);
+      // clang-format on
+      // BfConfigManager::loadBfGuiCreateWindowContainer(obj, c);
+      return c;
+   }
+
    static BfEvent loadContainers(sol::table obj, std::list<ptrContainer>& c);
 };
 

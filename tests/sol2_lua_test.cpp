@@ -754,5 +754,21 @@ TEST_CASE("Blade-base-section-windows")
              std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
          );
       }
+
+      // auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(
+      //     std::weak_ptr<BfGuiCreateWindowContainer>()
+      // );
+      //
+      // for (int i = 0; i < 3; ++i)
+      // {
+      //    ptr->add(std::make_shared<BfGuiCreateWindowBladeSection>(
+      //        std::weak_ptr<BfGuiCreateWindowContainer>()
+      //    ));
+      //
+      //    BfBladeSectionCreateInfo __;
+      //    REQUIRE_NOTHROW(bfFillBladeSectionStandart(&__));
+      //    // info.section_infos.push_back(std::move(__));
+      // }
+      // std::cout << std::to_string(*ptr) << "\n";
    }
 }

@@ -4,6 +4,7 @@ BfGui::BfGui()
 {
    BfGuiFileDialog::bindInstance(&__file_dialog);
    BfConfigManager::createConfigData();
+   BfConfigManager::createSavedFilesDir();
 }
 
 void

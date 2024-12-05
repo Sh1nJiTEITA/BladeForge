@@ -8,6 +8,7 @@
 #include "bfConfigManager.h"
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowBladeSection.h"
+#include "bfGuiCreateWindowContainer.h"
 #include "imgui.h"
 
 //
@@ -109,57 +110,73 @@ BfGuiCreateWindow::__renderManagePanel()
 {
    ImGui::BeginChild("##CreateWindowManagePanel2", {0.0, 37.0f}, true);
    {
-      if (ImGui::Button("Dsadasdas"))
+      if (ImGui::Button("Save"))
       {
-         BfConfigManager::loadStdLibrary(sol::lib::base);
-         BfConfigManager::loadStdLibrary(sol::lib::package);
-         BfConfigManager::loadRequireScript(
-             BfConfigManager::exePath() / "./scripts/guiconfig.lua"
-         );
-
-         sol::table settings_table = BfConfigManager::getLuaObj("guiconfig");
-
-         std::cout << BfConfigManager::getLuaTableStr(settings_table) << "\n";
+         fs::path path{std::move(BfConfigManager::getSavePath() / "test.lua")};
+         BfConfigManager::saveContainers(__containers, path);
       }
-   }
-   ImGui::EndChild();
+      ImGui::SameLine();
+      if (ImGui::Button("Load"))
+      {
+         fs::path path{std::move(BfConfigManager::getSavePath() / "test.lua")};
+         BfConfigManager::loadContainers(__containers, path);
+         for (auto& c : __containers)
+         {
+            std::cout << bfGetContainerStr(c) << "\n";
+         }
+      }
+      ImGui::EndChild();
 
-   ImGui::BeginChild("##CreateWindowManagePanel", {0.0, 37.0f}, true);
+      ImGui::BeginChild("##CreateWindowManagePanel", {0.0, 37.0f}, true);
+      {
+         if (!BfGuiCreateWindowContainerObj::isAnyMoving())
+         {
+            if (ImGui::Button("Container"))
+            {
+               __addContainerT<BfGuiCreateWindowContainer>();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("ContainerObj"))
+            {
+               __addContainerT<BfGuiCreateWindowContainerObj>();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("BladeSection"))
+            {
+               __addContainerT<BfGuiCreateWindowBladeSection>();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("BladeBase"))
+            {
+               __addContainerT<BfGuiCreateWindowBladeBase>();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("SingleLine"))
+            {
+               // __addContainerT<BfGuiCreateWindowSingleLine>();
+            }
+            ImGui::SameLine();
+         }
+         else
+         {
+            __renderDragDropZone();
+         }
+      }
+      ImGui::EndChild();
+   }
+}
+
+std::string
+bfGetContainerStr(ptrContainer c, int indent)
+{
+   std::stringstream ss;
+   std::string indent_str("\t", indent);
+   ss << indent_str << c->name() << "\n";
+   for (auto& it : c->__containers)
    {
-      if (!BfGuiCreateWindowContainerObj::isAnyMoving())
-      {
-         if (ImGui::Button("Container"))
-         {
-            __addContainerT<BfGuiCreateWindowContainer>();
-         }
-         ImGui::SameLine();
-         if (ImGui::Button("ContainerObj"))
-         {
-            __addContainerT<BfGuiCreateWindowContainerObj>();
-         }
-         ImGui::SameLine();
-         if (ImGui::Button("BladeSection"))
-         {
-            __addContainerT<BfGuiCreateWindowBladeSection>();
-         }
-         ImGui::SameLine();
-         if (ImGui::Button("BladeBase"))
-         {
-            __addContainerT<BfGuiCreateWindowBladeBase>();
-         }
-         ImGui::SameLine();
-         if (ImGui::Button("SingleLine"))
-         {
-            // __addContainerT<BfGuiCreateWindowSingleLine>();
-         }
-         ImGui::SameLine();
-      }
-      else
-      {
-         __renderDragDropZone();
-      }
+      ss << bfGetContainerStr(it, indent + 1);
    }
-   ImGui::EndChild();
+   return ss.str();
 }
 
 void
@@ -309,7 +326,8 @@ BfGuiCreateWindow::__renderDragDropZone()
          (*__containers.rbegin())->root() =
              std::weak_ptr<BfGuiCreateWindowContainer>();
 
-         // Меняем режим отображения для 'BladeSection'-контейнера после дропа
+         // Меняем режим отображения для 'BladeSection'-контейнера после
+         // дропа
          if (auto casted =
                  std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
                      dropped_container

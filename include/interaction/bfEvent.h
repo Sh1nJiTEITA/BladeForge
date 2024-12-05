@@ -260,6 +260,16 @@ enum BfEnActionType
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_OBJ = 0x73E,
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_LAYER_WITH_LAYER = 0x73F,
    BF_ACTION_TYPE_LAYER_HANDLER_TRANSACTION_SWAPPING_UNDERFINED = -0x73C,
+
+   BF_ACTION_TYPE_CREATE_CONFIG_DIR_SUCCESS = 0x74,
+   BF_ACTION_TYPE_CREATE_CONFIG_DIR_FAILURE = -0x74,
+   BF_ACTION_TYPE_CREATE_CONFIG_SAVES_DIR_SUCCESS = 0x75,
+   BF_ACTION_TYPE_CREATE_CONFIG_SAVES_DIR_FAILURE = -0x75,
+
+   BF_ACTION_TYPE_SAVE_CONTAINERS_SUCCESS = 0x76,
+   BF_ACTION_TYPE_SAVE_CONTAINERS_FAILURE = -0x76,
+   BF_ACTION_TYPE_LOAD_CONTAINERS_SUCCESS = 0x77,
+   BF_ACTION_TYPE_LOAD_CONTAINERS_FAULURE = -0x77
 };
 
 const std::map<int, std::string> bfSetActionsStr{
@@ -292,7 +302,8 @@ const std::map<int, std::string> bfSetActionsStr{
     {0x3, "Vulkan Debug messenger was created successfully"},
     {-0x3, "Vulkan Debug messenger wasn't created"},
     {0x3A,
-     "Vulkan Debug messenger wasn't created due to disabled validation layers"},
+     "Vulkan Debug messenger wasn't created due to disabled validation "
+     "layers"},
     {0x3B, "Vulkan Debug messenger was destroyed"},
     {-0x3B, "Vulkan Debug messenger was not destroyed"},
     {0x3BA, "Vulkan Debut messenger was not destroyed -> was not created before"
@@ -512,6 +523,15 @@ const std::map<int, std::string> bfSetActionsStr{
     {0x73E, ""},
     {0x73F, ""},
     {-0x73C, "Underfined behaviour of swapping inside BfLayerHandler"},
+    {0x74, "Config dir was created with path:"},
+    {-0x74, "Config dir wasnt created (already exists) with path:"},
+    {0x75, "Saves dir was created with path:"},
+    {-0x75, "Saves dir wasnt created (already exists) with path:"},
+    {0x76, "Saving containers is complete:"},
+    {-0x76, "Saving  containers was not complete:"},
+    {0x77, "Loading containers is complete:"},
+    {-0x77, "Loading  containers was not complete:"}
+
 };
 
 enum BfEnSingleEventType

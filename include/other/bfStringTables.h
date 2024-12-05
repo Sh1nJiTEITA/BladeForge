@@ -314,10 +314,18 @@ to_string(const std::list<ptrContainer> o, int indent = 0)
          format_str += std::to_string(*casted, indent + 1);
       }
       else if (auto casted =
+                   std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(
+                       *it
+                   ))
+      {
+         continue;
+      }
+      else if (auto casted =
                    std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(*it))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
+
       if (it != std::end(o))
          format_str += ",\n";
       else
@@ -380,6 +388,12 @@ bfStringTablesGenPair(
          {
             ss << std::to_string(*casted, indent + 1);
          }
+         else if (auto casted = std::dynamic_pointer_cast<
+                      BfGuiCreateWindowContainerPopup>(elem))
+         {
+            current_index++;
+            continue;
+         }
          else if (auto casted =
                       std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(elem
                       ))
@@ -387,12 +401,6 @@ bfStringTablesGenPair(
             ss << std::to_string(*casted, indent + 1);
          }
 
-         else if (auto casted =
-                      std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(elem
-                      ))
-         {
-            ss << std::to_string(*casted, indent + 1);
-         }
          else
          {
             ss << std::to_string(*elem, indent + 1);

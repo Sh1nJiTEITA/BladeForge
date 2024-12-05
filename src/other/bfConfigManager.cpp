@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <sol/forward.hpp>
 #include <stdexcept>
@@ -590,59 +591,200 @@ BfConfigManager::getConfigPath()
    return configPath;
 }
 
+std::filesystem::path
+BfConfigManager::getSavePath()
+{
+   return BfConfigManager::getConfigPath() / "saves/";
+}
+
 BfEvent
 BfConfigManager::createConfigData()
 {
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    auto needed_path = BfConfigManager::getConfigPath();
    if (!std::filesystem::exists(needed_path))
    {
       std::filesystem::create_directory(needed_path);
+      event.action = BF_ACTION_TYPE_CREATE_CONFIG_DIR_SUCCESS;
    }
-   return BfEvent();
+   else
+   {
+      event.action = BF_ACTION_TYPE_CREATE_CONFIG_DIR_FAILURE;
+   }
+   event.info = " " + needed_path.string();
+
+   return event;
 }
 
 BfEvent
-BfConfigManager::loadContainers(sol::table obj, std::list<ptrContainer>& c)
+BfConfigManager::createSavedFilesDir()
 {
-   for (auto& it : obj)
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   auto saveDir = BfConfigManager::getSavePath();
+   if (!std::filesystem::exists(saveDir))
    {
-      if (!obj.is<sol::table>())
-      {
-         throw std::runtime_error("Input table cell is not lua-table");
-      }
-      auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
-          std::weak_ptr<BfGuiCreateWindowContainer>()
+      std::filesystem::create_directory(saveDir);
+      event.action = BF_ACTION_TYPE_CREATE_CONFIG_SAVES_DIR_SUCCESS;
+   }
+   else
+   {
+      event.action = BF_ACTION_TYPE_CREATE_CONFIG_SAVES_DIR_FAILURE;
+   }
+   event.info = " " + saveDir.string();
+
+   return event;
+}
+/*
+      NOTE: Логичнее тут использовать виртуальный метод для каждого из
+      дочерних классов, но раз уже было решено преобразовывать через
+      std::to_string, то ладно
+*/
+std::string
+BfConfigManager::createContainersSaveFileString(
+    const std::list<ptrContainer>& cs
+)
+{
+   std::stringstream ss;
+   ss << "Containers = {\n";
+   for (auto& it : cs)
+   {
+      // clang-format off
+         if (auto casted = std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(it))
+         {
+               ss << std::to_string(*casted) << ",\n";   
+         }
+         else if (auto casted = std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(it)) 
+         {
+               ss << std::to_string(*casted) << ",\n";   
+         }
+         else if (auto casted = std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(it)) 
+         {
+               ss << std::to_string(*casted) << ",\n";   
+         }
+         else if (auto casted = std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(it)) 
+         {
+               // ss << std::to_string(*casted) << ",\n";   
+               continue;
+         }
+         else if (auto casted = std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(it)) 
+         {
+               ss << std::to_string(*casted) << ",\n";   
+         }
+      // clang-format on
+   }
+   ss << "}";
+   return ss.str();
+}
+
+BfEvent
+BfConfigManager::saveContainers(
+    const std::list<ptrContainer>& cs, fs::path path
+)
+{
+   BfSingleEvent event{};
+   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   event.info = std::string(" file path '") + fs::absolute(path).string() + "'";
+
+   std::ofstream s;
+   s.open(path);
+   if (!s.is_open())
+   {
+      event.action = BF_ACTION_TYPE_SAVE_CONTAINERS_FAILURE;
+      event.success = false;
+      return event;
+   }
+   else
+   {
+      event.action = BF_ACTION_TYPE_SAVE_CONTAINERS_SUCCESS;
+      event.success = true;
+   }
+
+   // Stream the output directly to the file
+   s << BfConfigManager::createContainersSaveFileString(cs);
+
+   // Check for writing errors (optional)
+   if (!s.good())
+   {
+      std::cerr << "NOT GOOD\n";
+   }
+
+   s.close();  // Explicitly close the file (optional)
+   return event;
+}
+
+BfEvent
+BfConfigManager::loadContainers(std::list<ptrContainer>& cs, fs::path path)
+{
+   BfConfigManager::recreateInstance();
+   BfConfigManager::loadStdLibrary(sol::lib::base);
+   BfConfigManager::loadStdLibrary(sol::lib::package);
+   BfConfigManager::addPackagePath(BfConfigManager::getSavePath());
+   BfConfigManager::loadRequireScript(path);
+   auto table = BfConfigManager::getLuaObj("Containers");
+
+   for (auto elem : sol::table(table))
+   {
+      std::cout << "Loading "
+                << sol::table(elem.second).get<std::string>("type") << "\n";
+      auto c = BfConfigManager::loadBfGuiCreateWindowContainerSmart(
+          sol::table(elem.second)
       );
-
-      BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
-      c.push_back(tmp);
-
-      // //
-      // std::string type_str = sol::table(it.second).get<std::string>("type");
-      // //
-      // if (type_str == "BfGuiCreateWindowContainer")
-      // {
-      //    auto tmp = std::make_shared<BfGuiCreateWindowContainer>(
-      //        std::weak_ptr<BfGuiCreateWindowContainer>()
-      //    );
-      //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
-      //    c.push_back(tmp);
-      // }
-      // else if (type_str == "BfGuiCreateWindowContainerObj")
-      // {
-      //    auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
-      //        std::weak_ptr<BfGuiCreateWindowContainer>()
-      //    );
-      //
-      //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
-      //    c.push_back(tmp);
-      // }
-      // else
-      // {
-      // }
+      cs.emplace_back(std::move(c));
    }
    return BfEvent();
 }
+
+// BfEve fs::path path
+// {
+//    BfConfigManag::crent BfConfigManager::loadContainers(
+//        sol::table obj,
+//        std::list<ptrContainer> & c
+//    )
+//    {
+//       for (auto& it : obj)
+//       {
+//          if (!obj.is<sol::table>())
+//          {
+//             throw std::runtime_error("Input table cell is not lua-table");
+//          }
+//          auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
+//              std::weak_ptr<BfGuiCreateWindowContainer>()
+//          );
+//
+//          BfConfigManager::loadBfGuiCreateWindowContainer(it.second, tmp);
+//          c.push_back(tmp);
+//
+//          // //
+//          // std::string type_str =
+//          // sol::table(it.second).get<std::string>("type");
+//          // //
+//          // if (type_str == "BfGuiCreateWindowContainer")
+//          // {
+//          //    auto tmp = std::make_shared<BfGuiCreateWindowContainer>(
+//          //        std::weak_ptr<BfGuiCreateWindowContainer>()
+//          //    );
+//          //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second,
+//          tmp);
+//          //    c.push_back(tmp);
+//          // }
+//          // else if (type_str == "BfGuiCreateWindowContainerObj")
+//          // {
+//          //    auto tmp = std::make_shared<BfGuiCreateWindowContainerObj>(
+//          //        std::weak_ptr<BfGuiCreateWindowContainer>()
+//          //    );
+//          //
+//          //    BfConfigManager::loadBfGuiCreateWindowContainer(it.second,
+//          tmp);
+//          //    c.push_back(tmp);
+//          // }
+//          // else
+//          // {
+//          // }
+//       }
+//       return BfEvent();
+//    }
 //
 //
 //
