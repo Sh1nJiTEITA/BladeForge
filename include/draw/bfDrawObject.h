@@ -223,15 +223,13 @@ public:
    VkPipeline *get_bound_pPipeline();
 
    glm::mat4 &get_model_matrix();
+
    void bind_pipeline(VkPipeline *pPipeline);
    void set_color(glm::vec3 c);
 
    virtual bool is_ok();
    virtual void create_indices();
    virtual void create_vertices();
-
-   void clear_vetices();
-   void clear_indices();
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

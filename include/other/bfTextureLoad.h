@@ -4,26 +4,23 @@
 #include <vulkan/vulkan_core.h>
 
 #include "bfBuffer.h"
-#include "bfCurves2.h"
 #include "bfPhysicalDevice.h"
 #include "bfVariative.hpp"
 #include "vk_mem_alloc.h"
 
-
 class BfTextureLoader;
-
 
 class BfTexture
 {
    std::string __path;
 
-   int      __width;
-   int      __height;
-   int      __channels;
+   int __width;
+   int __height;
+   int __channels;
    uint8_t* __data;
 
-   VkDescriptorSet  __desc_set;
-   VkSampler*       __sampler;
+   VkDescriptorSet __desc_set;
+   VkSampler* __sampler;
    BfAllocatedImage __image;
 
    uint32_t __id;
@@ -41,13 +38,13 @@ public:
 
    void load(VmaAllocator allocator, VkDevice device);
 
-   bool               is_ok() const;
-   uint32_t           id() const;
+   bool is_ok() const;
+   uint32_t id() const;
    const std::string& path() const;
-   VmaAllocator       allocator() const;
-   uint32_t           size() const;
+   VmaAllocator allocator() const;
+   uint32_t size() const;
 
-   VkSampler*       sampler() const;
+   VkSampler* sampler() const;
    VkDescriptorSet* set();
 
    BfAllocatedImage* image();
@@ -62,24 +59,26 @@ public:
 class BfTextureLoader
 {
    BfPhysicalDevice* __pPhysicalDevice;
-   VkDevice*         __pDevice;
-   VmaAllocator*     __pAllocator;
-   VkCommandPool*    __pCommandPool;
+   VkDevice* __pDevice;
+   VmaAllocator* __pAllocator;
+   VkCommandPool* __pCommandPool;
 
-   VkSampler       __sampler;
+   VkSampler __sampler;
    VkCommandBuffer __commandBuffer;
 
    VkDescriptorSetLayout __desc_set_layout;
-   VkDescriptorPool      __imguiDescriptorPool;
+   VkDescriptorPool __imguiDescriptorPool;
 
    std::vector<BfTexture> __textures;
 
 public:
    BfTextureLoader();
-   BfTextureLoader(BfPhysicalDevice* physical_device,
-                   VkDevice*         device,
-                   VmaAllocator*     allocator,
-                   VkCommandPool*    pool);
+   BfTextureLoader(
+       BfPhysicalDevice* physical_device,
+       VkDevice* device,
+       VmaAllocator* allocator,
+       VkCommandPool* pool
+   );
    void kill();
    ~BfTextureLoader();
 
@@ -96,7 +95,8 @@ private:
 
    // LOADING TEXTURES
    void __create_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture);
-   void __map_temp_buffer(BfAllocatedBuffer* buffer, BfTexture* texture
+   void __map_temp_buffer(
+       BfAllocatedBuffer* buffer, BfTexture* texture
 
    );
    void __create_sampler();
@@ -104,10 +104,12 @@ private:
 
    void __transition_image(BfTexture* image, VkImageLayout o, VkImageLayout n);
 
-   void __copy_buffer_to_image(BfAllocatedBuffer* buffer,
-                               BfAllocatedImage*  image,
-                               uint32_t           w,
-                               uint32_t           h);
+   void __copy_buffer_to_image(
+       BfAllocatedBuffer* buffer,
+       BfAllocatedImage* image,
+       uint32_t w,
+       uint32_t h
+   );
 
    void __create_texture_image_view(BfTexture* texture);
 

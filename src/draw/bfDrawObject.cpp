@@ -167,17 +167,6 @@ BfDrawObj::create_vertices()
 {
 }
 
-void
-BfDrawObj::clear_vetices()
-{
-   __vertices.clear();
-}
-void
-BfDrawObj::clear_indices()
-{
-   __indices.clear();
-}
-
 std::unordered_set<unsigned int> BfObjID::__existing_values;
 std::map<uint32_t, uint32_t> BfObjID::__existing_pairs;
 

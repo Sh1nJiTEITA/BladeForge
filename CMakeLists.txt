@@ -216,12 +216,8 @@ set(BF_BASE
     "src/base/bfWindow.cpp")
 
 set(BF_GEOMETRY
-    "include/geometry/bfCurves.hpp"
-    "include/geometry/bfCurves2.h"
-    "src/geometry/bfCurves2.cpp"
-    "include/geometry/bfCurves3.h"
-    "src/geometry/bfCurves3.cpp"
-    "include/geometry/bfBladeSection.h"
+    "include/geometry/bfCurves.hpp" "include/geometry/bfCurves3.h"
+    "src/geometry/bfCurves3.cpp" "include/geometry/bfBladeSection.h"
     "src/geometry/bfBladeSection.cpp")
 
 set(BF_INTERACTION
