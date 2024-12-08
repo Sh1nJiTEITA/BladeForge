@@ -10,7 +10,6 @@
 #include "bfUniforms.h"
 #include "bfVertex2.hpp"
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class BfObjID
 {
    uint32_t __value;
@@ -29,7 +28,10 @@ public:
    static bool is_id_exists(BfObjID &id);
    static uint32_t find_type(uint32_t);
 };
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 class BfDrawObj;
 class BfLayerHandler;
@@ -44,7 +46,9 @@ struct BfDrawLayerCreateInfo
    uint32_t id_type;
 };
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
 {
@@ -127,7 +131,6 @@ public:
    void update_nested(void *v, void *i, size_t &off_v, size_t &off_i);
 
    void clear_buffer();
-
    void set_color(glm::vec3 c);
 
    // TODO: global model-matrix descriptor
@@ -152,7 +155,6 @@ private:
    objPair __it_find_obj_by_id(size_t id);
    layerPair __it_find_layer_by_id(size_t id);
    varPair __it_find_var_by_id(size_t id);
-   // __varTransaction __gen_transaction(size_t what_id, size_t where_id);
 };
 
 class BfLayerKiller
@@ -172,7 +174,9 @@ public:
    void kill();
 };
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 class BfGuiIntegration
 {
@@ -183,6 +187,10 @@ public:
    bool *get_pSelection();
    bool is_draw = true;
 };
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 class BfDrawObj : public BfGuiIntegration
 {
@@ -203,35 +211,21 @@ public:
 
    BfObjID id;
 
-   const std::vector<BfVertex3> &get_rVertices() const;
-   const std::vector<BfVertex3> &get_rdVertices() const;
-   const std::vector<uint32_t> &get_rIndices() const;
+   std::vector<BfVertex3> &vertices();
+   std::vector<BfVertex3> &dVertices();
+   std::vector<uint32_t> &indices();
 
-   BfVertex3 *get_pVertices();
-   BfVertex3 *get_pdVertices();
-   uint32_t *get_pIndices();
-
-   BfObjectData get_obj_data();
-
-   const size_t get_vertices_count() const;
-   const size_t get_dvertices_count() const;
-   const size_t get_indices_count() const;
-
-   size_t get_vertex_data_size();
-   size_t get_index_data_size();
+   BfObjectData genObjData();
 
    VkPipeline *get_bound_pPipeline();
-
-   glm::mat4 &get_model_matrix();
+   glm::mat4 &modelMatrix();
 
    void bind_pipeline(VkPipeline *pPipeline);
    void set_color(glm::vec3 c);
 
    virtual bool is_ok();
-   virtual void create_indices();
-   virtual void create_vertices();
+   virtual void createIndices();
+   virtual void createVertices();
 };
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #endif

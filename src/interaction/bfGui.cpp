@@ -1000,7 +1000,7 @@ ShowTestPlot()
    std::vector<glm::vec2> spl = bfMathSplineFit(v_x, v_y);
 
    BfCubicSplineCurve spline(50, v);
-   spline.create_vertices();
+   spline.createVertices();
 
    auto compareByX = [](const glm::vec3 &a, const glm::vec3 &b) {
       return a.x < b.x;

@@ -176,7 +176,7 @@ public:
        size_t skip_vert = 0
    );
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 };
 
 #endif

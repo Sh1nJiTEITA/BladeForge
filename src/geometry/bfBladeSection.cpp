@@ -238,10 +238,10 @@ BfBladeSection::get_face_curve_frame()
 std::vector<std::shared_ptr<BfTriangle>>
 BfBladeSection::get_triangulated_shape()
 {
-   this->get_back_curve()->create_vertices();
-   this->get_face_curve()->create_vertices();
-   auto back = this->get_back_curve()->get_rVertices();
-   auto face = this->get_face_curve()->get_rVertices();
+   this->get_back_curve()->createVertices();
+   this->get_face_curve()->createVertices();
+   auto back = this->get_back_curve()->vertices();
+   auto face = this->get_face_curve()->vertices();
    if (back.size() != face.size()) abort();
 
    std::vector<std::shared_ptr<BfTriangle>> triangles;
@@ -260,8 +260,8 @@ BfBladeSection::get_triangulated_shape()
       );
    }
 
-   this->get_inlet_edge_a()->create_vertices();
-   auto iedge = this->get_inlet_edge_a()->get_rVertices();
+   this->get_inlet_edge_a()->createVertices();
+   auto iedge = this->get_inlet_edge_a()->vertices();
    auto icenter = this->get_inlet_edge_a()->get_center();
    for (size_t i = 0; i < iedge.size() - 1; i++)
    {
@@ -270,8 +270,8 @@ BfBladeSection::get_triangulated_shape()
       );
    }
 
-   this->get_outlet_edge_a()->create_vertices();
-   auto oedge = this->get_outlet_edge_a()->get_rVertices();
+   this->get_outlet_edge_a()->createVertices();
+   auto oedge = this->get_outlet_edge_a()->vertices();
    auto ocenter = this->get_outlet_edge_a()->get_center();
    for (size_t i = 0; i < iedge.size() - 1; i++)
    {
@@ -358,10 +358,10 @@ BfBladeSection::del_all()
 std::vector<BfVertex3>
 BfBladeSection::get_contour()
 {
-   if (!get_back_curve()->is_ok()) get_back_curve()->create_vertices();
-   if (!get_inlet_edge_a()->is_ok()) get_inlet_edge_a()->create_vertices();
-   if (!get_face_curve()->is_ok()) get_face_curve()->create_vertices();
-   if (!get_outlet_edge_a()->is_ok()) get_outlet_edge_a()->create_vertices();
+   if (!get_back_curve()->is_ok()) get_back_curve()->createVertices();
+   if (!get_inlet_edge_a()->is_ok()) get_inlet_edge_a()->createVertices();
+   if (!get_face_curve()->is_ok()) get_face_curve()->createVertices();
+   if (!get_outlet_edge_a()->is_ok()) get_outlet_edge_a()->createVertices();
 
    auto vert = bfMathStickObjVertices(
        {std::dynamic_pointer_cast<BfDrawObj>(get_back_curve()),
@@ -391,8 +391,8 @@ BfBladeSection::generate_draw_data()
    {
       auto obj = this->get_object_by_index(i);
       // obj->set_color({ 1.0f, 1.0f, 1.0f });
-      obj->create_vertices();
-      obj->create_indices();
+      obj->createVertices();
+      obj->createIndices();
       obj->bind_pipeline(&__info->l_pipeline);
    }
    this->update_buffer();
@@ -665,7 +665,7 @@ BfBladeSection::__generate_average_line_geometry()
           this->get_inlet_edge()->get_center(),
           this->get_inlet_edge()->get_center().pos + glm::normalize(inlet_dir)
       );
-      inlet_vector->create_vertices();
+      inlet_vector->createVertices();
       this->add_l(inlet_vector);
    }
 
@@ -683,7 +683,7 @@ BfBladeSection::__generate_average_line_geometry()
           this->get_outlet_edge()->get_center(),
           this->get_outlet_edge()->get_center().pos + glm::normalize(outlet_dir)
       );
-      outlet_vector->create_vertices();
+      outlet_vector->createVertices();
       this->add_l(outlet_vector);
    }
 
@@ -1248,8 +1248,8 @@ BfBladeBaseSurface::BfBladeBaseSurface(
 )
     : __secs{secs}, __slices_count{inner_sections_count}, __skip_vert{skip_vert}
 {
-   this->create_vertices();
-   this->create_indices();
+   this->createVertices();
+   this->createIndices();
 
    for (auto it = __indices.end() - 1; it != __indices.end() - 400; --it)
       std::cout << *it << "\n";
@@ -1259,7 +1259,7 @@ BfBladeBaseSurface::BfBladeBaseSurface(
 }
 
 void
-BfBladeBaseSurface::create_vertices()
+BfBladeBaseSurface::createVertices()
 {
    using T_parts = std::vector<std::shared_ptr<BfDrawObj>>;
 
@@ -1283,7 +1283,7 @@ BfBladeBaseSurface::create_vertices()
       size_t total_part_vert_count = 0;
       for (auto part = p.begin(); part != p.end(); ++part)
       {
-         total_part_vert_count += part->get()->get_vertices_count();
+         total_part_vert_count += part->get()->vertices().size();
       }
       total_vertices.emplace_back(total_part_vert_count);
    }
@@ -1303,7 +1303,7 @@ BfBladeBaseSurface::create_vertices()
    for (int p_index = 0; p_index < parts_count; ++p_index)
    {
       // Идем по каждой точке во всех сечениях
-      size_t vert_count = parts[0][p_index]->get_vertices_count();
+      size_t vert_count = parts[0][p_index]->vertices().size();
 
       std::vector<std::vector<glm::vec3>> v_part;
       v_part.resize((__slices_count) * (__secs.size() - 1));
@@ -1321,7 +1321,7 @@ BfBladeBaseSurface::create_vertices()
          for (auto part = parts.begin(); part != parts.end(); ++part)
          {
             // Получаем все точки для составляющей сечения с индексом p_index
-            spl_v.emplace_back((*part)[p_index]->get_rVertices()[v_index]);
+            spl_v.emplace_back((*part)[p_index]->vertices()[v_index]);
          }
 
          std::vector<SplineLib::cSpline3> spls =

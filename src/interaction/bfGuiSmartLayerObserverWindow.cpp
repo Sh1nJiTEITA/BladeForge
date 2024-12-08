@@ -265,9 +265,9 @@ std::string
 BfGuiSmartLayerObserver::objData(std::shared_ptr<BfDrawObj> o)
 {
    return std::string(
-       ("\tVertices " + std::to_string(o->get_vertices_count())) +
-       ("\n\tIndices " + std::to_string(o->get_indices_count())) +
-       ("\n\tDVertices " + std::to_string(o->get_dvertices_count()))
+       ("\tVertices " + std::to_string(o->vertices().size())) +
+       ("\n\tIndices " + std::to_string(o->indices().size())) +
+       ("\n\tDVertices " + std::to_string(o->dVertices().size()))
    );
 }
 

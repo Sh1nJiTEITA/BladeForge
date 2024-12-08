@@ -40,44 +40,26 @@ BfDrawObj::is_ok()
    return decision;
 }
 
-const std::vector<BfVertex3> &
-BfDrawObj::get_rVertices() const
+std::vector<BfVertex3> &
+BfDrawObj::vertices()
 {
    return __vertices;
 }
 
-const std::vector<BfVertex3> &
-BfDrawObj::get_rdVertices() const
+std::vector<BfVertex3> &
+BfDrawObj::dVertices()
 {
    return __dvertices;
 }
 
-const std::vector<uint32_t> &
-BfDrawObj::get_rIndices() const
+std::vector<uint32_t> &
+BfDrawObj::indices()
 {
    return __indices;
 }
 
-BfVertex3 *
-BfDrawObj::get_pVertices()
-{
-   return __vertices.data();
-}
-
-BfVertex3 *
-BfDrawObj::get_pdVertices()
-{
-   return __dvertices.data();
-}
-
-uint32_t *
-BfDrawObj::get_pIndices()
-{
-   return __indices.data();
-}
-
 BfObjectData
-BfDrawObj::get_obj_data()
+BfDrawObj::genObjData()
 {
    BfObjectData data{};
    data.id = this->id.get();
@@ -91,49 +73,14 @@ BfDrawObj::get_obj_data()
    return data;
 }
 
-const size_t
-BfDrawObj::get_vertices_count() const
-{
-   return __vertices.size();
-}
-
-const size_t
-BfDrawObj::get_dvertices_count() const
-{
-   return __dvertices.size();
-}
-
-const size_t
-BfDrawObj::get_indices_count() const
-{
-   return __indices.size();
-}
-
-size_t
-BfDrawObj::get_vertex_data_size()
-{
-   return sizeof(BfVertex3) * __vertices.size();
-}
-
-size_t
-BfDrawObj::get_index_data_size()
-{
-   return sizeof(uint32_t) * __indices.size();
-}
-
 VkPipeline *
 BfDrawObj::get_bound_pPipeline()
 {
    return __pPipeline;
 }
 
-// void BfDrawObj::set_obj_data(BfObjectData obj_data)
-//{
-//	__obj_data = obj_data;
-// }
-
 glm::mat4 &
-BfDrawObj::get_model_matrix()
+BfDrawObj::modelMatrix()
 {
    return __model_matrix;
 }
@@ -151,7 +98,7 @@ BfDrawObj::set_color(glm::vec3 c)
 }
 
 void
-BfDrawObj::create_indices()
+BfDrawObj::createIndices()
 {
    // TODO
    if (!__indices.empty()) __indices.clear();
@@ -163,7 +110,7 @@ BfDrawObj::create_indices()
 }
 
 void
-BfDrawObj::create_vertices()
+BfDrawObj::createVertices()
 {
 }
 
@@ -291,7 +238,7 @@ BfDrawLayer::get_whole_vertex_count() const noexcept
    size_t count = 0;
    for (auto &it : __objects)
    {
-      count += it->get_vertices_count();
+      count += it->vertices().size();
    }
    return count;
 }
@@ -302,7 +249,7 @@ BfDrawLayer::get_whole_index_count() const noexcept
    size_t count = 0;
    for (auto &it : __objects)
    {
-      count += it->get_indices_count();
+      count += it->indices().size();
    }
    return count;
 }
@@ -339,7 +286,7 @@ BfDrawLayer::get_obj_model_matrices() const noexcept
 
    for (const auto &obj : __objects)
    {
-      obj_data.push_back(obj->get_obj_data());
+      obj_data.push_back(obj->genObjData());
    }
 
    return obj_data;
@@ -487,8 +434,8 @@ BfDrawLayer::generate_draw_data()
    {
       auto obj = this->get_object_by_index(i);
       // obj->set_color({ 1.0f, 1.0f, 1.0f });
-      obj->create_vertices();
-      obj->create_indices();
+      obj->createVertices();
+      obj->createIndices();
       // obj->bind_pipeline(&__info.pipeline);
    }
    this->update_buffer();
@@ -504,7 +451,7 @@ BfDrawLayer::update_vertex_offset()
    for (size_t i = 0; i < __objects.size(); i++)
    {
       __vertex_offsets[i] = growing_offset;
-      growing_offset += __objects[i]->get_vertices_count();
+      growing_offset += __objects[i]->vertices().size();
    }
    return __vertex_offsets;
 }
@@ -519,7 +466,7 @@ BfDrawLayer::update_index_offset()
    for (size_t i = 0; i < __objects.size(); i++)
    {
       __index_offsets[i] = growing_offset;
-      growing_offset += __objects[i]->get_indices_count();
+      growing_offset += __objects[i]->indices().size();
    }
    return __index_offsets;
 }
@@ -533,13 +480,21 @@ BfDrawLayer::update_nested(void *v, void *i, size_t &off_v, size_t &off_i)
 
    for (const auto &obj : __objects)
    {
-      size_t size_v = sizeof(BfVertex3) * obj->get_vertices_count();
+      size_t size_v = sizeof(BfVertex3) * obj->vertices().size();
 
-      memcpy(reinterpret_cast<char *>(v) + off_v, obj->get_pVertices(), size_v);
+      memcpy(
+          reinterpret_cast<char *>(v) + off_v,
+          obj->vertices().data(),
+          size_v
+      );
       off_v += size_v;
 
-      size_t size_i = sizeof(uint32_t) * obj->get_indices_count();
-      memcpy(reinterpret_cast<char *>(i) + off_i, obj->get_pIndices(), size_i);
+      size_t size_i = sizeof(uint32_t) * obj->indices().size();
+      memcpy(
+          reinterpret_cast<char *>(i) + off_i,
+          obj->indices().data(),
+          size_i
+      );
       off_i += size_i;
    }
 
@@ -563,11 +518,11 @@ BfDrawLayer::update_buffer()
       size_t offset_v = 0;
       for (const auto &obj : __objects)
       {
-         size_t size = sizeof(BfVertex3) * obj->get_vertices_count();
+         size_t size = sizeof(BfVertex3) * obj->vertices().size();
 
          memcpy(
              reinterpret_cast<char *>(vertex_data) + offset_v,
-             obj->get_pVertices(),
+             obj->vertices().data(),
              size
          );
 
@@ -577,11 +532,11 @@ BfDrawLayer::update_buffer()
       size_t offset_i = 0;
       for (const auto &obj : __objects)
       {
-         size_t size = sizeof(uint32_t) * obj->get_indices_count();
+         size_t size = sizeof(uint32_t) * obj->indices().size();
 
          memcpy(
              reinterpret_cast<char *>(index_data) + offset_i,
-             obj->get_pIndices(),
+             obj->indices().data(),
              size
          );
 
@@ -678,7 +633,7 @@ BfDrawLayer::draw(
 
       vkCmdDrawIndexed(
           combuffer,
-          __objects[i]->get_indices_count(),
+          __objects[i]->indices().size(),
           1,
           __index_offsets[i] + index_offset,
           __vertex_offsets[i] + vertex_offset,
@@ -704,7 +659,7 @@ BfDrawLayer::map_model_matrices(size_t frame_index, size_t &offset, void *data)
    for (size_t i = 0; i < __objects.size(); i++)
    {
       if (!__objects[i]->is_draw) continue;
-      BfObjectData obj_data = __objects[i]->get_obj_data();
+      BfObjectData obj_data = __objects[i]->genObjData();
       memcpy(
           reinterpret_cast<char *>(data) + offset,
           &obj_data,

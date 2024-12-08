@@ -114,8 +114,8 @@ class BfPlane : public BfDrawObj
 {
 public:
    BfPlane(std::vector<BfVertex3> d_vertices);
-   virtual void create_vertices() override;
-   virtual void create_indices() override;
+   virtual void createVertices() override;
+   virtual void createIndices() override;
 
 private:
 };
@@ -156,7 +156,7 @@ public:
    glm::vec3 get_direction_from_start() const;
    glm::vec3 get_direction_from_end() const;
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,7 +174,7 @@ public:
    float get_area() const;
    BfVertex3 get_center() const;
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +209,7 @@ public:
 
    std::array<BfVertex3, 2> get_tangent_vert(const BfVertex3& P) const;
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 };
 
 class BfArc : public BfCircle
@@ -222,7 +222,7 @@ public:
        const BfVertex3& P_3
    );
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -259,7 +259,7 @@ public:
    const size_t get_out_vertices_count() const noexcept;
    void set_out_vertices_count(size_t in_m);
 
-   virtual void create_vertices() override;
+   virtual void createVertices() override;
 
    friend float bfMathGetBezierCurveLength(BfBezierCurve* curve);
    friend std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
@@ -303,7 +303,7 @@ public:
    BfCubicSplineCurve(size_t out_vertices_count, std::vector<BfVertex3>& dp);
    BfCubicSplineCurve(size_t out_vertices_count, std::vector<glm::vec3>& dp);
 
-   virtual void create_vertices();
+   virtual void createVertices();
 };
 
 #endif  // !BF_CURVES3_H

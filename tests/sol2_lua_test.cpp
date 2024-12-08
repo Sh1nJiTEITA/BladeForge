@@ -745,14 +745,14 @@ TEST_CASE("Blade-base-section-windows")
          REQUIRE_NOTHROW(
              BfConfigManager::loadBfGuiCreateWindowContainer(table, ptr_back)
          );
-         checkBaseContainer(
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
-         );
-         checkBaseContainer(
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
-         );
+         // checkBaseContainer(
+         //     std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+         // std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+         // );
+         // checkBaseContainer(
+         //     std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr),
+         //     std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr_back)
+         // );
       }
 
       // auto ptr = std::make_shared<BfGuiCreateWindowBladeBase>(

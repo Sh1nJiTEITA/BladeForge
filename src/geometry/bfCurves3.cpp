@@ -7,7 +7,7 @@ BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
 }
 
 void
-BfPlane::create_vertices()
+BfPlane::createVertices()
 {
    __vertices.reserve(__dvertices.size());
    for (const auto& dvert : __dvertices)
@@ -17,7 +17,7 @@ BfPlane::create_vertices()
 }
 
 void
-BfPlane::create_indices()
+BfPlane::createIndices()
 {
    __indices.reserve(__vertices.size() * 2);
    for (size_t i = 0; i < __vertices.size(); ++i)
@@ -31,7 +31,6 @@ BfSingleLine::BfSingleLine()
           {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}},
           {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}
       }
-
 {
 }
 
@@ -170,10 +169,10 @@ BfSingleLine::get_direction_from_end() const
 }
 
 void
-BfSingleLine::create_vertices()
+BfSingleLine::createVertices()
 {
    if (this->is_ok())
-      throw std::runtime_error("BfSingleLine::create_vertices abort");
+      throw std::runtime_error("BfSingleLine::createVertices abort");
 
    __vertices.clear();
 
@@ -226,7 +225,7 @@ BfTriangle::get_center() const
 }
 
 void
-BfTriangle::create_vertices()
+BfTriangle::createVertices()
 {
    for (auto& it : __dvertices)
    {
@@ -593,31 +592,31 @@ std::vector<glm::vec3>
 bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
 {
    std::vector<glm::vec3> d;
-   d.reserve(curve->get_dvertices_count());
+   d.reserve(curve->dVertices().size());
 
-   for (size_t i = 0; i < curve->get_dvertices_count(); ++i)
+   for (size_t i = 0; i < curve->dVertices().size(); ++i)
    {
       glm::vec3 axe_derivative{0.0f};
       for (size_t j = 0; j < 2; ++j)
       {
-         std::vector<BfVertex3> right_dvert = curve->get_rdVertices();
+         std::vector<BfVertex3> right_dvert = curve->dVertices();
          right_dvert[i].pos[j] += BF_MATH_ABS_ACCURACY;
          BfBezierCurve right_curve{
              curve->get_n(),
-             curve->get_dvertices_count(),
+             curve->dVertices().size(),
              right_dvert
          };
-         right_curve.create_vertices();
+         right_curve.createVertices();
          float right = bfMathGetBezierCurveLength(&right_curve);
 
-         std::vector<BfVertex3> left_dvert = curve->get_rdVertices();
+         std::vector<BfVertex3> left_dvert = curve->dVertices();
          left_dvert[i].pos[j] -= BF_MATH_ABS_ACCURACY;
          BfBezierCurve left_curve{
              curve->get_n(),
-             curve->get_dvertices_count(),
+             curve->dVertices().size(),
              left_dvert
          };
-         left_curve.create_vertices();
+         left_curve.createVertices();
          float left = bfMathGetBezierCurveLength(&left_curve);
 
          axe_derivative[j] = (right - left) / 2.0f / BF_MATH_ABS_ACCURACY;
@@ -728,19 +727,15 @@ bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs)
    size_t total_size = 0;
    for (auto& obj : objs)
    {
-      if (obj->get_vertices_count() == 0) abort();
-      total_size += obj->get_vertices_count();
+      if (obj->vertices().size() == 0) abort();
+      total_size += obj->vertices().size();
    }
    std::vector<BfVertex3> out;
    out.reserve(total_size);
 
    for (auto& obj : objs)
    {
-      out.insert(
-          out.end(),
-          obj->get_rVertices().begin(),
-          obj->get_rVertices().end()
-      );
+      out.insert(out.end(), obj->vertices().begin(), obj->vertices().end());
    }
 
    return out;
@@ -1137,7 +1132,7 @@ BfBezierCurve::set_out_vertices_count(size_t in_m)
 }
 
 void
-BfBezierCurve::create_vertices()
+BfBezierCurve::createVertices()
 {
    __vertices.clear();
 
@@ -1335,7 +1330,7 @@ BfCircle::get_tangent_vert(const BfVertex3& P) const
 }
 
 void
-BfCircle::create_vertices()
+BfCircle::createVertices()
 {
    if (!__vertices.empty()) __vertices.clear();
 
@@ -1376,7 +1371,7 @@ BfArc::BfArc(
 }
 
 void
-BfArc::create_vertices()
+BfArc::createVertices()
 {
    if (!__vertices.empty()) __vertices.clear();
 
@@ -1440,11 +1435,11 @@ BfBezierCurveFrame::BfBezierCurveFrame(
     , __triangle_pipeline{triangle_pipeline}
 
 {
-   for (size_t i = 0; i < curve->get_dvertices_count(); i++)
+   for (size_t i = 0; i < curve->dVertices().size(); i++)
    {
       auto handle = std::make_shared<BfCircle>(
           20,
-          curve->get_rdVertices()[i],
+          curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
       );
       handle->bind_pipeline(&__lines_pipeline);
@@ -1460,11 +1455,11 @@ BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 c)
 {
    this->del_all();
    __curve = curve;
-   for (size_t i = 0; i < curve->get_dvertices_count(); i++)
+   for (size_t i = 0; i < curve->dVertices().size(); i++)
    {
       auto handle = std::make_shared<BfCircle>(
           20,
-          curve->get_rdVertices()[i],
+          curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
       );
       handle->bind_pipeline(&__lines_pipeline);
@@ -1498,7 +1493,7 @@ BfCubicSplineCurve::BfCubicSplineCurve(
 }
 
 void
-BfCubicSplineCurve::create_vertices()
+BfCubicSplineCurve::createVertices()
 {
    auto calculateSplinePoint = [](const std::vector<glm::vec3>& a,
                                   const std::vector<glm::vec3>& b,
