@@ -1213,6 +1213,7 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
        .installAngle = 50.0f,
        .inletAngle = 25.0f,
        .outletAngle = 42.0f,
+       .cmax = {{0.15f, 0.2f}, {0.05f, 0.6}},
 
        .l_pipeline = BfLayerHandler::instance()
                          ? *BfLayerHandler::instance()->line_pipeline()
@@ -1227,6 +1228,7 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
     : __info{info}
 {
    __createAverageCurve();
+   __createCmax();
    createVertices();
 }
 
@@ -1252,6 +1254,12 @@ BfBladeSection2::createVertices()
       obj->bind_pipeline(&__info->l_pipeline);
    }
    this->update_buffer();
+}
+
+ptrObj
+BfBladeSection2::getPart(BfBladeSection2_ e)
+{
+   return this->get_object_by_index((size_t)e);
 }
 
 void
@@ -1307,6 +1315,18 @@ BfBladeSection2::__createAverageCurve()
    ave_curve_frame->set_color(BF_BLADESECTION_AVE_COLOR);
    ave_curve_frame->update_buffer();
    this->add(ave_curve_frame);
+}
+
+void
+BfBladeSection2::__createCmax()
+{
+   auto aveCurve = BFBSCONV(BfBezierCurve, BEZIER_AVE);
+
+   for (const auto &cmax : __info->cmax)
+   {
+      BfVertex3 aveCoo = aveCurve->calcBfV3(cmax.relativeCoordinate);
+
+   }
 }
 
 void

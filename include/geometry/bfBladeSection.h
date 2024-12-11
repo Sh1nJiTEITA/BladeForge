@@ -135,6 +135,12 @@ private:
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
 
+struct BfBladeSectionCmax
+{
+   float radius;
+   float relativeCoordinate;  // t
+};
+
 struct BfBladeSectionCreateInfo2
 {
    BfDrawLayerCreateInfo layer_create_info;
@@ -143,6 +149,8 @@ struct BfBladeSectionCreateInfo2
    float installAngle;
    float inletAngle;
    float outletAngle;
+
+   std::vector<BfBladeSectionCmax> cmax;
 
    VkPipeline l_pipeline = nullptr;
    VkPipeline t_pipeline = nullptr;
@@ -153,6 +161,8 @@ void bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info);
 #define BFVEC3_STR(VEC) VEC.x << " " << VEC.y << " " << VEC.z
 #define BFBS2_LOG(MSG) std::cout << MSG << "\n"
 
+using ptrObj = std::shared_ptr<BfDrawObj>;
+
 class BfBladeSection2 : public BfDrawLayer
 {
    BfBladeSectionCreateInfo2* __info;
@@ -160,13 +170,22 @@ class BfBladeSection2 : public BfDrawLayer
 public:
    BfBladeSection2(BfBladeSectionCreateInfo2* info);
 
+   enum BfBladeSection2_
+   {
+      BEZIER_AVE = 0
+   };
+
    float equivalentInletAngle();
    float equivalentOutletAngle();
 
    virtual void createVertices();
+#define BFBSCONV(TYPE, NAME) std::dynamic_pointer_cast<TYPE>(getPart(NAME))
+
+   ptrObj getPart(BfBladeSection2_ e);
 
 private:
    void __createAverageCurve();
+   void __createCmax();
    void __createBack();
 };
 
