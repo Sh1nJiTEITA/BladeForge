@@ -194,8 +194,9 @@ BfMain::__loop()
        glm::vec3{1.0f, 0.0f, 0.0f}
    );
    xAxis->set_color({1.0f, 0.0f, 0.0f});
-   // xAxis->createVertices();
-   // xAxis->createIndices();
+   xAxis->createVertices();
+   xAxis->createIndices();
+   xAxis->bind_pipeline(&__base.line_pipeline);
    auto yAxis = std::make_shared<BfSingleLine>(
        glm::vec3{0.0f, 0.0f, 0.0},
        glm::vec3{0.0f, 1.0f, 0.0f}
@@ -223,11 +224,11 @@ BfMain::__loop()
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
       std::cout << "ADDING 1\n";
-      // __other_layer->add_l(xAxis);
+      __other_layer->add_l(xAxis);
       std::cout << "ADDING 2\n";
       // __other_layer->add_l(yAxis);
       // __other_layer->add_l(zAxis);
-      // __other_layer->update_buffer();
+      __other_layer->update_buffer();
       std::cout << "ADDING 3\n";
    }
    //
