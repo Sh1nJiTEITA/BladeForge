@@ -3,6 +3,7 @@
 
 #include <bfDrawObjectDefineType.h>
 #include <bfGreekFont.h>
+#include <bfGuiCreateWindowContainerDefines.h>
 #include <bfIconsFontAwesome6.h>
 #include <bfLayerHandler.h>
 #include <imgui.h>
@@ -11,41 +12,24 @@
 #include <functional>
 #include <list>
 #include <memory>
-#include <queue>
 #include <string>
 #include <vector>
 
-class BfConfigManager;
-
-class BfGuiCreateWindow;
-class BfGuiCreateWindowContainer;
-class BfGuiCreateWindowContainerObj;
-class BfGuiCreateWindowContainerPopup;
+// === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === ===
 
 namespace std
 {
-// string to_string(const BfGuiCreateWindowContainer&);
 string to_string(const BfGuiCreateWindowContainer&, int);
-// string to_string(const BfGuiCreateWindowContainerObj&);
 string to_string(const BfGuiCreateWindowContainerObj&, int);
 }  // namespace std
 
-#define BfGuiCreateWindowContainer_ButtonType_All \
-   (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)
-#define BfGuiCreateWindowContainer_ButtonType_Left (1 << 0)
-#define BfGuiCreateWindowContainer_ButtonType_Right (1 << 1)
-#define BfGuiCreateWindowContainer_ButtonType_Top (1 << 2)
-#define BfGuiCreateWindowContainer_ButtonType_Bot (1 << 3)
-
-using swapFuncType =
-    std::function<void(const std::string&, const std::string&)>;
-using moveFuncType =
-    std::function<void(const std::string&, const std::string&)>;
-using ptrContainer = std::shared_ptr<BfGuiCreateWindowContainer>;
-using wptrContainer = std::weak_ptr<BfGuiCreateWindowContainer>;
+// === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === ===
 
 class BfGuiCreateWindowContainer
 {
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowContainer);
    std::string __str_child_border_id;
 
    bool __is_invisiable_buttons = true;
@@ -138,8 +122,6 @@ public:
    void add(ptrContainer container);
    void rem(ptrContainer container);
 
-   // friend std::string std::to_string(const BfGuiCreateWindowContainer&);
-
    friend class BfConfigManager;
 
 #if defined(BF_CONFIG_MANAGER_TESTING)
@@ -148,30 +130,29 @@ public:
    friend std::string std::to_string(const BfGuiCreateWindowContainer&, int);
    friend std::string bfGetContainerStr(ptrContainer c, int indent);
 };
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowContainer);
 
 void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
 
-//
-//
-//
-//
-//
+// === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === ===
 
 class BfGuiCreateWindowContainerObj
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerObj>
 {
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowContainerObj);
+
    static bool __is_moving_container;
    bool __is_current_moving;
    bool __is_drop_target;
    int __selected_layer = -1;
 
 protected:
-   // For changing initial size (mb)
    ImVec2 __old_size;
    std::string __name;
    ImVec2 __header_button_size = {20.0f, 20.0f};
-   //
+
    BfDrawLayerCreateInfo __layer_create_info;
    std::shared_ptr<BfDrawLayer> __layer_obj;
    std::weak_ptr<BfDrawLayer> __ptr_root;
@@ -213,22 +194,17 @@ public:
 
    friend class BfConfigManager;
 };
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowContainerObj);
 
-//
-//
-//
-//
-//
-
-#define BfGuiCreateWindowContainerPopup_Side_Left 0
-#define BfGuiCreateWindowContainerPopup_Side_Right 1
-#define BfGuiCreateWindowContainerPopup_Side_Top 2
-#define BfGuiCreateWindowContainerPopup_Side_Bot 3
+// === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === ===
 
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
       public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
 {
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowContainerPopup);
+
    void __assignButtons();
 
 protected:
@@ -251,17 +227,6 @@ public:
    int side() noexcept;
    void setSize(ImVec2);
 };
-
-//
-//
-//
-//
-//
-
-//
-//
-//
-//
-//
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowContainerPopup);
 
 #endif

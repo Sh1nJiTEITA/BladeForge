@@ -21,6 +21,8 @@ string to_string(const BfGuiCreateWindowBladeSection&, int);
 
 class BfGuiCreateWindowBladeSection : public BfGuiCreateWindowContainerObj
 {
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowBladeSection);
+
 public:
    enum class viewMode
    {
@@ -84,5 +86,31 @@ public:
    );
 #endif
 };
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowBladeSection);
+
+class BfGuiCreateWindowBladeSection2 : public BfGuiCreateWindowContainerObj
+{
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowBladeSection2);
+
+   BfBladeSectionCreateInfo2 __create_info;
+   std::weak_ptr<BfDrawLayer> __ptr_root;
+   std::shared_ptr<BfBladeSection> __ptr_section;
+
+protected:
+   std::shared_ptr<BfGuiCreateWindowContainerPopup> __layer_choser;
+   std::shared_ptr<BfGuiCreateWindowContainerPopup> __height_choser;
+
+   void __createObj() override;
+   virtual void __renderChildContent() override;
+
+public:
+   BfGuiCreateWindowBladeSection2(wptrContainer root, bool is_target = true);
+
+   friend BfGuiCreateWindow;
+   friend BfGuiCreateWindowBladeBase;
+   friend BfGuiCreateWindowContainerPopup;
+   friend BfConfigManager;
+};
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowBladeSection2);
 
 #endif

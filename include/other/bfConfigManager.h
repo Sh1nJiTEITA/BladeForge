@@ -118,27 +118,18 @@ public:
       return BfEvent();
    }
 
-#define BFCONFIG_ASSERT_TYPE_PAIR(T) {std::type_index(typeid(T)), #T}
-
    template <class T>
    static BfEvent assertLoadingContainerType(
        sol::table obj, std::shared_ptr<T> c
    )
    {
-      // clang-format off
-      static std::map<std::type_index, std::string> s{
-	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainerPopup),
-	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainerObj),
-	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowContainer),
-	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowBladeBase),
-	BFCONFIG_ASSERT_TYPE_PAIR(BfGuiCreateWindowBladeSection)
-      };
+      static auto s = BfGuiCreateWindowTypeRegistry::instance().get();
       // clang-format on
 
       auto found = s.find(std::type_index(typeid(T)));
       if (found != s.end())
       {
-         assert(obj.get<std::string>("type") == found->second);
+         assert(obj.get<std::string>("type") == found->second.name);
       }
       else
       {

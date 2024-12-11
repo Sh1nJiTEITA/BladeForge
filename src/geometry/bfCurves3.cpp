@@ -520,6 +520,20 @@ bfMathFindLinesIntersection(
    }
 }
 
+glm::vec3
+bfMathFindLinesIntersection(cVec3& P0, cVec3& P1, cVec3 Q0, cVec3 Q1)
+{
+   assert(bfMathIsVerticesInPlain({P0, P1, Q0, Q1}));
+
+   glm::vec3 dP = P1 - P0;
+   glm::vec3 dQ = Q1 - Q0;
+
+   float denom = dP.x * dQ.y - dP.y * dQ.x;
+   assert(denom != 0.0f);
+   float t = ((Q0.x - P0.x) * dQ.y - (Q0.y - P0.y) * dQ.x) / denom;
+   return P0 + t * dP;
+}
+
 bool
 bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
 {
@@ -602,7 +616,7 @@ bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
          std::vector<BfVertex3> right_dvert = curve->dVertices();
          right_dvert[i].pos[j] += BF_MATH_ABS_ACCURACY;
          BfBezierCurve right_curve{
-             curve->get_n(),
+             curve->n(),
              curve->dVertices().size(),
              right_dvert
          };
@@ -612,7 +626,7 @@ bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
          std::vector<BfVertex3> left_dvert = curve->dVertices();
          left_dvert[i].pos[j] -= BF_MATH_ABS_ACCURACY;
          BfBezierCurve left_curve{
-             curve->get_n(),
+             curve->n(),
              curve->dVertices().size(),
              left_dvert
          };
@@ -955,31 +969,25 @@ BfBezierCurve::BfBezierCurve(
     , __n{in_n}
     , __out_vertices_count{in_m}
 {
-   if (in_n + 1 != dvert.size())
-      throw std::runtime_error(
-          "Input bezier data is incorrect: vec.size() != in_n"
-      );
-
-   if (!bfMathIsVerticesInPlain(dvert))
-      throw std::runtime_error("Not all vertices in one plane of Bezier curve");
+   // Input bezier data is incorrect: vec.size() != in_n
+   assert(in_n + 1 == dvert.size());
+   // Not all vertices in one plane of Bezier curve
+   assert(bfMathIsVerticesInPlain(dvert));
 
    __dvertices = std::move(dvert);
 }
 
 BfBezierCurve::BfBezierCurve(
-    size_t in_n, size_t in_m, std::vector<BfVertex3>& dvert
+    size_t in_n, size_t in_m, const std::vector<BfVertex3>& dvert
 )
     : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
     , __n{in_n}
     , __out_vertices_count{in_m}
 {
-   if (in_n + 1 != dvert.size())
-      throw std::runtime_error(
-          "Input bezier data is incorrect: vec.size() != in_n"
-      );
-
-   if (!bfMathIsVerticesInPlain(dvert))
-      throw std::runtime_error("Not all vertices in one plane of Bezier curve");
+   // Input bezier data is incorrect: vec.size() != in_n
+   assert(in_n + 1 == dvert.size());
+   // Not all vertices in one plane of Bezier curve
+   assert(bfMathIsVerticesInPlain(dvert));
 
    __dvertices = dvert;
 }
@@ -995,13 +1003,13 @@ BfBezierCurve::BfBezierCurve(BfBezierCurve&& ncurve) noexcept
 }
 
 const size_t
-BfBezierCurve::get_n() const noexcept
+BfBezierCurve::n() const noexcept
 {
    return __n;
 }
 
 glm::vec3
-BfBezierCurve::get_single_vertex_v3(float t) const
+BfBezierCurve::calcV3(float t) const
 {
    glm::vec3 _v{0.0f, 0.0f, 0.0f};
    for (size_t i = 0; i <= __n; i++)
@@ -1016,10 +1024,10 @@ BfBezierCurve::get_single_vertex_v3(float t) const
 }
 
 BfVertex3
-BfBezierCurve::get_single_vertex_bfv3(float t) const
+BfBezierCurve::calcBfV3(float t) const
 {
    BfVertex3 _v{};
-   _v.pos = this->get_single_vertex_v3(t);
+   _v.pos = this->calcV3(t);
    _v.color = __main_color;
    _v.normals = bfMathGetNormal(
        __dvertices[0].pos,
@@ -1050,6 +1058,23 @@ BfBezierCurve::get_derivative()
    BfBezierCurve curve(k, this->__out_vertices_count, new_define_vertices);
 
    return curve;
+}
+
+void
+BfBezierCurve::extend(BfBezierCurve* curve)
+{
+   __dvertices.reserve(__dvertices.size() + curve->__dvertices.size());
+   size_t lastIndex = __dvertices.size() - 1 >= 0 ? __dvertices.size() - 1 : 0;
+   for (int j = 0; j < curve->__dvertices.size(); ++j)
+   {
+      // TODO: Fix normals / color assignment
+      __dvertices.push_back(
+          {__dvertices[lastIndex].pos +
+               0.5f * (curve->__dvertices[j].pos - __dvertices[lastIndex].pos),
+           __dvertices[lastIndex].color,
+           __dvertices[lastIndex].normals}
+      );
+   }
 }
 
 glm::vec3
@@ -1083,8 +1108,8 @@ BfBezierCurve::get_single_derivative_1_analyt_bfv3(float t) const
 glm::vec3
 BfBezierCurve::get_single_derivative_1_numeric_v3(float t, float step) const
 {
-   glm::vec3 left = this->get_single_vertex_v3(t - step);
-   glm::vec3 right = this->get_single_vertex_v3(t + step);
+   glm::vec3 left = this->calcV3(t - step);
+   glm::vec3 right = this->calcV3(t + step);
 
    return (right - left) / 2.0f / step;
 }
@@ -1119,18 +1144,6 @@ BfBezierCurve::get_single_derivative_2_analyt_bfv3(float t) const
    return _v;
 }
 
-const size_t
-BfBezierCurve::get_out_vertices_count() const noexcept
-{
-   return __out_vertices_count;
-}
-
-void
-BfBezierCurve::set_out_vertices_count(size_t in_m)
-{
-   __out_vertices_count = in_m;
-}
-
 void
 BfBezierCurve::createVertices()
 {
@@ -1140,7 +1153,7 @@ BfBezierCurve::createVertices()
    for (int i = 0; i < __out_vertices_count; i++)
    {
       t = static_cast<float>(i) / static_cast<float>(__out_vertices_count - 1);
-      __vertices.emplace_back(this->get_single_vertex_bfv3(t));
+      __vertices.emplace_back(this->calcBfV3(t));
    }
 }
 
@@ -1368,6 +1381,12 @@ BfArc::BfArc(
 )
     : BfCircle(m, P_1, P_2, P_3)
 {
+}
+
+std::shared_ptr<BfBezierCurve>
+BfArc::toBezier()
+{
+   // BfVertex3 P1
 }
 
 void

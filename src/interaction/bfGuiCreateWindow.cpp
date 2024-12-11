@@ -146,6 +146,12 @@ BfGuiCreateWindow::__renderManagePanel()
                __addContainerT<BfGuiCreateWindowBladeSection>();
             }
             ImGui::SameLine();
+            if (ImGui::Button("BladeSection2"))
+            {
+               __addContainerT<BfGuiCreateWindowBladeSection2>();
+            }
+            ImGui::SameLine();
+
             if (ImGui::Button("BladeBase"))
             {
                __addContainerT<BfGuiCreateWindowBladeBase>();

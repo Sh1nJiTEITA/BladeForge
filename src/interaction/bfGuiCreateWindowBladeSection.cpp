@@ -418,3 +418,57 @@ BfGuiCreateWindowBladeSection::__postrender()
 {
    if (__postrender_external_func) __postrender_external_func();
 }
+
+// === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === ===
+
+void
+BfGuiCreateWindowBladeSection2::__createObj()
+{
+   __layer_obj = std::make_shared<BfBladeSection2>(&__create_info);
+}
+
+void
+BfGuiCreateWindowBladeSection2::__renderChildContent()
+{
+   if (ImGui::Button("Add to layer"))
+   {
+      if (!__layer_choser)
+      {
+         __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+             shared_from_this(),
+             BfGuiCreateWindowContainerPopup_Side_Right,
+             false,
+             [&](wptrContainer root) {
+                BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
+                   size_t selected_id =
+                       BfGuiSmartLayerObserver::instance()->selectedLayer();
+                   std::shared_ptr<BfDrawLayer> selected_layer =
+                       BfLayerHandler::instance()->get_layer_by_id(selected_id);
+                   // __createObj();
+                   __addToLayer(selected_layer);
+                   __layer_choser->toggleRender(false);
+                });
+             }
+         );
+         this->add(__layer_choser);
+      }
+      else
+      {
+         __layer_choser->toggleRender();
+      }
+   }
+};
+
+BfGuiCreateWindowBladeSection2::BfGuiCreateWindowBladeSection2(
+    wptrContainer root, bool is_target
+)
+    : BfGuiCreateWindowContainerObj(root, is_target)
+{
+   __window_size = {500, 80};
+   __old_size = {500, 350};
+   __name = "BladeSection2";
+   bfFillBladeSectionStandart2(&__create_info);
+
+   __create_info.layer_create_info = __layer_create_info;
+}

@@ -14,6 +14,8 @@ string to_string(const BfGuiCreateWindowBladeBase&, int);
 
 class BfGuiCreateWindowBladeBase : public BfGuiCreateWindowContainerObj
 {
+   BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowBladeBase);
+
    BfBladeBaseCreateInfo __create_info;
    uint32_t __selected_id = 0;
 
@@ -42,5 +44,6 @@ public:
    friend std::string std::to_string(const BfGuiCreateWindowBladeBase&, int);
    friend class BfConfigManager;
 };
+BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowBladeBase);
 
 #endif

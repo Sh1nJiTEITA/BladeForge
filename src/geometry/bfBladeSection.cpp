@@ -1,5 +1,11 @@
 #include "bfBladeSection.h"
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
+#include <memory>
+
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
 
@@ -1185,6 +1191,131 @@ bfFillBladeBaseStandart(BfBladeBaseCreateInfo *info)
        // .t_pipeline = *BfLayerHandler::instance()->trinagle_pipeline()
    };
 }
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+
+void
+bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
+{
+   *info = {
+       .layer_create_info =
+           {.allocator = BfLayerHandler::instance()
+                             ? *BfLayerHandler::instance()->allocator()
+                             : nullptr,
+            .vertex_size = sizeof(BfVertex3),
+            .max_vertex_count = 10000,
+            .max_reserved_count = 1000,
+            .is_nested = false,
+            .id_type = BF_DRAW_LAYER_TYPE_BLADE_SECTION},
+
+       .chord = 0.3f,
+       .installAngle = 50.0f,
+       .inletAngle = 25.0f,
+       .outletAngle = 42.0f,
+
+       .l_pipeline = BfLayerHandler::instance()
+                         ? *BfLayerHandler::instance()->line_pipeline()
+                         : nullptr,
+       .t_pipeline = BfLayerHandler::instance()
+                         ? *BfLayerHandler::instance()->trinagle_pipeline()
+                         : nullptr
+   };
+}
+
+BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
+    : __info{info}
+{
+   __createAverageCurve();
+   createVertices();
+}
+
+float
+BfBladeSection2::equivalentInletAngle()
+{
+   return 90.0f - __info->inletAngle;
+}
+float
+BfBladeSection2::equivalentOutletAngle()
+{
+   return 90.0f - __info->outletAngle;
+}
+
+void
+BfBladeSection2::createVertices()
+{
+   for (size_t i = 0; i < this->get_obj_count(); ++i)
+   {
+      auto obj = this->get_object_by_index(i);
+      obj->createVertices();
+      obj->createIndices();
+      obj->bind_pipeline(&__info->l_pipeline);
+   }
+   this->update_buffer();
+}
+
+void
+BfBladeSection2::__createAverageCurve()
+{
+   glm::vec3 inletP = {0, 0, 0};
+   glm::vec3 outletP = {__info->chord, 0, 0};
+
+   BFBS2_LOG("Inlet vertex '" << BFVEC3_STR(inletP) << "'");
+   BFBS2_LOG("Outlet vertex '" << BFVEC3_STR(outletP) << "'");
+
+   glm::vec4 inletDirection = glm::rotate(
+                                  glm::mat4(1.0f),
+                                  glm::radians(equivalentInletAngle()),
+                                  glm::vec3(0.0f, 0.0, 1.0f)
+                              ) *
+                              glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+   BFBS2_LOG("Inlet direction '" << BFVEC3_STR(inletDirection) << "'");
+
+   glm::vec4 outletDirection = glm::rotate(
+                                   glm::mat4(1.0f),
+                                   glm::radians(-equivalentOutletAngle()),
+                                   glm::vec3(0.0f, 0.0, 1.0f)
+                               ) *
+                               glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+   BFBS2_LOG("Outlet direction '" << BFVEC3_STR(outletDirection) << "'");
+
+   glm::vec3 intersectionP = bfMathFindLinesIntersection(
+       BfSingleLine(inletP, inletP + inletDirection.xyz()),
+       BfSingleLine(outletP, outletP + outletDirection.xyz()),
+       BF_MATH_FIND_LINES_INTERSECTION_ANY
+   );
+
+   BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
+
+   auto curve = std::make_shared<BfBezierCurve>(
+       2,
+       BF_BEZIER_CURVE_VERT_COUNT,
+       std::vector<BfVertex3>{
+           BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+           BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+           BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+       }
+   );
+   this->add_l(curve);
+
+   auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
+       curve,
+       __info->layer_create_info.allocator,
+       __info->l_pipeline,
+       __info->t_pipeline
+   );
+   ave_curve_frame->set_color(BF_BLADESECTION_AVE_COLOR);
+   ave_curve_frame->update_buffer();
+   this->add(ave_curve_frame);
+}
+
+void
+BfBladeSection2::__createBack()
+{
+}
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo &info)
     : BfDrawLayer(info.layer_create_info), __info{info}

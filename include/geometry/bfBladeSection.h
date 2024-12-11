@@ -132,6 +132,47 @@ private:
    void __clear_draw_data();
 };
 
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+
+struct BfBladeSectionCreateInfo2
+{
+   BfDrawLayerCreateInfo layer_create_info;
+
+   float chord;
+   float installAngle;
+   float inletAngle;
+   float outletAngle;
+
+   VkPipeline l_pipeline = nullptr;
+   VkPipeline t_pipeline = nullptr;
+};
+
+void bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info);
+
+#define BFVEC3_STR(VEC) VEC.x << " " << VEC.y << " " << VEC.z
+#define BFBS2_LOG(MSG) std::cout << MSG << "\n"
+
+class BfBladeSection2 : public BfDrawLayer
+{
+   BfBladeSectionCreateInfo2* __info;
+
+public:
+   BfBladeSection2(BfBladeSectionCreateInfo2* info);
+
+   float equivalentInletAngle();
+   float equivalentOutletAngle();
+
+   virtual void createVertices();
+
+private:
+   void __createAverageCurve();
+   void __createBack();
+};
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+
 struct BfBladeBaseCreateInfo
 {
    BfDrawLayerCreateInfo layer_create_info{
