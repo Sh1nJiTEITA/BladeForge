@@ -89,6 +89,7 @@ public:
    void presentFileDialog();
    void presentCreateWindow();
    void presentSmartLayerObserver();
+   void presentInfo();
 
    void toggleRenderCreateWindow();
 

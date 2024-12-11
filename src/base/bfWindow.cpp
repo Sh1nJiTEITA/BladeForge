@@ -8,7 +8,8 @@ int BfWindow::height = 0;
 bool BfWindow::resized = false;
 */
 
-void bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
+void
+bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
 {
    switch (cam_index)
    {
@@ -16,12 +17,12 @@ void bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
          if (decision)
          {
             window->is_free_camera_active = true;
-            window->cam_mode              = 0;
+            window->cam_mode = 0;
          }
          else
          {
             window->is_free_camera_active = false;
-            window->first_free            = true;
+            window->first_free = true;
          }
          break;
       }
@@ -29,12 +30,12 @@ void bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
          if (decision)
          {
             window->is_rotate_camera_active = false;
-            window->cam_mode                = 1;
+            window->cam_mode = 1;
          }
          else
          {
             window->first_free_rotate = true;
-            window->first_s_rotate    = true;
+            window->first_s_rotate = true;
          }
          break;
       }
@@ -42,25 +43,26 @@ void bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
          if (decision)
          {
             window->is_s_camera_active = true;
-            window->cam_mode           = 2;
+            window->cam_mode = 2;
          }
          else
          {
             window->is_s_camera_active = false;
-            window->first_s            = true;
+            window->first_s = true;
          }
          break;
       }
    }
 }
 
-void bfCalculateViewPartsFree(BfWindow* window)
+void
+bfCalculateViewPartsFree(BfWindow* window)
 {
    if (window->first_free)
    {
       window->first_free = false;
-      window->lastX      = window->xpos;
-      window->lastY      = window->ypos;
+      window->lastX = window->xpos;
+      window->lastY = window->ypos;
    }
 
    float xoffset = window->xpos - window->lastX;
@@ -91,12 +93,13 @@ void bfCalculateViewPartsFree(BfWindow* window)
 
    // std::cout << "y: " << yaw << ", p: " << pitch << "\n";
 
-   window->front =
-       glm::normalize(glm::vec3(glm::cos(glm::radians(window->yaw)) *
-                                    glm::cos(glm::radians(window->pitch)),
-                                glm::sin(glm::radians(window->pitch)),
-                                glm::sin(glm::radians(window->yaw)) *
-                                    glm::cos(glm::radians(window->pitch))));
+   window->front = glm::normalize(glm::vec3(
+       glm::cos(glm::radians(window->yaw)) *
+           glm::cos(glm::radians(window->pitch)),
+       glm::sin(glm::radians(window->pitch)),
+       glm::sin(glm::radians(window->yaw)) *
+           glm::cos(glm::radians(window->pitch))
+   ));
 
    // window->view = glm::lookAt(window->pos, window->pos + window->front,
    // window->up);
@@ -112,7 +115,8 @@ void bfCalculateViewPartsFree(BfWindow* window)
       window->up.z << ")\n";*/
 }
 
-void bfCalculateViewPartsS(BfWindow* window)
+void
+bfCalculateViewPartsS(BfWindow* window)
 {
    static float lastXs = 0;
    static float lastYs = 0;
@@ -121,8 +125,8 @@ void bfCalculateViewPartsS(BfWindow* window)
    {
       // std::cout << " first s ";
       window->first_s = false;
-      lastXs          = window->xpos;
-      lastYs          = window->ypos;
+      lastXs = window->xpos;
+      lastYs = window->ypos;
    }
 
    float deltaX = lastXs - window->xpos;
@@ -138,7 +142,8 @@ void bfCalculateViewPartsS(BfWindow* window)
    // y-direction
    glm::vec3 y_dir =
        -glm::normalize(
-           glm::cross(glm::cross(window->up, window->front), window->front)) *
+           glm::cross(glm::cross(window->up, window->front), window->front)
+       ) *
        (deltaY / 50.0f);
 
    // z-direction
@@ -165,9 +170,9 @@ void bfCalculateViewPartsS(BfWindow* window)
          }*/
 
          static float last_yoffset = window->scroll_yoffset;
-         static float st           = 0.0f;
+         static float st = 0.0f;
 
-         float delta_yoffset       = window->scroll_yoffset - last_yoffset;
+         float delta_yoffset = window->scroll_yoffset - last_yoffset;
          st += delta_yoffset / 2.0;
          if (st < -10)
          {
@@ -186,7 +191,7 @@ void bfCalculateViewPartsS(BfWindow* window)
          }*/
          std::cout << st << "\n";
          last_yoffset = window->scroll_yoffset;
-         z_dir        = glm::vec3(0.0f);
+         z_dir = glm::vec3(0.0f);
       }
 
       window->is_scroll = false;
@@ -202,7 +207,8 @@ void bfCalculateViewPartsS(BfWindow* window)
    lastYs = window->ypos;
 }
 
-void bfCalculateRotateView(BfWindow* window)
+void
+bfCalculateRotateView(BfWindow* window)
 {
    static float lastRx = 0;
    static float lastRy = 0;
@@ -210,8 +216,8 @@ void bfCalculateRotateView(BfWindow* window)
    if (window->first_free_rotate)
    {
       window->first_free_rotate = false;
-      lastRx                    = window->xpos;
-      lastRy                    = window->ypos;
+      lastRx = window->xpos;
+      lastRy = window->ypos;
    }
 
    float xoffset = window->xpos - lastRx;
@@ -237,14 +243,15 @@ void bfCalculateRotateView(BfWindow* window)
    if (window->pitch > 89.0f) window->pitch = 89.0f;
    if (window->pitch < -89.0f) window->pitch = -89.0f;
 
-   window->front =
-       glm::normalize(glm::vec3(glm::cos(glm::radians(window->yaw)) *
-                                    glm::cos(glm::radians(window->pitch)),
+   window->front = glm::normalize(glm::vec3(
+       glm::cos(glm::radians(window->yaw)) *
+           glm::cos(glm::radians(window->pitch)),
 
-                                glm::sin(glm::radians(window->pitch)),
+       glm::sin(glm::radians(window->pitch)),
 
-                                glm::sin(glm::radians(window->yaw)) *
-                                    glm::cos(glm::radians(window->pitch))));
+       glm::sin(glm::radians(window->yaw)) *
+           glm::cos(glm::radians(window->pitch))
+   ));
 
    /*window->lastRx = window->xpos;
    window->lastRy = window->ypos;*/
@@ -259,8 +266,8 @@ void bfCalculateRotateView(BfWindow* window)
    if (window->first_s_rotate)
    {
       window->first_s_rotate = false;
-      lastRXs                = window->xpos;
-      lastRYs                = window->ypos;
+      lastRXs = window->xpos;
+      lastRYs = window->ypos;
    }
 
    float deltaX = lastRXs - window->xpos;
@@ -274,9 +281,11 @@ void bfCalculateRotateView(BfWindow* window)
 
    if (!((window->pitch == -89.0f) || (window->pitch == 89.0f)))
    {
-      y_dir = -glm::normalize(glm::cross(glm::cross(window->up, window->front),
-                                         window->front)) *
-              (deltaY / 50.0f);
+      y_dir =
+          -glm::normalize(
+              glm::cross(glm::cross(window->up, window->front), window->front)
+          ) *
+          (deltaY / 50.0f);
       x_dir = -glm::normalize(glm::cross(window->up, window->front)) *
               (deltaX / 50.0f);
    }
@@ -287,7 +296,7 @@ void bfCalculateRotateView(BfWindow* window)
    {
       z_dir =
           (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
-      window->is_scroll      = false;
+      window->is_scroll = false;
       window->scroll_yoffset = 0;
    }
    else
@@ -297,39 +306,44 @@ void bfCalculateRotateView(BfWindow* window)
 
    window->pos += y_dir + x_dir + z_dir;
 
-   lastRXs       = window->xpos;
-   lastRYs       = window->ypos;
+   lastRXs = window->xpos;
+   lastRYs = window->ypos;
 
    window->lastX = window->xpos;
    window->lastY = window->ypos;
 }
 
-void bfUpdateView(BfWindow* window)
+void
+bfUpdateView(BfWindow* window)
 {
    window->view =
        glm::lookAt(window->pos, window->pos + window->front, window->up);
 }
 
-BfEvent bfCreateWindow(BfWindow* window)
+BfEvent
+bfCreateWindow(BfWindow* window)
 {
    glfwInit();
    bfvSetGLFWProperties();
 
    // window->pos = { 2.0f, -2.0f, -1.0f};
 
-   window->pos = {0.04, 0.72, -3.1};
-
-   window->up  = {0.0f, 1.0f, 0.0f};
+   // window->pos = {0.04, 0.72, -3.1};
+   window->pos = {-0.04, -0.72, -3.1};
+   window->front = {0, 0, 0};
+   window->up = {0.0f, 1.0f, 0.0f};
    bfCalculateViewPartsFree(window);
    // window->front = { 0.0f, 0.0f, 0.0f };
    window->is_free_camera_active = false;
-   window->is_s_camera_active    = false;
+   window->is_s_camera_active = false;
 
-   window->pWindow               = glfwCreateWindow(window->width,
-                                      window->height,
-                                      window->name.c_str(),
-                                      nullptr,
-                                      nullptr);
+   window->pWindow = glfwCreateWindow(
+       window->width,
+       window->height,
+       window->name.c_str(),
+       nullptr,
+       nullptr
+   );
 
    glfwSetWindowUserPointer(window->pWindow, window);
    glfwSetScrollCallback(
@@ -352,27 +366,31 @@ BfEvent bfCreateWindow(BfWindow* window)
           // else {
           //	thisWindow->is_scroll = false;
           // }
-       });
+       }
+   );
 
-   glfwSetCursorPosCallback(window->pWindow,
-                            [](GLFWwindow* window, double xpos, double ypos) {
-                               BfWindow* thisWindow = static_cast<BfWindow*>(
-                                   glfwGetWindowUserPointer(window));
-                               thisWindow->xpos = xpos;
-                               thisWindow->ypos = ypos;
-                               // std::cout << "cb: " << thisWindow->xpos << ",
-                               // " << thisWindow->ypos << "\n";
-                            });
+   glfwSetCursorPosCallback(
+       window->pWindow,
+       [](GLFWwindow* window, double xpos, double ypos) {
+          BfWindow* thisWindow =
+              static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+          thisWindow->xpos = xpos;
+          thisWindow->ypos = ypos;
+          // std::cout << "cb: " << thisWindow->xpos << ",
+          // " << thisWindow->ypos << "\n";
+       }
+   );
    glfwSetFramebufferSizeCallback(
        window->pWindow,
        [](GLFWwindow* window, int width, int height) {
           BfWindow* thisWindow =
               static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
 
-          thisWindow->height  = height;
-          thisWindow->width   = width;
+          thisWindow->height = height;
+          thisWindow->width = width;
           thisWindow->resized = true;
-       });
+       }
+   );
 
    if (window->pWindow == nullptr)
    {
@@ -394,45 +412,52 @@ BfEvent bfCreateWindow(BfWindow* window)
    }
 }
 
-void bfSetOrthoUp(BfWindow* window)
+void
+bfSetOrthoUp(BfWindow* window)
 {
    window->pitch = 89.0f;
 
    bfCalculateViewPartsFree(window);
 }
 
-void bfSetOrthoBottom(BfWindow* window)
+void
+bfSetOrthoBottom(BfWindow* window)
 {
    window->pitch = -89.0f;
 
    bfCalculateViewPartsFree(window);
 }
 
-void bfSetOrthoRight(BfWindow* window)
+void
+bfSetOrthoRight(BfWindow* window)
 {
    window->yaw = -90.0f;
    bfCalculateViewPartsFree(window);
 }
 
-void bfSetOrthoLeft(BfWindow* window)
+void
+bfSetOrthoLeft(BfWindow* window)
 {
    window->yaw = 90.0f;
    bfCalculateViewPartsFree(window);
 }
 
-void bfSetOrthoNear(BfWindow* window)
+void
+bfSetOrthoNear(BfWindow* window)
 {
    window->yaw = 0.0f;
    bfCalculateViewPartsFree(window);
 }
 
-void bfSetOrthoFar(BfWindow* window)
+void
+bfSetOrthoFar(BfWindow* window)
 {
    window->yaw = 180.0f;
    bfCalculateViewPartsFree(window);
 }
 
-BfEvent bfSetWindowSize(BfWindow* window, int width, int height)
+BfEvent
+bfSetWindowSize(BfWindow* window, int width, int height)
 {
    BfSingleEvent event{};
    if (width <= 0 or height <= 0)
@@ -447,10 +472,10 @@ BfEvent bfSetWindowSize(BfWindow* window, int width, int height)
    }
    else
    {
-      window->width  = width;
+      window->width = width;
       window->height = height;
 
-      event.action   = BfEnActionType::BF_ACTION_TYPE_SET_WINDOW_SIZE_SUCCESS;
+      event.action = BfEnActionType::BF_ACTION_TYPE_SET_WINDOW_SIZE_SUCCESS;
       event.type =
           BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    }
@@ -458,7 +483,8 @@ BfEvent bfSetWindowSize(BfWindow* window, int width, int height)
    return BfEvent(event);
 }
 
-BfEvent bfSetWindowName(BfWindow* window, std::string name)
+BfEvent
+bfSetWindowName(BfWindow* window, std::string name)
 {
    window->name = name;
 
@@ -468,8 +494,8 @@ BfEvent bfSetWindowName(BfWindow* window, std::string name)
    return BfEvent(event);
 }
 
-BfEvent bfBindGuiWindowHoveringFunction(BfWindow*             window,
-                                        std::function<bool()> func)
+BfEvent
+bfBindGuiWindowHoveringFunction(BfWindow* window, std::function<bool()> func)
 {
    window->is_any_window_hovered_func = func;
    return BfEvent();

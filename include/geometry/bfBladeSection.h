@@ -163,6 +163,8 @@ void bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info);
 
 using ptrObj = std::shared_ptr<BfDrawObj>;
 
+#define BF_BLADESECTION_CMAX_COLOR glm::vec3(1.0f, 0.2f, 0.5f)
+
 class BfBladeSection2 : public BfDrawLayer
 {
    BfBladeSectionCreateInfo2* __info;

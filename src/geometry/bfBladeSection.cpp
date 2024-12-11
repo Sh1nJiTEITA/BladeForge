@@ -1213,7 +1213,11 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
        .installAngle = 50.0f,
        .inletAngle = 25.0f,
        .outletAngle = 42.0f,
-       .cmax = {{0.15f, 0.2f}, {0.05f, 0.6}},
+       .cmax =
+           {
+               {0.05f, 0.2f},
+               // {0.05f, 0.6}
+           },
 
        .l_pipeline = BfLayerHandler::instance()
                          ? *BfLayerHandler::instance()->line_pipeline()
@@ -1325,7 +1329,9 @@ BfBladeSection2::__createCmax()
    for (const auto &cmax : __info->cmax)
    {
       BfVertex3 aveCoo = aveCurve->calcBfV3(cmax.relativeCoordinate);
-
+      auto cmax_obj = std::make_shared<BfCircle>(100, aveCoo, cmax.radius);
+      cmax_obj->set_color(BF_BLADESECTION_CMAX_COLOR);
+      this->add_l(cmax_obj);
    }
 }
 

@@ -465,7 +465,7 @@ BfGuiCreateWindowBladeSection2::BfGuiCreateWindowBladeSection2(
 )
     : BfGuiCreateWindowContainerObj(root, is_target)
 {
-   __window_size = {500, 80};
+   __window_size = {500, 500};
    __old_size = {500, 350};
    __name = "BladeSection2";
    bfFillBladeSectionStandart2(&__create_info);
