@@ -185,6 +185,41 @@ public:
    );
 
    std::shared_ptr<BfBezierCurve> toBezier();
+   // TODO: Make
+   virtual void createVertices() override;
+};
+
+/**
+ * @class BfCone
+ * @brief Создает конус
+ *
+ */
+class BfCone : public BfDrawObj
+{
+   size_t __out_vertices_count;
+   float __base_radius;
+
+public:
+   /**
+    * @brief
+    *
+    * @param m      - количество граней
+    * @param tip    - координата вершины конуса
+    * @param center - координата центра основания
+    * @param radius - радиус основания конуса
+    *
+    * @note Следует верно указывать нормали внутри 'tip', 'center',
+    *       так как без них координаты не сгенерируются
+    */
+   BfCone(
+       size_t m, const BfVertex3& tip, const BfVertex3& center, float radius
+   );
+
+   BfCone(size_t m, const BfVertex3& tip, float height, float radius);
+
+   const BfVertex3& center();
+   const BfVertex3& tip();
+
    virtual void createVertices() override;
 };
 

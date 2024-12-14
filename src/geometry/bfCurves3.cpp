@@ -1,5 +1,8 @@
 #include "bfCurves3.h"
 
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/geometric.hpp>
+
 BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
 {
@@ -1434,6 +1437,74 @@ BfArc::createVertices()
       );
    }
 }
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+
+BfCone::BfCone(
+    size_t m, const BfVertex3& tip, const BfVertex3& center, float radius
+)
+    : __out_vertices_count{m}, __base_radius{radius}
+{
+   __dvertices.push_back(tip);
+   __dvertices.push_back(center);
+}
+
+BfCone::BfCone(size_t m, const BfVertex3& tip, float height, float radius)
+    : __out_vertices_count{m}, __base_radius{radius}
+{
+   __dvertices.push_back(tip);
+   glm::vec3 normolized = glm::normalize(tip.normals);
+   __dvertices.push_back({
+       {
+           tip.pos.x + height * normolized.x,
+           tip.pos.y + height * normolized.y,
+           tip.pos.z + height * normolized.z,
+       },
+       tip.color,
+       tip.normals,
+   });
+}
+
+const BfVertex3&
+BfCone::center()
+{
+   return __dvertices.at(1);
+}
+const BfVertex3&
+BfCone::tip()
+{
+   return __dvertices.at(0);
+}
+
+void
+BfCone::createVertices()
+{
+   if (!__vertices.empty()) __vertices.clear();
+
+   auto baseCircle = std::make_shared<BfCircle>(
+       __out_vertices_count - 1,
+       this->center(),
+       __base_radius
+   );
+   baseCircle->createVertices();
+   // NOTE: approx value, tired of calculating this
+   // TODO: CHANGE
+   __vertices.reserve((__out_vertices_count - 1) * 3.0f);
+
+   const glm::vec3& p2 = this->tip().pos;
+   for (size_t i = 0; i < baseCircle->vertices().size() - 1; ++i)
+   {
+      const glm::vec3& p1 = baseCircle->vertices()[i].pos;
+      const glm::vec3& p3 = baseCircle->vertices()[i + 1].pos;
+      const glm::vec3 normal = bfMathGetNormal(p1, p2, p3);
+      __vertices.emplace_back(BfVertex3{p1, __main_color, normal});
+      __vertices.emplace_back(BfVertex3{p2, __main_color, normal});
+      __vertices.emplace_back(BfVertex3{p3, __main_color, normal});
+   }
+}
+
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
 
 BfBezierCurveFrame::BfBezierCurveFrame(
     std::shared_ptr<BfBezierCurve> curve,

@@ -202,15 +202,32 @@ BfMain::__loop()
        glm::vec3{0.0f, 1.0f, 0.0f}
    );
    yAxis->set_color({1.0f, 0.0f, 0.0f});
-   // yAxis->createVertices();
-   // yAxis->createIndices();
+   yAxis->createVertices();
+   yAxis->createIndices();
    auto zAxis = std::make_shared<BfSingleLine>(
        glm::vec3{0.0f, 0.0f, 0.0},
        glm::vec3{0.0f, 0.0f, 1.0f}
    );
    zAxis->set_color({1.0f, 0.0f, 0.0f});
-   // zAxis->createVertices();
-   // zAxis->createIndices();
+   zAxis->createVertices();
+   zAxis->createIndices();
+
+   // auto cone = std::make_shared<BfCone>(
+   //     20,
+   //     BfVertex3{{0.0f, 0.0f, 0.0}, {}, {0.0f, 1.0f, 0.0f}},
+   //     BfVertex3{{0.0f, 1.0f, 0.0}, {}, {0.0f, 1.0f, 0.0f}},
+   //     1.0f
+   // );
+   auto cone = std::make_shared<BfCone>(
+       20,
+       BfVertex3{{0.0f, 0.0f, 0.0}, {}, {1.0f, 0.0f, 0.0f}},
+       0.5,
+       0.2f
+   );
+   cone->set_color({1.0f, 0.0f, 0.0f});
+   cone->bind_pipeline(&__base.triangle_pipeline);
+   cone->createVertices();
+   cone->createIndices();
 
    // BfLayerHandler
    {
@@ -223,15 +240,10 @@ BfMain::__loop()
       );
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
-      std::cout << "ADDING 1\n";
       __other_layer->add_l(xAxis);
-      std::cout << "ADDING 2\n";
-      // __other_layer->add_l(yAxis);
-      // __other_layer->add_l(zAxis);
+      __other_layer->add_l(cone);
       __other_layer->update_buffer();
-      std::cout << "ADDING 3\n";
    }
-   //
    {
       auto bladeBases = std::make_shared<BfDrawLayer>(
           __base.allocator,
@@ -245,17 +257,14 @@ BfMain::__loop()
    }
 
    bfSetOrthoLeft(__base.window);
-   std::cout << "start loop\n";
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
       __poll_events();
 
-      std::cout << "start loop1\n";
       ImGui_ImplVulkan_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      // std::cout << ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) <<
       // "\n";
       // __present_blade_base_create_window();
 
@@ -276,14 +285,10 @@ BfMain::__loop()
 
       // ImGui::ShowDemoWindow();
 
-      std::cout << "start render\n";
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();
 
-      std::cout << "start render2\n";
       bfDrawFrame(__base);
-
-      std::cout << "start render3\n";
    }
 
    auto layer_killer = BfLayerKiller::get_root();

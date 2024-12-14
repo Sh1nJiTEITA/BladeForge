@@ -218,9 +218,13 @@ set(BF_BASE
     "src/base/bfWindow.cpp")
 
 set(BF_GEOMETRY
-    "include/geometry/bfCurves.hpp" "include/geometry/bfCurves3.h"
-    "src/geometry/bfCurves3.cpp" "include/geometry/bfBladeSection.h"
-    "src/geometry/bfBladeSection.cpp")
+    "include/geometry/bfCurves.hpp"
+    "include/geometry/bfCurves3.h"
+    "src/geometry/bfCurves3.cpp"
+    "include/geometry/bfBladeSection.h"
+    "src/geometry/bfBladeSection.cpp"
+    "include/geometry/bfAxis.h"
+    "src/geometry/bfAxis.cpp")
 
 set(BF_INTERACTION
     "include/interaction/bfConsole.h"
