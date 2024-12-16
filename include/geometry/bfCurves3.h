@@ -239,6 +239,12 @@ public:
 
 #define STRVEC3(VEC) VEC.x << ", " << VEC.y << ", " << VEC.z
 
+/**
+ * @class BfTube
+ * @brief Создает объект трубы без внутреннией стенки и без граней между
+ * стенками соответственнo
+ *
+ */
 class BfTube : public BfDrawObj
 {
    size_t __out_m;
@@ -261,6 +267,11 @@ public:
    virtual void createIndices() override;
 };
 
+/**
+ * @class BfDoubleTube
+ * @brief Создает одинарный объект двойной трубы
+ *
+ */
 class BfDoubleTube : public BfDrawObj
 {
    size_t __out_m;
@@ -273,8 +284,9 @@ public:
    /**
     * @brief Генерирует трубу с 'm' - количеством граней
     *
-    * @param m - количество граней, должно быть нечетным  TODO: добавить
-    * поддержку четного количества
+    * @param m - количество граней, должно быть нечетным
+    *  TODO: добавить поддержку четного количества
+    *
     * @param begin - начальная точка центра
     * @param end - конечная точка центра
     * @param radius_out_begin - внешний радиус начала
