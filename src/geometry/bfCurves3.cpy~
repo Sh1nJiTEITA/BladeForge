@@ -1692,40 +1692,71 @@ void
 BfDoubleTube::createIndices()
 {
    if (!__indices.empty()) __indices.clear();
-   for (size_t i = 0; i < __vertices.size() - 8; i += 8)
-   {
-      // backwords
-      __indices.emplace_back(i + 1);
-      __indices.emplace_back(i + 3);
-      __indices.emplace_back(i + 10);
-      __indices.emplace_back(i + 10);
-      __indices.emplace_back(i + 9);
-      __indices.emplace_back(i + 1);
+   // for (size_t i = 0; i < __out_m * 15; i += 8)
+   // for (size_t i = 0; i < __vertices.size() - 8; i += 8)
+   // // for (size_t i = 0; i < 1; ++i)
+   // {
+   //    // backwords
+   //    __indices.emplace_back(i + 1);
+   //    __indices.emplace_back(i + 3);
+   //    __indices.emplace_back(i + 10);
+   //    __indices.emplace_back(i + 10);
+   //    __indices.emplace_back(i + 9);
+   //    __indices.emplace_back(i + 1);
+   //
+   //    // towards
+   //    __indices.emplace_back(i + 5);
+   //    __indices.emplace_back(i + 7);
+   //    __indices.emplace_back(i + 15);
+   //    __indices.emplace_back(i + 15);
+   //    __indices.emplace_back(i + 13);
+   //    __indices.emplace_back(i + 5);
+   //
+   //    // to center
+   //    __indices.emplace_back(i + 0);
+   //    __indices.emplace_back(i + 4);
+   //    __indices.emplace_back(i + 8);
+   //    __indices.emplace_back(i + 8);
+   //    __indices.emplace_back(i + 12);
+   //    __indices.emplace_back(i + 4);
+   //
+   //    // from center
+   //    __indices.emplace_back(i + 2);
+   //    __indices.emplace_back(i + 6);
+   //    __indices.emplace_back(i + 10);
+   //    __indices.emplace_back(i + 10);
+   //    __indices.emplace_back(i + 6);
+   //    __indices.emplace_back(i + 14);
+   // }
+   size_t step = 12;
+   size_t last = __vertices.size() - step;
+   __indices.emplace_back(last + 1);
+   __indices.emplace_back(last + 3);
+   __indices.emplace_back(10);  // ¿¿¿¿¿¿¿ ¿ ¿¿¿¿¿¿
+   __indices.emplace_back(10);
+   __indices.emplace_back(9);
+   __indices.emplace_back(last + 1);
 
-      // towards
-      __indices.emplace_back(i + 5);
-      __indices.emplace_back(i + 7);
-      __indices.emplace_back(i + 15);
-      __indices.emplace_back(i + 15);
-      __indices.emplace_back(i + 13);
-      __indices.emplace_back(i + 5);
+   __indices.emplace_back(last + 5);
+   __indices.emplace_back(last + 7);
+   __indices.emplace_back(15);  // ¿¿¿¿¿¿¿ ¿ ¿¿¿¿¿¿
+   __indices.emplace_back(15);
+   __indices.emplace_back(13);
+   __indices.emplace_back(last + 5);
 
-      // to center
-      __indices.emplace_back(i + 0);
-      __indices.emplace_back(i + 4);
-      __indices.emplace_back(i + 8);
-      __indices.emplace_back(i + 8);
-      __indices.emplace_back(i + 12);
-      __indices.emplace_back(i + 4);
+   __indices.emplace_back(last + 0);
+   __indices.emplace_back(last + 4);
+   __indices.emplace_back(8);  // ¿¿¿¿¿¿¿ ¿ ¿¿¿¿¿¿
+   __indices.emplace_back(8);
+   __indices.emplace_back(12);
+   __indices.emplace_back(last + 4);
 
-      // from center
-      __indices.emplace_back(i + 2);
-      __indices.emplace_back(i + 6);
-      __indices.emplace_back(i + 10);
-      __indices.emplace_back(i + 10);
-      __indices.emplace_back(i + 6);
-      __indices.emplace_back(i + 14);
-   }
+   __indices.emplace_back(last + 2);
+   __indices.emplace_back(last + 6);
+   __indices.emplace_back(10);  // ¿¿¿¿¿¿¿ ¿ ¿¿¿¿¿¿
+   __indices.emplace_back(10);
+   __indices.emplace_back(14);
+   __indices.emplace_back(last + 6);
 }
 
 // === === === === === === === === === === === === === === === === === === ===

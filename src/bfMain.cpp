@@ -218,16 +218,42 @@ BfMain::__loop()
    //     BfVertex3{{0.0f, 1.0f, 0.0}, {}, {0.0f, 1.0f, 0.0f}},
    //     1.0f
    // );
-   auto cone = std::make_shared<BfCone>(
-       20,
-       BfVertex3{{0.0f, 0.0f, 0.0}, {}, {1.0f, 0.0f, 0.0f}},
-       0.5,
+   // auto cone = std::make_shared<BfCone>(
+   //     20,
+   //     BfVertex3{{0.0f, 0.0f, 0.0}, {}, {1.0f, 0.0f, 0.0f}},
+   //     0.5,
+   //     0.2f
+   // );
+   // cone->set_color({1.0f, 0.0f, 0.0f});
+   // cone->bind_pipeline(&__base.triangle_pipeline);
+   // cone->createVertices();
+   // cone->createIndices();
+   //
+   // auto tube = std::make_shared<BfTube>(
+   //     100,
+   //     BfVertex3{{0.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+   //     BfVertex3{{1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+   //     0.4f,
+   //     0.2f
+   // );
+   // tube->set_color({1.0f, 0.0f, 0.0f});
+   // tube->bind_pipeline(&__base.triangle_pipeline);
+   // tube->createVertices();
+   // tube->createIndices();
+   //
+   auto dtube = std::make_shared<BfDoubleTube>(
+       50,
+       BfVertex3{{0.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+       BfVertex3{{1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+       0.4f,
+       0.2f,
+       0.4f,
        0.2f
    );
-   cone->set_color({1.0f, 0.0f, 0.0f});
-   cone->bind_pipeline(&__base.triangle_pipeline);
-   cone->createVertices();
-   cone->createIndices();
+   dtube->set_color({1.0f, 0.0f, 0.0f});
+   dtube->bind_pipeline(&__base.triangle_pipeline);
+   dtube->createVertices();
+   dtube->createIndices();
 
    // BfLayerHandler
    {
@@ -241,7 +267,8 @@ BfMain::__loop()
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
       __other_layer->add_l(xAxis);
-      __other_layer->add_l(cone);
+      // __other_layer->add_l(cone);
+      __other_layer->add_l(dtube);
       __other_layer->update_buffer();
    }
    {

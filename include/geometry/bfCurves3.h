@@ -15,6 +15,12 @@
 
 #include "bfDrawObjectDefineType.h"
 
+#ifdef NDEBUG
+#define bfAssert(cond) assert(cond)
+#else
+#define bfAssert(...)
+#endif
+
 class BfPlane;
 class BfSingleLine;
 class BfBezierCurve;
@@ -201,7 +207,7 @@ class BfCone : public BfDrawObj
 
 public:
    /**
-    * @brief
+    * @brief Конструктор через 2 точки и радиус
     *
     * @param m      - количество граней
     * @param tip    - координата вершины конуса
@@ -215,12 +221,82 @@ public:
        size_t m, const BfVertex3& tip, const BfVertex3& center, float radius
    );
 
+   /**
+    * @brief Конструктор через точку, нормаль и радиус
+    *
+    * @param m
+    * @param tip
+    * @param height
+    * @param radius
+    */
    BfCone(size_t m, const BfVertex3& tip, float height, float radius);
 
-   const BfVertex3& center();
-   const BfVertex3& tip();
+   const BfVertex3& centerVertex();
+   const BfVertex3& tipVertex();
 
    virtual void createVertices() override;
+};
+
+#define STRVEC3(VEC) VEC.x << ", " << VEC.y << ", " << VEC.z
+
+class BfTube : public BfDrawObj
+{
+   size_t __out_m;
+   float __radius_begin;
+   float __radius_end;
+
+public:
+   BfTube(
+       size_t m,
+       const BfVertex3& begin,
+       const BfVertex3& end,
+       float radius_begin,
+       float radius_end
+   );
+
+   const BfVertex3& beginCenterVertex();
+   const BfVertex3& endCenterVertex();
+
+   virtual void createVertices() override;
+   virtual void createIndices() override;
+};
+
+class BfDoubleTube : public BfDrawObj
+{
+   size_t __out_m;
+   float __radius_in_begin;
+   float __radius_out_begin;
+   float __radius_in_end;
+   float __radius_out_end;
+
+public:
+   /**
+    * @brief Генерирует трубу с 'm' - количеством граней
+    *
+    * @param m - количество граней, должно быть нечетным  TODO: добавить
+    * поддержку четного количества
+    * @param begin - начальная точка центра
+    * @param end - конечная точка центра
+    * @param radius_out_begin - внешний радиус начала
+    * @param radius_in_begin - внутренний радиус начала
+    * @param radius_out_end - внешний радиус конца
+    * @param radius_in_end - внешний радиус конца
+    */
+   BfDoubleTube(
+       size_t m,
+       const BfVertex3& begin,
+       const BfVertex3& end,
+       float radius_out_begin,
+       float radius_in_begin,
+       float radius_out_end,
+       float radius_in_end
+   );
+
+   const BfVertex3& beginCenterVertex();
+   const BfVertex3& endCenterVertex();
+
+   virtual void createVertices() override;
+   virtual void createIndices() override;
 };
 
 // === === === === === === === === === === === === === === === === === === ===

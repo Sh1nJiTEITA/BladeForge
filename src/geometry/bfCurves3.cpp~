@@ -1665,7 +1665,7 @@ BfDoubleTube::createVertices()
       const glm::vec3 towardsCenterNormal_ = glm::normalize(bfMathGetNormal(p4_, p3_, p3));
       bfAssert(glm::length2(glm::cross(towardsCenterNormal_, towardsCenterNormal)) < 1e-6f);
 #endif
-      __vertices.emplace_back(BfVertex3{p1, __main_color, toCenterNormal});            //   | 0
+      __vertices.emplace_back(BfVertex3{p1, __main_color, toCenterNormal});            // 0  | 0
       __vertices.emplace_back(BfVertex3{p1, __main_color, backwordsCenterNormal});     // 0' | 1
       __vertices.emplace_back(BfVertex3{p2, __main_color, fromCenterNormal});          // 1  | 2
       __vertices.emplace_back(BfVertex3{p2, __main_color, backwordsCenterNormal});     // 1' | 3
@@ -1692,7 +1692,9 @@ void
 BfDoubleTube::createIndices()
 {
    if (!__indices.empty()) __indices.clear();
+   // for (size_t i = 0; i < __out_m * 15; i += 8)
    for (size_t i = 0; i < __vertices.size() - 8; i += 8)
+   // for (size_t i = 0; i < 1; ++i)
    {
       // backwords
       __indices.emplace_back(i + 1);
