@@ -25,6 +25,7 @@
 #define BF_DRAW_LAYER_TYPE_AXIS_X 0xB2
 #define BF_DRAW_LAYER_TYPE_AXIS_Y 0xB3
 #define BF_DRAW_LAYER_TYPE_AXIS_Z 0xB4
+#define BF_DRAW_LAYER_TYPE_AXIS_SYSTEM 0xB5
 
 static std::string
 bfGetStrNameDrawObjType(unsigned int type)
@@ -53,6 +54,9 @@ bfGetStrNameDrawObjType(unsigned int type)
       case BF_DRAW_LAYER_TYPE_AXIS_X: return "X-Axis";
       case BF_DRAW_LAYER_TYPE_AXIS_Y: return "Y-Axis";
       case BF_DRAW_LAYER_TYPE_AXIS_Z: return "Z-Axis";
+      case BF_DRAW_LAYER_TYPE_AXIS_SYSTEM : return "AxisSystem";
+
+
       default: throw std::runtime_error("Invalid BfDrawObject type");
    }
    // clang-format on

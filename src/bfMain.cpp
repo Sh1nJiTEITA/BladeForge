@@ -271,11 +271,6 @@ BfMain::__loop()
    // arrow_x->createVertices();
    // arrow_x->createIndices();
    //
-   // clang-format off
-   auto x_axis = std::make_shared<BfAxis3D>(BfAxis3DType_X, &__base.triangle_pipeline);
-   auto y_axis = std::make_shared<BfAxis3D>(BfAxis3DType_Y, &__base.triangle_pipeline);
-   auto z_axis = std::make_shared<BfAxis3D>(BfAxis3DType_Z, &__base.triangle_pipeline);
-   // clang-format on
 
    // BfLayerHandler
    {
@@ -288,11 +283,9 @@ BfMain::__loop()
       );
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
-
-      __other_layer->add(x_axis);
-      __other_layer->add(y_axis);
-      __other_layer->add(z_axis);
-
+      __other_layer->add(
+          std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline)
+      );
       __other_layer->update_buffer();
    }
    {

@@ -20,8 +20,8 @@ BfArrow3D::BfArrow3D(
     : BfDrawLayer(
           *BfLayerHandler::instance()->allocator(),
           sizeof(BfVertex3),
-          50,
-          20,
+          4000,
+          2,
           true,
           BF_DRAW_LAYER_TYPE_ARROW
       )
@@ -139,5 +139,46 @@ BfAxis3D::BfAxis3D(BfAxis3DType type, VkPipeline* pipeline)
       case BfAxis3DType_Z: id.change_type(BF_DRAW_LAYER_TYPE_AXIS_Z); break;
       default: throw std::runtime_error("Underfined BfAxisType");
    }
+   // clang-format on
+}
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+BfAxis3DPack::BfAxis3DPack(VkPipeline* pipeline)
+    : BfDrawLayer(
+          *BfLayerHandler::instance()->allocator(),
+          sizeof(BfVertex3),
+          5000,
+          3,
+          true,
+          BF_DRAW_LAYER_TYPE_AXIS_SYSTEM
+      )
+{
+   // clang-format off
+   this->add(std::make_shared<BfAxis3D>(BfAxis3DType_X, pipeline));
+   this->add(std::make_shared<BfAxis3D>(BfAxis3DType_Y, pipeline));
+   this->add(std::make_shared<BfAxis3D>(BfAxis3DType_Z, pipeline));
    // clang-format on
 }

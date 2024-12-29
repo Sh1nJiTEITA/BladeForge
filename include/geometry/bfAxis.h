@@ -78,4 +78,33 @@ public:
    BfAxis3D(BfAxis3DType type, VkPipeline* pipeline);
 };
 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+class BfAxis3DPack : public BfDrawLayer
+{
+public:
+   BfAxis3DPack(VkPipeline* pipeline);
+};
+
 #endif
