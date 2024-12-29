@@ -5,7 +5,8 @@
 #include "bfVariative.hpp"
 #include "include/other/bfVariative.hpp"
 
-int main()
+int
+main()
 {
    try
    {

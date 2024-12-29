@@ -24,6 +24,7 @@ public:
 
    const uint32_t get() const;
    const uint32_t get_type() const;
+   void change_type(uint32_t type);
    static bool is_id_exists(uint32_t id);
    static bool is_id_exists(BfObjID &id);
    static uint32_t find_type(uint32_t);

@@ -150,6 +150,16 @@ BfObjID::get_type() const
    return __type;
 }
 
+void
+BfObjID::change_type(uint32_t type)
+{
+   if (BfObjID::is_id_exists(this->__value))
+   {
+      BfObjID::__existing_pairs[__value] = type;
+   }
+   __type = type;
+}
+
 bool
 BfObjID::is_id_exists(uint32_t id)
 {

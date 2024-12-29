@@ -33,8 +33,8 @@ struct bfVertex
    static inline VkVertexInputBindingDescription getBindingDescription()
    {
       VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding   = 0;
-      bindingDescription.stride    = sizeof(bfVertex);
+      bindingDescription.binding = 0;
+      bindingDescription.stride = sizeof(bfVertex);
       bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
       return bindingDescription;
@@ -44,15 +44,15 @@ struct bfVertex
    {
       std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
 
-      attributeDescriptions[0].binding  = 0;
+      attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[0].offset   = offsetof(bfVertex, pos);
+      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[0].offset = offsetof(bfVertex, pos);
 
-      attributeDescriptions[1].binding  = 0;
+      attributeDescriptions[1].binding = 0;
       attributeDescriptions[1].location = 1;
-      attributeDescriptions[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[1].offset   = offsetof(bfVertex, color);
+      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[1].offset = offsetof(bfVertex, color);
 
       return attributeDescriptions;
    }
@@ -83,6 +83,11 @@ struct BfVertex3
    {
    }
 
+   static inline BfVertex3 fromPos(const glm::vec3 &pos)
+   {
+      return BfVertex3{pos};
+   }
+
    inline bool equal(const BfVertex3 &o) const
    {
       return CHECK_FLOAT_EQUALITY(o.pos.x, pos.x) &&
@@ -93,8 +98,8 @@ struct BfVertex3
    static inline VkVertexInputBindingDescription getBindingDescription()
    {
       VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding   = 0;
-      bindingDescription.stride    = sizeof(BfVertex3);
+      bindingDescription.binding = 0;
+      bindingDescription.stride = sizeof(BfVertex3);
       bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
       return bindingDescription;
@@ -104,20 +109,20 @@ struct BfVertex3
    {
       std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
-      attributeDescriptions[0].binding  = 0;
+      attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[0].offset   = offsetof(BfVertex3, pos);
+      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[0].offset = offsetof(BfVertex3, pos);
 
-      attributeDescriptions[1].binding  = 0;
+      attributeDescriptions[1].binding = 0;
       attributeDescriptions[1].location = 1;
-      attributeDescriptions[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[1].offset   = offsetof(BfVertex3, color);
+      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[1].offset = offsetof(BfVertex3, color);
 
-      attributeDescriptions[2].binding  = 0;
+      attributeDescriptions[2].binding = 0;
       attributeDescriptions[2].location = 2;
-      attributeDescriptions[2].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[2].offset   = offsetof(BfVertex3, normals);
+      attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[2].offset = offsetof(BfVertex3, normals);
 
       return attributeDescriptions;
    }
@@ -135,16 +140,16 @@ struct BfVertex3
 
 struct BfVertex4
 {
-   glm::vec3     pos;
-   glm::vec3     color;
-   glm::vec3     normal;
+   glm::vec3 pos;
+   glm::vec3 color;
+   glm::vec3 normal;
    glm::uint32_t obj_id;
 
    static inline VkVertexInputBindingDescription getBindingDescription()
    {
       VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding   = 0;
-      bindingDescription.stride    = sizeof(BfVertex4);
+      bindingDescription.binding = 0;
+      bindingDescription.stride = sizeof(BfVertex4);
       bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
       return bindingDescription;
@@ -154,22 +159,22 @@ struct BfVertex4
    {
       std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 
-      attributeDescriptions[0].binding  = 0;
+      attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[0].offset   = offsetof(BfVertex4, pos);
+      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[0].offset = offsetof(BfVertex4, pos);
 
-      attributeDescriptions[1].binding  = 0;
+      attributeDescriptions[1].binding = 0;
       attributeDescriptions[1].location = 1;
-      attributeDescriptions[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[1].offset   = offsetof(BfVertex4, color);
+      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[1].offset = offsetof(BfVertex4, color);
 
-      attributeDescriptions[2].binding  = 0;
+      attributeDescriptions[2].binding = 0;
       attributeDescriptions[2].location = 2;
-      attributeDescriptions[2].format   = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[2].offset   = offsetof(BfVertex4, normal);
+      attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[2].offset = offsetof(BfVertex4, normal);
 
-      attributeDescriptions[3].binding  = 0;
+      attributeDescriptions[3].binding = 0;
       attributeDescriptions[3].location = 2;
       attributeDescriptions[3].format =
           VK_FORMAT_R32_UINT;  // VK_FORMAT_R32G32B32_SFLOAT;
@@ -192,7 +197,7 @@ struct BfVertex4
 
 enum BfePipelineType
 {
-   BF_GRAPHICS_PIPELINE_LINES    = 0,
+   BF_GRAPHICS_PIPELINE_LINES = 0,
    BF_GRAPHICS_PIPELINE_TRIANGLE = 1
 };
 

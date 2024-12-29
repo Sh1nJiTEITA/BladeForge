@@ -1,5 +1,8 @@
 ﻿#include <imgui_impl_vulkan.h>
 
+#include <memory>
+
+#include "bfAxis.h"
 #include "bfBase.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
@@ -241,19 +244,38 @@ BfMain::__loop()
    // tube->createVertices();
    // tube->createIndices();
    //
-   auto dtube = std::make_shared<BfDoubleTube>(
-       50,
-       BfVertex3{{0.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
-       BfVertex3{{1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
-       0.4f,
-       0.2f,
-       0.4f,
-       0.2f
-   );
-   dtube->set_color({1.0f, 0.0f, 0.0f});
-   dtube->bind_pipeline(&__base.triangle_pipeline);
-   dtube->createVertices();
-   dtube->createIndices();
+   // auto dtube = std::make_shared<BfDoubleTube>(
+   //     50,
+   //     BfVertex3{{0.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+   //     BfVertex3{{1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f, 0.0f}},
+   //     0.4f,
+   //     0.2f,
+   //     0.4f,
+   //     0.2f
+   // );
+   // dtube->set_color({1.0f, 0.0f, 0.0f});
+   // dtube->bind_pipeline(&__base.triangle_pipeline);
+   // dtube->createVertices();
+   // dtube->createIndices();
+
+   // auto arrow_x = std::make_shared<BfArrow3D>(
+   //     BfVertex3({1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}),
+   //     BfVertex3({0.0f, 0.0f, 0.0f}, {0.25f, 0.0f, 0.0f}, {1.0f, 0.0f,
+   //     0.0f}), 0.011f, 0.005f, 0.25f,
+   //     &__base.triangle_pipeline,
+   //     glm::vec3{1.0f, 0.0f, 0.0f},
+   //     glm::vec3{1.0f, 0.0f, 0.0f}
+   // );
+
+   // arrow_x->bind_pipeline(&__base.triangle_pipeline);
+   // arrow_x->createVertices();
+   // arrow_x->createIndices();
+   //
+   // clang-format off
+   auto x_axis = std::make_shared<BfAxis3D>(BfAxis3DType_X, &__base.triangle_pipeline);
+   auto y_axis = std::make_shared<BfAxis3D>(BfAxis3DType_Y, &__base.triangle_pipeline);
+   auto z_axis = std::make_shared<BfAxis3D>(BfAxis3DType_Z, &__base.triangle_pipeline);
+   // clang-format on
 
    // BfLayerHandler
    {
@@ -266,9 +288,11 @@ BfMain::__loop()
       );
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
-      __other_layer->add_l(xAxis);
-      // __other_layer->add_l(cone);
-      __other_layer->add_l(dtube);
+
+      __other_layer->add(x_axis);
+      __other_layer->add(y_axis);
+      __other_layer->add(z_axis);
+
       __other_layer->update_buffer();
    }
    {
@@ -292,7 +316,6 @@ BfMain::__loop()
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      // "\n";
       // __present_blade_base_create_window();
 
       __gui.presentInfo();

@@ -294,6 +294,7 @@ public:
     * @param radius_out_end - внешний радиус конца
     * @param radius_in_end - внешний радиус конца
     */
+   BfDoubleTube();
    BfDoubleTube(
        size_t m,
        const BfVertex3& begin,

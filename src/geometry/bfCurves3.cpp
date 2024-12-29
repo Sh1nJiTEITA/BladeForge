@@ -5,6 +5,8 @@
 #include <glm/geometric.hpp>
 #include <memory>
 
+#include "bfDrawObject.h"
+
 BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
 {
@@ -1445,14 +1447,18 @@ BfArc::createVertices()
 BfCone::BfCone(
     size_t m, const BfVertex3& tip, const BfVertex3& center, float radius
 )
-    : __out_vertices_count{m}, __base_radius{radius}
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_CONE)
+    , __out_vertices_count{m}
+    , __base_radius{radius}
 {
    __dvertices.push_back(tip);
    __dvertices.push_back(center);
 }
 
 BfCone::BfCone(size_t m, const BfVertex3& tip, float height, float radius)
-    : __out_vertices_count{m}, __base_radius{radius}
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_CONE)
+    , __out_vertices_count{m}
+    , __base_radius{radius}
 {
    __dvertices.push_back(tip);
    glm::vec3 normolized = glm::normalize(tip.normals);
@@ -1585,6 +1591,11 @@ BfTube::createIndices()
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
 
+BfDoubleTube::BfDoubleTube()
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_DOUBLE_TUBE)
+{
+}
+
 BfDoubleTube::BfDoubleTube(
     size_t m,
     const BfVertex3& begin,
@@ -1594,7 +1605,8 @@ BfDoubleTube::BfDoubleTube(
     float radius_out_end,
     float radius_in_end
 )
-    : __out_m{m}
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_DOUBLE_TUBE)
+    , __out_m{m}
     , __radius_in_begin{radius_in_begin}
     , __radius_out_begin{radius_out_begin}
     , __radius_in_end{radius_in_end}
