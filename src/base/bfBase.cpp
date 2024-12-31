@@ -1736,7 +1736,7 @@ bfCreateGraphicsPipelines(BfBase &base)
    std::vector<VkDynamicState> dynamicStates = {
        VK_DYNAMIC_STATE_VIEWPORT,
        VK_DYNAMIC_STATE_SCISSOR,
-       VK_DYNAMIC_STATE_BLEND_CONSTANTS
+       // VK_DYNAMIC_STATE_BLEND_CONSTANTS
    };
 
    VkPipelineDynamicStateCreateInfo dynamicState{};
@@ -3199,12 +3199,7 @@ bfaRecreateSwapchain(BfBase &base)
 
    return BfEvent();
 }
-// TODO СДЕЛАТЬ ЗАГРУЗЧИК ШЕЙДЕРОВ
-/*
-        Далее исправить шейдеры для случая (с толстыми линиями)
-        Применять матрицу преобразования видов после создания
-        новых точек, то есть в в .geom шейдере
-*/
+
 BfEvent
 bfaCreateShaderCreateInfos(
     VkDevice device,

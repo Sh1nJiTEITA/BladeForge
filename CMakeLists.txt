@@ -215,7 +215,9 @@ set(BF_BASE
     "include/base/bfHolder.h"
     "src/base/bfHolder.cpp"
     "include/base/bfWindow.h"
-    "src/base/bfWindow.cpp")
+    "src/base/bfWindow.cpp"
+    "include/base/bfPipeline.h"
+    "src/base/bfPipeline.cpp")
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"
