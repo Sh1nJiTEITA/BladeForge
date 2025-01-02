@@ -6,12 +6,16 @@
 #include "bfBase.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
+#include "bfPipeline.h"
 #include "bfWindow.h"
 #include "imgui.h"
 
 #define VMA_IMPLEMENTATION
 
 #include "BfMain.h"
+#include "BfPipelineLine.hpp"
+#include "BfPipelineTriangle.hpp"
+#include "bfPipeline.h"
 #include "vk_mem_alloc.h"
 
 void
@@ -117,7 +121,16 @@ BfMain::__init()
    bfCreateCommandPool(__base);
    bfInitOwnDescriptors(__base);
 
+   BfPipelineHandler::instance()->create<BfPipelineCreateInfoLine>(
+       BfPipelineType_Triangles,
+       "shaders/lines",
+       __base.device,
+       __base.standart_render_pass,
+       __base.descriptor
+   );
+
    bfCreateGraphicsPipelines(__base);
+
    bfCreateStandartFrameBuffers(__base);
    bfCreateGUIFrameBuffers(__base);
 

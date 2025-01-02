@@ -24,9 +24,9 @@
 class BfMain
 {
 private:
-   BfBase   __base;
+   BfBase __base;
    BfHolder __holder;
-   BfGui    __gui;
+   BfGui __gui;
 
    BfDrawLayer *__blade_bases = nullptr;
    BfDrawLayer *__other_layer = nullptr;

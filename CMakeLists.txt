@@ -282,6 +282,11 @@ set(BF_DRAW
     "include/draw/bfLayerKiller.h"
     "src/draw/bfLayerKiller.cpp")
 
+set(BF_PIPELINES
+    "include/pipelines/BfPipelineLine.hpp"
+    "include/pipelines/BfPipelineTriangle.hpp")
+
+
 # Headers/Sources
 set(SOURCES "src/bfMain.cpp" "include/BfMain.h")
 
@@ -294,6 +299,7 @@ list(
   ${BF_OTHER}
   ${BF_DRAW}
   ${BF_OTHER}
+  ${BF_PIPELINES}
   ${BF_FORMS})
 
 # Add source to this project's executable.
