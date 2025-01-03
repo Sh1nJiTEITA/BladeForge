@@ -50,7 +50,8 @@ project(${PROJECT_NAME})
 set(SHADER_PACK_PATHS
     "${CMAKE_SOURCE_DIR}/shaders/basic"
     "${CMAKE_SOURCE_DIR}/shaders/thick_lines"
-    "${CMAKE_SOURCE_DIR}/shaders/lines")
+    "${CMAKE_SOURCE_DIR}/shaders/lines"
+    "${CMAKE_SOURCE_DIR}/shaders/triangle")
 
 if(WIN32)
   if(EXISTS ${VULKAN_SHADER_COMPILER})
@@ -70,7 +71,7 @@ if(WIN32)
 
       foreach(SHADER_EXT ${SHADER_EXTENSIONS})
 
-        file(GLOB_RECURSE SHADER_FILES_TEMP "${SHADER_DIR_PATH}/${SHADER_EXT}")
+        file(GLOB_RECURSE SHADER_FILES_TEMP "${SHADER_DIR_PATH}/${SHADER_EXT}.glsl")
         list(APPEND ALL_LOCAL_SHADER_FILES ${SHADER_FILES_TEMP})
 
       endforeach()

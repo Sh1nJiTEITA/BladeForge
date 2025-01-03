@@ -3,11 +3,9 @@
 
 #include "bfPipeline.h"
 
-class BfPipelineCreateInfoLine : public BfPipelineInterfaceStd
+class BfPipelineBuilderLine : public BfPipelineInterfaceStd
 {
 public:
-   BfPipelineCreateInfoLine() {}
-
    virtual IA_t genInputAssemblyState() override
    {
       IA_t inputAssembly_triangle{};

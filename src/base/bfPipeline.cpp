@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "bfBase.h"
+
 std::unique_ptr<BfPipelineHandler> BfPipelineHandler::__instance =
     std::unique_ptr<BfPipelineHandler>(new BfPipelineHandler);
 
@@ -13,6 +15,37 @@ BfPipelineHandler*
 BfPipelineHandler::instance()
 {
    return __instance.get();
+}
+
+void
+BfPipelineHandler::createLayout(
+    BfPipelineLayoutType type,
+    const std::vector<VkDescriptorSetLayout>& descSetLayouts
+)
+{
+   // clang-format off
+   auto [iPipelineLayout, insertSuccess] = __pipeline_layouts.insert({type, {}});
+   if (!insertSuccess)
+   {
+      throw std::runtime_error("Cant insert new pipeline to pipeline-storage");
+   }
+
+   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+   pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+   pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descSetLayouts.size());
+   pipelineLayoutCreateInfo.pSetLayouts = descSetLayouts.data();
+   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+   // clang-format on
+   if (vkCreatePipelineLayout(
+           bfGetBase()->device,
+           &pipelineLayoutCreateInfo,
+           nullptr,
+           &iPipelineLayout->second
+       ) != VK_SUCCESS)
+   {
+      throw std::runtime_error("Line pipeline layout isn't done;");
+   }
 }
 
 // void
@@ -25,35 +58,62 @@ BfPipelineHandler::instance()
 //     const BfDescriptor& desc
 // )
 
-VkPipeline*
+BfPipelineData*
 BfPipelineHandler::get(BfPipelineType type)
 {
    auto pair = __pipelines.find(type);
    if (pair != __pipelines.end())
    {
-      return &pair->second.pipeline;
+      return &pair->second;
    }
    else
    {
       return nullptr;
    }
 }
-void
+
+VkPipeline*
+BfPipelineHandler::getPipeline(BfPipelineType type)
+{
+   return &get(type)->pipeline;
+}
+
+VkPipelineLayout*
+BfPipelineHandler::getLayout(BfPipelineLayoutType type)
+{
+   auto pair = __pipeline_layouts.find(type);
+   if (pair != __pipeline_layouts.end())
+   {
+      return &pair->second;
+   }
+   else
+   {
+      return nullptr;
+   }
+}
+
+bool
 BfPipelineHandler::check(BfPipelineType type)
 {
+   auto pipeline_struct = this->get(type);
+
+   return pipeline_struct && pipeline_struct != VK_NULL_HANDLE;
+}
+
+void
+BfPipelineHandler::kill()
+{
+   auto pBase = bfGetBase();
+   for (auto [type, pipeline_struct] : __pipelines)
+   {
+      std::cout << "Destroing pipeline for type: " << type << "\n";
+      vkDestroyPipelineLayout(pBase->device, *pipeline_struct.pLayout, nullptr);
+      vkDestroyPipeline(pBase->device, pipeline_struct.pipeline, nullptr);
+   }
 }
 
 BfPipelineHandler::BfPipelineHandler() {}
 BfPipelineHandler::~BfPipelineHandler() {}
-
-void
-BfPipelineHandler::__findPipeline()
-{
-}
-void
-BfPipelineHandler::__destroyPipelines()
-{
-}
 
 BfEvent
 BfPipelineHandler::__readShaderFile(
@@ -203,6 +263,79 @@ BfPipelineHandler::__createShaderCreateInfos(
       event.success = true;
       event.info = ss.str();
       return event;
+   }
+}
+
+void
+BfPipelineHandler::__create(
+    BfPipelineInterface* builder,
+    BfPipelineType type,
+    BfPipelineLayoutType layout_type,
+    const fs::path& shaders_path,
+    const VkDevice& device,
+    const VkRenderPass& render_pass
+)
+{
+   auto [iPipelineStruct, insertSuccess] = __pipelines.insert({type, {}});
+   if (!insertSuccess)
+   {
+      throw std::runtime_error("Cant insert new pipeline to pipeline-storage");
+   }
+
+   // LOADING SHADERS;
+   std::vector<VkShaderModule> modules;
+   std::vector<VkPipelineShaderStageCreateInfo> infos;
+
+   __createShaderCreateInfos(device, shaders_path, modules, infos);
+
+   auto VertexInputState = builder->genVertexInputState();
+   auto DynamicState = builder->genDynamicState();
+   auto ViewportState = builder->genViewportState();
+   auto RasterizationState = builder->genRasterizationState();
+   auto MultisampleState = builder->genMultisampleState();
+   auto DepthStencilState = builder->genDepthStencilState();
+   auto ColorBlendState = builder->genColorBlendAttachmentState();
+   auto InputAssemblyState = builder->genInputAssemblyState();
+
+   // Bind pipeline-layout ( BINDINGS to group of descriptor sets
+   // (descriptor-set layout) ) This new pipeline will have access inside
+   // shaders to number of variables which were declared inside descriptor
+   // set layouts which was grouped as pipeline-layout
+   iPipelineStruct->second.pLayout = &__pipeline_layouts[layout_type];
+
+   VkGraphicsPipelineCreateInfo pipelineInfo{};
+   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+   pipelineInfo.pVertexInputState = &VertexInputState;
+   pipelineInfo.pViewportState = &ViewportState;
+   pipelineInfo.pRasterizationState = &RasterizationState;
+   pipelineInfo.pMultisampleState = &MultisampleState;
+   pipelineInfo.pDepthStencilState = &DepthStencilState;
+   pipelineInfo.pColorBlendState = &ColorBlendState;
+   pipelineInfo.pDynamicState = &DynamicState;
+   pipelineInfo.pInputAssemblyState = &InputAssemblyState;
+   pipelineInfo.renderPass = render_pass;
+   pipelineInfo.subpass = 0;
+   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+   pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
+   pipelineInfo.layout = *iPipelineStruct->second.pLayout;
+   pipelineInfo.stageCount = infos.size();
+   pipelineInfo.pStages = infos.data();
+
+   if (vkCreateGraphicsPipelines(
+           device,
+           VK_NULL_HANDLE,
+           1,
+           &pipelineInfo,
+           nullptr,
+           &iPipelineStruct->second.pipeline
+       ) != VK_SUCCESS)
+   {
+      throw std::runtime_error("Base pipeline (triangles) wasn't created;");
+   }
+
+   for (auto& mod : modules)
+   {
+      vkDestroyShaderModule(device, mod, nullptr);
    }
 }
 

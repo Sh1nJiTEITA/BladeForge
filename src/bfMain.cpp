@@ -88,7 +88,7 @@ void
 BfMain::__init()
 {
    BfConfigManager::createInstance();
-
+   bfBindBase(&__base);
    bfBindHolder(&__holder);
 
    bfHoldWindow(__base.window);
@@ -121,15 +121,24 @@ BfMain::__init()
    bfCreateCommandPool(__base);
    bfInitOwnDescriptors(__base);
 
-   BfPipelineHandler::instance()->create<BfPipelineCreateInfoLine>(
-       BfPipelineType_Triangles,
-       "shaders/lines",
-       __base.device,
-       __base.standart_render_pass,
-       __base.descriptor
+   BfPipelineHandler::instance()->createLayout(
+       BfPipelineLayoutType_Main,
+       __base.descriptor.getAllLayouts()
    );
 
-   bfCreateGraphicsPipelines(__base);
+   BfPipelineHandler::instance()->create<BfPipelineBuilderLine>(
+       BfPipelineType_Lines,
+       BfPipelineLayoutType_Main,
+       "shaders/lines"
+   );
+
+   BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
+       BfPipelineType_Triangles,
+       BfPipelineLayoutType_Main,
+       "shaders/triangle"
+   );
+
+   // bfCreateGraphicsPipelines(__base);
 
    bfCreateStandartFrameBuffers(__base);
    bfCreateGUIFrameBuffers(__base);
@@ -172,8 +181,9 @@ BfMain::__kill()
    bfDestroyGUIFrameBuffers(__base);
    bfDestroyStandartFrameBuffers(__base);
    bfDestroyDepthBuffer(__base);
-   bfDestoryGraphicsPipelineLayouts(__base);
-   bfDestroyGraphicsPipelines(__base);
+   BfPipelineHandler::instance()->kill();
+   // bfDestoryGraphicsPipelineLayouts(__base);
+   // bfDestroyGraphicsPipelines(__base);
    bfDestroyOwnDescriptors(__base);
    bfDestroyIDMapImage(__base);
    bfDestroyGUIRenderPass(__base);
@@ -212,7 +222,10 @@ BfMain::__loop()
    xAxis->set_color({1.0f, 0.0f, 0.0f});
    xAxis->createVertices();
    xAxis->createIndices();
-   xAxis->bind_pipeline(&__base.line_pipeline);
+   // xAxis->bind_pipeline(&__base.line_pipeline);
+   xAxis->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+   );
    auto yAxis = std::make_shared<BfSingleLine>(
        glm::vec3{0.0f, 0.0f, 0.0},
        glm::vec3{0.0f, 1.0f, 0.0f}
@@ -296,9 +309,12 @@ BfMain::__loop()
       );
       __other_layer = otherLayer.get();
       __base.layer_handler.add(otherLayer);
-      __other_layer->add(
-          std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline)
-      );
+      // __other_layer->add(
+      // std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline));
+      __other_layer->add(std::make_shared<BfAxis3DPack>(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+      ));
+
       __other_layer->update_buffer();
    }
    {

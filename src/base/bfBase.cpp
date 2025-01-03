@@ -4,9 +4,11 @@
 #include <vulkan/vulkan_core.h>
 
 #include <memory>
+#include <stdexcept>
 
 #include "bfDescriptor.h"
 #include "bfEvent.h"
+#include "bfPipeline.h"
 #include "implot.h"
 
 #define IMGUI_ENABLE_DOCKING
@@ -1378,7 +1380,6 @@ bfInitOwnDescriptors(BfBase &base)
    base.descriptor.create_desc_pool(sizes);
 
    // Model matrix
-
    BfDescriptorBufferCreateInfo binfo_model_mtx{};
    binfo_model_mtx.single_buffer_element_size = sizeof(BfObjectData);
    binfo_model_mtx.elements_count = MAX_UNIQUE_DRAW_OBJECTS;
@@ -1422,146 +1423,11 @@ bfInitOwnDescriptors(BfBase &base)
 
    info_view.layout_binding = BfDescriptorSetGlobal;
 
-   // PosPick
-   BfDescriptorBufferCreateInfo binfo_pos_pick{};
-   binfo_pos_pick.single_buffer_element_size = sizeof(uint32_t);
-   binfo_pos_pick.elements_count = 32;  // MAX_DEPTH_CURSOR_POS_ELEMENTS;
-   binfo_pos_pick.vk_buffer_usage_flags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-   binfo_pos_pick.vma_memory_usage = VMA_MEMORY_USAGE_AUTO;
-   binfo_pos_pick.vma_alloc_flags =
-       VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
-       VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-   BfDescriptorCreateInfo info_pos_pick{};
-   info_pos_pick.usage = BfDescriptorPosPickUsage;
-   info_pos_pick.vma_allocator = base.allocator;
-
-   info_pos_pick.pBuffer_info = &binfo_pos_pick;
-
-   info_pos_pick.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-   info_pos_pick.shader_stages = VK_SHADER_STAGE_VERTEX_BIT |
-                                 VK_SHADER_STAGE_FRAGMENT_BIT |
-                                 VK_SHADER_STAGE_GEOMETRY_BIT;
-   info_pos_pick.binding = 1;
-
-   info_pos_pick.layout_binding = BfDescriptorSetMain;
-
-   // id-image
-   VkImageCreateInfo id_image_create_info{};
-   // info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
-   id_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-   id_image_create_info.pNext = nullptr;
-   id_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-   id_image_create_info.format =
-       VK_FORMAT_R32_SFLOAT;  // base.swap_chain_format;
-   id_image_create_info.extent = {
-       base.swap_chain_extent.width,
-       base.swap_chain_extent.height,
-       1
-   };
-   id_image_create_info.mipLevels = 1;
-   id_image_create_info.arrayLayers = 2;
-   id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-   id_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-   id_image_create_info.usage =
-       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-       VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-       VK_IMAGE_USAGE_SAMPLED_BIT;
-
-   id_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   id_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-   VmaAllocationCreateInfo allocinfo{};
-   allocinfo.usage = VMA_MEMORY_USAGE_AUTO;
-   // allocinfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
-   // VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-
-   VkImageViewUsageCreateInfo id_image_usage_info{};
-   id_image_usage_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO;
-   id_image_usage_info.usage =
-       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-       VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-       VK_IMAGE_USAGE_SAMPLED_BIT;
-
-   VkImageViewCreateInfo id_image_info = {};
-   id_image_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-   id_image_info.viewType =
-       VK_IMAGE_VIEW_TYPE_2D_ARRAY;              // VK_IMAGE_VIEW_TYPE_2D;
-   id_image_info.format = VK_FORMAT_R32_SFLOAT;  // VK_FORMAT_R32_UINT;
-   id_image_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-   id_image_info.subresourceRange.baseMipLevel = 0;
-   id_image_info.subresourceRange.levelCount = 1;
-   id_image_info.subresourceRange.baseArrayLayer = 0;
-   id_image_info.subresourceRange.layerCount = 2;
-   id_image_info.pNext = &id_image_usage_info;
-
-   // std::cout << "TEXTURE MAIN\n";
-   // auto t = std::make_shared<BfTexture>("resources/buttons/test.png");
-   // t->open();
-   // t->load(base.allocator, base.device);
-   //
-   // base.descriptor.add_texture({t, t});
-   // auto t1 = std::make_shared<BfTexture>("resources/buttons/test.png");
-   //
-   // t1->open();
-   // t1->load(base.allocator, base.device);
-   //
-   // base.descriptor.add_texture({t1, t1});
-   //
-   // std::cout << "TEXTURE MAIN\n";
-   //
-   BfDescriptorImageCreateInfo binfo_id_map{};
-   binfo_id_map.alloc_create_info = allocinfo;
-   binfo_id_map.count = MAX_FRAMES_IN_FLIGHT;
-   binfo_id_map.image_create_info = id_image_create_info;
-   binfo_id_map.is_image_view = true;
-   binfo_id_map.view_create_info = id_image_info;
-
-   BfDescriptorCreateInfo info_id_map{};
-   info_id_map.usage = BfDescriptorPosPickUsage;
-   info_id_map.vma_allocator = base.allocator;
-   info_id_map.pImage_info = &binfo_id_map;
-   info_id_map.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-   info_id_map.shader_stages = VK_SHADER_STAGE_VERTEX_BIT |
-                               VK_SHADER_STAGE_FRAGMENT_BIT |
-                               VK_SHADER_STAGE_GEOMETRY_BIT;
-   info_id_map.binding = 1;
-   info_id_map.layout_binding = BfDescriptorSetGlobal;
-
-   // auto id = base.texture_loader.load("./resources/buttons/test.png");
-
-   // base.t_texture = base.texture_loader.get(id);
-   // base.descriptor.add_texture(base.texture_loader.get(id));
-
-   // std::cout << "Loading texture 1\n";
-   // BfTexture texture2("./resources/buttons/test.png");
-   // std::cout << "Loading texture 2\n";
-   // texture2.open();
-   // std::cout << "Loading texture 3\n";
-   // texture2.load(base.allocator, base.device);
-   // std::cout << "Loading texture 4\n";
-   //
-   //   BfDescriptorImageCreateInfo info_image_texture{};
-   //
-   //
-   // BfDescriptorCreateInfo info_texture{};
-   // info_texture.layout_binding =
-   //     BfEnDescriptorSetLayoutType::BfDescriptorSetTexture;
-   // info_texture.binding       = 0;
-   // info_texture.type          = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   // info_texture.usage         = BfEnDescriptorUsage::BfDescriptorTexture;
-   // info_texture.shader_stages = VK_SHADER_STAGE_FRAGMENT_BIT;
-   // info_texture.pImage        = texture.image();
-   //
-   //
-
    std::vector<BfDescriptorCreateInfo> infos{
        info_model_mtx,
-       // info_pos_pick,
        info_view,
-       // info_id_map
-       // info_texture,
    };
+
    base.descriptor.add_descriptor_create_info(infos);
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
@@ -3502,14 +3368,16 @@ bfMainRecordCommandBuffer(BfBase &base)
           BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
           base.current_frame,
           local_buffer,
-          base.triangle_pipeline_layout,
+          // base.triangle_pipeline_layout,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           0
       );
       base.descriptor.bind_desc_sets(
           BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
           base.current_frame,
           local_buffer,
-          base.triangle_pipeline_layout,
+          // base.triangle_pipeline_layout,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           1
       );
 
@@ -3886,4 +3754,20 @@ void
 bfDestorySampler(BfBase &base)
 {
    vkDestroySampler(base.device, base.sampler, nullptr);
+}
+
+void
+bfBindBase(BfBase *new_base)
+{
+   __pBase = new_base;
+}
+
+BfBase *
+bfGetBase()
+{
+   if (!__pBase)
+   {
+      throw std::runtime_error("No BfBase was bound to static pointer");
+   }
+   return __pBase;
 }

@@ -14,6 +14,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "bfBase.h"
 #include "bfDescriptor.h"
 #include "bfVariative.hpp"
 
@@ -30,6 +31,12 @@ enum BfPipelineType_ : BfPipelineType
    BfPipelineType_Axis
 };
 
+typedef uint32_t BfPipelineLayoutType;
+enum BfPipelineLayoutType_ : BfPipelineLayoutType
+{
+   BfPipelineLayoutType_Main,
+};
+
 /**
  * @class BfPipelineHandler
  * @brief [Singleton] Vulkan pipeline handler to load/unload
@@ -37,109 +44,138 @@ enum BfPipelineType_ : BfPipelineType
  *
  */
 
+struct BfPipelineData
+{
+   VkPipeline pipeline;
+   VkPipelineLayout* pLayout;
+};
+
 class BfPipelineHandler
 {
    static std::unique_ptr<BfPipelineHandler> __instance;
-   //
 
-   struct __PipelineData
-   {
-      VkPipeline pipeline;
-      VkPipelineLayout layout;
-   };
-   std::unordered_map<BfPipelineType, __PipelineData> __pipelines;
+   // clang-format off
+   std::unordered_map<BfPipelineType, BfPipelineData> __pipelines;
+   std::unordered_map<BfPipelineLayoutType, VkPipelineLayout> __pipeline_layouts;
+   // clang-format on
 
 public:
    static BfPipelineHandler* instance();
 
-   // INTERACTION //
+   /**
+    * @brief Creates pipeline layout.
+    * Layouts can be used multiple times for different pipelines.
+    * Binding pipeline-layout to pipeline provides descriptor-data (shader
+    * variables) to pipelines. Usualy (as i suppose) pipelines want to get
+    * camera-data (view), model-data (model, id and etc).
+    *
+    * @param type => some item of BfPipelineLayoutType-enum
+    * @param descSetLayouts => group of descriptor-set-layouts
+    * in context of BfDescriptor each descriptor-set-layout is bound to
+    * element of 'BfEnDescriptorSetLayoutType' enum. Each element has its own
+    * set index (inside shaders layout(set = <INT-index>, binding = <INT>)
+    */
+   void createLayout(
+       BfPipelineLayoutType type,
+       const std::vector<VkDescriptorSetLayout>& descSetLayouts
+   );
+
+   /**
+    * @brief Creates pipeline.
+    * Created pipeline adds to inner storage. Access to it can be get by
+    * 'get(type)' method. Each created pipeline must be provided with value-type
+    * of 'BfPipelineType_' struct.
+    * Pipeline describes how Vulkan should use input-vertex,index data to render
+    * it.
+    *
+    * @tparam T => derivative of BfPipelineInterface
+    * @param type => value of 'BfPipelineType_' struct
+    * @param shaders_path => path to shader directory ('PATH/TO/SHADER_DIR')
+    * where inside SHADER_DIR: SHADER_DIR.vert, SHADER_DIR.frag etc
+    * @param layout_type => layout type to bind it to pipeline (check
+    * 'createLayout' description)
+    * @param device => VkDevice handle
+    * @param render_pass => VkRenderPass handle
+    * @return void
+    */
    template <class T>
    typename std::enable_if<std::is_base_of<BfPipelineInterface, T>::value>::type
    create(
        BfPipelineType type,
+       BfPipelineLayoutType layout_type,
        const fs::path& shaders_path,
        const VkDevice& device,
-       const VkRenderPass& render_pass,
-       const BfDescriptor& desc
+       const VkRenderPass& render_pass
    )
    {
       auto builder = T();
-
-      auto [iPipelineStruct, insertSuccess] = __pipelines.emplace();
-      if (!insertSuccess)
-      {
-         throw std::runtime_error(
-             "Cant emplace new pipeline to pipeline-storage"
-         );
-      }
-
-      // LOADING SHADERS;
-      std::vector<VkShaderModule> modules;
-      std::vector<VkPipelineShaderStageCreateInfo> infos;
-
-      __createShaderCreateInfos(device, shaders_path, modules, infos);
-
-      auto pipelineLayoutCreateInfo = builder.genLayout(device, desc);
-      if (vkCreatePipelineLayout(
-              device,
-              &pipelineLayoutCreateInfo,
-              nullptr,
-              &iPipelineStruct->second.layout
-          ) == VK_SUCCESS)
-      {
-      }
-      else
-      {
-         throw std::runtime_error("Line pipeline layout isn't done;");
-      }
-
-      auto VertexInputState = builder.genVertexInputState();
-      auto DynamicState = builder.genDynamicState();
-      auto ViewportState = builder.genViewportState();
-      auto RasterizationState = builder.genRasterizationState();
-      auto MultisampleState = builder.genMultisampleState();
-      auto DepthStencilState = builder.genDepthStencilState();
-      auto ColorBlendState = builder.genColorBlendAttachmentState();
-      auto InputAssemblyState = builder.genInputAssemblyState();
-
-      VkGraphicsPipelineCreateInfo pipelineInfo{};
-      pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-      pipelineInfo.pVertexInputState = &VertexInputState;
-      pipelineInfo.pViewportState = &ViewportState;
-      pipelineInfo.pRasterizationState = &RasterizationState;
-      pipelineInfo.pMultisampleState = &MultisampleState;
-      pipelineInfo.pDepthStencilState = &DepthStencilState;
-      pipelineInfo.pColorBlendState = &ColorBlendState;
-      pipelineInfo.pDynamicState = &DynamicState;
-      pipelineInfo.pInputAssemblyState = &InputAssemblyState;
-      pipelineInfo.renderPass = render_pass;
-      pipelineInfo.subpass = 0;
-      pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-      pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
-      pipelineInfo.layout = iPipelineStruct->second.layout;
-      pipelineInfo.stageCount = infos.size();
-      pipelineInfo.pStages = infos.data();
-
-      if (vkCreateGraphicsPipelines(
-              device,
-              VK_NULL_HANDLE,
-              1,
-              &pipelineInfo,
-              nullptr,
-              &iPipelineStruct->second.pipeline
-          ) != VK_SUCCESS)
-      {
-         throw std::runtime_error("Base pipeline (triangles) wasn't created;");
-      }
-
-      for (auto& mod : modules)
-      {
-         vkDestroyShaderModule(device, mod, nullptr);
-      }
+      __create(&builder, type, layout_type, shaders_path, device, render_pass);
    }
 
-   VkPipeline* get(BfPipelineType type);
-   void check(BfPipelineType type);
+   /**
+    * @brief Short version of 'create' method.
+    * Check other 'create' description.
+    * Uses render-pass, device, descriptor from bound BfBase via 'bfGetBase()'
+    * function
+    *
+    * @param type
+    * @param layout_type
+    * @param shaders_path
+    * @return void
+    */
+   template <class T>
+   typename std::enable_if<std::is_base_of<BfPipelineInterface, T>::value>::type
+   create(
+       BfPipelineType type,
+       BfPipelineLayoutType layout_type,
+       const fs::path& shaders_path
+   )
+   {
+      // clang-format off
+      auto pBase = bfGetBase();
+      auto builder = T();
+      __create(&builder, type, layout_type, shaders_path, pBase->device, pBase->standart_render_pass);
+      // clang-format on
+   }
+
+   /**
+    * @brief Finds created inner pipeline data by type
+    *
+    * @param type => value of 'BfPipelineType_' struct
+    * @return pointer to __PipelineStruct of saved created pipelines
+    */
+   BfPipelineData* get(BfPipelineType type);
+
+   /**
+    * @brief Finds created inner VkPipeline by type
+    *
+    * @param type => value of 'BfPipelineType_' struct
+    * @return pointer to VkPipeline of saved created pipelines
+    */
+   VkPipeline* getPipeline(BfPipelineType type);
+
+   /**
+    * @brief Finds created VkPipelineLayoyt by type
+    *
+    * @param type => value of 'BfPipelineLayoutType_' struct
+    * @return pointer to VkPipelineLayout of saved created pipelines
+    */
+   VkPipelineLayout* getLayout(BfPipelineType type);
+
+   /**
+    * @brief Checks if pipeline
+    *
+    * @param type
+    * @return
+    */
+   bool check(BfPipelineType type);
+
+   /**
+    * @brief Destroys all created Vulkan handles: vk-pipeline-layouts,
+    * vk-pipelines
+    *
+    */
+   void kill();
    // INSTANCE //
 
    ~BfPipelineHandler();
@@ -153,9 +189,6 @@ private:
    BfPipelineHandler& operator=(BfPipelineHandler&&) = delete;
    BfPipelineHandler& operator=(const BfPipelineHandler&) = delete;
    // OTHER //
-   void __findPipeline();
-   void __destroyPipelines();
-
    BfEvent __readShaderFile(std::vector<char>& data, const fs::path& path);
    BfEvent __createShaderModule(VkShaderModule& module, VkDevice device, const std::vector<char>& data);
    BfEvent __createShaderCreateInfos(
@@ -164,10 +197,15 @@ private:
        std::vector<VkShaderModule>& modules,
        std::vector<VkPipelineShaderStageCreateInfo>& out
    );
-
-   // PIPELINE CREATION //
-
    // clang-format on
+   void __create(
+       BfPipelineInterface* builder,
+       BfPipelineType type,
+       BfPipelineLayoutType layout_type,
+       const fs::path& shaders_path,
+       const VkDevice& device,
+       const VkRenderPass& render_pass
+   );
 };
 
 struct BfPipelineInterface

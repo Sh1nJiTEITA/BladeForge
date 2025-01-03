@@ -1,10 +1,11 @@
-#ifndef BF_PIPELINE_LINE_H
-#define BF_PIPELINE_LINE_H
+#ifndef BF_PIPELINE_TRIANGLE_H
+#define BF_PIPELINE_TRIANGLE_H
 
 #include "bfPipeline.h"
 
-class BfPipelineCreateInfoTriangle : public BfPipelineInterfaceStd
+class BfPipelineBuilderTriangle : public BfPipelineInterfaceStd
 {
+public:
    virtual IA_t genInputAssemblyState() override
    {
       IA_t inputAssembly_triangle{};

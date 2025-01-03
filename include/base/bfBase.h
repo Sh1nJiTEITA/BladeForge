@@ -10,7 +10,6 @@
 #include "bfLayerHandler.h"
 #include "bfLayerKiller.h"
 #include "bfPhysicalDevice.h"
-#include "bfPipeline.h"
 #include "bfTextureLoad.h"
 #include "bfUniforms.h"
 #include "bfVariative.hpp"
@@ -241,5 +240,11 @@ void bfUpdateUniformBuffer(BfBase &base);
 
 void bfCreateSampler(BfBase &base);
 void bfDestorySampler(BfBase &base);
+
+// Binding
+
+static BfBase *__pBase = nullptr;
+void bfBindBase(BfBase *);
+BfBase *bfGetBase();
 
 #endif

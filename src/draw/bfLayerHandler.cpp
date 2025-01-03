@@ -414,7 +414,6 @@ BfLayerHandler::map_model_matrices(size_t frame_index)
          offset); offset += obj_data.size();*/
       }
    }
-
    __pDescriptor->unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);
 }
 

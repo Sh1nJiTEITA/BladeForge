@@ -26,10 +26,8 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
 layout(location = 0) in vec3 fragColor;
 layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 fragPos;
-
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out uint outId;
-
 
 layout(location = 4) flat in uint obj_index;
 
@@ -39,7 +37,6 @@ vec3 uLightColor = vec3(1.0, 1.0, 1.0);    // Цвет источника све
 void main() {
     float ambientStrength = 0.050505050505050505;
     vec3 ambient = ambientStrength * uLightColor;
-  	
     // diffuse 
     vec3 norm = normalize(fragNormal);
     vec3 lightDir = normalize(uLightPosition - fragPos);

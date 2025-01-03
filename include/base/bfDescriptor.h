@@ -27,6 +27,7 @@ extern std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// In shader: set = ...?
 enum BfEnDescriptorSetLayoutType
 {
    BfDescriptorSetGlobal = 0,
@@ -62,7 +63,6 @@ struct BfDescriptorCreateInfo
 
    BfDescriptorImageCreateInfo *pImage_info = nullptr;
    BfDescriptorBufferCreateInfo *pBuffer_info = nullptr;
-
    // Binding
    // VkDescriptorType : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER...
    VkDescriptorType type;
@@ -101,8 +101,8 @@ class BfDescriptor
 
 public:
    BfDescriptor();
-   void kill();
    ~BfDescriptor();
+   void kill();
    void set_frames_in_flight(unsigned int in);
    void bind_device(VkDevice device);
 
