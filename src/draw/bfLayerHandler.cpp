@@ -52,17 +52,6 @@ BfLayerHandler::allocator() noexcept
    return __pAllocator;
 }
 
-VkPipeline*
-BfLayerHandler::trinagle_pipeline() noexcept
-{
-   return __pTrianglePipeline;
-}
-VkPipeline*
-BfLayerHandler::line_pipeline() noexcept
-{
-   return __pLinePipeline;
-}
-
 BfEvent
 BfLayerHandler::bind_descriptor(BfDescriptor* desc)
 {
@@ -98,46 +87,6 @@ BfLayerHandler::bind_allocator(VmaAllocator* allocator)
    else
    {
       event.action = BF_ACTION_TYPE_BIND_ALLOCATOR_TO_LAYER_HANDLER_FAILURE;
-      event.success = false;
-   }
-   return event;
-}
-
-BfEvent
-BfLayerHandler::bind_trianle_pipeline(VkPipeline* pipeline)
-{
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-   if (pipeline)
-   {
-      event.action =
-          BF_ACTION_TYPE_BIND_TRIANGLE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
-      event.success = true;
-      __pTrianglePipeline = pipeline;
-   }
-   else
-   {
-      event.action =
-          BF_ACTION_TYPE_BIND_TRIANGLE_PIPELINE_TO_LAYER_HANDLER_FAILURE;
-      event.success = false;
-   }
-   return event;
-}
-
-BfEvent
-BfLayerHandler::bind_line_pipeline(VkPipeline* pipeline)
-{
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-   if (pipeline)
-   {
-      event.action = BF_ACTION_TYPE_BIND_LINE_PIPELINE_TO_LAYER_HANDLER_SUCCESS;
-      event.success = true;
-      __pLinePipeline = pipeline;
-   }
-   else
-   {
-      event.action = BF_ACTION_TYPE_BIND_LINE_PIPELINE_TO_LAYER_HANDLER_FAILURE;
       event.success = false;
    }
    return event;
@@ -435,7 +384,7 @@ BfLayerHandler::get_layer_count() const noexcept
 }
 
 void
-BfLayerHandler::draw(VkCommandBuffer command_buffer, VkPipeline)
+BfLayerHandler::draw(VkCommandBuffer command_buffer)
 {
    size_t obj_data_offset = 0;
 

@@ -1520,308 +1520,313 @@ bfaReadFile(std::vector<char> &data, const std::string &filename)
    }
 }
 
-BfEvent
-bfCreateGraphicsPipelines(BfBase &base)
-{
-   std::vector<VkShaderModule> modules_basic;
-   std::vector<VkPipelineShaderStageCreateInfo> infos_basic;
-   bfaCreateShaderCreateInfos(
-       base.device,
-       "shaders/basic",
-       modules_basic,
-       infos_basic
-   );
-
-   std::vector<VkShaderModule> modules_tlines;
-   std::vector<VkPipelineShaderStageCreateInfo> infos_tlines;
-   bfaCreateShaderCreateInfos(
-       base.device,
-       "shaders/thick_lines",
-       modules_tlines,
-       infos_tlines
-   );
-
-   std::vector<VkShaderModule> modules_lines;
-   std::vector<VkPipelineShaderStageCreateInfo> infos_lines;
-   bfaCreateShaderCreateInfos(
-       base.device,
-       "shaders/lines",
-       modules_lines,
-       infos_lines
-   );
-
-   // Vertex Data
-   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-   vertexInputInfo.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-   auto bindingDescription = BfVertex3::getBindingDescription();
-   auto attributeDescriptions = BfVertex3::getAttributeDescriptions();
-
-   vertexInputInfo.vertexBindingDescriptionCount = 1;
-   vertexInputInfo.vertexAttributeDescriptionCount =
-       static_cast<uint32_t>(attributeDescriptions.size());
-   vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-   vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-   // How to use vertex data
-   VkPipelineInputAssemblyStateCreateInfo inputAssembly_triangles{};
-   inputAssembly_triangles.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-   inputAssembly_triangles.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-   inputAssembly_triangles.primitiveRestartEnable = VK_FALSE;
-
-   VkPipelineInputAssemblyStateCreateInfo inputAssembly_lines{};
-   inputAssembly_lines.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-   inputAssembly_lines.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-   inputAssembly_lines.primitiveRestartEnable = VK_FALSE;
-
-   /*VkPipelineShaderStageCreateInfo lines_shaderStages[] = {
-           lines_vertShaderCreateInfo,
-           lines_geomShaderCreateInfo,
-           lines_fragShaderCreateInfo
-   };*/
-   //// Viewports
-   // VkViewport viewport{};
-   // viewport.x = 0.0f;
-   // viewport.y = 0.0f;
-
-   // viewport.width = (float)swapChainExtent.width;
-   // viewport.height = (float)swapChainExtent.height;
-
-   // viewport.minDepth = 0.0f;
-   // viewport.maxDepth = 1.0f;
-
-   //// Scissors
-   // VkRect2D scissor{};
-   // scissor.offset = { 0, 0 };
-   // scissor.extent = swapChainExtent;
-
-   // Dynamic viewport/scissors
-   std::vector<VkDynamicState> dynamicStates = {
-       VK_DYNAMIC_STATE_VIEWPORT,
-       VK_DYNAMIC_STATE_SCISSOR,
-       // VK_DYNAMIC_STATE_BLEND_CONSTANTS
-   };
-
-   VkPipelineDynamicStateCreateInfo dynamicState{};
-   dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-   dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-   dynamicState.pDynamicStates = dynamicStates.data();
-
-   VkPipelineViewportStateCreateInfo viewportState{};
-   viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-   viewportState.viewportCount = 1;
-   viewportState.scissorCount = 1;
-
-   // Rasterizer
-   VkPipelineRasterizationStateCreateInfo rasterizer{};
-   rasterizer.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-   rasterizer.depthClampEnable = VK_FALSE;
-   rasterizer.rasterizerDiscardEnable = VK_FALSE;
-   rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-   rasterizer.lineWidth = 1.0f;
-   rasterizer.cullMode = VK_CULL_MODE_NONE;
-   rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-   // rasterizer.depthBiasEnable = VK_TRUE;
-   // rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-   // rasterizer.depthBiasClamp = 0.0f; // Optional
-   // rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-   // Multisampling
-   VkPipelineMultisampleStateCreateInfo multisampling{};
-   multisampling.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisampling.sampleShadingEnable = VK_FALSE;
-   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-   multisampling.minSampleShading = 1.0f;           // Optional
-   multisampling.pSampleMask = nullptr;             // Optional
-   multisampling.alphaToCoverageEnable = VK_FALSE;  // Optional
-   multisampling.alphaToOneEnable = VK_FALSE;       // Optional
-
-   // Color blending
-   VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-   colorBlendAttachment.colorWriteMask = {
-       VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-       VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-   };
-   colorBlendAttachment.blendEnable = VK_FALSE;
-   colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-   colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-   colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
-   colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-   colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-   colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
-
-   // id Color blending
-   VkPipelineColorBlendAttachmentState idBlendAttachment{};
-   idBlendAttachment.colorWriteMask = {VK_COLOR_COMPONENT_R_BIT};
-   idBlendAttachment.blendEnable = VK_FALSE;
-   idBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-   idBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-   idBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
-   idBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-   idBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-   idBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
-
-   std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments = {
-       colorBlendAttachment,
-       idBlendAttachment
-   };
-
-   VkPipelineColorBlendStateCreateInfo colorBlending{};
-   colorBlending.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-   colorBlending.logicOpEnable = VK_FALSE;
-   colorBlending.logicOp = VK_LOGIC_OP_COPY;  // Optional
-   colorBlending.attachmentCount = colorBlendAttachments.size();
-   colorBlending.pAttachments = colorBlendAttachments.data();
-   colorBlending.blendConstants[0] = 0.0f;  // Optional
-   colorBlending.blendConstants[1] = 0.0f;  // Optional
-   colorBlending.blendConstants[2] = 0.0f;  // Optional
-   colorBlending.blendConstants[3] = 0.0f;  // Optional
-
-   // Depth-stencil part
-   auto depth_stencil_state = bfPopulateDepthStencilStateCreateInfo(
-       true,
-       true,
-       VK_COMPARE_OP_LESS_OR_EQUAL
-   );
-
-   bool is_pipelines_created = true;
-   std::stringstream ss;
-
-   // Uniforms
-   bfaCreateGraphicsPipelineLayouts(base);
-
-   VkGraphicsPipelineCreateInfo pipelineInfo{};
-   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-   pipelineInfo.pVertexInputState = &vertexInputInfo;
-   pipelineInfo.pViewportState = &viewportState;
-   pipelineInfo.pRasterizationState = &rasterizer;
-   pipelineInfo.pMultisampleState = &multisampling;
-   pipelineInfo.pDepthStencilState = &depth_stencil_state;
-   pipelineInfo.pColorBlendState = &colorBlending;
-   pipelineInfo.pDynamicState = &dynamicState;
-   pipelineInfo.renderPass = base.standart_render_pass;
-   pipelineInfo.subpass = 0;
-   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-   pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
-
-   // basic (triangles)
-   pipelineInfo.stageCount = infos_basic.size();
-   pipelineInfo.pStages = infos_basic.data();
-   pipelineInfo.pInputAssemblyState = &inputAssembly_triangles;
-   pipelineInfo.layout = base.triangle_pipeline_layout;
-   if (vkCreateGraphicsPipelines(
-           base.device,
-           VK_NULL_HANDLE,
-           1,
-           &pipelineInfo,
-           nullptr,
-           &base.triangle_pipeline
-       ) != VK_SUCCESS)
-   {
-      is_pipelines_created = false;
-      ss << "Base pipeline (triangles) wasn't created;";
-   }
-
-   // tline
-   pipelineInfo.stageCount = infos_tlines.size();
-   pipelineInfo.pStages = infos_tlines.data();
-   pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
-   pipelineInfo.layout = base.tline_pipeline_layout;
-   if (vkCreateGraphicsPipelines(
-           base.device,
-           VK_NULL_HANDLE,
-           1,
-           &pipelineInfo,
-           nullptr,
-           &base.tline_pipeline
-       ) != VK_SUCCESS)
-   {
-      is_pipelines_created = false;
-      ss << "Base pipeline (slines) wasn't created;";
-   }
-
-   pipelineInfo.stageCount = infos_lines.size();
-   pipelineInfo.pStages = infos_lines.data();
-   pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
-   pipelineInfo.layout = base.line_pipeline_layout;
-   // pipelineInfo.basePipelineIndex = -1;
-   // pipelineInfo.basePipelineHandle = base.triangle_pipeline;
-
-   if (vkCreateGraphicsPipelines(
-           base.device,
-           VK_NULL_HANDLE,
-           1,
-           &pipelineInfo,
-           nullptr,
-           &base.line_pipeline
-       ) != VK_SUCCESS)
-   {
-      is_pipelines_created = false;
-      ss << "Derivative pipeline (lines) wasn't created;";
-   }
-
-   for (auto &mod : modules_tlines)
-   {
-      vkDestroyShaderModule(base.device, mod, nullptr);
-   }
-
-   for (auto &mod : modules_basic)
-   {
-      vkDestroyShaderModule(base.device, mod, nullptr);
-   }
-
-   for (auto &mod : modules_lines)
-   {
-      vkDestroyShaderModule(base.device, mod, nullptr);
-   }
-
-   /*vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
-   vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
-   vkDestroyShaderModule(base.device, geomShaderModule, nullptr);*/
-
-   BfSingleEvent event{};
-   event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-
-   if (is_pipelines_created)
-   {
-      event.action =
-          BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_SUCCESS;
-      event.info = "All pipelines is OK";
-   }
-   else
-   {
-      event.action =
-          BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE;
-      event.info = ss.str();
-   }
-   return BfEvent(event);
-}
-
-BfEvent
-bfDestroyGraphicsPipelines(BfBase &base)
-{
-   vkDestroyPipeline(base.device, base.line_pipeline, nullptr);
-   vkDestroyPipeline(base.device, base.tline_pipeline, nullptr);
-   vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
-
-   // vkDestroyDescriptorSetLayout(base.device, base.tline_pipeline_layout,
-   // nullptr); vkDestroyDescriptorSetLayout(base.device,
-   // base.triangle_pipeline_layout, nullptr);
-   // vkDestroyDescriptorSetLayout(base.device, base.line_pipeline_layout,
-   // nullptr);
-   //
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
-   event.action = BF_ACTION_TYPE_DESTROY_PIPELINES;
-
-   return BfEvent(event);
-}
+// BfEvent
+// bfCreateGraphicsPipelines(BfBase &base)
+// {
+//    std::vector<VkShaderModule> modules_basic;
+//    std::vector<VkPipelineShaderStageCreateInfo> infos_basic;
+//    bfaCreateShaderCreateInfos(
+//        base.device,
+//        "shaders/basic",
+//        modules_basic,
+//        infos_basic
+//    );
+//
+//    std::vector<VkShaderModule> modules_tlines;
+//    std::vector<VkPipelineShaderStageCreateInfo> infos_tlines;
+//    bfaCreateShaderCreateInfos(
+//        base.device,
+//        "shaders/thick_lines",
+//        modules_tlines,
+//        infos_tlines
+//    );
+//
+//    std::vector<VkShaderModule> modules_lines;
+//    std::vector<VkPipelineShaderStageCreateInfo> infos_lines;
+//    bfaCreateShaderCreateInfos(
+//        base.device,
+//        "shaders/lines",
+//        modules_lines,
+//        infos_lines
+//    );
+//
+//    // Vertex Data
+//    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+//    vertexInputInfo.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+//
+//    auto bindingDescription = BfVertex3::getBindingDescription();
+//    auto attributeDescriptions = BfVertex3::getAttributeDescriptions();
+//
+//    vertexInputInfo.vertexBindingDescriptionCount = 1;
+//    vertexInputInfo.vertexAttributeDescriptionCount =
+//        static_cast<uint32_t>(attributeDescriptions.size());
+//    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+//    vertexInputInfo.pVertexAttributeDescriptions =
+//    attributeDescriptions.data();
+//
+//    // How to use vertex data
+//    VkPipelineInputAssemblyStateCreateInfo inputAssembly_triangles{};
+//    inputAssembly_triangles.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+//    inputAssembly_triangles.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+//    inputAssembly_triangles.primitiveRestartEnable = VK_FALSE;
+//
+//    VkPipelineInputAssemblyStateCreateInfo inputAssembly_lines{};
+//    inputAssembly_lines.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+//    inputAssembly_lines.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+//    inputAssembly_lines.primitiveRestartEnable = VK_FALSE;
+//
+//    /*VkPipelineShaderStageCreateInfo lines_shaderStages[] = {
+//            lines_vertShaderCreateInfo,
+//            lines_geomShaderCreateInfo,
+//            lines_fragShaderCreateInfo
+//    };*/
+//    //// Viewports
+//    // VkViewport viewport{};
+//    // viewport.x = 0.0f;
+//    // viewport.y = 0.0f;
+//
+//    // viewport.width = (float)swapChainExtent.width;
+//    // viewport.height = (float)swapChainExtent.height;
+//
+//    // viewport.minDepth = 0.0f;
+//    // viewport.maxDepth = 1.0f;
+//
+//    //// Scissors
+//    // VkRect2D scissor{};
+//    // scissor.offset = { 0, 0 };
+//    // scissor.extent = swapChainExtent;
+//
+//    // Dynamic viewport/scissors
+//    std::vector<VkDynamicState> dynamicStates = {
+//        VK_DYNAMIC_STATE_VIEWPORT,
+//        VK_DYNAMIC_STATE_SCISSOR,
+//        // VK_DYNAMIC_STATE_BLEND_CONSTANTS
+//    };
+//
+//    VkPipelineDynamicStateCreateInfo dynamicState{};
+//    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+//    dynamicState.dynamicStateCount =
+//    static_cast<uint32_t>(dynamicStates.size()); dynamicState.pDynamicStates =
+//    dynamicStates.data();
+//
+//    VkPipelineViewportStateCreateInfo viewportState{};
+//    viewportState.sType =
+//    VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+//    viewportState.viewportCount = 1;
+//    viewportState.scissorCount = 1;
+//
+//    // Rasterizer
+//    VkPipelineRasterizationStateCreateInfo rasterizer{};
+//    rasterizer.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+//    rasterizer.depthClampEnable = VK_FALSE;
+//    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+//    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+//    rasterizer.lineWidth = 1.0f;
+//    rasterizer.cullMode = VK_CULL_MODE_NONE;
+//    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+//    // rasterizer.depthBiasEnable = VK_TRUE;
+//    // rasterizer.depthBiasConstantFactor = 0.0f; // Optional
+//    // rasterizer.depthBiasClamp = 0.0f; // Optional
+//    // rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
+//
+//    // Multisampling
+//    VkPipelineMultisampleStateCreateInfo multisampling{};
+//    multisampling.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+//    multisampling.sampleShadingEnable = VK_FALSE;
+//    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+//    multisampling.minSampleShading = 1.0f;           // Optional
+//    multisampling.pSampleMask = nullptr;             // Optional
+//    multisampling.alphaToCoverageEnable = VK_FALSE;  // Optional
+//    multisampling.alphaToOneEnable = VK_FALSE;       // Optional
+//
+//    // Color blending
+//    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+//    colorBlendAttachment.colorWriteMask = {
+//        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+//        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+//    };
+//    colorBlendAttachment.blendEnable = VK_FALSE;
+//    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   //
+//    Optional colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+//    // Optional colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; //
+//    Optional colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+//    // Optional colorBlendAttachment.dstAlphaBlendFactor =
+//    VK_BLEND_FACTOR_ZERO;  // Optional colorBlendAttachment.alphaBlendOp =
+//    VK_BLEND_OP_ADD;              // Optional
+//
+//    // id Color blending
+//    VkPipelineColorBlendAttachmentState idBlendAttachment{};
+//    idBlendAttachment.colorWriteMask = {VK_COLOR_COMPONENT_R_BIT};
+//    idBlendAttachment.blendEnable = VK_FALSE;
+//    idBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
+//    idBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
+//    idBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
+//    idBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
+//    idBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
+//    idBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
+//
+//    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments = {
+//        colorBlendAttachment,
+//        idBlendAttachment
+//    };
+//
+//    VkPipelineColorBlendStateCreateInfo colorBlending{};
+//    colorBlending.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+//    colorBlending.logicOpEnable = VK_FALSE;
+//    colorBlending.logicOp = VK_LOGIC_OP_COPY;  // Optional
+//    colorBlending.attachmentCount = colorBlendAttachments.size();
+//    colorBlending.pAttachments = colorBlendAttachments.data();
+//    colorBlending.blendConstants[0] = 0.0f;  // Optional
+//    colorBlending.blendConstants[1] = 0.0f;  // Optional
+//    colorBlending.blendConstants[2] = 0.0f;  // Optional
+//    colorBlending.blendConstants[3] = 0.0f;  // Optional
+//
+//    // Depth-stencil part
+//    auto depth_stencil_state = bfPopulateDepthStencilStateCreateInfo(
+//        true,
+//        true,
+//        VK_COMPARE_OP_LESS_OR_EQUAL
+//    );
+//
+//    bool is_pipelines_created = true;
+//    std::stringstream ss;
+//
+//    // Uniforms
+//    bfaCreateGraphicsPipelineLayouts(base);
+//
+//    VkGraphicsPipelineCreateInfo pipelineInfo{};
+//    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+//    pipelineInfo.pVertexInputState = &vertexInputInfo;
+//    pipelineInfo.pViewportState = &viewportState;
+//    pipelineInfo.pRasterizationState = &rasterizer;
+//    pipelineInfo.pMultisampleState = &multisampling;
+//    pipelineInfo.pDepthStencilState = &depth_stencil_state;
+//    pipelineInfo.pColorBlendState = &colorBlending;
+//    pipelineInfo.pDynamicState = &dynamicState;
+//    pipelineInfo.renderPass = base.standart_render_pass;
+//    pipelineInfo.subpass = 0;
+//    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+//    pipelineInfo.flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT;
+//
+//    // basic (triangles)
+//    pipelineInfo.stageCount = infos_basic.size();
+//    pipelineInfo.pStages = infos_basic.data();
+//    pipelineInfo.pInputAssemblyState = &inputAssembly_triangles;
+//    pipelineInfo.layout = base.triangle_pipeline_layout;
+//    if (vkCreateGraphicsPipelines(
+//            base.device,
+//            VK_NULL_HANDLE,
+//            1,
+//            &pipelineInfo,
+//            nullptr,
+//            &base.triangle_pipeline
+//        ) != VK_SUCCESS)
+//    {
+//       is_pipelines_created = false;
+//       ss << "Base pipeline (triangles) wasn't created;";
+//    }
+//
+//    // tline
+//    pipelineInfo.stageCount = infos_tlines.size();
+//    pipelineInfo.pStages = infos_tlines.data();
+//    pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
+//    pipelineInfo.layout = base.tline_pipeline_layout;
+//    if (vkCreateGraphicsPipelines(
+//            base.device,
+//            VK_NULL_HANDLE,
+//            1,
+//            &pipelineInfo,
+//            nullptr,
+//            &base.tline_pipeline
+//        ) != VK_SUCCESS)
+//    {
+//       is_pipelines_created = false;
+//       ss << "Base pipeline (slines) wasn't created;";
+//    }
+//
+//    pipelineInfo.stageCount = infos_lines.size();
+//    pipelineInfo.pStages = infos_lines.data();
+//    pipelineInfo.pInputAssemblyState = &inputAssembly_lines;
+//    pipelineInfo.layout = base.line_pipeline_layout;
+//    // pipelineInfo.basePipelineIndex = -1;
+//    // pipelineInfo.basePipelineHandle = base.triangle_pipeline;
+//
+//    if (vkCreateGraphicsPipelines(
+//            base.device,
+//            VK_NULL_HANDLE,
+//            1,
+//            &pipelineInfo,
+//            nullptr,
+//            &base.line_pipeline
+//        ) != VK_SUCCESS)
+//    {
+//       is_pipelines_created = false;
+//       ss << "Derivative pipeline (lines) wasn't created;";
+//    }
+//
+//    for (auto &mod : modules_tlines)
+//    {
+//       vkDestroyShaderModule(base.device, mod, nullptr);
+//    }
+//
+//    for (auto &mod : modules_basic)
+//    {
+//       vkDestroyShaderModule(base.device, mod, nullptr);
+//    }
+//
+//    for (auto &mod : modules_lines)
+//    {
+//       vkDestroyShaderModule(base.device, mod, nullptr);
+//    }
+//
+//    /*vkDestroyShaderModule(base.device, vertShaderModule, nullptr);
+//    vkDestroyShaderModule(base.device, fragShaderModule, nullptr);
+//    vkDestroyShaderModule(base.device, geomShaderModule, nullptr);*/
+//
+//    BfSingleEvent event{};
+//    event.type =
+//    BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+//
+//    if (is_pipelines_created)
+//    {
+//       event.action =
+//           BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_SUCCESS;
+//       event.info = "All pipelines is OK";
+//    }
+//    else
+//    {
+//       event.action =
+//           BfEnActionType::BF_ACTION_TYPE_CREATE_GRAPHICS_PIPELINE_FAILURE;
+//       event.info = ss.str();
+//    }
+//    return BfEvent(event);
+// }
+//
+// BfEvent
+// bfDestroyGraphicsPipelines(BfBase &base)
+// {
+//    vkDestroyPipeline(base.device, base.line_pipeline, nullptr);
+//    vkDestroyPipeline(base.device, base.tline_pipeline, nullptr);
+//    vkDestroyPipeline(base.device, base.triangle_pipeline, nullptr);
+//
+//    // vkDestroyDescriptorSetLayout(base.device, base.tline_pipeline_layout,
+//    // nullptr); vkDestroyDescriptorSetLayout(base.device,
+//    // base.triangle_pipeline_layout, nullptr);
+//    // vkDestroyDescriptorSetLayout(base.device, base.line_pipeline_layout,
+//    // nullptr);
+//    //
+//    BfSingleEvent event{};
+//    event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+//    event.action = BF_ACTION_TYPE_DESTROY_PIPELINES;
+//
+//    return BfEvent(event);
+// }
 
 BfEvent
 bfCreateStandartFrameBuffers(BfBase &base)
@@ -2669,17 +2674,24 @@ bfBindAllocatorToLayerHandler(BfBase &base)
    return base.layer_handler.bind_allocator(&base.allocator);
 }
 
-BfEvent
-bfBindTrianglePipelineToLayerHandler(BfBase &base)
-{
-   return base.layer_handler.bind_trianle_pipeline(&base.triangle_pipeline);
-}
-
-BfEvent
-bfBindLinePipelineToLayerHandler(BfBase &base)
-{
-   return base.layer_handler.bind_line_pipeline(&base.line_pipeline);
-}
+// BfEvent
+// bfBindTrianglePipelineToLayerHandler(BfBase &base)
+// {
+//    // return
+//    base.layer_handler.bind_trianle_pipeline(&base.triangle_pipeline); return
+//    base.layer_handler.bind_trianle_pipeline(
+//        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+//    );
+// }
+//
+// BfEvent
+// bfBindLinePipelineToLayerHandler(BfBase &base)
+// {
+//    // return base.layer_handler.bind_line_pipeline(&base.line_pipeline);
+//    return base.layer_handler.bind_trianle_pipeline(
+//        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+//    );
+// }
 
 // void bfAllocateBuffersForDynamicMesh(BfBase& base)
 //{
@@ -2933,105 +2945,107 @@ bfaCreateShaderModule(
    return BfEvent(event);
 }
 
-BfEvent
-bfaCreateGraphicsPipelineLayouts(BfBase &base)
-{
-   std::vector<VkDescriptorSetLayout> layouts;
-   layouts.reserve(10);
-   for (auto &pack : base.descriptor.__desc_layout_packs_map)
-   {
-      layouts.push_back(pack.second.desc_set_layout);
-   }
-   //{
-   //	base.global_set_layout,
-   //	base.main_set_layout
-   //};
+// BfEvent
+// bfaCreateGraphicsPipelineLayouts(BfBase &base)
+// {
+//    std::vector<VkDescriptorSetLayout> layouts;
+//    layouts.reserve(10);
+//    for (auto &pack : base.descriptor.__desc_layout_packs_map)
+//    {
+//       layouts.push_back(pack.second.desc_set_layout);
+//    }
+//    //{
+//    //	base.global_set_layout,
+//    //	base.main_set_layout
+//    //};
+//
+//    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+//    pipelineLayoutCreateInfo.sType =
+//        VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+//    pipelineLayoutCreateInfo.setLayoutCount =
+//        static_cast<uint32_t>(layouts.size());
+//    pipelineLayoutCreateInfo.pSetLayouts = layouts.data();   // Optional
+//    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;     // Optional
+//    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;  // Optional
+//
+//    bool is_pipeline_layouts_done = true;
+//
+//    std::stringstream ss;
+//
+//    if (vkCreatePipelineLayout(
+//            base.device,
+//            &pipelineLayoutCreateInfo,
+//            nullptr,
+//            &base.tline_pipeline_layout
+//        ) == VK_SUCCESS)
+//    {
+//       ss << "SLine pipeline layout is done;";
+//    }
+//    else
+//    {
+//       ss << "SLine pipeline layout isn't done;";
+//       is_pipeline_layouts_done = false;
+//    }
+//    if (vkCreatePipelineLayout(
+//            base.device,
+//            &pipelineLayoutCreateInfo,
+//            nullptr,
+//            &base.triangle_pipeline_layout
+//        ) == VK_SUCCESS)
+//    {
+//       ss << "Triangle pipeline layout is done;";
+//    }
+//    else
+//    {
+//       ss << "Triangle pipeline layout isn't done;";
+//       is_pipeline_layouts_done = false;
+//    }
+//    if (vkCreatePipelineLayout(
+//            base.device,
+//            &pipelineLayoutCreateInfo,
+//            nullptr,
+//            &base.line_pipeline_layout
+//        ) == VK_SUCCESS)
+//    {
+//       ss << "Line pipeline layout is done;";
+//    }
+//    else
+//    {
+//       ss << "Line pipeline layout isn't done;";
+//       is_pipeline_layouts_done = false;
+//    }
+//
+//    BfSingleEvent event{};
+//    event.type =
+//    BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT; if
+//    (is_pipeline_layouts_done)
+//    {
+//       event.action =
+//           BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_SUCCESS;
+//    }
+//    else
+//    {
+//       event.action =
+//           BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_FAILURE;
+//    }
+//    event.info = ss.str();
+//
+//    return BfEvent(event);
+// }
 
-   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
-   pipelineLayoutCreateInfo.sType =
-       VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-   pipelineLayoutCreateInfo.setLayoutCount =
-       static_cast<uint32_t>(layouts.size());
-   pipelineLayoutCreateInfo.pSetLayouts = layouts.data();   // Optional
-   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;     // Optional
-   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;  // Optional
-
-   bool is_pipeline_layouts_done = true;
-
-   std::stringstream ss;
-
-   if (vkCreatePipelineLayout(
-           base.device,
-           &pipelineLayoutCreateInfo,
-           nullptr,
-           &base.tline_pipeline_layout
-       ) == VK_SUCCESS)
-   {
-      ss << "SLine pipeline layout is done;";
-   }
-   else
-   {
-      ss << "SLine pipeline layout isn't done;";
-      is_pipeline_layouts_done = false;
-   }
-   if (vkCreatePipelineLayout(
-           base.device,
-           &pipelineLayoutCreateInfo,
-           nullptr,
-           &base.triangle_pipeline_layout
-       ) == VK_SUCCESS)
-   {
-      ss << "Triangle pipeline layout is done;";
-   }
-   else
-   {
-      ss << "Triangle pipeline layout isn't done;";
-      is_pipeline_layouts_done = false;
-   }
-   if (vkCreatePipelineLayout(
-           base.device,
-           &pipelineLayoutCreateInfo,
-           nullptr,
-           &base.line_pipeline_layout
-       ) == VK_SUCCESS)
-   {
-      ss << "Line pipeline layout is done;";
-   }
-   else
-   {
-      ss << "Line pipeline layout isn't done;";
-      is_pipeline_layouts_done = false;
-   }
-
-   BfSingleEvent event{};
-   event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-   if (is_pipeline_layouts_done)
-   {
-      event.action =
-          BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_SUCCESS;
-   }
-   else
-   {
-      event.action =
-          BfEnActionType::BF_ACTION_TYPE_CREATE_PIPELINE_LAYOUT_FAILURE;
-   }
-   event.info = ss.str();
-
-   return BfEvent(event);
-}
-
-BfEvent
-bfDestoryGraphicsPipelineLayouts(BfBase &base)
-{
-   vkDestroyPipelineLayout(base.device, base.triangle_pipeline_layout, nullptr);
-   vkDestroyPipelineLayout(base.device, base.tline_pipeline_layout, nullptr);
-   vkDestroyPipelineLayout(base.device, base.line_pipeline_layout, nullptr);
-
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
-   event.action = BF_ACTION_TYPE_DESTROY_PIPELINE_LAYOUT;
-   return event;
-}
+// BfEvent
+// bfDestoryGraphicsPipelineLayouts(BfBase &base)
+// {
+//    vkDestroyPipelineLayout(base.device, base.triangle_pipeline_layout,
+//    nullptr); vkDestroyPipelineLayout(base.device, base.tline_pipeline_layout,
+//    nullptr); vkDestroyPipelineLayout(base.device, base.line_pipeline_layout,
+//    nullptr);
+//
+//    BfSingleEvent event{};
+//    event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
+//    event.action = BF_ACTION_TYPE_DESTROY_PIPELINE_LAYOUT;
+//    return event;
+// }
 
 BfEvent
 bfaRecreateSwapchain(BfBase &base)
@@ -3364,24 +3378,23 @@ bfMainRecordCommandBuffer(BfBase &base)
       scissor.extent = base.swap_chain_extent;
       vkCmdSetScissor(local_buffer, 0, 1, &scissor);
 
-      base.descriptor.bind_desc_sets(
+      // Bind descriptor sets to pipeline-layouts
+      base.descriptor.bind_desc_sets(  // GLOBAL
           BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
           base.current_frame,
           local_buffer,
-          // base.triangle_pipeline_layout,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           0
       );
-      base.descriptor.bind_desc_sets(
+      base.descriptor.bind_desc_sets(  // MAIN
           BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
           base.current_frame,
           local_buffer,
-          // base.triangle_pipeline_layout,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           1
       );
 
-      base.layer_handler.draw(local_buffer, base.triangle_pipeline);
+      base.layer_handler.draw(local_buffer);
    }
    vkCmdEndRenderPass(local_buffer);
 

@@ -8,6 +8,7 @@
 
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
+#include "bfPipeline.h"
 
 bool
 bfCheckBladeSectionCreateInfoEquality(
@@ -102,13 +103,14 @@ bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
 
        .is_triangulate = false,
        .is_center = true,
-
+       // clang-format off
        .l_pipeline = BfLayerHandler::instance()
-                         ? *BfLayerHandler::instance()->line_pipeline()
+                         ? *BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
                          : nullptr,
        .t_pipeline = BfLayerHandler::instance()
-                         ? *BfLayerHandler::instance()->trinagle_pipeline()
+                         ? *BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
                          : nullptr
+       // clang-format on
    };
 };
 
@@ -1218,13 +1220,14 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
                {0.05f, 0.2f},
                // {0.05f, 0.6}
            },
-
+       // clang-format off
        .l_pipeline = BfLayerHandler::instance()
-                         ? *BfLayerHandler::instance()->line_pipeline()
+                         ? *BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
                          : nullptr,
        .t_pipeline = BfLayerHandler::instance()
-                         ? *BfLayerHandler::instance()->trinagle_pipeline()
+                         ? *BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
                          : nullptr
+       // clang-format on
    };
 }
 

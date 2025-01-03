@@ -195,14 +195,14 @@ BfPipelineHandler::__createShaderCreateInfos(
 )
 {
    /*
-              "*.vert"
-              "*.frag"
-              "*.geom"
-              "*.glsl"
-              "*.comp"
-              "*.tesse"
-              "*.tessc"
-      */
+        "*.vert"
+        "*.frag"
+        "*.geom"
+        "*.glsl"
+        "*.comp"
+        "*.tesse"
+        "*.tessc"
+    */
 
    static std::map<std::string, VkShaderStageFlagBits> stage_bits = {
        {"vert", VK_SHADER_STAGE_VERTEX_BIT},

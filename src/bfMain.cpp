@@ -150,8 +150,8 @@ BfMain::__init()
 
    {  // TODO: REMAKE LOGIC ?
       bfBindAllocatorToLayerHandler(__base);
-      bfBindTrianglePipelineToLayerHandler(__base);
-      bfBindLinePipelineToLayerHandler(__base);
+      // bfBindTrianglePipelineToLayerHandler(__base);
+      // bfBindLinePipelineToLayerHandler(__base);
    }
 
    __gui.bindSettings("./scripts/guiconfig.lua");

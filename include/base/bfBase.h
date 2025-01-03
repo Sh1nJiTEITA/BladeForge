@@ -71,12 +71,13 @@ struct BfBase
    VkRenderPass standart_render_pass;
    VkRenderPass gui_render_pass;
 
-   VkPipeline tline_pipeline;
-   VkPipelineLayout tline_pipeline_layout;
-   VkPipeline triangle_pipeline;
-   VkPipelineLayout triangle_pipeline_layout;
-   VkPipeline line_pipeline;
-   VkPipelineLayout line_pipeline_layout;
+   // FIXME: DEPRECATE
+   // VkPipeline tline_pipeline;
+   // VkPipelineLayout tline_pipeline_layout;
+   // VkPipeline triangle_pipeline;
+   // VkPipelineLayout triangle_pipeline_layout;
+   // VkPipeline line_pipeline;
+   // VkPipelineLayout line_pipeline_layout;
 
    BfDescriptor descriptor;
 
@@ -128,8 +129,9 @@ BfEvent bfDestroyGUIRenderPass(BfBase &base);
 BfEvent bfInitOwnDescriptors(BfBase &base);
 BfEvent bfDestroyOwnDescriptors(BfBase &base);
 
-BfEvent bfCreateGraphicsPipelines(BfBase &base);
-BfEvent bfDestroyGraphicsPipelines(BfBase &base);
+// FIXME: DEPRECATE
+// BfEvent bfCreateGraphicsPipelines(BfBase &base);
+// BfEvent bfDestroyGraphicsPipelines(BfBase &base);
 
 BfEvent bfCreateStandartFrameBuffers(BfBase &base);
 BfEvent bfDestroyStandartFrameBuffers(BfBase &base);
@@ -171,9 +173,10 @@ BfEvent bfDestroyTextureLoader(BfBase &base);
 BfEvent bfLoadTextures(BfBase &base);
 
 BfEvent bfBindAllocatorToLayerHandler(BfBase &base);
-BfEvent bfBindTrianglePipelineToLayerHandler(BfBase &base);
-BfEvent bfBindLinePipelineToLayerHandler(BfBase &base);
 
+// FIXME: DEPRECATE
+// BfEvent bfBindTrianglePipelineToLayerHandler(BfBase &base);
+// BfEvent bfBindLinePipelineToLayerHandler(BfBase &base);
 // void bfUploadMesh(BfBase &base, BfMesh &mesh);
 // void bfUploadVertices(BfBase &base, BfMesh &mesh);
 // void bfUploadIndices(BfBase &base, BfMesh &mesh);

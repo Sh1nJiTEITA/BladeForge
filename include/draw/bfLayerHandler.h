@@ -18,9 +18,6 @@ class BfLayerHandler
    static BfLayerHandler* __pInstance;
    VmaAllocator* __pAllocator;
 
-   VkPipeline* __pTrianglePipeline;
-   VkPipeline* __pLinePipeline;
-
    struct __varTransaction
    {
       std::optional<BfDrawLayer::itptrVar_t> what;
@@ -35,14 +32,10 @@ public:
 
    static BfLayerHandler* instance() noexcept;
    VmaAllocator* allocator() noexcept;
-   VkPipeline* trinagle_pipeline() noexcept;
-   VkPipeline* line_pipeline() noexcept;
 
    BfEvent bind_descriptor(BfDescriptor* desc);
    BfEvent bind_allocator(VmaAllocator* allocator);
    // TODO: Remake pipelines
-   BfEvent bind_trianle_pipeline(VkPipeline* allocator);
-   BfEvent bind_line_pipeline(VkPipeline* allocator);
 
    BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
 
@@ -62,7 +55,7 @@ public:
    const size_t get_layer_count() const noexcept;
 
    void map_model_matrices(size_t frame_index);
-   void draw(VkCommandBuffer command_buffer, VkPipeline);
+   void draw(VkCommandBuffer command_buffer);
 
    std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
    std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t id);
