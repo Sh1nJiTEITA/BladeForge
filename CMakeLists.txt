@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-std=c++20) # optional to use c++11
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+OPTION(IS_BUILD_TESTS OFF)
+
+
 file(
   GLOB SUBDIRECTORIES
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -201,94 +204,51 @@ endif()
 
 set(BF_BASE
     "include/base/bfVertex2.hpp"
-    "include/base/bfBase.h"
     "src/base/bfBase.cpp"
-    "include/base/bfBuffer.h"
     "src/base/bfBuffer.cpp"
-    "include/base/bfDescriptor.h"
     "src/base/bfDescriptor.cpp"
-    "include/base/bfPhysicalDevice.h"
     "src/base/bfPhysicalDevice.cpp"
-    "include/base/bfSwapChain.h"
     "src/base/bfSwapChain.cpp"
-    "include/base/bfUniforms.h"
     "src/base/bfUniforms.cpp"
-    "include/base/bfHolder.h"
     "src/base/bfHolder.cpp"
-    "include/base/bfWindow.h"
     "src/base/bfWindow.cpp"
-    "include/base/bfPipeline.h"
     "src/base/bfPipeline.cpp")
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"
-    "include/geometry/bfCurves3.h"
     "src/geometry/bfCurves3.cpp"
-    "include/geometry/bfBladeSection.h"
     "src/geometry/bfBladeSection.cpp"
-    "include/geometry/bfAxis.h"
     "src/geometry/bfAxis.cpp")
 
 set(BF_INTERACTION
-    "include/interaction/bfConsole.h"
     "src/interaction/bfConsole.cpp"
-    "include/interaction/bfEvent.h"
     "src/interaction/bfEvent.cpp"
-    "include/interaction/bfGui.h"
     "src/interaction/bfGui.cpp"
-    "include/interaction/bfGuiFileDialog.h"
     "src/interaction/bfGuiFileDialog.cpp"
-    "include/interaction/bfGuiLuaInteraction.h"
     "src/interaction/bfGuiLuaInteraction.cpp"
-    "include/interaction/bfGuiCreateWindow.h"
     "src/interaction/bfGuiCreateWindow.cpp"
-    "include/interaction/bfGuiCreateWindowContainer.h"
     "src/interaction/bfGuiCreateWindowContainer.cpp"
-    "include/interaction/bfGuiCreateWindowBladeSection.h"
     "src/interaction/bfGuiCreateWindowBladeSection.cpp"
-    "include/interaction/bfGuiCreateWindowBladeBase.h"
     "src/interaction/bfGuiCreateWindowBladeBase.cpp"
-    "include/interaction/bfGuiSmartLayerObserverWindow.h"
     "src/interaction/bfGuiSmartLayerObserverWindow.cpp"
-    "include/interaction/bfGuiCreateWindowSingleLine.h"
     "src/interaction/bfGuiCreateWindowSingleLine.cpp"
-    "include/interaction/bfGuiWindow.h"
     "src/interaction/bfGuiWindow.cpp")
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"
     "include/other/bfMatrix.hpp"
     "include/other/bfVariative.hpp"
-    "include/other/bfMatrix2.h"
     "src/other/bfMatrix2.cpp"
-    "include/other/stb_image.h"
-    "include/other/stb_image_write.h"
     "include/other/bfMath.hpp"
     "src/other/bfMath.cpp"
-    "include/other/bfTextureLoad.h"
     "src/other/bfTextureLoad.cpp"
-    "include/other/bfIconsFontAwesome6.h"
-    "include/other/bfConfigManager.h"
     "src/other/bfConfigManager.cpp")
 
-set(BF_FORMS "include/other/config_forms/bfFormGui.h"
-             "include/other/config_forms/bfFormSettings.h")
-
 set(BF_DRAW
-    "include/draw/bfDrawObject.h"
     "src/draw/bfDrawObject.cpp"
-    "include/draw/bfLayerHandler.h"
     "src/draw/bfLayerHandler.cpp"
-    "include/draw/bfDrawObjectDefineType.h"
-    "include/draw/bfLayerKiller.h"
     "src/draw/bfLayerKiller.cpp")
 
-set(BF_PIPELINES
-    "include/pipelines/BfPipelineLine.hpp"
-    "include/pipelines/BfPipelineTriangle.hpp")
-
-
-# Headers/Sources
 set(SOURCES "src/bfMain.cpp" "include/BfMain.h")
 
 list(
@@ -358,6 +318,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE GPUOpen::VulkanMemoryAllocator)
 
 # Tests
 # ~~~
+if (IS_BUILD_TESTS)
 add_executable(
   tests
   # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
@@ -393,3 +354,6 @@ include_directories(external/eigen)
 include_directories(external/splines-lib)
 # target_link_libraries(tests PRIVATE glm)
 target_link_libraries(tests PRIVATE glm::glm)
+
+endif(IS_BUILD_TESTS)
+

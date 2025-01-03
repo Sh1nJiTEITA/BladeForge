@@ -104,10 +104,13 @@ void
 BfPipelineHandler::kill()
 {
    auto pBase = bfGetBase();
+   for (auto [type, layout] : __pipeline_layouts)
+   {
+      vkDestroyPipelineLayout(pBase->device, layout, nullptr);
+   }
+
    for (auto [type, pipeline_struct] : __pipelines)
    {
-      std::cout << "Destroing pipeline for type: " << type << "\n";
-      vkDestroyPipelineLayout(pBase->device, *pipeline_struct.pLayout, nullptr);
       vkDestroyPipeline(pBase->device, pipeline_struct.pipeline, nullptr);
    }
 }

@@ -499,18 +499,17 @@ bfCreateSwapchain(BfBase &base)
    }
 
    // if (indices.graphicsFamily != indices.presentFamily) {
-   if (base.physical_device
-           ->queue_family_indices[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE]
-           .value() !=
-       base.physical_device
-           ->queue_family_indices[BfvEnQueueType::BF_QUEUE_PRESENT_TYPE]
-           .value() !=
-       base.physical_device
-           ->queue_family_indices[BfvEnQueueType::BF_QUEUE_TRANSFER_TYPE]
-           .value())
+   // clang-format off
+   if (base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE].value() !=
+       base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_PRESENT_TYPE].value() ||
+       base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_GRAPHICS_TYPE].value() !=
+       base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_TRANSFER_TYPE].value() ||
+       base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_PRESENT_TYPE].value() !=
+       base.physical_device->queue_family_indices[BfvEnQueueType::BF_QUEUE_TRANSFER_TYPE].value())
+   // clang-format on
    {
       createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-      createInfo.queueFamilyIndexCount = 3;
+      createInfo.queueFamilyIndexCount = queueFamilyIndices.size();
       createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
    }
    else
@@ -1432,7 +1431,7 @@ bfInitOwnDescriptors(BfBase &base)
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
    base.descriptor.create_desc_set_layouts();
-   base.descriptor.create_texture_desc_set_layout();
+   // base.descriptor.create_texture_desc_set_layout();
    base.descriptor.allocate_desc_sets();
    base.descriptor.update_desc_sets();
    // base.descriptor.map_textures();

@@ -1654,25 +1654,25 @@ BfDoubleTube::createVertices()
       const glm::vec3& p4_ = endOutCircle->vertices()[i + 1].pos;
       // clang-format off
       const glm::vec3 toCenterNormal = glm::normalize(bfMathGetNormal(p1, p3, p3_));
-      std::cout << STRVEC3(toCenterNormal) << "\n";
+      // std::cout << STRVEC3(toCenterNormal) << "\n";
 #if defined(NDEBUG)
       const glm::vec3 toCetnerNormal_ = glm::normalize(bfMathGetNormal(p3_, p3, p1));
       bfAssert(glm::length2(glm::cross(toCenterNormal_, toCenterNormal)) < 1e-6f);
 #endif
       const glm::vec3 fromCenterNormal = glm::normalize(bfMathGetNormal(p2, p4, p4_));
-      std::cout << STRVEC3(fromCenterNormal ) << "\n";
+      // std::cout << STRVEC3(fromCenterNormal ) << "\n";
 #if defined(NDEBUG)
       const glm::vec3 fromCenterNormal_ = glm::normalize(bfMathGetNormal(p4_, p2_, p2));
       bfAssert(glm::length2(glm::cross(fromCenterNormal_, fromCenterNormal)) < 1e-6f);
 #endif
       const glm::vec3 backwordsCenterNormal = glm::normalize(bfMathGetNormal(p1, p2, p2_));
-      std::cout << STRVEC3(backwordsCenterNormal ) << "\n";
+      // std::cout << STRVEC3(backwordsCenterNormal ) << "\n";
 #if defined(NDEBUG)
       const glm::vec3 backwordsCetnerNormal_ = glm::normalize(bfMathGetNormal(p2_, p1_, p1));
       bfAssert(glm::length2(glm::cross(backwordsCenterNormal_, backwordsCenterNormal)) < 1e-6f);
 #endif
       const glm::vec3 towardsCenterNormal = glm::normalize(bfMathGetNormal(p3, p4, p4_));
-      std::cout << STRVEC3(towardsCenterNormal ) << "\n";
+      // std::cout << STRVEC3(towardsCenterNormal ) << "\n";
 #if defined(NDEBUG)
       const glm::vec3 towardsCenterNormal_ = glm::normalize(bfMathGetNormal(p4_, p3_, p3));
       bfAssert(glm::length2(glm::cross(towardsCenterNormal_, towardsCenterNormal)) < 1e-6f);

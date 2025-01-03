@@ -117,7 +117,7 @@ BfMain::__init()
 
    bfCreateIDMapImage(__base);
 
-   bfCreateTextureLoader(__base);
+   // bfCreateTextureLoader(__base);
    bfCreateCommandPool(__base);
    bfInitOwnDescriptors(__base);
 
@@ -125,20 +125,16 @@ BfMain::__init()
        BfPipelineLayoutType_Main,
        __base.descriptor.getAllLayouts()
    );
-
    BfPipelineHandler::instance()->create<BfPipelineBuilderLine>(
        BfPipelineType_Lines,
        BfPipelineLayoutType_Main,
        "shaders/lines"
    );
-
    BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
        BfPipelineType_Triangles,
        BfPipelineLayoutType_Main,
        "shaders/triangle"
    );
-
-   // bfCreateGraphicsPipelines(__base);
 
    bfCreateStandartFrameBuffers(__base);
    bfCreateGUIFrameBuffers(__base);
@@ -148,11 +144,7 @@ BfMain::__init()
    bfCreateGUICommandBuffers(__base);
    bfCreateSyncObjects(__base);
 
-   {  // TODO: REMAKE LOGIC ?
-      bfBindAllocatorToLayerHandler(__base);
-      // bfBindTrianglePipelineToLayerHandler(__base);
-      // bfBindLinePipelineToLayerHandler(__base);
-   }
+   bfBindAllocatorToLayerHandler(__base);
 
    __gui.bindSettings("./scripts/guiconfig.lua");
    bfInitImGUI(__base);
@@ -166,7 +158,6 @@ BfMain::__init()
    bfCreateSampler(__base);
 
    __gui.bindBase(&__base);
-
    __gui.bindHolder(&__holder);
 }
 
@@ -182,8 +173,6 @@ BfMain::__kill()
    bfDestroyStandartFrameBuffers(__base);
    bfDestroyDepthBuffer(__base);
    BfPipelineHandler::instance()->kill();
-   // bfDestoryGraphicsPipelineLayouts(__base);
-   // bfDestroyGraphicsPipelines(__base);
    bfDestroyOwnDescriptors(__base);
    bfDestroyIDMapImage(__base);
    bfDestroyGUIRenderPass(__base);
@@ -191,22 +180,18 @@ BfMain::__kill()
    bfDestroyImageViews(__base);
    bfDestroySwapchain(__base);
    bfDestorySampler(__base);
-   bfDestroyTextureLoader(__base);
+   // BUG: Not destorying vulkan objects inside
+   // bfDestroyTextureLoader(__base);
    // id buffer
    bfDestroyBuffer(&__base.id_image_buffer);
    __base.layer_handler.kill();
    __base.layer_killer.kill();
-
-   // std::cout << BfAllocationViewer::print_info();
 
    bfDestroySurface(__base);
    bfDestroyAllocator(__base);
    bfDestroyLogicalDevice(__base);
    bfDestroyDebufMessenger(__base);
    bfDestroyInstance(__base);
-
-   // __base.layer_killer.kill();
-   // std::cout << BfAllocationViewer::print_info();
 }
 
 void

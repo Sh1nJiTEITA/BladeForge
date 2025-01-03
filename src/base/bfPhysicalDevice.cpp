@@ -111,16 +111,17 @@ bfFindQueueFamilyIndices(
    int i = 0;
    for (const auto& queueFamily : queueFamilies)
    {
-      if (bfvEnabledQueueTypes.contains(BF_QUEUE_GRAPHICS_TYPE))
+      if (bfvEnabledQueueTypes.contains(BF_QUEUE_GRAPHICS_TYPE) &&
+          !bf_physical_device->queue_family_indices[BF_QUEUE_GRAPHICS_TYPE]
+               .has_value() &&
+          (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT))
       {
-         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-         {
-            bf_physical_device->queue_family_indices[BF_QUEUE_GRAPHICS_TYPE] =
-                i;
-         }
+         bf_physical_device->queue_family_indices[BF_QUEUE_GRAPHICS_TYPE] = i;
       }
 
-      if (bfvEnabledQueueTypes.contains(BF_QUEUE_PRESENT_TYPE))
+      if (bfvEnabledQueueTypes.contains(BF_QUEUE_PRESENT_TYPE) &&
+          !bf_physical_device->queue_family_indices[BF_QUEUE_PRESENT_TYPE]
+               .has_value())
       {
          VkBool32 presentSupport = false;
          vkGetPhysicalDeviceSurfaceSupportKHR(
@@ -136,22 +137,22 @@ bfFindQueueFamilyIndices(
          }
       }
 
-      if (bfvEnabledQueueTypes.contains(BF_QUEUE_TRANSFER_TYPE))
+      if (bfvEnabledQueueTypes.contains(BF_QUEUE_TRANSFER_TYPE) &&
+          !bf_physical_device->queue_family_indices[BF_QUEUE_TRANSFER_TYPE]
+               .has_value() &&
+          (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT))
       {
-         if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
-         {
-            bf_physical_device->queue_family_indices[BF_QUEUE_TRANSFER_TYPE] =
-                i;
-         }
+         bf_physical_device->queue_family_indices[BF_QUEUE_TRANSFER_TYPE] = i;
       }
 
-      if (bfvEnabledQueueTypes.contains(BF_QUEUE_COMPUTE_TYPE))
+      if (bfvEnabledQueueTypes.contains(BF_QUEUE_COMPUTE_TYPE) &&
+          !bf_physical_device->queue_family_indices[BF_QUEUE_COMPUTE_TYPE]
+               .has_value() &&
+          (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
       {
-         if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
-         {
-            bf_physical_device->queue_family_indices[BF_QUEUE_COMPUTE_TYPE] = i;
-         }
+         bf_physical_device->queue_family_indices[BF_QUEUE_COMPUTE_TYPE] = i;
       }
+
       i++;
    }
 
