@@ -11,6 +11,7 @@
 #include "bfBase.h"
 #include "bfBladeSection.h"
 #include "bfBuffer.h"
+#include "bfCamera.h"
 #include "bfConsole.h"
 #include "bfEvent.h"
 #include "bfGui.h"
@@ -27,6 +28,7 @@ private:
    BfBase __base;
    BfHolder __holder;
    BfGui __gui;
+   BfCamera __cam;
 
    BfDrawLayer *__blade_bases = nullptr;
    BfDrawLayer *__other_layer = nullptr;

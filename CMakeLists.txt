@@ -54,7 +54,9 @@ set(SHADER_PACK_PATHS
     "${CMAKE_SOURCE_DIR}/shaders/basic"
     "${CMAKE_SOURCE_DIR}/shaders/thick_lines"
     "${CMAKE_SOURCE_DIR}/shaders/lines"
-    "${CMAKE_SOURCE_DIR}/shaders/triangle")
+    "${CMAKE_SOURCE_DIR}/shaders/triangle"
+    "${CMAKE_SOURCE_DIR}/shaders/axis"
+)
 
 if(WIN32)
   if(EXISTS ${VULKAN_SHADER_COMPILER})
@@ -212,7 +214,9 @@ set(BF_BASE
     "src/base/bfUniforms.cpp"
     "src/base/bfHolder.cpp"
     "src/base/bfWindow.cpp"
-    "src/base/bfPipeline.cpp")
+    "src/base/bfPipeline.cpp"
+    "src/base/bfCamera.cpp"
+)
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"

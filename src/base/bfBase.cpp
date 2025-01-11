@@ -6,8 +6,10 @@
 #include <memory>
 #include <stdexcept>
 
+#include "bfCamera.h"
 #include "bfDescriptor.h"
 #include "bfEvent.h"
+#include "bfLayerHandler.h"
 #include "bfPipeline.h"
 #include "implot.h"
 
@@ -3076,6 +3078,15 @@ bfaRecreateSwapchain(BfBase &base)
    // base.window->ortho_right = (float)base.swap_chain_extent.width;
    // base.window->ortho_top = (float)base.swap_chain_extent.height;
 
+   auto camera = BfCamera::instance();
+   if (camera)
+   {
+      camera->setExtent(
+          base.swap_chain_extent.width,
+          base.swap_chain_extent.height
+      );
+   }
+
    return BfEvent();
 }
 
@@ -3643,7 +3654,7 @@ bfCleanUpSwapchain(BfBase &base)
 }
 
 void
-bfUpdateUniformBuffer(BfBase &base)
+bfUpdateUniformView(BfBase &base)
 {
    BfUniformView ubo{};
 
@@ -3726,11 +3737,55 @@ bfUpdateUniformBuffer(BfBase &base)
        BfDescriptorViewDataUsage,
        base.current_frame
    );
-
-   base.layer_handler.map_model_matrices(base.current_frame);
-
    base.window->proj = ubo.proj;
    base.window->view = ubo.view;
+}
+
+void
+bfUpdateUniformViewNew(BfBase &base)
+{
+   BfUniformView ubo{};
+
+   ubo.view = BfCamera::instance()->view();
+   ubo.proj = BfCamera::instance()->projection();
+   ubo.cursor_pos = {base.window->xpos, base.window->ypos};
+   ubo.id_on_cursor = base.pos_id;
+   ubo.camera_pos = base.window->pos;
+
+   void *view_data = nullptr;
+   base.descriptor.map_descriptor(
+       BfDescriptorViewDataUsage,
+       base.current_frame,
+       &view_data
+   );
+   {
+      memcpy(view_data, &ubo, sizeof(ubo));
+   }
+   base.descriptor.unmap_descriptor(
+       BfDescriptorViewDataUsage,
+       base.current_frame
+   );
+}
+
+void
+bfUpdateUniformBuffer(BfBase &base)
+{
+   if (base.camera_mode == 0)
+   {
+      bfUpdateUniformView(base);
+   }
+   else
+   {
+      bfUpdateUniformViewNew(base);
+   }
+
+   {  // AXIS MODEL MATRIX
+      glm::mat4 moveMatrix = glm::mat4(1.0f);
+      glm::vec3 translation = glm::vec3(0.0f, 0.0f, -5.0f);
+      moveMatrix = glm::translate(moveMatrix, translation);
+   }
+
+   base.layer_handler.map_model_matrices(base.current_frame);
 }
 
 void

@@ -78,6 +78,7 @@ struct BfBase
    // VkPipelineLayout triangle_pipeline_layout;
    // VkPipeline line_pipeline;
    // VkPipelineLayout line_pipeline_layout;
+   uint32_t camera_mode;
 
    BfDescriptor descriptor;
 
@@ -239,6 +240,8 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 // CleanUp's
 BfEvent bfCleanUpSwapchain(BfBase &base);
 
+void bfUpdateUniformView(BfBase &base);
+void bfUpdateUniformViewNew(BfBase &base);
 void bfUpdateUniformBuffer(BfBase &base);
 
 void bfCreateSampler(BfBase &base);

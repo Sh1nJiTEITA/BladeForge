@@ -12,6 +12,7 @@
 #include <string>
 
 #include "bfBase.h"
+#include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
@@ -48,8 +49,9 @@ class BfGui
    bool __is_settings = false;
    bool __is_ortho_settings = false;
    bool __is_file_dialog = true;
-
    bool __is_left_dock_space_name = false;
+
+   bool __is_new_cam = false;
 
    uint32_t __current_id;
 
@@ -76,6 +78,7 @@ public:
    std::string getMenuCameraInfoStr();
    std::string getMenuSettingsInfoStr();
    std::string getMenuIsLeftDockTitleInfoStr();
+   std::string getMenuNewCameraStatusStr();
 
    void presentLayerHandler();  // FIXME: deprecate
    void presentMenuBar();
@@ -112,6 +115,9 @@ enum BfEnMenuStatus
 
    BF_MENU_STATUS_LEFT_DOCK_TITLE_ENABLED = 0x5,
    BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED = -0x5,
+
+   BF_MENU_STATUS_NEW_CAM_ENABLED = 0x6,
+   BF_MENU_STATUS_NEW_CAM_DISABLED = -0x6,
 };
 
 const std::map<int, std::string> bfSetMenuStr{
@@ -130,6 +136,8 @@ const std::map<int, std::string> bfSetMenuStr{
     {0x5, "Hide left-dock name window"},
     {-0x5, "Show left-dock name window"},
 
+    {0x6, "Disable new camera"},
+    {-0x6, "Enable new camera"},
 };
 
 void bfPresentLayerHandler(BfLayerHandler&);  // FIXME: deprecate

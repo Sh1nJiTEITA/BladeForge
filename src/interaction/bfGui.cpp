@@ -1,5 +1,8 @@
 #include "bfGui.h"
 
+#include "bfCamera.h"
+#include "imgui.h"
+
 BfGui::BfGui()
 {
    BfGuiFileDialog::bindInstance(&__file_dialog);
@@ -226,6 +229,15 @@ BfGui::getMenuIsLeftDockTitleInfoStr()
       return bfSetMenuStr.at(BF_MENU_STATUS_LEFT_DOCK_TITLE_DISABLED);
 }
 
+std::string
+BfGui::getMenuNewCameraStatusStr()
+{
+   if (__is_new_cam)
+      return bfSetMenuStr.at(BF_MENU_STATUS_NEW_CAM_ENABLED);
+   else
+      return bfSetMenuStr.at(BF_MENU_STATUS_NEW_CAM_DISABLED);
+}
+
 void
 BfGui::presentLayerHandler()  // FIXME: deprecate
 {
@@ -287,6 +299,11 @@ BfGui::presentMenuBar()
          if (ImGui::MenuItem(getMenuIsLeftDockTitleInfoStr().c_str()))
          {
             __is_left_dock_space_name = !__is_left_dock_space_name;
+         }
+         if (ImGui::MenuItem(getMenuNewCameraStatusStr().c_str()))
+         {
+            __is_new_cam = !__is_new_cam;
+            __ptr_base->camera_mode = __is_new_cam;
          }
 
          ImGui::EndMenu();
@@ -818,6 +835,36 @@ BfGui::presentInfo()
       ImGui::Text(pitch_string.c_str());
       ImGui::Text(mpos_string.c_str());
       ImGui::Text(selected_id_string.c_str());
+      ImGui::Separator();
+      {
+#define BF_SPLIT_VEC3(VEC) VEC.x, VEC.y, VEC.z
+#define BF_SPLIT_VEC2(VEC) VEC.x, VEC.y
+#define BF_SPLIT_BFKEYSTATE(KEY)                                   \
+   KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld, \
+       KEY.isPressedInitial
+
+         auto pCam = BfCamera::instance();
+
+         ImGui::Text("CameraMode(BfBase): %d", __ptr_base->camera_mode);
+         ImGui::Text("CamPos: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_pos));
+         ImGui::Text("CamTarget: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_target));
+         ImGui::Text("CamUp: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_up));
+         ImGui::Text("MousePosOld: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouseOld));
+         ImGui::Text("MousePos: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouse));
+         ImGui::Text("MouseDelta: %f, %f", BF_SPLIT_VEC2(pCam->m_mouseDelta));
+         ImGui::Text(
+             "Middle key (isPressedBefore, isPressed, isReleased, isHeld, "
+             "isPressedInitial): %d, "
+             "%d, %d, %d, %d",
+             BF_SPLIT_BFKEYSTATE(pCam->m_middleMouseState)
+         );
+         ImGui::Text(
+             "Left key (isPressedBefore, isPressed, isReleased, isHeld, "
+             "isPressedInitial): %d, "
+             "%d, %d, %d, %d",
+             BF_SPLIT_BFKEYSTATE(pCam->m_leftMouseState)
+         );
+      }
       ImGui::End();
    }
 }

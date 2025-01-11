@@ -4,6 +4,7 @@
 
 #include "bfAxis.h"
 #include "bfBase.h"
+#include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfPipeline.h"
@@ -82,21 +83,25 @@ BfMain::__poll_events()
 
    // __gui.updateFonts();
    __gui.pollEvents();
+   __cam.update();
 }
 
 void
 BfMain::__init()
 {
    BfConfigManager::createInstance();
+
    bfBindBase(&__base);
    bfBindHolder(&__holder);
 
    bfHoldWindow(__base.window);
+
    bfHoldPhysicalDevice(__base.physical_device);
 
    bfSetWindowSize(__base.window, BF_START_W, BF_START_H);
    bfSetWindowName(__base.window, BF_APP_NAME);
    bfCreateWindow(__base.window);
+
    bfBindGuiWindowHoveringFunction(__base.window, []() {
       return ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
    });
@@ -109,6 +114,15 @@ BfMain::__init()
    bfCreateAllocator(__base);
 
    bfCreateSwapchain(__base);
+
+   // Setup camera
+   BfCamera::bindInstance(&__cam);
+   BfCamera::instance()->bindWindow(__base.window->pWindow);
+   // NOTE: WAS ADDITIONALY SET IN RECREATE SWAP-CHAIN FUNCTION
+   BfCamera::instance()->setExtent(
+       __base.swap_chain_extent.width,
+       __base.swap_chain_extent.height
+   );
 
    bfCreateImageViews(__base);
    bfCreateDepthBuffer(__base);
@@ -134,6 +148,11 @@ BfMain::__init()
        BfPipelineType_Triangles,
        BfPipelineLayoutType_Main,
        "shaders/triangle"
+   );
+   BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
+       BfPipelineType_Axis,
+       BfPipelineLayoutType_Main,
+       "shaders/axis"
    );
 
    bfCreateStandartFrameBuffers(__base);
@@ -297,7 +316,7 @@ BfMain::__loop()
       // __other_layer->add(
       // std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline));
       __other_layer->add(std::make_shared<BfAxis3DPack>(
-          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Axis)
       ));
 
       __other_layer->update_buffer();
@@ -770,7 +789,7 @@ BfMain::__loop()
    для каждого такого класса не прописывать bind
 */
 BfMain::BfMain()
-    : __base{}, __holder{}
+    : __base{}, __holder{}, __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
 {
 }
 
