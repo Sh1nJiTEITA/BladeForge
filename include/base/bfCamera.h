@@ -58,6 +58,9 @@ public:
    float m_vAngle;
    float m_vAngleOld;
 
+   float m_yScroll;
+   float m_yScrollOld;
+
    glm::vec3 m_target;
    glm::vec3 m_up;
 

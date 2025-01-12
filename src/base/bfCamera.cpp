@@ -39,6 +39,10 @@ BfCamera::BfCamera(BfCameraMode mode)
    switch (mode)
    {
       case BfCameraMode_Perspective:
+         m_pWindow = {nullptr};
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 1.0};
+         m_up = {0.0, 1.0, 0.0};
          break;
       case BfCameraMode_PerspectiveCentered:
          m_pWindow = {nullptr};
@@ -157,11 +161,21 @@ BfCamera::update()
    glfwGetCursorPos(m_pWindow, &mousePosNew.x, &mousePosNew.y);
    m_posMouse = mousePosNew;
 
+   // Process scroll
+   if (m_yScroll != m_yScrollOld)
+   {
+      const float scrollSen = 0.05f;
+      glm::vec3 to_target = m_target - m_pos;
+      m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
+   }
+   m_yScrollOld = m_yScroll;
+
    if (m_middleMouseState.isPressedInitial)
    {
       m_posMouseOld = mousePosNew;
       m_posOld = m_pos;
       m_vAngleOld = m_vAngle;
+      m_yScrollOld = m_yScroll;
    }
    if (m_middleMouseState.isPressed)
    {  // clang-format off
@@ -182,15 +196,7 @@ BfCamera::update()
             m_mouseDelta = m_posMouse - m_posMouseOld;
 
             m_vAngle = m_vAngleOld - m_mouseDelta.y * sen_y;
-
-            // if (m_vAngle > glm::radians(89.9999f)) {
-            //     m_vAngle = glm::radians(89.9999f);
-            // } else if (m_vAngle < glm::radians(-89.9999f)) {
-            //     m_vAngle = glm::radians(-89.9999f);
-            // }
             m_vAngle = std::clamp(m_vAngle, glm::radians(-89.9999f), glm::radians(89.9999f));
-            
-
 
             glm::vec3 right = glm::normalize(glm::cross(m_up, glm::normalize(m_posOld)));
             glm::quat horizontalRotation = glm::angleAxis(-m_mouseDelta.x * sen_x, m_up);

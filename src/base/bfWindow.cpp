@@ -1,5 +1,6 @@
 #include "bfWindow.h"
 
+#include "bfCamera.h"
 /*
 GLFWwindow* BfWindow::pWindow = nullptr;
 std::string BfWindow::name = "";
@@ -356,8 +357,9 @@ bfCreateWindow(BfWindow* window)
           // std::cout << "xoffset = " << xoffset << "; yoffset = << " <<
           // yoffset << "soffset = " << thisWindow->scroll_xoffset << "\n";
           thisWindow->is_scroll = true;
-
           bfCalculateViewPartsS(thisWindow);
+          BfCamera::instance()->m_yScroll += yoffset;
+
           ////thisWindow->scroll_xoffset = xoffset;
           // if (thisWindow->scroll_yoffset != 0) {
           //	thisWindow->scroll_xoffset = yoffset;

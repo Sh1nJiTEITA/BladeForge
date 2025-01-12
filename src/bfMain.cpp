@@ -793,7 +793,7 @@ BfMain::BfMain()
     , __holder{}
     ,
     // __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
-    __cam{BfCameraMode_PerspectiveCentered}
+    __cam{BfCameraMode_Perspective}
 {
 }
 

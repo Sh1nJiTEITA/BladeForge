@@ -858,6 +858,7 @@ BfGui::presentInfo()
          ImGui::Text("MousePosOld: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouseOld));
          ImGui::Text("MousePos: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouse));
          ImGui::Text("MouseDelta: %f, %f", BF_SPLIT_VEC2(pCam->m_mouseDelta));
+         ImGui::Text("YScroll: %f", pCam->m_yScroll);
          ImGui::Text(
              "Middle key (isPressedBefore, isPressed, isReleased, isHeld, "
              "isPressedInitial): %d, "
