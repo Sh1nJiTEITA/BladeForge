@@ -3751,6 +3751,7 @@ bfUpdateUniformViewNew(BfBase &base)
    ubo.cursor_pos = {base.window->xpos, base.window->ypos};
    ubo.id_on_cursor = base.pos_id;
    ubo.camera_pos = base.window->pos;
+   ubo.model = BfCamera::instance()->m_scale;
 
    void *view_data = nullptr;
    base.descriptor.map_descriptor(

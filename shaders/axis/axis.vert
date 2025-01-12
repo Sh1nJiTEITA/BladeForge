@@ -36,8 +36,7 @@ layout(location = 4) flat out uint obj_index;
 void main() {
    
 
-    vec4 coo = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
-    
+    vec4 coo = ubo.proj * ubo.view * ubo.model * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
     gl_Position = coo;
     obj_index = gl_BaseInstance;

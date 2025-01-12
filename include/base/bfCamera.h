@@ -34,6 +34,8 @@ enum BfCameraMode_ : BfCameraMode
 {
    BfCameraMode_Perspective,
    BfCameraMode_PerspectiveCentered,
+   BfCameraMode_Ortho,
+   BfCameraMode_OrthoCentered,
 };
 
 class BfCamera
@@ -63,6 +65,8 @@ public:
 
    glm::vec3 m_target;
    glm::vec3 m_up;
+
+   glm::mat4 m_scale;  // NOTE: for ORTHO only
 
    static BfCamera* m_pInstance;
 

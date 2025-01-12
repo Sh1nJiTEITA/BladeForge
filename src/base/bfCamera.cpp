@@ -34,18 +34,27 @@ bfKeyUpdate(BfKeyState<KEY>& key, GLFWwindow* window)
 BfCamera* BfCamera::m_pInstance = nullptr;
 
 BfCamera::BfCamera(BfCameraMode mode)
-    : m_cameraMode(mode)
+    : BfCamera()
 {
+   m_cameraMode = mode;
    switch (mode)
    {
       case BfCameraMode_Perspective:
-         m_pWindow = {nullptr};
          m_pos = {0.0, 0.0, -3.0};
          m_target = {0.0, 0.0, 1.0};
          m_up = {0.0, 1.0, 0.0};
          break;
       case BfCameraMode_PerspectiveCentered:
-         m_pWindow = {nullptr};
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 0.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
+      case BfCameraMode_Ortho:
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 1.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
+      case BfCameraMode_OrthoCentered:
          m_pos = {0.0, 0.0, -3.0};
          m_target = {0.0, 0.0, 0.0};
          m_up = {0.0, 1.0, 0.0};
@@ -73,11 +82,7 @@ BfCamera::BfCamera(
 }
 
 BfCamera::BfCamera()
-    : m_pos{0.0f, 0.0f, 0.0f}
-    , m_target{0.0f, 0.0f, 0.0f}
-    , m_up{0.0f, 0.0f, 1.0f}
-    , m_posMouseOld{0, 0}
-    , m_pWindow{nullptr}
+    : m_scale(1.0f), m_posMouseOld{0, 0}, m_pWindow{nullptr}
 {
 }
 
@@ -122,6 +127,10 @@ BfCamera::view()
          return glm::lookAt(m_pos, m_pos + m_target, m_up);
       case BfCameraMode_PerspectiveCentered:
          return glm::lookAt(m_pos, m_target, m_up);
+      case BfCameraMode_Ortho:
+         return glm::lookAt(m_pos, m_pos + m_target, m_up);
+      case BfCameraMode_OrthoCentered:
+         return glm::lookAt(m_pos, m_target, m_up);
    }
    throw std::runtime_error("Underfined camera mode (view)");
 }
@@ -145,6 +154,24 @@ BfCamera::projection()
              0.01f,
              100.0f
          );
+      case BfCameraMode_Ortho:
+         return glm::ortho(
+             0.f,
+             1.f,
+             1.f * m_extent.y / m_extent.x,
+             0.f * m_extent.y / m_extent.x,
+             0.f,
+             100.0f
+         );
+      case BfCameraMode_OrthoCentered:
+         return glm::ortho(
+             -0.5f,
+             0.5f,
+             0.5f * m_extent.y / m_extent.x,
+             -0.5f * m_extent.y / m_extent.x,
+             0.f,
+             100.0f
+         );
    }
    throw std::runtime_error("Underfined camera mode (proj)");
 }
@@ -161,14 +188,50 @@ BfCamera::update()
    glfwGetCursorPos(m_pWindow, &mousePosNew.x, &mousePosNew.y);
    m_posMouse = mousePosNew;
 
-   // Process scroll
-   if (m_yScroll != m_yScrollOld)
+   switch (m_cameraMode)
    {
-      const float scrollSen = 0.05f;
-      glm::vec3 to_target = m_target - m_pos;
-      m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
-   }
-   m_yScrollOld = m_yScroll;
+      case BfCameraMode_Perspective: {
+         if (m_yScroll != m_yScrollOld)
+         {
+            const float scrollSen = 0.05f;
+            glm::vec3 to_target = m_target - m_pos;
+            m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
+         }
+         m_yScrollOld = m_yScroll;
+      }
+      case BfCameraMode_PerspectiveCentered: {
+         if (m_yScroll != m_yScrollOld)
+         {
+            const float scrollSen = 0.05f;
+            glm::vec3 to_target = m_target - m_pos;
+            m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
+         }
+         m_yScrollOld = m_yScroll;
+      }
+      case BfCameraMode_Ortho: {
+         if (m_yScroll != m_yScrollOld)
+         {
+            const float scrollSen = 0.05f;
+            m_scale = glm::scale(
+                glm::mat4(1.0f),
+                glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
+            );
+         }
+      }
+      case BfCameraMode_OrthoCentered: {
+         if (m_yScroll != m_yScrollOld)
+         {
+            const float scrollSen = 0.05f;
+            float nonlinearZoomFactor = std::exp(m_yScroll * scrollSen);
+            nonlinearZoomFactor =
+                std::clamp(nonlinearZoomFactor, 0.01f, 1000.0f);
+            glm::vec3 zoom = glm::vec3(nonlinearZoomFactor);
+            m_scale = glm::scale(glm::mat4(1.0f), zoom);
+         }
+      }
+   };
+
+   // Process scroll
 
    if (m_middleMouseState.isPressedInitial)
    {
@@ -196,6 +259,32 @@ BfCamera::update()
             m_mouseDelta = m_posMouse - m_posMouseOld;
 
             m_vAngle = m_vAngleOld - m_mouseDelta.y * sen_y;
+            m_vAngle = std::clamp(m_vAngle, glm::radians(-89.9999f), glm::radians(89.9999f));
+
+            glm::vec3 right = glm::normalize(glm::cross(m_up, glm::normalize(m_posOld)));
+            glm::quat horizontalRotation = glm::angleAxis(-m_mouseDelta.x * sen_x, m_up);
+            glm::quat verticalRotation = glm::angleAxis(m_vAngleOld - m_vAngle, right);
+            glm::quat combinedRotation = horizontalRotation * verticalRotation;
+
+            m_pos = combinedRotation * m_posOld;
+            break;
+         }
+         case BfCameraMode_Ortho: { 
+            const float sen_x = 0.01;
+            const float sen_y = 0.005;
+            m_mouseDelta = m_posMouse - m_posMouseOld;
+            m_pos = m_posOld
+                + glm::vec3(1.0f, 0.0f, 0.0f) * m_mouseDelta.x * sen_x
+                - glm::vec3(0.0f, 1.0f, 0.0f) * m_mouseDelta.y * sen_y
+            ;
+            break;
+         }
+         case BfCameraMode_OrthoCentered: { 
+            const float sen_x = 0.01f;
+            const float sen_y = 0.005f;
+            m_mouseDelta = m_posMouse - m_posMouseOld;
+
+            m_vAngle = m_vAngleOld + m_mouseDelta.y * sen_y;
             m_vAngle = std::clamp(m_vAngle, glm::radians(-89.9999f), glm::radians(89.9999f));
 
             glm::vec3 right = glm::normalize(glm::cross(m_up, glm::normalize(m_posOld)));
