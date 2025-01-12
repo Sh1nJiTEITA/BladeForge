@@ -789,7 +789,11 @@ BfMain::__loop()
    для каждого такого класса не прописывать bind
 */
 BfMain::BfMain()
-    : __base{}, __holder{}, __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
+    : __base{}
+    , __holder{}
+    ,
+    // __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
+    __cam{BfCameraMode_PerspectiveCentered}
 {
 }
 

@@ -1,5 +1,7 @@
 #include "bfGui.h"
 
+#include <glm/trigonometric.hpp>
+
 #include "bfCamera.h"
 #include "imgui.h"
 
@@ -846,6 +848,10 @@ BfGui::presentInfo()
          auto pCam = BfCamera::instance();
 
          ImGui::Text("CameraMode(BfBase): %d", __ptr_base->camera_mode);
+         ImGui::Text("Vertical Angle %f", glm::degrees(pCam->m_vAngle));
+         // ImGui::Text("Old Vertical Angle %f",
+         // glm::degrees(pCam->m_vAngleOld));
+         ImGui::Text("Old Vertical Angle %f", pCam->m_vAngleOld);
          ImGui::Text("CamPos: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_pos));
          ImGui::Text("CamTarget: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_target));
          ImGui::Text("CamUp: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_up));

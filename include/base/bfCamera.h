@@ -3,7 +3,17 @@
 
 #include <GLFW/glfw3.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/vec2.hpp>
+#include <stdexcept>
 
 template <int KEY>
 struct BfKeyState
@@ -22,7 +32,8 @@ void bfKeyUpdate(BfKeyState<KEY>& key, GLFWwindow* window);
 typedef uint32_t BfCameraMode;
 enum BfCameraMode_ : BfCameraMode
 {
-   BfCameraMode_Perspective
+   BfCameraMode_Perspective,
+   BfCameraMode_PerspectiveCentered,
 };
 
 class BfCamera
@@ -42,10 +53,17 @@ public:
    BfKeyState<GLFW_MOUSE_BUTTON_RIGHT> m_rightMouseState;
 
    glm::vec3 m_pos;
+   glm::vec3 m_posOld;
+
+   float m_vAngle;
+   float m_vAngleOld;
+
    glm::vec3 m_target;
    glm::vec3 m_up;
 
    static BfCamera* m_pInstance;
+
+   BfCamera(BfCameraMode mode);
 
    BfCamera(
        const glm::vec3& pos,
@@ -60,6 +78,9 @@ public:
    static BfCamera* instance() noexcept;
    static void bindInstance(BfCamera*);
    void bindWindow(GLFWwindow* window);
+
+   // NOTE: Extent can be set via GLFW if
+   // only single viewport is used!
    void setExtent(float x, float y);
 
    // Out
