@@ -219,24 +219,6 @@ void bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info);
 /** Default color for cmax object */
 #define BF_BLADESECTION_CMAX_COLOR glm::vec3(1.0f, 0.2f, 0.5f)
 
-//
-//
-//
-/** Shortcut for `BfDrawObject` smart pointer */
-// using pObj = std::shared_ptr<BfDrawObj>;
-// using pLay = std::shared_ptr<BfDrawLayer>;
-// using pVar = std::variant<pObj, pLay>;
-
-//
-//
-//
-/** Get part from main vector and convert it to its main type */
-#define BFBSCONV_O(TYPE, NAME) \
-   std::dynamic_pointer_cast<TYPE>(std::get<pObj>(part(NAME)))
-
-#define BFBSCONV_L(TYPE, NAME) \
-   std::dynamic_pointer_cast<TYPE>(std::get<pLay>(part(NAME)))
-
 /**@} end of BfBladeSection2_Defines */
 
 //

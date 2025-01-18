@@ -181,16 +181,69 @@ private:
 //
 //
 
+/**
+ * @defgroup bfDrawElementsShortcuts Короткие
+ * названия для стандартных элементов
+ * @{
+ */
+
+/*! Для объекта отрисовки */
 using pObj = std::shared_ptr<BfDrawObj>;
+/*! Для слоя отрисовки */
 using pLay = std::shared_ptr<BfDrawLayer>;
+/*! Для варианта (объект или слой) */
 using pVar = std::variant<pObj, pLay>;
 
+/**@} end of BfBladeSection2_Defines */
+//
+//
+//
+//
+//
+
+/**
+ * @brief Класс слоя с возможностью
+ * получения элементов через список
+ *
+ * Для правильной работы класса необходимо
+ * в качестве шаблонного аргумента предоставить
+ * `enum`, на основе которого и будет осуществляться
+ * логика хранения и поиска
+ *
+ * @tparam PartType Тип списка, по которому будут
+ * записываться и получаться объекты или слои.
+ * Должен быть списком, который наследует `uint32_t`
+ *
+ */
 template <class PartType>
 class BfDrawLayerAccessed : public BfDrawLayer
 {
 protected:
+   /**
+    * @brief Мапа, на основе которой будет
+    * происходить поиск объектов
+    *
+    * @note В будущем для большей оптимизации
+    * можно заменить `id` объектов и слоев
+    * на указатели, но тогда экземляр класса
+    * будет хранить дупликаты этих указателей,
+    * это не страшно, так как вся логика
+    * объектов и слоев основывается на использовании
+    * `std::shared_ptr`
+    */
    std::unordered_map<PartType, uint32_t> m_idMap;
-
+   //
+   //
+   //
+   //
+   /**
+    * @brief Добавляет объекты
+    * @note Замена для `add(ptrObj_t obj)` и `add(ptrLayer_t layer)`
+    *
+    * @param var Вариант из слоя или объекта
+    * @param part Элемент списка, к которому необходимо
+    * привязать объект
+    */
    void _addPart(pVar var, PartType part)
    {
       std::visit(
@@ -217,21 +270,73 @@ protected:
           var
       );
    }
-
+   //
+   //
+   //
+   //
+   //
+   /**
+    * @brief Добавление объекта через аргументы.
+    * Для создания объекта внутри функции
+    * передается тип и аргументы
+    *
+    * @note Функция существует для динамического добавления
+    * элементов по время `runtime`
+    *
+    * @tparam T Тип создаваемого объекта или слоя
+    * @tparam Ts Типы aргументов создаваемого объекта или слоя
+    * @param part Элемент списка к которому нужно будет привязать объект или
+    * слой
+    * @param args Аргументы создаваемого объекта или слоя
+    * @return Shared-указатель на созданный объект
+    */
    template <class T, class... Ts>
-   void _addPartForward(PartType part, Ts &&...args)
+   std::shared_ptr<T> _addPartForward(PartType part, Ts &&...args)
    {
       auto item = std::make_shared<T>(std::forward<Ts>(args)...);
       _addPart(item, part);
+      return item;
    };
-
+   //
+   //
+   //
+   //
+   //
+   /**
+    * @brief Добавление объекта через аргументы.
+    * Для создания объекта внутри функции
+    * передается тип и аргументы
+    *
+    * @note Функция существует для статического добавления
+    * элементов, так как компилятор может оптимизировать
+    * шаблонные функции
+    *
+    * @tparam T Тип создаваемого объекта или слоя
+    * @tparam Ts Типы aргументов создаваемого объекта или слоя
+    * @tparam part Элемент списка к которому нужно будет привязать объект или
+    * слой
+    * @param args Аргументы создаваемого объекта или слоя
+    * @return Shared-указатель на созданный объект
+    */
    template <class T, PartType part, class... Ts>
-   void _addPartForward(Ts &&...args)
+   std::shared_ptr<T> _addPartForward(Ts &&...args)
    {
       auto item = std::make_shared<T>(std::forward<Ts>(args)...);
       _addPart(item, part);
    };
-
+   //
+   //
+   //
+   //
+   //
+   /**
+    * @brief Возвращает casted-указатель на элемент слоя.
+    * Если такого объекта нет, то происходит аварийный выход
+    *
+    * @tparam Cast Тип к которому нужно скастить найденный объект
+    * @param e Элемент списка который по которому нужно искать
+    * @return Casted-shared-указатель на объект
+    */
    template <class Cast>
    std::shared_ptr<Cast> _part(PartType e)
    {
