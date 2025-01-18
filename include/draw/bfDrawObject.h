@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -145,6 +147,7 @@ public:
    void map_model_matrices(size_t frame_index, size_t &offset, void *data);
 
    ptrObj_t get_object_by_index(size_t index);
+   ptrObj_t get_object_by_id(size_t index);
    ptrLayer_t get_layer_by_index(size_t index);
    ptrLayer_t get_layer_by_id(size_t index);
 
@@ -157,6 +160,116 @@ private:
    layerPair __it_find_layer_by_id(size_t id);
    varPair __it_find_var_by_id(size_t id);
 };
+
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+using pObj = std::shared_ptr<BfDrawObj>;
+using pLay = std::shared_ptr<BfDrawLayer>;
+using pVar = std::variant<pObj, pLay>;
+
+template <class PartType>
+class BfDrawLayerAccessed : public BfDrawLayer
+{
+protected:
+   std::unordered_map<PartType, uint32_t> m_idMap;
+
+   void _addPart(pVar var, PartType part)
+   {
+      std::visit(
+          [this, &part](auto &&input) {
+             using T = std::decay_t<decltype(input)>;
+             uint32_t id = input->id.get();
+
+             if constexpr (std::is_same_v<T, pObj>)
+             {
+                m_idMap[part] = id;
+                this->add_l(input);
+             }
+             else if constexpr (std::is_same_v<T, pLay>)
+             {
+                m_idMap[part] = id;
+                this->add(input);
+             }
+             else
+             {
+                std::cerr << "Invalid type in variant (_addPart)\n";
+                abort();
+             }
+          },
+          var
+      );
+   }
+
+   template <class T, class... Ts>
+   void _addPartForward(PartType part, Ts &&...args)
+   {
+      auto item = std::make_shared<T>(std::forward<Ts>(args)...);
+      _addPart(item, part);
+   };
+
+   template <class T, PartType part, class... Ts>
+   void _addPartForward(Ts &&...args)
+   {
+      auto item = std::make_shared<T>(std::forward<Ts>(args)...);
+      _addPart(item, part);
+   };
+
+   template <class Cast>
+   std::shared_ptr<Cast> _part(PartType e)
+   {
+      auto id = m_idMap[e];
+      if (pObj found = this->get_object_by_id(id))
+      {
+         return std::dynamic_pointer_cast<Cast>(found);
+      }
+      else if (pLay found = this->get_layer_by_id(id))
+      {
+         return std::dynamic_pointer_cast<Cast>(found);
+      }
+      else
+      {
+         std::cerr << "Invalid 'id' (no obj or layer with such id) (_part)\n";
+         abort();
+      }
+   }
+};
+
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
 
 class BfLayerKiller
 {

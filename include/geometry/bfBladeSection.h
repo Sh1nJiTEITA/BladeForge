@@ -2,7 +2,10 @@
 #define BF_BLADE_SECTION_H
 
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
+#include <type_traits>
+#include <unordered_map>
 
 #include "bfCurves3.h"
 #include "bfDrawObject.h"
@@ -134,65 +137,202 @@ private:
 
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
+/**
+ * @class BfBladeSectionCmax
+ * @brief Описывает как должны располагаться окружности,
+ * между которыми необходимо будет проводить кривые Безье
+ *
+ */
 struct BfBladeSectionCmax
 {
-   float radius;
-   float relativeCoordinate;  // t
+   float radius;             /*! Радиус окружности */
+   float relativeCoordinate; /*! Относительная координата (от начала) */
 };
 
+/**
+ * @class BfBladeSectionCreateInfo2
+ * @brief Описывает каким образом сечение должно быть
+ * создано
+ *
+ */
 struct BfBladeSectionCreateInfo2
 {
+   /*! Как создать слой (заполняется автоматически) */
    BfDrawLayerCreateInfo layer_create_info;
 
-   float chord;
-   float installAngle;
-   float inletAngle;
-   float outletAngle;
+   float chord;            /*! Длина хорды */
+   float installAngle;     /*! Угол установки */
+   float inletAngle;       /*! Входной угол */
+   float outletAngle;      /*! Выходной угол */
+   float inletEdgeRadius;  /*! Радиус входной кромки */
+   float outletEdgeRadius; /*! Радиус выходной кромки */
 
-   std::vector<BfBladeSectionCmax> cmax;
+   std::vector<BfBladeSectionCmax> cmax; /*! Все окружности */
 
    VkPipeline l_pipeline = nullptr;
    VkPipeline t_pipeline = nullptr;
 };
 
+/**
+ * @brief Заполняет `BfBladeSectionCreateInfo2`
+ * стандартными значениями
+ * @param info
+ */
 void bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info);
 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/**
+ * @defgroup BfBladeSection2_Defines Некоторые отладочные макросы
+ * для `BfBladeSection2`
+ * @{
+ */
+
+/** Transform vector to string with `<<` operator, (for std::cout) */
 #define BFVEC3_STR(VEC) VEC.x << " " << VEC.y << " " << VEC.z
+//
+//
+//
+/** Short log */
 #define BFBS2_LOG(MSG) std::cout << MSG << "\n"
-
-using ptrObj = std::shared_ptr<BfDrawObj>;
-
+//
+//
+//
+/** Default color for cmax object */
 #define BF_BLADESECTION_CMAX_COLOR glm::vec3(1.0f, 0.2f, 0.5f)
 
-class BfBladeSection2 : public BfDrawLayer
+//
+//
+//
+/** Shortcut for `BfDrawObject` smart pointer */
+// using pObj = std::shared_ptr<BfDrawObj>;
+// using pLay = std::shared_ptr<BfDrawLayer>;
+// using pVar = std::variant<pObj, pLay>;
+
+//
+//
+//
+/** Get part from main vector and convert it to its main type */
+#define BFBSCONV_O(TYPE, NAME) \
+   std::dynamic_pointer_cast<TYPE>(std::get<pObj>(part(NAME)))
+
+#define BFBSCONV_L(TYPE, NAME) \
+   std::dynamic_pointer_cast<TYPE>(std::get<pLay>(part(NAME)))
+
+/**@} end of BfBladeSection2_Defines */
+
+//
+//
+//
+//
+//
+//
+//
+//
+
+typedef uint32_t BfBladeSection2_Part;
+enum BfBladeSection2_Part_ : BfBladeSection2_Part
 {
-   BfBladeSectionCreateInfo2* __info;
-
-public:
-   BfBladeSection2(BfBladeSectionCreateInfo2* info);
-
-   enum BfBladeSection2_
-   {
-      BEZIER_AVE = 0
-   };
-
-   float equivalentInletAngle();
-   float equivalentOutletAngle();
-
-   virtual void createVertices();
-#define BFBSCONV(TYPE, NAME) std::dynamic_pointer_cast<TYPE>(getPart(NAME))
-
-   ptrObj getPart(BfBladeSection2_ e);
-
-private:
-   void __createAverageCurve();
-   void __createCmax();
-   void __createBack();
+   BfBladeSection2_Part_Average,
+   BfBladeSection2_Part_AverageFrame,
+   BfBladeSection2_Part_Back,
+   BfBladeSection2_Part_Front,
 };
 
+//
+//
+//
+//
+//
+//
+//
+
+/**
+ * @class BfBladeSection2
+ * @brief Слой для создания сечения лопатки 2.0
+ *
+ */
+class BfBladeSection2 : public BfDrawLayerAccessed<BfBladeSection2_Part>
+{
+   /*! Входное инфо для создания */
+   BfBladeSectionCreateInfo2* m_info;
+
+   /*! Хранение `id` элементов для их поиска */
+   std::unordered_map<BfBladeSection2_Part, uint32_t> m_idMap;
+
+public:
+   /**
+    * @brief Дефолтный конструктор
+    * @param info Инфо как создать сечение
+    */
+   BfBladeSection2(BfBladeSectionCreateInfo2* info);
+
+   //
+   //
+   //
+   /** @brief Эквивалетный входной угол */
+   float equivalentInletAngle();
+
+   //
+   //
+   //
+   /** @brief Эквивалетный выходной угол */
+   float equivalentOutletAngle();
+
+   //
+   //
+   //
+   /** @brief Генерирует точки для 3D визуализации */
+   virtual void createVertices();
+
+   /**
+    * @brief Получить указатель на элемент слоя
+    *
+    * @param e Тип объекта
+    * @return Дефолтный `BfDrawObj` указатель на элемент слоя
+    */
+
+private:
+   void _createAverageCurve();
+   void _createCmax();
+   void _createInitialEdges();
+   void _createBack();
+};
+
+//
+//
+//
+//
+//
+//
+//
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
 
 struct BfBladeBaseCreateInfo
 {

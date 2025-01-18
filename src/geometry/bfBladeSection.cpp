@@ -5,6 +5,7 @@
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
+#include <variant>
 
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
@@ -1215,11 +1216,11 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
        .installAngle = 50.0f,
        .inletAngle = 25.0f,
        .outletAngle = 42.0f,
-       .cmax =
-           {
-               {0.05f, 0.2f},
-               // {0.05f, 0.6}
-           },
+       .inletEdgeRadius = 0.05,
+       .outletEdgeRadius = 0.01,
+
+       .cmax = {{0.05f, 0.2f}, {0.05f, 0.6}},
+
        // clang-format off
        .l_pipeline = BfLayerHandler::instance()
                          ? *BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
@@ -1232,22 +1233,23 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
 }
 
 BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
-    : __info{info}
+    : m_info{info}
 {
-   __createAverageCurve();
-   __createCmax();
+   _createAverageCurve();
+   _createCmax();
+
    createVertices();
 }
 
 float
 BfBladeSection2::equivalentInletAngle()
 {
-   return 90.0f - __info->inletAngle;
+   return 90.0f - m_info->inletAngle;
 }
 float
 BfBladeSection2::equivalentOutletAngle()
 {
-   return 90.0f - __info->outletAngle;
+   return 90.0f - m_info->outletAngle;
 }
 
 void
@@ -1258,22 +1260,16 @@ BfBladeSection2::createVertices()
       auto obj = this->get_object_by_index(i);
       obj->createVertices();
       obj->createIndices();
-      obj->bind_pipeline(&__info->l_pipeline);
+      obj->bind_pipeline(&m_info->l_pipeline);
    }
    this->update_buffer();
 }
 
-ptrObj
-BfBladeSection2::getPart(BfBladeSection2_ e)
-{
-   return this->get_object_by_index((size_t)e);
-}
-
 void
-BfBladeSection2::__createAverageCurve()
+BfBladeSection2::_createAverageCurve()
 {
    glm::vec3 inletP = {0, 0, 0};
-   glm::vec3 outletP = {__info->chord, 0, 0};
+   glm::vec3 outletP = {m_info->chord, 0, 0};
 
    BFBS2_LOG("Inlet vertex '" << BFVEC3_STR(inletP) << "'");
    BFBS2_LOG("Outlet vertex '" << BFVEC3_STR(outletP) << "'");
@@ -1302,7 +1298,18 @@ BfBladeSection2::__createAverageCurve()
 
    BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
 
-   auto curve = std::make_shared<BfBezierCurve>(
+   // auto curve = std::make_shared<BfBezierCurve>(
+   //     2,
+   //     BF_BEZIER_CURVE_VERT_COUNT,
+   //     std::vector<BfVertex3>{
+   //         BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+   //         BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+   //         BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+   //     }
+   // );
+   // this->_addPart(curve, BfBladeSection2_Part_Average);
+
+   _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
        2,
        BF_BEZIER_CURVE_VERT_COUNT,
        std::vector<BfVertex3>{
@@ -1311,35 +1318,39 @@ BfBladeSection2::__createAverageCurve()
            BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
        }
    );
-   this->add_l(curve);
+   // this->_addPart(curve, BfBladeSection2_Part_Average);
 
-   auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
-       curve,
-       __info->layer_create_info.allocator,
-       __info->l_pipeline,
-       __info->t_pipeline
-   );
-   ave_curve_frame->set_color(BF_BLADESECTION_AVE_COLOR);
-   ave_curve_frame->update_buffer();
-   this->add(ave_curve_frame);
+   //
+   // auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
+   //     curve,
+   //     m_info->layer_create_info.allocator,
+   //     m_info->l_pipeline,
+   //     m_info->t_pipeline
+   // );
+   // ave_curve_frame->set_color(BF_BLADESECTION_AVE_COLOR);
+   // this->_addPart(ave_curve_frame, BfBladeSection2_Part_AverageFrame);
 }
 
 void
-BfBladeSection2::__createCmax()
+BfBladeSection2::_createCmax()
 {
-   auto aveCurve = BFBSCONV(BfBezierCurve, BEZIER_AVE);
-
-   for (const auto &cmax : __info->cmax)
+   auto aveCurve = _part<BfBezierCurve>(BfBladeSection2_Part_Average);
+   for (const auto &cmax : m_info->cmax)
    {
       BfVertex3 aveCoo = aveCurve->calcBfV3(cmax.relativeCoordinate);
+      // TODO: Make defines for default numuber of vertices
       auto cmax_obj = std::make_shared<BfCircle>(100, aveCoo, cmax.radius);
       cmax_obj->set_color(BF_BLADESECTION_CMAX_COLOR);
       this->add_l(cmax_obj);
    }
 }
 
+void BfBladeSection2::_createInitialEdges() {
+
+};
+
 void
-BfBladeSection2::__createBack()
+BfBladeSection2::_createBack()
 {
 }
 

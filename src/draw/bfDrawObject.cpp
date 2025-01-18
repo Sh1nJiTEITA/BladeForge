@@ -693,6 +693,25 @@ BfDrawLayer::get_object_by_index(size_t index)
       return __objects.at(index);
 }
 
+std::shared_ptr<BfDrawObj>
+BfDrawLayer::get_object_by_id(size_t id)
+{
+   for (auto &o : __objects)
+   {
+      if (o->id.get() == id)
+      {
+         return o;
+      }
+   }
+
+   for (auto &l : __layers)
+   {
+      auto found = l->get_object_by_id(id);
+      if (found) return found;
+   }
+   return nullptr;
+}
+
 std::shared_ptr<BfDrawLayer>
 BfDrawLayer::get_layer_by_index(size_t index)
 {
