@@ -1,5 +1,8 @@
 #include <bfGuiWindow.h>
 
+#include "imgui.h"
+#include "imgui_internal.h"
+
 void
 BfGuiWindow::__preRender()
 {
@@ -28,6 +31,12 @@ BfGuiWindow::BfGuiWindow()
 void
 BfGuiWindow::render()
 {
+   if (ImGui::IsKeyDown(__wi.toggleRenderMapping[0]) &&
+       ImGui::IsKeyPressed(__wi.toggleRenderMapping[1]))
+   {
+      toggleRender();
+   }
+
    if (__wi.isRender)
    {
       __preRender();

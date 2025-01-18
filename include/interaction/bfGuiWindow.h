@@ -3,6 +3,7 @@
 
 #include <imgui.h>
 
+#include <array>
 #include <ctime>
 #include <string>
 #include <vector>
@@ -12,7 +13,7 @@ struct BfGuiWindowCreateInfo
    std::string name;
    ImGuiWindowFlags flags = ImGuiWindowFlags_None;
    bool isRender = true;
-   std::vector<int> toggleRenderMapping = {};
+   std::array<ImGuiKey, 2> toggleRenderMapping = {};
 };
 
 class BfGuiWindow

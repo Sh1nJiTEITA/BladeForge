@@ -46,34 +46,34 @@ struct BfWindow
    //
    std::function<bool()> is_any_window_hovered_func = nullptr;
    //
-   bool is_scroll               = false;
+   bool is_scroll = false;
 
-   bool is_free_camera_active   = false;
-   bool first_free              = true;
+   bool is_free_camera_active = false;
+   bool first_free = true;
 
-   bool is_s_camera_active      = false;
-   bool first_s                 = false;
+   bool is_s_camera_active = false;
+   bool first_s = false;
 
    bool is_rotate_camera_active = false;
-   bool first_free_rotate       = true;
-   bool first_s_rotate          = true;
+   bool first_free_rotate = true;
+   bool first_s_rotate = true;
 
-   uint32_t cam_mode            = -1;
+   uint32_t cam_mode = -1;
 
    uint32_t proj_mode;
 
-   float ortho_left   = 0.0f;
-   float ortho_right  = 1.0f;
+   float ortho_left = 0.0f;
+   float ortho_right = 1.0f;
    float ortho_bottom = 0.0f;
-   float ortho_top    = 1.0f;
-   float ortho_near   = 0.1f;
-   float ortho_far    = 100.0f;
-   bool  is_asp       = true;
+   float ortho_top = 1.0f;
+   float ortho_near = 0.1f;
+   float ortho_far = 100.0f;
+   bool is_asp = true;
 
-   int  width;
-   int  height;
+   int width;
+   int height;
    bool resized;
-   int  holder_index;
+   int holder_index;
 };
 #endif
 
@@ -94,7 +94,8 @@ void bfSetOrthoFar(BfWindow *window);
 BfEvent bfCreateWindow(BfWindow *window);
 BfEvent bfSetWindowSize(BfWindow *window, int width, int height);
 BfEvent bfSetWindowName(BfWindow *window, std::string name);
-BfEvent bfBindGuiWindowHoveringFunction(BfWindow             *window,
-                                        std::function<bool()> func);
+BfEvent bfBindGuiWindowHoveringFunction(
+    BfWindow *window, std::function<bool()> func
+);
 
 #endif

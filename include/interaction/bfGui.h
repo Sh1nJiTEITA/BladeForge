@@ -16,6 +16,7 @@
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfEvent.h"
+#include "bfGuiCamera.h"
 #include "bfGuiCreateWindow.h"
 #include "bfGuiFileDialog.h"
 #include "bfGuiLuaInteraction.h"
@@ -38,6 +39,7 @@ class BfGui
    BfGuiLuaInteraction __lua_interaction;
    BfGuiCreateWindow __create_window;
    BfGuiSmartLayerObserver __smart_layer_observer;
+   BfGuiCameraWindow __camera_window;
 
    ImFont* __default_font = nullptr;
    ImFont* __icon_font = nullptr;
@@ -93,6 +95,7 @@ public:
    void presentCreateWindow();
    void presentSmartLayerObserver();
    void presentInfo();
+   void presentCameraWindow();
 
    void toggleRenderCreateWindow();
 

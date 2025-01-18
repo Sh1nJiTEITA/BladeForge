@@ -24,10 +24,9 @@
 // #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_SWIZZLE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <fstream>  // Read shaderfiles
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <fstream> // Read shaderfiles
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -62,7 +61,8 @@ const std::vector<const char *> bfvDeviceExtensions = {
 };
 
 const std::vector<VkValidationFeatureEnableEXT> bfvValidationFeatures = {
-    VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT};
+    VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
+};
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Vulkan
 // properties //
@@ -77,33 +77,38 @@ const bool enableValidationLayers = true;
 
 // Store validation layers here:
 const std::vector<const char *> bfvValidationLayers = {
-    "VK_LAYER_KHRONOS_validation"};
+    "VK_LAYER_KHRONOS_validation"
+};
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL
-bfvDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                 VkDebugUtilsMessageTypeFlagsEXT messageType,
-                 const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                 void *pUserData) {
-  char *severity_type{};
-  switch (messageSeverity) {
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    severity_type = const_cast<char *>("[INFO]");
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    severity_type = const_cast<char *>("[VERB]");
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    severity_type = const_cast<char *>("[WARN]");
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    severity_type = const_cast<char *>("[ERR]");
-    break;
-  }
+bfvDebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void *pUserData
+)
+{
+   char *severity_type{};
+   switch (messageSeverity)
+   {
+      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+         severity_type = const_cast<char *>("[INFO]");
+         break;
+      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+         severity_type = const_cast<char *>("[VERB]");
+         break;
+      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+         severity_type = const_cast<char *>("[WARN]");
+         break;
+      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+         severity_type = const_cast<char *>("[ERR]");
+         break;
+   }
 
-  std::cerr << severity_type << " Validation layer: " << pCallbackData->pMessage
-            << std::endl;
+   std::cerr << severity_type
+             << " Validation layer: " << pCallbackData->pMessage << std::endl;
 
-  return VK_FALSE;
+   return VK_FALSE;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Debug
@@ -112,10 +117,13 @@ bfvDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 // Window properties
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-inline void bfvSetGLFWProperties() {
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-  glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
+inline void
+bfvSetGLFWProperties()
+{
+   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+   glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
+   // glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Window
@@ -124,26 +132,29 @@ inline void bfvSetGLFWProperties() {
 // Queues
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // //
-enum BfvEnQueueType {
-  BF_QUEUE_GRAPHICS_TYPE,
-  BF_QUEUE_COMPUTE_TYPE,
-  BF_QUEUE_PRESENT_TYPE,
-  BF_QUEUE_TRANSFER_TYPE
+enum BfvEnQueueType
+{
+   BF_QUEUE_GRAPHICS_TYPE,
+   BF_QUEUE_COMPUTE_TYPE,
+   BF_QUEUE_PRESENT_TYPE,
+   BF_QUEUE_TRANSFER_TYPE
 };
 
-const std::set<BfvEnQueueType> bfvEnabledQueueTypes{BF_QUEUE_GRAPHICS_TYPE,
-                                                    // BF_QUEUE_COMPUTE_TYPE,
-                                                    BF_QUEUE_PRESENT_TYPE,
-                                                    BF_QUEUE_TRANSFER_TYPE};
+const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
+    BF_QUEUE_GRAPHICS_TYPE,
+    // BF_QUEUE_COMPUTE_TYPE,
+    BF_QUEUE_PRESENT_TYPE,
+    BF_QUEUE_TRANSFER_TYPE
+};
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Queues //
 
-static void check_vk_result(VkResult err) {
-  if (err == 0)
-    return;
-  fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-  if (err < 0)
-    abort();
+static void
+check_vk_result(VkResult err)
+{
+   if (err == 0) return;
+   fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+   if (err < 0) abort();
 };
 
 #endif

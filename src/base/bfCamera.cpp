@@ -36,54 +36,14 @@ BfCamera* BfCamera::m_pInstance = nullptr;
 BfCamera::BfCamera(BfCameraMode mode)
     : BfCamera()
 {
-   m_cameraMode = mode;
-   switch (mode)
-   {
-      case BfCameraMode_Perspective:
-         m_pos = {0.0, 0.0, -3.0};
-         m_target = {0.0, 0.0, 1.0};
-         m_up = {0.0, 1.0, 0.0};
-         break;
-      case BfCameraMode_PerspectiveCentered:
-         m_pos = {0.0, 0.0, -3.0};
-         m_target = {0.0, 0.0, 0.0};
-         m_up = {0.0, 1.0, 0.0};
-         break;
-      case BfCameraMode_Ortho:
-         m_pos = {0.0, 0.0, -3.0};
-         m_target = {0.0, 0.0, 1.0};
-         m_up = {0.0, 1.0, 0.0};
-         break;
-      case BfCameraMode_OrthoCentered:
-         m_pos = {0.0, 0.0, -3.0};
-         m_target = {0.0, 0.0, 0.0};
-         m_up = {0.0, 1.0, 0.0};
-         break;
-   }
-}
-
-BfCamera::BfCamera(
-    const glm::vec3& pos,
-    const glm::vec3& target,
-    const glm::vec3& up,
-    GLFWwindow* window
-)
-    : m_pWindow{window}
-    , m_pos{pos}
-    , m_target{target}
-    , m_up{up}
-    , m_posMouseOld{0, 0}
-    , m_mouseDelta{0, 0}
-    , m_middleMouseState{0, 0}
-    , m_leftMouseState{0, 0}
-    , m_rightMouseState{0, 0}
-    , m_cameraMode{BfCameraMode_PerspectiveCentered}
-{
+   m_mode = mode;
+   _assignMainVectors();
 }
 
 BfCamera::BfCamera()
-    : m_scale(1.0f), m_posMouseOld{0, 0}, m_pWindow{nullptr}
+    : m_mode{BfCameraMode_PerspectiveCentered}
 {
+   _assignMainVectors();
 }
 
 BfCamera*
@@ -118,10 +78,17 @@ BfCamera::setExtent(float x, float y)
    m_extent = {x, y};
 }
 
+void
+BfCamera::setMode(BfCameraMode mode)
+{
+   m_mode = mode;
+   _assignMainVectors();
+}
+
 glm::mat4
 BfCamera::view()
 {
-   switch (m_cameraMode)
+   switch (m_mode)
    {
       case BfCameraMode_Perspective:
          return glm::lookAt(m_pos, m_pos + m_target, m_up);
@@ -138,7 +105,7 @@ BfCamera::view()
 glm::mat4
 BfCamera::projection()
 {
-   switch (m_cameraMode)
+   switch (m_mode)
    {
       case BfCameraMode_Perspective:
          return glm::perspective(
@@ -188,7 +155,7 @@ BfCamera::update()
    glfwGetCursorPos(m_pWindow, &mousePosNew.x, &mousePosNew.y);
    m_posMouse = mousePosNew;
 
-   switch (m_cameraMode)
+   switch (m_mode)
    {
       case BfCameraMode_Perspective: {
          if (m_yScroll != m_yScrollOld)
@@ -242,7 +209,7 @@ BfCamera::update()
    }
    if (m_middleMouseState.isPressed)
    {  // clang-format off
-      switch (m_cameraMode) { 
+      switch (m_mode) { 
          case BfCameraMode_Perspective: { 
             const float sen_x = 0.01;
             const float sen_y = 0.005;
@@ -301,5 +268,33 @@ BfCamera::update()
    else
    {
       m_mouseDelta = {0, 0};
+   }
+}
+
+void 
+BfCamera::_assignMainVectors() 
+{ 
+   switch (m_mode)
+   {
+      case BfCameraMode_Perspective:
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 1.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
+      case BfCameraMode_PerspectiveCentered:
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 0.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
+      case BfCameraMode_Ortho:
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 1.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
+      case BfCameraMode_OrthoCentered:
+         m_pos = {0.0, 0.0, -3.0};
+         m_target = {0.0, 0.0, 0.0};
+         m_up = {0.0, 1.0, 0.0};
+         break;
    }
 }

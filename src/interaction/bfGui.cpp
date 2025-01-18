@@ -318,105 +318,6 @@ BfGui::presentMenuBar()
 void
 BfGui::presentCamera()
 {
-   if (__is_camera_info)
-   {
-      static bool is_per = true;
-      static bool is_ort = false;
-      static bool is_ortho = false;
-
-      if (ImGui::Begin("Camera"))
-      {
-         ImVec2 table_size = ImGui::GetContentRegionAvail();
-         ImGui::BeginChild(
-             "##PresentcameraButtonsTableChild",
-             {table_size.x - 130.0f, table_size.y}
-         );
-         {
-            if (ImGui::BeginTable(
-                    "##PresentCameraButtonsTable",
-                    3
-                    // ,ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
-                ))
-            {
-               float row_h = table_size.y / 3.0f;
-               ImVec2 dummy_size{0.1, 0.1};
-
-               ImGui::TableNextRow(0, row_h);
-               ImGui::TableSetColumnIndex(1);
-               ImVec2 button_size{ImGui::GetContentRegionAvail().x, row_h - 10};
-
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button("\uf062", button_size))
-               {
-                  bfSetOrthoUp(__ptr_base->window);
-               }
-
-               ImGui::TableNextRow(0, row_h);
-               ImGui::TableSetColumnIndex(0);
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button("\uf060", button_size))
-               {
-                  bfSetOrthoLeft(__ptr_base->window);
-               }
-               ImGui::TableSetColumnIndex(1);
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button(ICON_FA_CIRCLE_DOT, button_size))
-               {
-                  bfSetOrthoNear(__ptr_base->window);
-               }
-               ImGui::TableSetColumnIndex(2);
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button("\uf061", button_size))
-               {
-                  bfSetOrthoRight(__ptr_base->window);
-               }
-
-               ImGui::TableNextRow(0, row_h);
-               ImGui::TableSetColumnIndex(1);
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button("\uf063", button_size))
-               {
-                  bfSetOrthoBottom(__ptr_base->window);
-               }
-               ImGui::TableSetColumnIndex(2);
-               ImGui::Dummy(dummy_size);
-               if (ImGui::Button("\uf148", button_size))
-               {
-                  bfSetOrthoFar(__ptr_base->window);
-               }
-
-               ImGui::EndTable();
-            }
-            ImGui::EndChild();
-         }
-         ImGui::SameLine();
-         ImGui::BeginChild("##PresentcameraRadioChoiceChild");
-         {
-            if (ImGui::RadioButton("Perspective", is_per))
-            {
-               is_ort = false;
-               is_per = true;
-
-               __ptr_base->window->proj_mode = 0;
-            }
-            if (ImGui::RadioButton("Ortho", is_ort))
-            {
-               is_ort = true;
-               is_per = false;
-
-               __ptr_base->window->proj_mode = 1;
-            }
-            ImGui::Dummy({0.0f, 14.0f});
-            if (ImGui::Button("Ortho settings"))
-            {
-               __is_ortho_settings = !__is_ortho_settings;
-            }
-            ImGui::EndChild();
-         }
-      }
-      ImGui::End();
-   }
-   __presentOrthoSettings();
 }
 
 void
@@ -874,6 +775,12 @@ BfGui::presentInfo()
       }
       ImGui::End();
    }
+}
+
+void
+BfGui::presentCameraWindow()
+{
+   __camera_window.render();
 }
 
 void

@@ -358,6 +358,7 @@ BfMain::__loop()
       __gui.presentFileDialog();
       __gui.presentCreateWindow();
       __gui.presentSmartLayerObserver();
+      __gui.presentCameraWindow();
 
       // ImGui::ShowDemoWindow();
 
