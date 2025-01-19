@@ -67,13 +67,6 @@ class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
    using objPair = std::pair<ptrLayer_t, std::optional<itptrObj_t>>;
    using varPair = std::pair<ptrLayer_t, std::optional<itptrVar_t>>;
 
-   // struct __varTransaction
-   // {
-   //    std::optional<itptrVar_t> what;
-   //    std::optional<itptrVar_t> where;
-   //    std::optional<ptrLayer_t> root;
-   // };
-
    uint32_t __reserved_n;
    std::vector<ptrObj_t> __objects;
    std::vector<ptrLayer_t> __layers;
@@ -323,6 +316,7 @@ protected:
    {
       auto item = std::make_shared<T>(std::forward<Ts>(args)...);
       _addPart(item, part);
+      return item;
    };
    //
    //
@@ -333,6 +327,8 @@ protected:
     * @brief Возвращает casted-указатель на элемент слоя.
     * Если такого объекта нет, то происходит аварийный выход
     *
+    * @param Для динамического использования
+    *
     * @tparam Cast Тип к которому нужно скастить найденный объект
     * @param e Элемент списка который по которому нужно искать
     * @return Casted-shared-указатель на объект
@@ -341,6 +337,38 @@ protected:
    std::shared_ptr<Cast> _part(PartType e)
    {
       auto id = m_idMap[e];
+      if (pObj found = this->get_object_by_id(id))
+      {
+         return std::dynamic_pointer_cast<Cast>(found);
+      }
+      else if (pLay found = this->get_layer_by_id(id))
+      {
+         return std::dynamic_pointer_cast<Cast>(found);
+      }
+      else
+      {
+         std::cerr << "Invalid 'id' (no obj or layer with such id) (_part)\n";
+         abort();
+      }
+   }
+   //
+   //
+   //
+   //
+   //
+   /**
+    * @brief Возвращает casted-указатель на элемент слоя.
+    * Если такого объекта нет, то происходит аварийный выход
+    *
+    * @param Для статического использования
+    *
+    * @tparam Cast Элемент списка который по которому нужно искать
+    * @return Casted-shared-указатель на объект
+    */
+   template <class Cast, PartType part>
+   std::shared_ptr<Cast> _part()
+   {
+      auto id = m_idMap[part];
       if (pObj found = this->get_object_by_id(id))
       {
          return std::dynamic_pointer_cast<Cast>(found);

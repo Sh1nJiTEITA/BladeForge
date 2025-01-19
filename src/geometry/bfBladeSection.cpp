@@ -1298,18 +1298,7 @@ BfBladeSection2::_createAverageCurve()
 
    BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
 
-   // auto curve = std::make_shared<BfBezierCurve>(
-   //     2,
-   //     BF_BEZIER_CURVE_VERT_COUNT,
-   //     std::vector<BfVertex3>{
-   //         BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-   //         BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-   //         BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
-   //     }
-   // );
-   // this->_addPart(curve, BfBladeSection2_Part_Average);
-
-   _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
+   auto curve = _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
        2,
        BF_BEZIER_CURVE_VERT_COUNT,
        std::vector<BfVertex3>{
@@ -1318,31 +1307,44 @@ BfBladeSection2::_createAverageCurve()
            BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
        }
    );
-   // this->_addPart(curve, BfBladeSection2_Part_Average);
 
-   //
-   // auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
-   //     curve,
-   //     m_info->layer_create_info.allocator,
-   //     m_info->l_pipeline,
-   //     m_info->t_pipeline
-   // );
-   // ave_curve_frame->set_color(BF_BLADESECTION_AVE_COLOR);
-   // this->_addPart(ave_curve_frame, BfBladeSection2_Part_AverageFrame);
+   _addPartForward<BfBezierCurveFrame, BfBladeSection2_Part_AverageFrame>(
+       curve,
+       m_info->layer_create_info.allocator,
+       m_info->l_pipeline,
+       m_info->t_pipeline
+   );
 }
 
 void
 BfBladeSection2::_createCmax()
 {
-   auto aveCurve = _part<BfBezierCurve>(BfBladeSection2_Part_Average);
+   auto aveCurve = _part<BfBezierCurve, BfBladeSection2_Part_Average>();
+
+   // // Create special layer for cmax circles
+   // auto cmaxLayer = _addPartForward<BfDrawLayer, BfBladeSection2_Part_Cmax>(
+   //     BfDrawLayerCreateInfo{.is_nested = true}
+   // );
+   auto cmaxLayer =
+       std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true});
+
    for (const auto &cmax : m_info->cmax)
    {
       BfVertex3 aveCoo = aveCurve->calcBfV3(cmax.relativeCoordinate);
-      // TODO: Make defines for default numuber of vertices
+      // TODO: Make defines for default number of vertices
       auto cmax_obj = std::make_shared<BfCircle>(100, aveCoo, cmax.radius);
+      BFBS2_LOG(
+          "Added cmax with aveCoo '" << BFVEC3_STR(aveCoo.pos) << "' radius '"
+                                     << cmax.radius << "'"
+      );
       cmax_obj->set_color(BF_BLADESECTION_CMAX_COLOR);
-      this->add_l(cmax_obj);
+      cmax_obj->createVertices();
+      cmax_obj->createIndices();
+      cmax_obj->bind_pipeline(&m_info->l_pipeline);
+
+      cmaxLayer->add_l(cmax_obj);
    }
+   _addPart(cmaxLayer, BfBladeSection2_Part_Average);
 }
 
 void BfBladeSection2::_createInitialEdges() {

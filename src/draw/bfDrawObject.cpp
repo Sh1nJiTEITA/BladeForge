@@ -1,6 +1,7 @@
 #include "bfDrawObject.h"
 
 #include <optional>
+#include <stdexcept>
 
 // BfDrawObj::BfDrawObj() :
 //	id()
@@ -316,13 +317,15 @@ BfDrawLayer::add(std::shared_ptr<BfDrawLayer> layer)
       throw std::runtime_error(
           "Import layer is not nested, can't add to over layer"
       );
-   __layers.emplace_back(layer);
+   // __layers.emplace_back(layer);
+   __layers.push_back(layer);
 }
 
 void
 BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj)
 {
-   __objects.emplace_back(obj);
+   // __objects.emplace_back(obj);
+   __objects.push_back(obj);
 }
 
 void
@@ -624,8 +627,9 @@ BfDrawLayer::draw(
    for (size_t i = 0; i < __objects.size(); i++)
    {
       if (__objects[i] == nullptr) continue;
-      if (__objects[i]->get_bound_pPipeline() == nullptr)
+      if (!__objects[i]->get_bound_pPipeline())
       {
+         std::cerr << "Pipeline was not bound (nullptr)\n";
          throw std::runtime_error("Object pipeline pointer is nullptr");
       }
       if (!__objects[i]->is_draw) continue;
@@ -634,13 +638,16 @@ BfDrawLayer::draw(
           current_pipeline != __objects[i]->get_bound_pPipeline())
       {
          current_pipeline = __objects[i]->get_bound_pPipeline();
+         if (!current_pipeline)
+         {
+            throw std::runtime_error("Pipeline was not bound (nullptr)");
+         }
          vkCmdBindPipeline(
              combuffer,
              VK_PIPELINE_BIND_POINT_GRAPHICS,
              *current_pipeline
          );
       }
-
       vkCmdDrawIndexed(
           combuffer,
           __objects[i]->indices().size(),

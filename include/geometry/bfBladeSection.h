@@ -235,6 +235,7 @@ enum BfBladeSection2_Part_ : BfBladeSection2_Part
 {
    BfBladeSection2_Part_Average,
    BfBladeSection2_Part_AverageFrame,
+   BfBladeSection2_Part_Cmax,
    BfBladeSection2_Part_Back,
    BfBladeSection2_Part_Front,
 };
@@ -284,13 +285,6 @@ public:
    //
    /** @brief Генерирует точки для 3D визуализации */
    virtual void createVertices();
-
-   /**
-    * @brief Получить указатель на элемент слоя
-    *
-    * @param e Тип объекта
-    * @return Дефолтный `BfDrawObj` указатель на элемент слоя
-    */
 
 private:
    void _createAverageCurve();
