@@ -53,7 +53,7 @@ class BfGui
    bool __is_file_dialog = true;
    bool __is_left_dock_space_name = false;
 
-   bool __is_new_cam = false;
+   bool __is_new_cam = true;
 
    uint32_t __current_id;
 

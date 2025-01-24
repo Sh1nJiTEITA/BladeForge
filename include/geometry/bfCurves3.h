@@ -1,6 +1,10 @@
 #ifndef BF_CURVES3_H
 #define BF_CURVES3_H
 
+// NOTE: Define this if BfCurves3_gui.cpp file is existing and need
+// to override `GuiIntegration::update()` method
+#define BF_CURVES3_GUI
+
 #include <Splines.h>
 
 #include <cfloat>
@@ -72,6 +76,9 @@ glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
 std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v);
 std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y);
 std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v);
+
+// Camera
+glm::mat4 bfOrtho(float right, float left, float bot, float top, float far, float near);
 
 // clang-format on
 
@@ -145,8 +152,18 @@ public:
    virtual void createVertices() override;
 };
 
+//
+//
+//
+//
+//
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
 
 #define BF_CIRCLE_DEFINE_TYPE_CENTER_RADIUS 0x1
 #define BF_CIRCLE_DEFINE_TYPE_3_VERTICES 0x2
@@ -179,6 +196,54 @@ public:
 
    virtual void createVertices() override;
 };
+
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+
+class BfCircleFilled : public BfDrawObj
+{
+   float m_radius;
+   size_t m_outVerticesCount;
+
+public:
+   BfCircleFilled(size_t m, const BfVertex3& center, float radius);
+
+   float radius() const noexcept;
+   const glm::vec3& tangent() const noexcept;
+
+   virtual void createVertices() override;
+   virtual void createIndices() override;
+
+#if defined(BF_CURVES3_GUI)
+   virtual void update() override;
+#endif
+
+private:
+   const BfVertex3& _center() const;
+};
+
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
 
 class BfArc : public BfCircle
 {
@@ -312,8 +377,18 @@ public:
    virtual void createIndices() override;
 };
 
+//
+//
+//
+//
+//
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
 
 #define BF_BEZIER_CURVE_VERT_COUNT 70
 

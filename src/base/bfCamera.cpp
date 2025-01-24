@@ -271,6 +271,7 @@ BfCamera::update()
    }
 }
 
+
 void 
 BfCamera::_assignMainVectors() 
 { 

@@ -17,6 +17,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/vec2.hpp>
 
+#include "bfCurves3.h"
+
 template <int KEY>
 struct BfKeyState
 {

@@ -67,6 +67,9 @@ public:
    BfDrawLayer::objPair get_it_obj(size_t id);
    BfDrawLayer::varPair get_it_var(size_t id);
 
+   BfDrawLayer* findNotNestedRoot(BfDrawLayer* elem);
+   BfDrawLayer* findNotNestedRoot(BfDrawObj* elem);
+
 private:
    bool __is_space_for_new_layer();
    bool __is_layer_exists(uint32_t id);

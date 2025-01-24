@@ -2,6 +2,7 @@
 #define BF_DRAWOBJECT_H
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
@@ -37,7 +38,28 @@ public:
 // === === === === === === === === === === === === === === === === === === ===
 
 class BfDrawObj;
+class BfDrawLayer;
 class BfLayerHandler;
+
+/**
+ * @defgroup bfDrawElementsShortcuts Короткие
+ * названия для стандартных элементов
+ * @{
+ */
+
+/*! Для объекта отрисовки */
+using pObj = std::shared_ptr<BfDrawObj>;
+/*! Для слоя отрисовки */
+using pLay = std::shared_ptr<BfDrawLayer>;
+/*! Для варианта (объект или слой) */
+using pVar = std::variant<pObj, pLay>;
+
+/**@} end of BfBladeSection2_Defines */
+//
+//
+//
+//
+//
 
 struct BfDrawLayerCreateInfo
 {
@@ -79,6 +101,8 @@ class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
 
    BfLayerBuffer __buffer;
 
+   BfDrawLayer *m_root = nullptr;
+
 public:
    BfObjID id;
 
@@ -92,6 +116,7 @@ public:
    );
 
    BfDrawLayer(const BfDrawLayerCreateInfo &info);
+
    virtual ~BfDrawLayer();
 
    bool is_nested() const noexcept;
@@ -168,26 +193,6 @@ private:
 //
 //
 //
-//
-//
-//
-//
-//
-
-/**
- * @defgroup bfDrawElementsShortcuts Короткие
- * названия для стандартных элементов
- * @{
- */
-
-/*! Для объекта отрисовки */
-using pObj = std::shared_ptr<BfDrawObj>;
-/*! Для слоя отрисовки */
-using pLay = std::shared_ptr<BfDrawLayer>;
-/*! Для варианта (объект или слой) */
-using pVar = std::variant<pObj, pLay>;
-
-/**@} end of BfBladeSection2_Defines */
 //
 //
 //
@@ -427,12 +432,12 @@ public:
 
 class BfGuiIntegration
 {
-protected:
-   bool __is_selected = false;
-
 public:
-   bool *get_pSelection();
    bool is_draw = true;
+   bool is_hovered = false;
+   bool is_dragged = false;
+
+   virtual void update();
 };
 
 // === === === === === === === === === === === === === === === === === === ===
@@ -450,6 +455,8 @@ protected:
    glm::mat4 __model_matrix = glm::mat4(1.0f);
    glm::vec3 __main_color = glm::vec3(1.0f);
    float __line_thickness = 0.00025;
+
+   BfDrawLayer *m_root = nullptr;
 
 public:
    BfDrawObj();
@@ -473,6 +480,9 @@ public:
    virtual bool is_ok();
    virtual void createIndices();
    virtual void createVertices();
+
+   friend BfDrawLayer;
+   friend BfLayerHandler;
 };
 
 #endif

@@ -3,6 +3,8 @@
 #include <optional>
 #include <stdexcept>
 
+#include "bfBase.h"
+
 // BfDrawObj::BfDrawObj() :
 //	id()
 //{
@@ -16,6 +18,11 @@
 //	this->__indices = obj.__indices;
 //	this->id = obj.id;
 // }
+
+void
+BfGuiIntegration::update()
+{
+}
 
 BfDrawObj::BfDrawObj()
     : BfDrawObj(0)
@@ -67,7 +74,7 @@ BfDrawObj::genObjData()
    data.model_matrix = __model_matrix;
    data.line_thickness = __line_thickness;
 
-   if (__is_selected)
+   if (is_hovered)
       data.select_color = glm::vec3(1.0f, 0.5f, 0.0f);
    else
       data.select_color = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -308,6 +315,8 @@ BfDrawLayer::add(std::shared_ptr<BfDrawObj> obj)
 {
    if (!obj->is_ok()) throw std::runtime_error("object is incorrect");
    __objects.emplace_back(obj);
+
+   obj->m_root = this;
 }
 
 void
@@ -319,6 +328,8 @@ BfDrawLayer::add(std::shared_ptr<BfDrawLayer> layer)
       );
    // __layers.emplace_back(layer);
    __layers.push_back(layer);
+
+   layer->m_root = this;
 }
 
 void
@@ -326,6 +337,8 @@ BfDrawLayer::add_l(std::shared_ptr<BfDrawObj> obj)
 {
    // __objects.emplace_back(obj);
    __objects.push_back(obj);
+
+   obj->m_root = this;
 }
 
 void
@@ -623,7 +636,7 @@ BfDrawLayer::draw(
    // this->update_index_offset();
 
    VkPipeline *current_pipeline = nullptr;
-
+   auto pBase = bfGetBase();
    for (size_t i = 0; i < __objects.size(); i++)
    {
       if (__objects[i] == nullptr) continue;
@@ -656,6 +669,8 @@ BfDrawLayer::draw(
           __vertex_offsets[i] + vertex_offset,
           i + offset
       );
+      __objects[i]->is_hovered = (pBase->pos_id == __objects[i]->id.get());
+      __objects[i]->update();
    }
    if (!__objects.empty())
    {
@@ -896,12 +911,6 @@ BfDrawLayer::__it_find_var_by_id(size_t id)
 //       }
 //    }
 // }
-
-bool *
-BfGuiIntegration::get_pSelection()
-{
-   return &__is_selected;
-}
 
 BfLayerKiller *BfLayerKiller::__p = nullptr;
 

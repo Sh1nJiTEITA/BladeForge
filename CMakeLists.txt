@@ -221,6 +221,7 @@ set(BF_BASE
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"
     "src/geometry/bfCurves3.cpp"
+    "src/geometry/bfCurves3_gui.cpp"
     "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfAxis.cpp")
 

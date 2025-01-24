@@ -78,7 +78,7 @@ struct BfBase
    // VkPipelineLayout triangle_pipeline_layout;
    // VkPipeline line_pipeline;
    // VkPipelineLayout line_pipeline_layout;
-   uint32_t camera_mode;
+   uint32_t camera_mode = 1;
 
    BfDescriptor descriptor;
 

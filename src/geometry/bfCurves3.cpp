@@ -4,6 +4,7 @@
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/geometric.hpp>
 #include <memory>
+#include <stdexcept>
 
 #include "bfDrawObject.h"
 
@@ -943,6 +944,20 @@ bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
    return o;
 }
 
+glm::mat4
+bfOrtho(float right, float left, float bot, float top, float far, float near)
+{
+   glm::mat4 m(1.0f);
+   m[0][0] = 2.0f / (right - left);
+   m[1][1] = 2.0f / (top - bot);
+   m[2][2] = -2.0f / (far - near);
+   m[0][3] = -(right + left) / (right - left);
+   m[1][3] = -(top + bot) / (top - bot);
+   m[2][3] = -(far + near) / (far - near);
+   m[3][3] = 1;
+   return m;
+}
+
 //
 // std::vector<BfVertex3> bfMathSplineFitExternal3D(
 // 	const std::vector<BfVertex3>& v
@@ -1382,6 +1397,106 @@ BfCircle::createVertices()
       );
    }
 }
+//
+//
+//
+//
+// BfCircleFilled
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+BfCircleFilled::BfCircleFilled(size_t m, const BfVertex3& center, float radius)
+    : m_radius(radius), m_outVerticesCount(m)
+{
+   __dvertices.push_back(center);
+   __vertices.push_back(center);
+   __vertices.reserve(m * 3);
+   __indices.reserve(m * 3);
+}
+
+float
+BfCircleFilled::radius() const noexcept
+{
+   return m_radius;
+}
+
+const glm::vec3&
+BfCircleFilled::tangent() const noexcept
+{
+   return _center().normals;
+}
+
+void
+BfCircleFilled::createVertices()
+{
+   if (!__vertices.empty()) __vertices.clear();
+
+   glm::vec3 orth_1;
+   glm::vec3 orth_2;
+   glm::vec3 normal = _center().normals;
+
+   if (std::abs(normal.x) > std::abs(normal.y))
+   {
+      orth_1 = glm::normalize(glm::vec3(-normal.z, 0.0f, normal.x));
+   }
+   else
+   {
+      orth_1 = glm::normalize(glm::vec3(0.0f, normal.z, -normal.y));
+   }
+   orth_2 = glm::normalize(glm::cross(normal, orth_1));
+
+   float theta;
+   glm::vec3 center = _center().pos;
+   for (size_t i = 0; i < m_outVerticesCount + 1; ++i)
+   {  // clang-format off
+      theta = 2 * BF_PI * i / m_outVerticesCount;
+      __vertices.emplace_back(
+          center + m_radius * cosf(theta) * orth_1
+                 + m_radius * sinf(theta) * orth_2,
+          this->__main_color,
+          normal
+      );
+   }  // clang-format on
+}
+
+void
+BfCircleFilled::createIndices()
+{
+   if (!__indices.empty()) __indices.clear();
+   for (size_t i = 1; i < __vertices.size() - 2; ++i)
+   {
+      __indices.emplace_back(0);
+      __indices.emplace_back(i);
+      __indices.emplace_back(i + 1);
+   }
+}
+
+const BfVertex3&
+BfCircleFilled::_center() const
+{
+   if (!__dvertices.size())
+   {
+      throw std::runtime_error("No addded center vertex inside dvertices");
+   }
+   return __dvertices[0];
+}
+
+//
+//
+//
+//
+// /BfCircleFilled
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
 
 BfArc::BfArc(
     size_t m, const BfVertex3& P_1, const BfVertex3& P_2, const BfVertex3& P_3
@@ -1764,12 +1879,12 @@ BfBezierCurveFrame::BfBezierCurveFrame(
 {
    for (size_t i = 0; i < curve->dVertices().size(); i++)
    {
-      auto handle = std::make_shared<BfCircle>(
+      auto handle = std::make_shared<BfCircleFilled>(
           20,
           curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
       );
-      handle->bind_pipeline(&__lines_pipeline);
+      handle->bind_pipeline(&__triangle_pipeline);
       this->add_l(handle);
    }
 

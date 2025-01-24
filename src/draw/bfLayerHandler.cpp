@@ -569,3 +569,34 @@ BfLayerHandler::get_it_var(size_t id)
    }
    return BfDrawLayer::varPair(nullptr, std::nullopt);
 }
+
+BfDrawLayer*
+BfLayerHandler::findNotNestedRoot(BfDrawLayer* elem)
+{
+   if (!elem)
+   {
+      return nullptr;
+   }
+
+   if (!elem->m_root)
+   {
+      return elem;
+   }
+
+   return BfLayerHandler::instance()->findNotNestedRoot(elem->m_root);
+}
+
+BfDrawLayer*
+BfLayerHandler::findNotNestedRoot(BfDrawObj* elem)
+{
+   auto newRoot = elem->m_root;
+   if (newRoot)
+   {
+      newRoot = BfLayerHandler::instance()->findNotNestedRoot(newRoot);
+   }
+   else
+   {
+      return newRoot;
+   }
+   return nullptr;
+}
