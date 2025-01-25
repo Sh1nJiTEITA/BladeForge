@@ -33,12 +33,13 @@ if(WIN32)
 endif(WIN32)
 # VULKAN PATH
 if(WIN32)
-  set(VULKAN_DIR "C:/VulkanSDK/1.3.261.1")
+  set(VULKAN_DIR "C:/VulkanSDK/1.4.304.0")
   set(VULKAN_SHADER_COMPILER "${VULKAN_DIR}/Bin/glslc.exe")
+  message("Complier path: ${VULKAN_SHADER_COMPILER}")
 endif(WIN32)
 
 if(UNIX)
-  set(VULKAN_DIR "VulkanSDK/1.3.261.1")
+  set(VULKAN_DIR "VulkanSDK/1.4.304.0")
   set(VULKAN_SHADER_COMPILER "/usr/bin/glslc")
   add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
 endif(UNIX)
@@ -76,7 +77,7 @@ if(WIN32)
 
       foreach(SHADER_EXT ${SHADER_EXTENSIONS})
 
-        file(GLOB_RECURSE SHADER_FILES_TEMP "${SHADER_DIR_PATH}/${SHADER_EXT}.glsl")
+        file(GLOB_RECURSE SHADER_FILES_TEMP "${SHADER_DIR_PATH}/${SHADER_EXT}")
         list(APPEND ALL_LOCAL_SHADER_FILES ${SHADER_FILES_TEMP})
 
       endforeach()
@@ -85,7 +86,6 @@ if(WIN32)
           "[SHADER_PATH_SEARCH] Found shader files in dir ${SHADER_DIR_PATH}:")
 
       foreach(SHADER_FILE ${ALL_LOCAL_SHADER_FILES})
-        # message(STATUS ${SHADER_FILE})
         get_filename_component(FILE_NAME ${SHADER_FILE} NAME)
         string(APPEND LOCAL_MESSAGE " ${FILE_NAME}")
       endforeach()
@@ -93,12 +93,13 @@ if(WIN32)
       message(${LOCAL_MESSAGE})
       list(APPEND ALL_SHADER_FILES ${ALL_LOCAL_SHADER_FILES})
     endforeach()
-
+  
     foreach(SHADER_FILE ${ALL_SHADER_FILES})
       get_filename_component(NEW_FILE_EXT ${SHADER_FILE} EXT)
       string(REPLACE "." "" NEW_FILE_EXT ${NEW_FILE_EXT})
       get_filename_component(NEW_FILE_DIR ${SHADER_FILE} DIRECTORY)
 
+      # Используем execute_process для компиляции шейдеров
       execute_process(
         COMMAND
           cmd /C
@@ -119,9 +120,15 @@ if(WIN32)
 
       get_filename_component(LAST_FOLDER_NAME ${NEW_FILE_DIR} NAME)
 
-      file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shaders/${LAST_FOLDER_NAME})
+      # Проверяем существование директории и создаем её
+      set(TARGET_SHADER_DIR ${CMAKE_BINARY_DIR}/shaders/${LAST_FOLDER_NAME})
+      file(MAKE_DIRECTORY ${TARGET_SHADER_DIR})
+      message("Created dir: ${TARGET_SHADER_DIR}")
+
+      # Копируем шейдеры в директорию
       file(COPY ${NEW_FILE_DIR}/${NEW_FILE_EXT}.spv
-           DESTINATION ${CMAKE_BINARY_DIR}/shaders/${LAST_FOLDER_NAME})
+           DESTINATION ${TARGET_SHADER_DIR})
+      message("Copied shader to: ${TARGET_SHADER_DIR}/${NEW_FILE_EXT}.spv")
 
     endforeach()
   else()
@@ -354,7 +361,7 @@ target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 # target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
 
 target_link_libraries(tests PUBLIC bfexternallib)
-target_include_directories(tests PUBLIC "C:/VulkanSDK/1.3.261.1/Include")
+target_include_directories(tests PUBLIC "C:/VulkanSDK/1.4.304.0/Include")
 # target_link_libraries(tests PRIVATE splines-lib)
 
 include_directories(external/eigen)

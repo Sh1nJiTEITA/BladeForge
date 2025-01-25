@@ -13,6 +13,10 @@
 #include "bfEvent.h"
 #include "bfGuiCreateWindowContainer.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 std::shared_ptr<BfConfigManager> BfConfigManager::__instance = nullptr;
 //
 // BfLuaValue& BfLuaTable::operator[](BfLuaValue t) { return v[t]; }
@@ -89,7 +93,13 @@ BfConfigManager::exePath()
 {
 #ifdef _WIN32
    char buffer[MAX_PATH];
-   GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+   DWORD size = GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+
+   if (size == 0)
+   {
+      throw std::runtime_error("Failed to retrieve the executable path");
+   }
+
    return std::filesystem::path(buffer).remove_filename();
 #elif __linux__
    char buffer[2048];
@@ -224,10 +234,13 @@ BfConfigManager::addPackagePath(std::filesystem::path path)
          tmp_path = tmp_path / "";
       }
 
+      std::string lua_path = tmp_path.string();
+      std::replace(lua_path.begin(), lua_path.end(), '\\', '/');
+
       std::string command_msg =
           "package.path = package.path .. "
           "\";" +
-          tmp_path.string() + "?.lua\"";
+          lua_path + "?.lua\"";
 
       BfConfigManager::getInstance()->__lua.script(command_msg);
 

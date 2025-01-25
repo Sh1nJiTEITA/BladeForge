@@ -225,10 +225,10 @@ void BfGuiLuaInteraction::__renderList()
       for (auto script = __scripts.begin(); script != __scripts.end(); ++script)
       {
          const bool is_selected = (__selected_script == &(*script));
-         if (ImGui::Selectable(script->path.filename().c_str(), is_selected))
-         {
-            __selected_script = &(*script);
-         }
+         // if (ImGui::Selectable(script->path.filename().c_str(), is_selected))
+         // {
+         //    __selected_script = &(*script);
+         // }
 
          if (is_selected) ImGui::SetItemDefaultFocus();
       }

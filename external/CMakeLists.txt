@@ -23,7 +23,9 @@ target_include_directories(
   bfexternallib
   INTERFACE ${Vulkan_INCLUDE_DIRS}
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/backends/)
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/backends/
+  PUBLIC C:/VulkanSDK/1.4.304.0/Include
+)
 
 set(BF_IMPLOT_DIR_NAME "implot")
 
@@ -54,8 +56,13 @@ target_link_libraries(bfexternallib PUBLIC ${Vulkan_LIBRARIES}
 
 target_link_libraries(bfexternallib PUBLIC glfw)
 
-find_package(Lua REQUIRED)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sol2)
+# find_package(Lua REQUIRED)
+
+set(LUA_INCLUDE_DIR "C:/msys64/mingw64/include")
+set(LUA_LIBRARIES "C:/msys64/mingw64/lib/liblua.dll.a")
+
 
 target_link_libraries(bfexternallib PUBLIC sol2::sol2 ${LUA_LIBRARIES})
 target_include_directories(bfexternallib PUBLIC ${LUA_INCLUDE_DIR})
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sol2)
