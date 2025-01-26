@@ -56,10 +56,15 @@ target_link_libraries(bfexternallib PUBLIC ${Vulkan_LIBRARIES}
 
 target_link_libraries(bfexternallib PUBLIC glfw)
 
-# find_package(Lua REQUIRED)
 
-set(LUA_INCLUDE_DIR "C:/msys64/mingw64/include")
-set(LUA_LIBRARIES "C:/msys64/mingw64/lib/liblua.dll.a")
+
+
+if(WIN32)
+  set(LUA_INCLUDE_DIR "C:/msys64/mingw64/include")
+  set(LUA_LIBRARIES "C:/msys64/mingw64/lib/liblua.dll.a")
+elseif(UNIX) 
+  find_package(Lua REQUIRED)
+endif()
 
 
 target_link_libraries(bfexternallib PUBLIC sol2::sol2 ${LUA_LIBRARIES})

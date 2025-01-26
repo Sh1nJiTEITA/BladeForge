@@ -395,21 +395,6 @@ BfLayerHandler::draw(VkCommandBuffer command_buffer)
 
       layer->draw(command_buffer, obj_data_offset, index_offset, vertex_offset);
    }
-
-   /*vkCmdBindVertexBuffers(combuffer, 0, 1, __buffer.get_p_vertex_buffer(),
-   nullptr); vkCmdBindIndexBuffer(combuffer, *__buffer.get_p_index_buffer(), 0,
-   VK_INDEX_TYPE_UINT16);
-
-   for (size_t i = 0; i < __objects.size(); i++) {
-           vkCmdDrawIndexed(
-                   combuffer,
-                   __objects[i]->get_indices_count(),
-                   1,
-                   __index_offsets[i],
-                   __vertex_offsets[i],
-                   i
-           );
-   }*/
 }
 
 std::shared_ptr<BfDrawLayer>

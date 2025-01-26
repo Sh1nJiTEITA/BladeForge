@@ -315,9 +315,9 @@ BfMain::__loop()
       __base.layer_handler.add(otherLayer);
       // __other_layer->add(
       // std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline));
-      // __other_layer->add(std::make_shared<BfAxis3DPack>(
-      //     BfPipelineHandler::instance()->getPipeline(BfPipelineType_Axis)
-      // ));
+      __other_layer->add(std::make_shared<BfAxis3DPack>(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Axis)
+      ));
 
       __other_layer->update_buffer();
    }

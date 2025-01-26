@@ -632,9 +632,6 @@ BfDrawLayer::draw(
       );
    }
 
-   // this->update_vertex_offset();
-   // this->update_index_offset();
-
    VkPipeline *current_pipeline = nullptr;
    auto pBase = bfGetBase();
    for (size_t i = 0; i < __objects.size(); i++)
@@ -676,7 +673,7 @@ BfDrawLayer::draw(
    {
       vertex_offset += this->get_whole_vertex_count();
       index_offset += this->get_whole_index_count();
-      offset += __objects.size() - 1;
+      offset += __objects.size();
    }
 
    for (const auto &layer : __layers)
