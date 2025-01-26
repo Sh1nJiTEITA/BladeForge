@@ -7,6 +7,7 @@
 #include <memory>
 #include <variant>
 
+#include "bfCurves3.h"
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
@@ -1298,23 +1299,33 @@ BfBladeSection2::_createAverageCurve()
 
    BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
 
-   auto curve = _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
-       // auto curve = std::make_shared<BfBezierCurve>(
-       2,
-       BF_BEZIER_CURVE_VERT_COUNT,
-       std::vector<BfVertex3>{
-           BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-           BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-           BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
-       }
-   );
+   // auto curve = _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
+   //     // auto curve = std::make_shared<BfBezierCurve>(
+   //     2,
+   //     BF_BEZIER_CURVE_VERT_COUNT,
+   //     std::vector<BfVertex3>{
+   //         BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+   //         BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+   //         BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+   //     }
+   // );
+   //
+   auto curve =
+       _addPartForward<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>(
+           BF_BEZIER_CURVE_VERT_COUNT,
+           std::vector<BfVertex3>{
+               BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+               BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+               BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+           }
+       );
 
-   _addPartForward<BfBezierCurveFrame, BfBladeSection2_Part_AverageFrame>(
-       curve,
-       m_info->layer_create_info.allocator,
-       m_info->l_pipeline,
-       m_info->t_pipeline
-   );
+   // _addPartForward<BfBezierCurveFrame, BfBladeSection2_Part_AverageFrame>(
+   //     curve,
+   //     m_info->layer_create_info.allocator,
+   //     m_info->l_pipeline,
+   //     m_info->t_pipeline
+   // );
 }
 
 void

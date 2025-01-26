@@ -122,6 +122,15 @@ BfDrawObj::createVertices()
 {
 }
 
+void
+BfDrawObj::remake()
+{
+   __vertices.clear();
+   __indices.clear();
+   createVertices();
+   createIndices();
+}
+
 std::unordered_set<unsigned int> BfObjID::__existing_values;
 std::map<uint32_t, uint32_t> BfObjID::__existing_pairs;
 
@@ -231,12 +240,15 @@ BfDrawLayer::is_nested() const noexcept
 void
 BfDrawLayer::remake()
 {
-   for (auto &it : __layers)
-   {
-      it->remake();
-   }
-
-   this->del_all();
+   // for (auto &it : __layers)
+   // {
+   //    it->remake();
+   // }
+   //
+   // this->del_all();
+   for (auto &it : __layers) it->remake();
+   for (auto &it : __objects) it->remake();
+   update_buffer();
 }
 
 std::vector<std::shared_ptr<BfDrawObj>>::iterator

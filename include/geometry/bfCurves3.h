@@ -113,7 +113,7 @@ class BfSingleLine : public BfDrawObj
 public:
    BfSingleLine();
    BfSingleLine(const BfVertex3& fp, const BfVertex3& sp);
-
+   BfSingleLine(BfVertex3* fp, BfVertex3* sp);
    BfSingleLine(const glm::vec3& fp, const glm::vec3& sp);
 
    float get_k(int proj = BF_SINGLE_LINE_PROJ_XY);
@@ -217,6 +217,7 @@ class BfCircleFilled : public BfDrawObj
 
 public:
    BfCircleFilled(size_t m, const BfVertex3& center, float radius);
+   BfCircleFilled(size_t m, BfVertex3* center, float radius);
 
    float radius() const noexcept;
    const glm::vec3& tangent() const noexcept;
@@ -426,8 +427,51 @@ public:
    );
 };
 
+//
+//
+//
+//
+//
+//
+//
+//
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+class BfBezierCurveWithHandles : public BfDrawLayer
+{
+public:
+   BfBezierCurveWithHandles(size_t in_m, std::vector<BfVertex3>&& dvert);
+   BfBezierCurveWithHandles(size_t in_m, const std::vector<BfVertex3>& dvert);
+
+   std::shared_ptr<BfBezierCurve> curve();
+};
+//
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
 
 #define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.01f
 
@@ -449,8 +493,9 @@ public:
    std::shared_ptr<BfBezierCurve> attachedCurve() noexcept;
 
    void remake(
-       std::shared_ptr<BfBezierCurve> curve, glm::vec3 c = {1.0f, 1.0f, 1.0f}
+       std::shared_ptr<BfBezierCurve> curve, glm::vec3 col = {1.0f, 1.0f, 1.0f}
    );
+   void remake() override;
 };
 
 // === === === === === === === === === === === === === === === === === === ===

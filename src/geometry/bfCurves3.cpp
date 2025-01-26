@@ -6,7 +6,11 @@
 #include <memory>
 #include <stdexcept>
 
+#include "bfBase.h"
+#include "bfCurves.hpp"
 #include "bfDrawObject.h"
+#include "bfMatrix2.h"
+#include "bfPipeline.h"
 
 BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
@@ -17,11 +21,25 @@ BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
 void
 BfPlane::createVertices()
 {
-   __vertices.reserve(__dvertices.size());
-   for (const auto& dvert : __dvertices)
-   {
-      __vertices.emplace_back(dvert);
-   }
+   switch (__depMode)
+   {  // clang-format off
+      case BfDrawObjDependencies_Mode_Ptr: {
+         __vertices.reserve(__pdvertices.size());
+         for (const auto& dvert : __pdvertices)
+         {
+            __vertices.emplace_back(*dvert);
+         }
+      }
+      case BfDrawObjDependencies_Mode_No: {
+         __vertices.reserve(__dvertices.size());
+         for (const auto& dvert : __dvertices)
+         {
+            __vertices.emplace_back(dvert);
+         }
+      }
+      default:
+         throw std::runtime_error("Unexpected dependency mode in BfPlane");
+   }  // clang-format on
 }
 
 void
@@ -46,6 +64,17 @@ BfSingleLine::BfSingleLine(const BfVertex3& fp, const BfVertex3& sp)
     : BfDrawObj{{fp, sp}, BF_DRAW_OBJ_TYPE_SINGLE_LINE}
 {
    __dvertices.reserve(2);
+   __vertices.reserve(2);
+   __indices.reserve(2);
+}
+
+BfSingleLine::BfSingleLine(BfVertex3* fp, BfVertex3* sp)
+{
+   __depMode = BfDrawObjDependencies_Mode_Ptr;
+   __pdvertices.reserve(2);
+   __pdvertices.push_back(fp);
+   __pdvertices.push_back(sp);
+
    __vertices.reserve(2);
    __indices.reserve(2);
 }
@@ -155,13 +184,23 @@ BfSingleLine::get_length()
 const BfVertex3&
 BfSingleLine::get_first() const
 {
-   return __dvertices.at(0);
+   switch (__depMode)
+   {  // clang-format off
+      case BfDrawObjDependencies_Mode_Ptr: return *__pdvertices[0];
+      case BfDrawObjDependencies_Mode_No: return __dvertices[0];
+      default: throw std::runtime_error("Unexpected dependency mode in BfSingleLine");
+   }  // clang-format on
 }
 
 const BfVertex3&
 BfSingleLine::get_second() const
 {
-   return __dvertices.at(1);
+   switch (__depMode)
+   {  // clang-format off
+      case BfDrawObjDependencies_Mode_Ptr: return *__pdvertices[1];
+      case BfDrawObjDependencies_Mode_No: return __dvertices[1];
+      default: throw std::runtime_error("Unexpected dependency mode in BfSingleLine");
+   }  // clang-format on
 }
 
 glm::vec3
@@ -183,10 +222,9 @@ BfSingleLine::createVertices()
       throw std::runtime_error("BfSingleLine::createVertices abort");
 
    __vertices.clear();
-
-   __vertices.emplace_back(__dvertices.at(0));
+   __vertices.emplace_back(get_first());
    __vertices.at(0).color = __main_color;
-   __vertices.emplace_back(__dvertices.at(1));
+   __vertices.emplace_back(get_second());
    __vertices.at(1).color = __main_color;
 }
 
@@ -1412,8 +1450,18 @@ BfCircle::createVertices()
 BfCircleFilled::BfCircleFilled(size_t m, const BfVertex3& center, float radius)
     : m_radius(radius), m_outVerticesCount(m)
 {
+   __depMode = BfDrawObjDependencies_Mode_No;
    __dvertices.push_back(center);
    __vertices.push_back(center);
+   __vertices.reserve(m * 3);
+   __indices.reserve(m * 3);
+}
+
+BfCircleFilled::BfCircleFilled(size_t m, BfVertex3* center, float radius)
+    : m_radius(radius), m_outVerticesCount(m)
+{
+   __depMode = BfDrawObjDependencies_Mode_Ptr;
+   __pdvertices.push_back(center);
    __vertices.reserve(m * 3);
    __indices.reserve(m * 3);
 }
@@ -1478,10 +1526,22 @@ BfCircleFilled::createIndices()
 const BfVertex3&
 BfCircleFilled::_center() const
 {
-   if (!__dvertices.size())
+   switch (__depMode)
    {
-      throw std::runtime_error("No addded center vertex inside dvertices");
+      case BfDrawObjDependencies_Mode_No: {
+         if (!__dvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return __dvertices[0];
+      }
+      case BfDrawObjDependencies_Mode_Ptr: {
+         if (!__pdvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return *__pdvertices[0];
+      }
    }
+
    return __dvertices[0];
 }
 
@@ -1855,8 +1915,135 @@ BfDoubleTube::createIndices()
    }
 }
 
+//
+//
+//
+//
+//
+//
+//
+//
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
+
+BfBezierCurveWithHandles::BfBezierCurveWithHandles(
+    size_t in_m, std::vector<BfVertex3>&& dvert
+)
+    : BfDrawLayer(
+          bfGetBase()->allocator,
+          sizeof(BfVertex3),
+          2000,
+          20,
+          true,
+          BF_DRAW_OBJ_TYPE_BEZIER_CURVE_WITH_HANDLES
+      )
+{
+   bfAssert(dvert.size() > 1);
+   auto curve = std::make_shared<BfBezierCurve>(
+       dvert.size() - 1,
+       in_m,
+       std::move(dvert)
+   );
+   this->add_l(curve);
+   curve->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+   );
+
+   for (size_t i = 0; i < curve->dVertices().size(); i++)
+   {
+      auto handle = std::make_shared<BfCircleFilled>(
+          20,
+          &curve->dVertices()[i],
+          BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+      );
+      handle->bind_pipeline(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+      );
+      this->add_l(handle);
+   }
+   //
+   for (size_t i = 1; i < curve->dVertices().size(); i++)
+   {
+      auto line = std::make_shared<BfSingleLine>(
+          &curve->dVertices()[i],
+          &curve->dVertices()[i - 1]
+      );
+      line->bind_pipeline(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+      );
+      this->add_l(line);
+   }
+
+   generate_draw_data();
+   update_buffer();
+}
+
+BfBezierCurveWithHandles::BfBezierCurveWithHandles(
+    size_t in_m, const std::vector<BfVertex3>& dvert
+)
+{
+   bfAssert(dvert.size() > 1);
+   auto curve = std::make_shared<BfBezierCurve>(dvert.size() - 1, in_m, dvert);
+   this->add_l(curve);
+
+   for (size_t i = 0; i < dvert.size(); i++)
+   {
+      auto handle = std::make_shared<BfCircleFilled>(
+          20,
+          curve->dVertices()[i],
+          BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+      );
+      handle->bind_pipeline(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+      );
+      this->add_l(handle);
+   }
+
+   for (size_t i = 1; i < curve->dVertices().size(); i++)
+   {
+      auto line = std::make_shared<BfSingleLine>(
+          curve->dVertices()[i],
+          curve->dVertices()[i - 1]
+      );
+      line->bind_pipeline(
+          BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+      );
+      this->add_l(line);
+   }
+
+   update_buffer();
+}
+
+std::shared_ptr<BfBezierCurve>
+BfBezierCurveWithHandles::curve()
+{
+   return std::dynamic_pointer_cast<BfBezierCurve>(get_object_by_index(0));
+}
+
+//
+//
+//
+//
+//
+//
+//
+//
+// === === === === === === === === === === === === === === === === === === ===
+// === === === === === === === === === === === === === === === === === === ===
+//
+//
+//
+//
+//
+//
+//
 
 BfBezierCurveFrame::BfBezierCurveFrame(
     std::shared_ptr<BfBezierCurve> curve,
@@ -1888,6 +2075,16 @@ BfBezierCurveFrame::BfBezierCurveFrame(
       this->add_l(handle);
    }
 
+   for (size_t i = 1; i < curve->dVertices().size(); i++)
+   {
+      auto line = std::make_shared<BfSingleLine>(
+          curve->dVertices()[i],
+          curve->dVertices()[i - 1]
+      );
+      line->bind_pipeline(&__lines_pipeline);
+      this->add_l(line);
+   }
+
    this->generate_draw_data();
    this->update_buffer();
 }
@@ -1899,24 +2096,43 @@ BfBezierCurveFrame::attachedCurve() noexcept
 }
 
 void
-BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 c)
+BfBezierCurveFrame::remake()
 {
-   this->del_all();
-   __curve = curve;
-   for (size_t i = 0; i < curve->dVertices().size(); i++)
+   for (auto& dvert : __curve->dVertices())
    {
-      auto handle = std::make_shared<BfCircle>(
-          20,
-          curve->dVertices()[i],
-          BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+   }
+
+   BfDrawLayer::remake();
+}
+
+void
+BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 col)
+{
+   // this->del_all();
+   // TODO: Add check for existing objects (if bezier changed its order)
+   for (size_t i = 0; i < __curve->dVertices().size(); i++)
+   {
+      // auto handle = std::make_shared<BfCircleFilled>(
+      //     20,
+      //     __curve->dVertices()[i],
+      //     BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+      // );
+      // handle->bind_pipeline(&__triangle_pipeline);
+      // this->add_l(handle);
+   }
+
+   for (size_t i = 1; i < __curve->dVertices().size(); i++)
+   {
+      auto line = std::make_shared<BfSingleLine>(
+          __curve->dVertices()[i],
+          __curve->dVertices()[i - 1]
       );
-      handle->bind_pipeline(&__lines_pipeline);
-      handle->set_color(c);
-      this->add_l(handle);
+      line->bind_pipeline(&__lines_pipeline);
+      this->add_l(line);
    }
 
    this->generate_draw_data();
-   this->update_buffer();
+   // this->update_buffer();
 }
 
 BfCubicSplineCurve::BfCubicSplineCurve(

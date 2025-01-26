@@ -9,6 +9,7 @@
 #define BF_DRAW_OBJ_TYPE_PLANE 0x01
 #define BF_DRAW_OBJ_TYPE_SINGLE_LINE 0x02
 #define BF_DRAW_OBJ_TYPE_BEZIER_CURVE 0x03
+#define BF_DRAW_OBJ_TYPE_BEZIER_CURVE_WITH_HANDLES 0x031
 #define BF_DRAW_OBJ_TYPE_CIRCLE 0x04
 #define BF_DRAW_OBJ_TYPE_TRIANGLE 0x05
 #define BF_DRAW_OBJ_TYPE_TUBE 0x06
@@ -43,6 +44,7 @@ bfGetStrNameDrawObjType(unsigned int type)
       case BF_DRAW_OBJ_TYPE_TUBE: return "Tube";
       case BF_DRAW_OBJ_TYPE_DOUBLE_TUBE: return "DoubleTube";
       case BF_DRAW_OBJ_TYPE_CONE: return "Cone";
+      case BF_DRAW_OBJ_TYPE_BEZIER_CURVE_WITH_HANDLES: return "Bezier curve with handles";
 
       // bfBladeSection
       case BF_DRAW_LAYER_TYPE_BLADE_SECTION: return "BladeSection";

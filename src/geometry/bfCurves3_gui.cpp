@@ -19,6 +19,7 @@ BfCircleFilled::update()
                    (is_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
       if (is_dragged)
       {
+         if (__depMode != BfDrawObjDependencies_Mode_Ptr) return;
          auto pLayerHandler = BfLayerHandler::instance();
          auto extent = BfCamera::instance()->m_extent;
          ImVec2 mousePos = ImGui::GetMousePos();
@@ -41,25 +42,18 @@ BfCircleFilled::update()
          //           << "]\n";
 
          // clang-format off
-         if (auto bezierFrame = dynamic_cast<BfBezierCurveFrame*>(m_root))
+         if (auto bezierFrame = dynamic_cast<BfBezierCurveWithHandles*>(m_root))
          {
-            for (auto& dvert : bezierFrame->attachedCurve()->dVertices())
+            for (auto& dvert : bezierFrame->curve()->dVertices())
             {
-               if (dvert.pos == __dvertices[0].pos)
+               if (dvert.pos == __pdvertices[0]->pos)
                {
-                  dvert = __dvertices[0] = {
-                      glm::vec3(finalWorldPos, 0.0f),
-                      __dvertices[0].color,
-                      __dvertices[0].normals
-                  };
-                  bezierFrame->attachedCurve()->createVertices();
-                  bezierFrame->attachedCurve()->createIndices();
-                  createVertices();
-                  createIndices();
-                  notNestedRoot->update_buffer();
+                  dvert.pos = glm::vec3(finalWorldPos, 0.0f);
                   break;
                }
             }
+            bezierFrame->remake();
+            notNestedRoot->update_buffer();
          }
          // clang-format on
 

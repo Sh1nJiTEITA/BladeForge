@@ -90,8 +90,8 @@ class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
    using varPair = std::pair<ptrLayer_t, std::optional<itptrVar_t>>;
 
    uint32_t __reserved_n;
-   std::vector<ptrObj_t> __objects;
-   std::vector<ptrLayer_t> __layers;
+   std::vector<pObj> __objects;
+   std::vector<pLay> __layers;
 
    // offset of index of vertex in vertex buffer
    std::vector<int32_t> __vertex_offsets;
@@ -100,7 +100,6 @@ class BfDrawLayer : public std::enable_shared_from_this<BfDrawLayer>
    std::vector<int32_t> __index_offsets;
 
    BfLayerBuffer __buffer;
-
    BfDrawLayer *m_root = nullptr;
 
 public:
@@ -444,12 +443,22 @@ public:
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
 
+typedef uint32_t BfDrawObjDependencies_Mode;
+enum BfDrawObjDependencies_Mode_ : BfDrawObjDependencies_Mode
+{
+   BfDrawObjDependencies_Mode_No,
+   BfDrawObjDependencies_Mode_Ptr,
+};
+
 class BfDrawObj : public BfGuiIntegration
 {
 protected:
    std::vector<BfVertex3> __vertices;
    std::vector<BfVertex3> __dvertices;
    std::vector<uint32_t> __indices;
+   std::vector<BfVertex3 *> __pdvertices;
+
+   BfDrawObjDependencies_Mode __depMode = BfDrawObjDependencies_Mode_No;
 
    VkPipeline *__pPipeline = nullptr;
    glm::mat4 __model_matrix = glm::mat4(1.0f);
@@ -480,6 +489,7 @@ public:
    virtual bool is_ok();
    virtual void createIndices();
    virtual void createVertices();
+   virtual void remake();
 
    friend BfDrawLayer;
    friend BfLayerHandler;
