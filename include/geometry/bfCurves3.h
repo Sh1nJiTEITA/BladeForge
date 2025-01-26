@@ -446,6 +446,8 @@ public:
        VkPipeline triangle_pipeline
    );
 
+   std::shared_ptr<BfBezierCurve> attachedCurve() noexcept;
+
    void remake(
        std::shared_ptr<BfBezierCurve> curve, glm::vec3 c = {1.0f, 1.0f, 1.0f}
    );

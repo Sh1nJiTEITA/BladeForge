@@ -1892,6 +1892,12 @@ BfBezierCurveFrame::BfBezierCurveFrame(
    this->update_buffer();
 }
 
+std::shared_ptr<BfBezierCurve>
+BfBezierCurveFrame::attachedCurve() noexcept
+{
+   return __curve;
+}
+
 void
 BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 c)
 {
