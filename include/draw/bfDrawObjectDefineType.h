@@ -11,6 +11,7 @@
 #define BF_DRAW_OBJ_TYPE_BEZIER_CURVE 0x03
 #define BF_DRAW_OBJ_TYPE_BEZIER_CURVE_WITH_HANDLES 0x031
 #define BF_DRAW_OBJ_TYPE_CIRCLE 0x04
+#define BF_DRAW_OBJ_TYPE_CIRCLE_FILLED 0x041
 #define BF_DRAW_OBJ_TYPE_TRIANGLE 0x05
 #define BF_DRAW_OBJ_TYPE_TUBE 0x06
 #define BF_DRAW_OBJ_TYPE_DOUBLE_TUBE 0x07
@@ -40,6 +41,7 @@ bfGetStrNameDrawObjType(unsigned int type)
       case BF_DRAW_OBJ_TYPE_SINGLE_LINE: return "SingleLine";
       case BF_DRAW_OBJ_TYPE_BEZIER_CURVE: return "BezierCurve";
       case BF_DRAW_OBJ_TYPE_CIRCLE: return "Circle";
+      case BF_DRAW_OBJ_TYPE_CIRCLE_FILLED: return "CircleFilled";
       case BF_DRAW_OBJ_TYPE_TRIANGLE: return "Triangle";
       case BF_DRAW_OBJ_TYPE_TUBE: return "Tube";
       case BF_DRAW_OBJ_TYPE_DOUBLE_TUBE: return "DoubleTube";

@@ -9,6 +9,7 @@
 #include "bfBase.h"
 #include "bfCurves.hpp"
 #include "bfDrawObject.h"
+#include "bfDrawObjectDefineType.h"
 #include "bfMatrix2.h"
 #include "bfPipeline.h"
 
@@ -1228,6 +1229,18 @@ BfCircle::BfCircle(size_t m, const BfVertex3& center, float radius)
    __indices.reserve(__out_vertices_count * 2);
 }
 
+BfCircle::BfCircle(size_t m, BfVertex3* center, float radius)
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE)
+    , __radius{radius}
+    , __out_vertices_count{m}
+    , __define_type{BF_CIRCLE_DEFINE_TYPE_CENTER_RADIUS}
+{
+   __depMode = BfDrawObjDependencies_Mode_Ptr;
+   __pdvertices = {center};
+   __vertices.reserve(__out_vertices_count * 3);
+   __indices.reserve(__out_vertices_count * 3);
+}
+
 BfCircle::BfCircle(
     size_t m, const BfVertex3& P_1, const BfVertex3& P_2, const BfVertex3& P_3
 )
@@ -1326,10 +1339,27 @@ BfCircle::BfCircle(
 }
 
 const BfVertex3&
-BfCircle::get_center() const noexcept
+BfCircle::get_center() const
 {
+   switch (__depMode)
+   {
+      case BfDrawObjDependencies_Mode_No: {
+         if (!__dvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return __dvertices[0];
+      }
+      case BfDrawObjDependencies_Mode_Ptr: {
+         if (!__pdvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return *__pdvertices[0];
+      }
+   }
+
    return __dvertices[0];
 }
+
 const BfVertex3&
 BfCircle::get_first() const noexcept
 {
@@ -1448,7 +1478,9 @@ BfCircle::createVertices()
 //
 //
 BfCircleFilled::BfCircleFilled(size_t m, const BfVertex3& center, float radius)
-    : m_radius(radius), m_outVerticesCount(m)
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE_FILLED)
+    , m_radius(radius)
+    , m_outVerticesCount(m)
 {
    __depMode = BfDrawObjDependencies_Mode_No;
    __dvertices.push_back(center);
@@ -1458,7 +1490,9 @@ BfCircleFilled::BfCircleFilled(size_t m, const BfVertex3& center, float radius)
 }
 
 BfCircleFilled::BfCircleFilled(size_t m, BfVertex3* center, float radius)
-    : m_radius(radius), m_outVerticesCount(m)
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_CIRCLE_FILLED)
+    , m_radius(radius)
+    , m_outVerticesCount(m)
 {
    __depMode = BfDrawObjDependencies_Mode_Ptr;
    __pdvertices.push_back(center);

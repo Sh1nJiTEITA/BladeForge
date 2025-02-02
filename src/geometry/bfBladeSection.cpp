@@ -1237,7 +1237,7 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
     : m_info{info}
 {
    _createAverageCurve();
-   // _createCmax();
+   _createCmax();
 
    createVertices();
 }
@@ -1264,6 +1264,24 @@ BfBladeSection2::createVertices()
       obj->bind_pipeline(&m_info->l_pipeline);
    }
    this->update_buffer();
+}
+
+void
+BfBladeSection2::remake()
+{
+   auto aveCurve =
+       _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
+
+   auto cmaxs = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
+
+   bfAssert(cmaxs->get_obj_count() == m_info->cmax.size());
+
+   for (size_t i = 0; i < m_info->cmax.size(); ++i)
+   {
+      BfVertex3 aveCoo = aveCurve->calcBfV3(m_info->cmax[i].relativeCoordinate);
+      cmaxs->get_object_by_index(i)->dVertices()[0] = aveCoo;
+   }
+   BfDrawLayer::remake();
 }
 
 void
@@ -1299,17 +1317,6 @@ BfBladeSection2::_createAverageCurve()
 
    BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
 
-   // auto curve = _addPartForward<BfBezierCurve, BfBladeSection2_Part_Average>(
-   //     // auto curve = std::make_shared<BfBezierCurve>(
-   //     2,
-   //     BF_BEZIER_CURVE_VERT_COUNT,
-   //     std::vector<BfVertex3>{
-   //         BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-   //         BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-   //         BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
-   //     }
-   // );
-   //
    auto curve =
        _addPartForward<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>(
            BF_BEZIER_CURVE_VERT_COUNT,
@@ -1319,19 +1326,12 @@ BfBladeSection2::_createAverageCurve()
                BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
            }
        );
-
-   // _addPartForward<BfBezierCurveFrame, BfBladeSection2_Part_AverageFrame>(
-   //     curve,
-   //     m_info->layer_create_info.allocator,
-   //     m_info->l_pipeline,
-   //     m_info->t_pipeline
-   // );
 }
 
 void
 BfBladeSection2::_createCmax()
 {  // clang-format off
-   auto aveCurve = _part<BfBezierCurve, BfBladeSection2_Part_Average>();
+   auto aveCurve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
    auto cmaxLayer = std::make_shared<BfDrawLayer>(
       BfDrawLayerCreateInfo{.is_nested = true}
    );
@@ -1351,7 +1351,7 @@ BfBladeSection2::_createCmax()
       cmax_obj->bind_pipeline(&m_info->l_pipeline);
       cmaxLayer->add_l(cmax_obj);
    }
-   _addPart(cmaxLayer, BfBladeSection2_Part_Average);
+   _addPart(cmaxLayer, BfBladeSection2_Part_Cmax);
 }  // clang-format on
 
 void BfBladeSection2::_createInitialEdges() {

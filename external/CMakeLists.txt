@@ -79,4 +79,4 @@ if(WIN32)
 endif(WIN32)
 
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-target_link_libraries(bfexternallib   PRIVATE GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(bfexternallib PRIVATE GPUOpen::VulkanMemoryAllocator)

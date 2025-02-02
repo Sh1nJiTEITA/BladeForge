@@ -285,6 +285,8 @@ public:
    /** @brief Генерирует точки для 3D визуализации */
    virtual void createVertices();
 
+   virtual void remake() override;
+
 private:
    void _createAverageCurve();
    void _createCmax();

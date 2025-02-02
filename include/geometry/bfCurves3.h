@@ -178,6 +178,7 @@ protected:
 
 public:
    BfCircle(size_t m, const BfVertex3& center, float radius);
+   BfCircle(size_t m, BfVertex3* center, float radius);
    BfCircle(
        size_t m,
        const BfVertex3& P_1,
@@ -185,7 +186,7 @@ public:
        const BfVertex3& P_3
    );
 
-   const BfVertex3& get_center() const noexcept;
+   const BfVertex3& get_center() const;
    const BfVertex3& get_first() const noexcept;
    const BfVertex3& get_second() const noexcept;
    const BfVertex3& get_third() const noexcept;

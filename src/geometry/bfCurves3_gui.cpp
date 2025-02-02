@@ -35,7 +35,8 @@ BfCircleFilled::update()
                   break;
                }
             }
-            bezierFrame->remake();
+            // bezierFrame->remake();
+            notNestedRoot->remake();
             notNestedRoot->update_buffer();
          }
          // clang-format on
