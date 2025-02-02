@@ -5,17 +5,11 @@ set(BF_IMGUI_DIR_NAME "imgui")
 
 add_library(
   bfexternallib
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imconfig.h
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui.h
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui_demo.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui_draw.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui_internal.h
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui_tables.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imgui_widgets.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imstb_rectpack.h
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imstb_textedit.h
-  # ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/imstb_truetype.h
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/backends/imgui_impl_vulkan.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/backends/imgui_impl_glfw.cpp)
 
@@ -71,3 +65,18 @@ target_link_libraries(bfexternallib PUBLIC sol2::sol2 ${LUA_LIBRARIES})
 target_include_directories(bfexternallib PUBLIC ${LUA_INCLUDE_DIR})
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sol2)
+
+set(IMGUI_IMPL_VULKAN
+    ON
+    CACHE BOOL "" FORCE)
+
+find_package(glm CONFIG REQUIRED)
+target_link_libraries(bfexternallib  PRIVATE glm::glm)
+
+if(WIN32)
+  set(VulkanMemoryAllocator_DIR
+      "C:/Program Files (x86)/VMA/share/cmake/VulkanMemoryAllocator/")
+endif(WIN32)
+
+find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+target_link_libraries(bfexternallib   PRIVATE GPUOpen::VulkanMemoryAllocator)

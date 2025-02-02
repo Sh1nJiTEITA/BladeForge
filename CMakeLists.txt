@@ -211,6 +211,8 @@ if(UNIX)
   endif()
 endif()
 
+add_subdirectory(external)
+
 set(BF_BASE
     "include/base/bfVertex2.hpp"
     "src/base/bfBase.cpp"
@@ -224,6 +226,8 @@ set(BF_BASE
     "src/base/bfPipeline.cpp"
     "src/base/bfCamera.cpp"
 )
+add_library(bfbaselib STATIC ${BF_BASE})
+target_link_libraries(bfbaselib PUBLIC bfexternallib)
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"
@@ -231,6 +235,10 @@ set(BF_GEOMETRY
     "src/geometry/bfCurves3_gui.cpp"
     "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfAxis.cpp")
+
+add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
+target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
+
 
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"
@@ -247,6 +255,10 @@ set(BF_INTERACTION
     "src/interaction/bfGuiWindow.cpp"
     "src/interaction/bfGuiCamera.cpp"
 )
+add_library(bfinteractionlib STATIC ${BF_INTERACTION})
+target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
+target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
+
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"
@@ -258,27 +270,28 @@ set(BF_OTHER
     "src/other/bfTextureLoad.cpp"
     "src/other/bfConfigManager.cpp")
 
+add_library(bfotherlib STATIC ${BF_OTHER})
+target_link_libraries(bfotherlib PUBLIC bfexternallib)
+
+
 set(BF_DRAW
     "src/draw/bfDrawObject.cpp"
     "src/draw/bfLayerHandler.cpp"
     "src/draw/bfLayerKiller.cpp")
 
-set(SOURCES "src/bfMain.cpp" "include/BfMain.h")
+add_library(bfdrawlib STATIC ${BF_DRAW})
+target_link_libraries(bfdrawlib PUBLIC bfexternallib)
 
-list(
-  APPEND
-  SOURCES
-  ${BF_BASE}
-  ${BF_GEOMETRY}
-  ${BF_INTERACTION}
-  ${BF_OTHER}
-  ${BF_DRAW}
-  ${BF_OTHER}
-  ${BF_PIPELINES}
-  ${BF_FORMS})
 
 # Add source to this project's executable.
-add_executable(${PROJECT_NAME} "main.h" "main.cpp" ${SOURCES})
+add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp" "include/BfMain.h")
+
+target_link_libraries(${PROJECT_NAME} PUBLIC bfbaselib)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
+ 
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 file(COPY "${CMAKE_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_BINARY_DIR}/")
@@ -300,27 +313,12 @@ endif(WIN32)
 # target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 # target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
 
-add_subdirectory(external)
-target_link_libraries(${PROJECT_NAME} PUBLIC bfexternallib)
 
 find_package(Catch2 REQUIRED)
 
 # GLM
-set(IMGUI_IMPL_VULKAN
-    ON
-    CACHE BOOL "" FORCE)
-
 # add_subdirectory(external/glm)
-find_package(glm CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
-if(WIN32)
-  set(VulkanMemoryAllocator_DIR
-      "C:/Program Files (x86)/VMA/share/cmake/VulkanMemoryAllocator/")
-endif(WIN32)
-
-find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE GPUOpen::VulkanMemoryAllocator)
 
 # add_subdirectory(external/splines-lib) target_link_libraries(${PROJECT_NAME}
 # PRIVATE splines-lib)
