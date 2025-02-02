@@ -1238,6 +1238,8 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
 {
    _createAverageCurve();
    _createCmax();
+   _createInitialEdges();
+   _createBack();
 
    createVertices();
 }
@@ -1268,20 +1270,54 @@ BfBladeSection2::createVertices()
 
 void
 BfBladeSection2::remake()
-{
-   auto aveCurve =
-       _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
-
-   auto cmaxs = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
-
-   bfAssert(cmaxs->get_obj_count() == m_info->cmax.size());
-
-   for (size_t i = 0; i < m_info->cmax.size(); ++i)
-   {
-      BfVertex3 aveCoo = aveCurve->calcBfV3(m_info->cmax[i].relativeCoordinate);
-      cmaxs->get_object_by_index(i)->dVertices()[0] = aveCoo;
+{  // clang-format off
+   { // CMAX
+      auto aveCurve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
+      auto cmaxs = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
+      bfAssert(cmaxs->get_obj_count() == m_info->cmax.size());
+      // NOTE: Если количество точек увеличится то это надо будет сделать тут
+      for (size_t i = 0; i < m_info->cmax.size(); ++i)
+      {
+         BfVertex3 aveCoo = aveCurve->calcBfV3(m_info->cmax[i].relativeCoordinate);
+         cmaxs->get_object_by_index(i)->dVertices()[0] = aveCoo;
+      }
    }
+
+   { // CMAX LINES
+      auto circles = this->circles(); 
+      auto lines_layer = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines>();
+      for (size_t i = 0; i < circles.size() - 1; ++i) { 
+         std::array<glm::vec3, 4> tangent = bfMathFindTangentLines(
+            *circles[i], 
+            *circles[i + 1]
+         );
+         auto line_1 = lines_layer->get_object_by_index(2 * i);
+         line_1->dVertices()[0] = tangent[0];
+         line_1->dVertices()[1] = tangent[1];
+
+         auto line_2 = lines_layer->get_object_by_index(2 * i + 1);
+         line_2->dVertices()[0] = tangent[2];
+         line_2->dVertices()[1] = tangent[3];
+      }
+   }
+
    BfDrawLayer::remake();
+}  // clang-format on
+
+std::vector<std::shared_ptr<BfCircle>>
+BfBladeSection2::circles()
+{
+   std::vector<std::shared_ptr<BfCircle>> circles;
+   circles.push_back(_part<BfCircle, BfBladeSection2_Part_InitialInletEdge>());
+   auto cmax_layer = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
+   for (size_t i = 0; i < cmax_layer->get_obj_count(); ++i)
+   {
+      circles.push_back(std::dynamic_pointer_cast<BfCircle>(
+          cmax_layer->get_object_by_index(i)
+      ));
+   }
+   circles.push_back(_part<BfCircle, BfBladeSection2_Part_InitialOutletEdge>());
+   return circles;
 }
 
 void
@@ -1317,15 +1353,14 @@ BfBladeSection2::_createAverageCurve()
 
    BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
 
-   auto curve =
-       _addPartForward<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>(
-           BF_BEZIER_CURVE_VERT_COUNT,
-           std::vector<BfVertex3>{
-               BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-               BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-               BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
-           }
-       );
+   _addPartForward<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>(
+       BF_BEZIER_CURVE_VERT_COUNT,
+       std::vector<BfVertex3>{
+           BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+           BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+           BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+       }
+   );
 }
 
 void
@@ -1354,13 +1389,60 @@ BfBladeSection2::_createCmax()
    _addPart(cmaxLayer, BfBladeSection2_Part_Cmax);
 }  // clang-format on
 
-void BfBladeSection2::_createInitialEdges() {
+void
+BfBladeSection2::_createInitialEdges()
+{  // clang-format off
+   auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()
+   ->curve();
 
-};
+   auto inlet_edge = _addPartForward<BfCircle, BfBladeSection2_Part_InitialInletEdge>(
+       200,
+       &(*ave_curve->dVertices().begin()),
+       m_info->inletEdgeRadius
+   );
+   inlet_edge->bind_pipeline(&m_info->l_pipeline);
+   auto outlet_edge = _addPartForward<BfCircle, BfBladeSection2_Part_InitialOutletEdge>(
+       200,
+       &(*ave_curve->dVertices().rbegin()),
+       m_info->outletEdgeRadius
+   );
+   outlet_edge->bind_pipeline(&m_info->l_pipeline);
+
+}; //clang-format on
 
 void
 BfBladeSection2::_createBack()
 {
+   auto circles = this->circles(); 
+   
+   auto lines_layer = std::make_shared<BfDrawLayer>(
+      BfDrawLayerCreateInfo{.is_nested = true}
+   );
+
+   for (size_t i = 0; i < circles.size() - 1; ++i) { 
+      std::array<glm::vec3, 4> tangent = bfMathFindTangentLines(
+         *circles[i], 
+         *circles[i + 1]
+      );
+      // clang-format off
+      auto line_1 = std::make_shared<BfSingleLine>(tangent[0], tangent[1]);
+      line_1->bind_pipeline(&m_info->l_pipeline);
+      line_1->createVertices();
+      line_1->createIndices();
+      line_1->set_color({0.8, 0.1, 0.2});
+
+      auto line_2 = std::make_shared<BfSingleLine>(tangent[2], tangent[3]);
+      line_2->bind_pipeline(&m_info->l_pipeline);
+      line_2->createVertices();
+      line_2->createIndices();
+      line_2->set_color({0.8, 0.1, 0.2});
+
+      // clang-format on
+      lines_layer->add_l(line_1);
+      lines_layer->add_l(line_2);
+   }
+
+   _addPart(lines_layer, BfBladeSection2_Part_CmaxLines);
 }
 
 // === === === === === === === === === === === === === === === === === === ===

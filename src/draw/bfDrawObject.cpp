@@ -54,6 +54,12 @@ BfDrawObj::vertices()
    return __vertices;
 }
 
+const std::vector<BfVertex3> &
+BfDrawObj::vertices() const
+{
+   return __vertices;
+}
+
 std::vector<BfVertex3> &
 BfDrawObj::dVertices()
 {

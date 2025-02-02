@@ -475,6 +475,8 @@ public:
    BfObjID id;
 
    std::vector<BfVertex3> &vertices();
+   const std::vector<BfVertex3> &vertices() const;
+
    std::vector<BfVertex3> &dVertices();
    std::vector<uint32_t> &indices();
 

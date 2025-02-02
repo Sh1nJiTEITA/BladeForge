@@ -76,6 +76,9 @@ glm::vec3 bfMathFindMassCenter(std::vector<BfVertex3> v);
 std::vector<float> bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v);
 std::vector<glm::vec2> bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y);
 std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v);
+std::array<glm::vec3, 4> bfMathFindTangentLines(const BfCircle& c1, const BfCircle& c2);
+std::array<glm::vec3, 4> bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2);
+
 
 // Camera
 glm::mat4 bfOrtho(float right, float left, float bot, float top, float far, float near);
@@ -474,7 +477,7 @@ public:
 //
 //
 
-#define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.01f
+#define BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS 0.005f
 
 // FIX: DEPRECATE
 class BfBezierCurveFrame : public BfDrawLayer

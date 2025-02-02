@@ -237,6 +237,10 @@ enum BfBladeSection2_Part_ : BfBladeSection2_Part
    BfBladeSection2_Part_Cmax,
    BfBladeSection2_Part_Back,
    BfBladeSection2_Part_Front,
+   BfBladeSection2_Part_InitialInletEdge,
+   BfBladeSection2_Part_InitialOutletEdge,
+   BfBladeSection2_Part_CmaxLines,
+
 };
 
 //
@@ -284,8 +288,16 @@ public:
    //
    /** @brief Генерирует точки для 3D визуализации */
    virtual void createVertices();
-
+   //
+   //
+   //
+   /** @brief Пересобирает сечение */
    virtual void remake() override;
+   //
+   //
+   //
+   //
+   std::vector<std::shared_ptr<BfCircle>> circles();
 
 private:
    void _createAverageCurve();

@@ -1,8 +1,10 @@
 #include "bfCurves3.h"
 
+#include <cfloat>
 #include <functional>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <memory>
 #include <stdexcept>
 
@@ -981,6 +983,69 @@ bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
       o.emplace_back(splines[i]);
    }
    return o;
+}
+
+std::array<glm::vec3, 4>
+bfMathFindTangentLines(const BfCircle& _c1, const BfCircle& _c2)
+{
+   glm::vec3 c1 = _c1.get_center().pos;
+   glm::vec3 c2 = _c2.get_center().pos;
+   float r1 = _c1.get_radius();
+   float r2 = _c2.get_radius();
+
+   glm::vec3 d_vec = c2 - c1;
+   bfAssert(d_vec.z == c1.z == c1.z);
+
+   float theta = glm::acos((r1 - r2) / glm::length(d_vec));
+
+   glm::vec3 u = glm::normalize(d_vec);
+   glm::vec3 v = glm::cross(u, _c2.get_center().normals);
+
+   return {
+       c1 + r1 * (glm::cos(theta) * u + glm::sin(theta) * v),
+       c2 + r2 * (glm::cos(theta) * u + glm::sin(theta) * v),
+       c1 + r1 * (glm::cos(theta) * u - glm::sin(theta) * v),
+       c2 + r2 * (glm::cos(theta) * u - glm::sin(theta) * v),
+   };
+}
+
+std::array<glm::vec3, 4>
+bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2)
+{
+   std::array<glm::vec3, 4> vert{bfMathFindTangentLines(c1, c2)};
+   std::array<glm::vec3, 4> out{
+       glm::vec3{FLT_MAX},
+       glm::vec3{FLT_MAX},
+       glm::vec3{FLT_MAX},
+       glm::vec3{FLT_MAX}
+   };
+
+   for (size_t i = 0; i < 4; ++i)
+   {
+      float minDist1 = FLT_MAX;
+      float minDist2 = FLT_MAX;
+
+      for (const auto& v : c1.vertices())
+      {
+         float dist = glm::distance(v.pos, vert[i]);
+         if (dist < minDist1)
+         {
+            minDist1 = dist;
+            out[i] = v.pos;
+         }
+      }
+      for (const auto& v : c2.vertices())
+      {
+         float dist = glm::distance(v.pos, vert[i]);
+         if (dist < minDist2)
+         {
+            minDist2 = dist;
+            out[i] = v.pos;
+         }
+      }
+   }
+
+   return out;
 }
 
 glm::mat4
@@ -1997,6 +2062,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
           &curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
       );
+      handle->set_color({0.3, 0.5, 0.1});
       handle->bind_pipeline(
           BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
       );
@@ -2009,6 +2075,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
           &curve->dVertices()[i],
           &curve->dVertices()[i - 1]
       );
+      line->set_color({0.3, 0.5, 0.1});
       line->bind_pipeline(
           BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
       );
