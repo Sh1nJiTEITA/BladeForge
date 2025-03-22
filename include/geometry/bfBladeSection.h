@@ -176,6 +176,8 @@ struct BfBladeSectionCreateInfo2
    float outletAngle;      /*! Выходной угол */
    float inletEdgeRadius;  /*! Радиус входной кромки */
    float outletEdgeRadius; /*! Радиус выходной кромки */
+   float inletEdgeAngle;
+   float outletEdgeAngle;
 
    std::vector<BfBladeSectionCmax> cmax; /*! Все окружности */
 
@@ -239,8 +241,17 @@ enum BfBladeSection2_Part_ : BfBladeSection2_Part
    BfBladeSection2_Part_Front,
    BfBladeSection2_Part_InitialInletEdge,
    BfBladeSection2_Part_InitialOutletEdge,
-   BfBladeSection2_Part_CmaxLines,
+   BfBladeSection2_Part_CmaxLines_Skeleton,
 
+   BfBladeSection2_Part_CmaxLines_Normals_Front,
+   BfBladeSection2_Part_CmaxLines_Normals_Back,
+   BfBladeSection2_Part_CmaxLines_Tangets_Front,
+   BfBladeSection2_Part_CmaxLines_Tangets_Back,
+
+   BfBladeSection2_Part_CmaxPerpendiculars,
+
+   // BfBladeSection2_Part_InletPerpendicularLine1,
+   // BfBladeSection2_Part_InletPerpendicularLine2,
 };
 
 //
@@ -303,7 +314,9 @@ private:
    void _createAverageCurve();
    void _createCmax();
    void _createInitialEdges();
-   void _createBack();
+   void _createCircleSkeleton();
+   void _createCmaxLines();
+   void _createOutShape();
 };
 
 //

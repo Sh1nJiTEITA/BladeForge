@@ -3,6 +3,9 @@
 
 // NOTE: Define this if BfCurves3_gui.cpp file is existing and need
 // to override `GuiIntegration::update()` method
+#include <array>
+
+#include "bfVertex2.hpp"
 #define BF_CURVES3_GUI
 
 #include <Splines.h>
@@ -79,6 +82,7 @@ std::vector<SplineLib::cSpline3> bfMathSplineFitExternal3D(const std::vector<BfV
 std::array<glm::vec3, 4> bfMathFindTangentLines(const BfCircle& c1, const BfCircle& c2);
 std::array<glm::vec3, 4> bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2);
 
+bool bfMathFindBezierNormals(BfBezierCurve* curve, float t, float, std::array<BfVertex3, 2>& vert);
 
 // Camera
 glm::mat4 bfOrtho(float right, float left, float bot, float top, float far, float near);
@@ -414,6 +418,11 @@ public:
    BfVertex3 calcBfV3(float t) const;
    BfBezierCurve get_derivative();
    void extend(BfBezierCurve* curve);
+
+   BfVertex3 calcTangent(float t) const;
+
+   // 2D normal (perpendicular to tangent) in PLAIN!!!
+   BfVertex3 calcNormal(float t) const;
 
    // clang-format off
    glm::vec3 get_single_derivative_1_analyt_v3(float t) const;

@@ -11,6 +11,7 @@
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
+#include "bfVertex2.hpp"
 
 bool
 bfCheckBladeSectionCreateInfoEquality(
@@ -1217,10 +1218,12 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
        .installAngle = 50.0f,
        .inletAngle = 25.0f,
        .outletAngle = 42.0f,
-       .inletEdgeRadius = 0.05,
+       .inletEdgeRadius = 0.015,
        .outletEdgeRadius = 0.01,
+       .inletEdgeAngle = 15.0f,
+       .outletEdgeAngle = 10.0f,
 
-       .cmax = {{0.05f, 0.2f}, {0.05f, 0.6}},
+       .cmax = {{0.03f, 0.2f}, {0.02f, 0.6}},
 
        // clang-format off
        .l_pipeline = BfLayerHandler::instance()
@@ -1239,8 +1242,9 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
    _createAverageCurve();
    _createCmax();
    _createInitialEdges();
-   _createBack();
-
+   // _createBack();
+   _createCmaxLines();
+   _createCircleSkeleton();
    createVertices();
 }
 
@@ -1285,7 +1289,7 @@ BfBladeSection2::remake()
 
    { // CMAX LINES
       auto circles = this->circles(); 
-      auto lines_layer = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines>();
+      auto lines_layer = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Skeleton>();
       for (size_t i = 0; i < circles.size() - 1; ++i) { 
          std::array<glm::vec3, 4> tangent = bfMathFindTangentLines(
             *circles[i], 
@@ -1299,6 +1303,63 @@ BfBladeSection2::remake()
          line_2->dVertices()[0] = tangent[2];
          line_2->dVertices()[1] = tangent[3];
       }
+   }
+
+   { 
+      auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
+      
+      // BfBladeSectionCmax
+      auto nlines_layer_front = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Normals_Front>();
+      auto nlines_layer_back = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Normals_Back>();
+      auto tlines_layer_front = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Front>();
+      auto tlines_layer_back = _part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Back>();
+         
+      std::vector<BfBladeSectionCmax> cmaxes = m_info->cmax;
+      cmaxes.insert(cmaxes.begin(), { m_info->inletEdgeRadius, 0.f });
+      cmaxes.insert(cmaxes.end(), { m_info->outletEdgeRadius, 1.f });
+
+      int i = 0;
+      for (auto cmax : cmaxes) { 
+         auto bezier_vert = ave_curve->calcBfV3(cmax.relativeCoordinate);
+         std::array<BfVertex3, 2> normals;
+         bfMathFindBezierNormals(ave_curve.get(), cmax.relativeCoordinate, cmax.radius, normals);
+
+         auto old_normal_1 = std::dynamic_pointer_cast<BfSingleLine>(
+            nlines_layer_front->get_object_by_index(i)
+         );
+         old_normal_1->dVertices().at(0) = bezier_vert;
+         old_normal_1->dVertices().at(1) = normals[0];
+         
+         auto old_normal_2 = std::dynamic_pointer_cast<BfSingleLine>(
+            nlines_layer_back->get_object_by_index(i)
+         );
+         old_normal_2->dVertices().at(0) = bezier_vert;
+         old_normal_2->dVertices().at(1) = normals[1];
+
+
+         auto bline_direction_1 = bezier_vert.pos - normals[0].pos;
+         auto bline_direction_2 = bezier_vert.pos - normals[1].pos;
+
+         auto tline_direction_1 = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), bezier_vert.normals) * 
+                                  glm::vec4(bline_direction_1, 1.f);
+         auto tline_direction_2 = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), bezier_vert.normals) * 
+                                  glm::vec4(bline_direction_2, 1.f);
+         
+         auto old_tangent_1 = std::dynamic_pointer_cast<BfSingleLine>(
+            tlines_layer_front->get_object_by_index(i)
+         );
+         old_tangent_1->dVertices().at(0) =  tline_direction_1.xyz() + normals[0].pos;
+         old_tangent_1->dVertices().at(1) = -tline_direction_1.xyz() + normals[0].pos;
+         
+         auto old_tangent_2 = std::dynamic_pointer_cast<BfSingleLine>(
+            tlines_layer_back->get_object_by_index(i)
+         );
+         old_tangent_2->dVertices().at(0) =  tline_direction_2.xyz() + normals[1].pos;
+         old_tangent_2->dVertices().at(1) = -tline_direction_2.xyz() + normals[1].pos;
+
+         i++;
+      }
+
    }
 
    BfDrawLayer::remake();
@@ -1410,10 +1471,9 @@ BfBladeSection2::_createInitialEdges()
 
 }; //clang-format on
 
-void
-BfBladeSection2::_createBack()
-{
-   auto circles = this->circles(); 
+
+void BfBladeSection2::_createCircleSkeleton() { 
+auto circles = this->circles(); 
    
    auto lines_layer = std::make_shared<BfDrawLayer>(
       BfDrawLayerCreateInfo{.is_nested = true}
@@ -1442,7 +1502,81 @@ BfBladeSection2::_createBack()
       lines_layer->add_l(line_2);
    }
 
-   _addPart(lines_layer, BfBladeSection2_Part_CmaxLines);
+   _addPart(lines_layer, BfBladeSection2_Part_CmaxLines_Skeleton);
+}
+
+void
+BfBladeSection2::_createCmaxLines()
+{  // clang-format off
+   // INLET
+   auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
+   
+   auto nlines_layer_front = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true}); 
+   auto nlines_layer_back = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true}); 
+
+   auto tlines_layer_front = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true}); 
+   auto tlines_layer_back = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true}); 
+      
+   std::vector<BfBladeSectionCmax> cmaxes = m_info->cmax;
+   cmaxes.insert(cmaxes.begin(), { m_info->inletEdgeRadius, 0.f });
+   cmaxes.insert(cmaxes.end(), { m_info->outletEdgeRadius, 1.f });
+
+   for (auto cmax : cmaxes) { 
+      auto bezier_vert = ave_curve->calcBfV3(cmax.relativeCoordinate);
+      std::array<BfVertex3, 2> normals;
+      bfMathFindBezierNormals(ave_curve.get(), cmax.relativeCoordinate, cmax.radius, normals);
+      
+      auto nline_1 = std::make_shared<BfSingleLine>( bezier_vert, normals[0]);
+      nline_1->bind_pipeline(&m_info->l_pipeline);
+      nline_1->set_color({1.0f, 0.0f, 0.0f});
+      nline_1->createVertices();
+      nline_1->createIndices();
+      nlines_layer_front->add_l(nline_1);
+
+      auto nline_2 = std::make_shared<BfSingleLine>(bezier_vert, normals[1]);
+      nline_2->bind_pipeline(&m_info->l_pipeline);
+      nline_2->set_color({0.0f, 1.f, 0.0f});
+      nline_2->createVertices();
+      nline_2->createIndices();
+      nlines_layer_back->add_l(nline_2);
+
+      auto bline_direction_1 = bezier_vert.pos - normals[0].pos;
+      auto bline_direction_2 = bezier_vert.pos - normals[1].pos;
+   
+      auto tline_direction_1 = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), bezier_vert.normals) * 
+                               glm::vec4(bline_direction_1, 1.f);
+      auto tline_direction_2 = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), bezier_vert.normals) * 
+                               glm::vec4(bline_direction_2, 1.f);
+      
+      // auto tline_1 = std::make_shared<BfSingleLine>(tline_direction_1.xyz() * normals[0].pos + 1.f, 
+      //                                               tline_direction_1.xyz() * normals[0].pos - 1.f);
+      auto tline_1 = std::make_shared<BfSingleLine>( tline_direction_1.xyz() + normals[0].pos, 
+                                                    -tline_direction_1.xyz() + normals[0].pos);
+      // auto tline_1 = std::make_shared<BfSingleLine>(normals[0].pos, 
+      //                                               -tline_direction_1.xyz() + normals[0].pos);
+      tline_1->bind_pipeline(&m_info->l_pipeline);
+      tline_1->set_color({1.f, 0.5f, 0.3f});
+      tline_1->createVertices();
+      tline_1->createIndices();
+      tlines_layer_front->add_l(tline_1);
+
+      auto tline_2 = std::make_shared<BfSingleLine>( tline_direction_2.xyz() + normals[1].pos,
+                                                    -tline_direction_2.xyz() + normals[1].pos);
+      tline_2->bind_pipeline(&m_info->l_pipeline);
+      tline_2->set_color({0.0f, 1.0f, 0.0f});
+      tline_2->createVertices();
+      tline_2->createIndices();
+      tlines_layer_back->add_l(tline_2);
+   }
+   _addPart(nlines_layer_front, BfBladeSection2_Part_CmaxLines_Normals_Front);
+   _addPart(nlines_layer_back, BfBladeSection2_Part_CmaxLines_Normals_Back);
+   _addPart(tlines_layer_front, BfBladeSection2_Part_CmaxLines_Tangets_Front);
+   _addPart(tlines_layer_back, BfBladeSection2_Part_CmaxLines_Tangets_Back);
+}  // clang-format on
+
+void
+BfBladeSection2::_createOutShape()
+{
 }
 
 // === === === === === === === === === === === === === === === === === === ===

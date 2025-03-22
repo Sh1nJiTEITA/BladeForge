@@ -265,7 +265,7 @@ BfCamera::update()
          case BfCameraMode_Ortho: { 
             const float sen_x = 0.01;
             const float sen_y = 0.005;
-            m_mouseDelta = m_posMouse - m_posMouseOld;
+            m_mouseDelta = -(m_posMouse - m_posMouseOld);
             m_pos = m_posOld
                 + glm::vec3(1.0f, 0.0f, 0.0f) * m_mouseDelta.x * sen_x
                 - glm::vec3(0.0f, 1.0f, 0.0f) * m_mouseDelta.y * sen_y
@@ -314,12 +314,12 @@ BfCamera::_assignMainVectors()
          m_up = {0.0, 1.0, 0.0};
          break;
       case BfCameraMode_Ortho:
-         m_pos = {0.0, 0.0, -3.0};
-         m_target = {0.0, 0.0, 1.0};
+         m_pos = {0.0, 0.0, 3.0};
+         m_target = {0.0, 0.0, -1.0};
          m_up = {0.0, 1.0, 0.0};
          break;
       case BfCameraMode_OrthoCentered:
-         m_pos = {0.0, 0.0, -3.0};
+         m_pos = {0.0, 0.0, 3.0};
          m_target = {0.0, 0.0, 0.0};
          m_up = {0.0, 1.0, 0.0};
          break;

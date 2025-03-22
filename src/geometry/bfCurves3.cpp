@@ -1048,6 +1048,25 @@ bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2)
    return out;
 }
 
+bool
+bfMathFindBezierNormals(
+    BfBezierCurve* curve, float t, float r, std::array<BfVertex3, 2>& vert
+)
+{
+   try
+   {  // clang-format off
+      auto v = curve->calcBfV3(t);
+      auto norm = curve->calcNormal(t);
+      vert[0] = {v.pos + r * norm.pos, v.color, v.normals};
+      vert[1] = {v.pos - r * norm.pos, v.color, v.normals};
+   }  // clang-format on
+   catch (...)
+   {
+      return false;
+   }
+   return true;
+}
+
 glm::mat4
 bfOrtho(float right, float left, float bot, float top, float far, float near)
 {
@@ -1201,6 +1220,22 @@ BfBezierCurve::extend(BfBezierCurve* curve)
            __dvertices[lastIndex].normals}
       );
    }
+}
+
+BfVertex3
+BfBezierCurve::calcTangent(float t) const
+{
+   // return get_single_derivative_1_analyt_bfv3(t);
+   return get_single_derivative_1_numeric_v3(t);
+}
+
+BfVertex3
+BfBezierCurve::calcNormal(float t) const
+{
+   auto v = calcBfV3(t);
+   auto norm = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), v.normals) *
+               glm::vec4(glm::normalize(calcTangent(t).pos), 1.0f);
+   return BfVertex3{norm, v.color, v.normals};
 }
 
 glm::vec3
