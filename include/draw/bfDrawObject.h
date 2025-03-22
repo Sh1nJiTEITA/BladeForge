@@ -478,6 +478,7 @@ public:
    const std::vector<BfVertex3> &vertices() const;
 
    std::vector<BfVertex3> &dVertices();
+   const std::vector<BfVertex3> &dVertices() const;
    std::vector<uint32_t> &indices();
 
    BfObjectData genObjData();

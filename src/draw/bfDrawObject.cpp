@@ -66,6 +66,12 @@ BfDrawObj::dVertices()
    return __dvertices;
 }
 
+const std::vector<BfVertex3> &
+BfDrawObj::dVertices() const
+{
+   return __dvertices;
+}
+
 std::vector<uint32_t> &
 BfDrawObj::indices()
 {

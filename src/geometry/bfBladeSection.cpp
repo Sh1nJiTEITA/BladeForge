@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "bfCurves3.h"
+#include "bfDrawObject.h"
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
@@ -1218,12 +1219,12 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
        .installAngle = 50.0f,
        .inletAngle = 25.0f,
        .outletAngle = 42.0f,
-       .inletEdgeRadius = 0.015,
-       .outletEdgeRadius = 0.01,
+       .inletEdgeRadius = 0.025,
+       .outletEdgeRadius = 0.005,
        .inletEdgeAngle = 15.0f,
        .outletEdgeAngle = 10.0f,
 
-       .cmax = {{0.03f, 0.2f}, {0.02f, 0.6}},
+       .cmax = {{0.04f, 0.25f}, {0.025f, 0.6}},
 
        // clang-format off
        .l_pipeline = BfLayerHandler::instance()
@@ -1245,6 +1246,7 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
    // _createBack();
    _createCmaxLines();
    _createCircleSkeleton();
+   _createOutShape();
    createVertices();
 }
 
@@ -1305,7 +1307,7 @@ BfBladeSection2::remake()
       }
    }
 
-   { 
+   {  // TANGENTS & NORMALS
       auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
       
       // BfBladeSectionCmax
@@ -1360,6 +1362,26 @@ BfBladeSection2::remake()
          i++;
       }
 
+   }
+   {  // OUTSHAPE BEZIER PARTS
+      auto remakeBezierParts = [this](pLay tangent_l, pLay bezier_l) {
+         for (size_t i = 0; i < tangent_l->get_obj_count() - 1; ++i)
+         {
+            auto start = std::dynamic_pointer_cast<BfSingleLine>(tangent_l->get_object_by_index(i));
+            auto stop = std::dynamic_pointer_cast<BfSingleLine>(tangent_l->get_object_by_index(i + 1));
+            auto bezier = std::dynamic_pointer_cast<BfBezierCurve>(bezier_l->get_object_by_index(i));
+            if (!bfMathCreateBezier2From2Lines(*start, *stop, *bezier))
+            {
+               BFBS2_LOG("Cant create back bezier part");
+               abort();
+            }
+         }
+      };
+      remakeBezierParts(_part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Back>(),
+                        _part<BfDrawLayer, BfBladeSection2_Part_Back>());
+
+      remakeBezierParts(_part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Front>(),
+                        _part<BfDrawLayer, BfBladeSection2_Part_Front>());
    }
 
    BfDrawLayer::remake();
@@ -1576,8 +1598,34 @@ BfBladeSection2::_createCmaxLines()
 
 void
 BfBladeSection2::_createOutShape()
-{
-}
+{  // clang-format off
+   auto createBezierParts = [this](std::shared_ptr<BfDrawLayer> tangent_l) { 
+      auto bezier_l = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true});
+      for (size_t i = 0; i < tangent_l->get_obj_count() - 1; ++i) 
+      { 
+         auto start = std::dynamic_pointer_cast<BfSingleLine>(tangent_l->get_object_by_index(i));
+         auto stop  = std::dynamic_pointer_cast<BfSingleLine>(tangent_l->get_object_by_index(i + 1));
+         auto bezier = std::make_shared<BfBezierCurve>(2, BF_BEZIER_CURVE_VERT_COUNT);
+         if (bfMathCreateBezier2From2Lines(*start, *stop, *bezier)) { 
+            bezier->bind_pipeline(&m_info->l_pipeline);
+            bezier->set_color({1.f, 0.5f, 0.3f});
+            bezier->createVertices();
+            bezier->createIndices();
+            bezier_l->add_l(bezier);   
+         } else { 
+            BFBS2_LOG("Cant create back bezier part");
+            abort();
+         }
+      }
+      return bezier_l;
+   };
+
+   _addPart(createBezierParts(_part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Back>()), 
+            BfBladeSection2_Part_Back);
+   _addPart(createBezierParts(_part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Front>()), 
+            BfBladeSection2_Part_Front);
+
+}  // clang-format on
 
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===

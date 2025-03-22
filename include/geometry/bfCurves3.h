@@ -83,6 +83,7 @@ std::array<glm::vec3, 4> bfMathFindTangentLines(const BfCircle& c1, const BfCirc
 std::array<glm::vec3, 4> bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2);
 
 bool bfMathFindBezierNormals(BfBezierCurve* curve, float t, float, std::array<BfVertex3, 2>& vert);
+bool bfMathCreateBezier2From2Lines(const BfSingleLine& l1, const BfSingleLine& l2, BfBezierCurve& c);
 
 // Camera
 glm::mat4 bfOrtho(float right, float left, float bot, float top, float far, float near);
@@ -175,6 +176,8 @@ public:
 #define BF_CIRCLE_DEFINE_TYPE_CENTER_RADIUS 0x1
 #define BF_CIRCLE_DEFINE_TYPE_3_VERTICES 0x2
 
+class BfCircleFilled;
+
 class BfCircle : public BfDrawObj
 {
 protected:
@@ -203,6 +206,8 @@ public:
    std::array<BfVertex3, 2> get_tangent_vert(const BfVertex3& P) const;
 
    virtual void createVertices() override;
+
+   friend BfCircleFilled;
 };
 
 //
@@ -239,6 +244,30 @@ public:
 
 private:
    const BfVertex3& _center() const;
+};
+
+class BfCircleFilledWithHandles : public BfDrawLayer
+{
+   // std::shared_ptr<BfCircle> m_circle;
+   // std::shared_ptr<BfCircleFilled> m_centerHandle;
+   // std::shared_ptr<BfCircleFilled> m_radiusHandle;
+
+   BfVertex3 m_rHandleVert;
+
+public:
+   BfCircleFilledWithHandles(size_t m, const BfVertex3& center, float radius);
+   BfCircleFilledWithHandles(size_t m, BfVertex3* center, float radius);
+
+   std::shared_ptr<BfCircle> circle() noexcept;
+   std::shared_ptr<BfCircleFilled> centerHandle() noexcept;
+   std::shared_ptr<BfCircleFilled> radiusHandle() noexcept;
+
+   virtual void createVertices();
+   // virtual void createIndices() override;
+
+   // #if defined(BF_CURVES3_GUI)
+   //    virtual void update() override;
+   // #endif
 };
 
 //
@@ -407,10 +436,11 @@ class BfBezierCurve : public BfDrawObj
    size_t __out_vertices_count;
 
 public:
-   BfBezierCurve();
+   BfBezierCurve(size_t in_n, size_t in_m);
    BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert);
    BfBezierCurve(size_t in_n, size_t in_m, const std::vector<BfVertex3>& dvert);
    BfBezierCurve(BfBezierCurve&& ncurve) noexcept;
+   BfBezierCurve(const BfBezierCurve& ncurve);
 
    const size_t n() const noexcept;
 

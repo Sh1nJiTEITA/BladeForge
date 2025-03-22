@@ -8,6 +8,7 @@
 #include "bfConfigManager.h"
 #include "bfGuiCreateWindowBladeBase.h"
 #include "bfGuiCreateWindowBladeSection.h"
+#include "bfGuiCreateWindowCircleWithHandles.h"
 #include "bfGuiCreateWindowContainer.h"
 #include "imgui.h"
 
@@ -160,6 +161,11 @@ BfGuiCreateWindow::__renderManagePanel()
             if (ImGui::Button("SingleLine"))
             {
                // __addContainerT<BfGuiCreateWindowSingleLine>();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("CircleFilledWithHandles"))
+            {
+               __addContainerT<BfGuiCreateWindowCircleFilledWithHandles>();
             }
             ImGui::SameLine();
          }

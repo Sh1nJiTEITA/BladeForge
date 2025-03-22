@@ -1,6 +1,7 @@
 #include "bfCurves3.h"
 
 #include <cfloat>
+#include <cmath>
 #include <functional>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/geometric.hpp>
@@ -448,59 +449,16 @@ bfMathIsVertexInPlain(
     const glm::vec3& t
 )
 {
-   // Вычисляем векторы между точками
    glm::vec3 fs = s - f;
    glm::vec3 ft = t - f;
    glm::vec3 fn = np - f;
 
-   // Вычисляем скалярное тройное произведение
    float volume = glm::dot(glm::cross(fs, ft), fn);
 
-   // Проверяем, если объем равен нулю (точки лежат в одной плоскости)
    if (glm::abs(volume) < BF_MATH_ABS_ACCURACY)
       return true;
    else
       return false;
-
-   // glm::vec3 first = bfMathGetNormal(f, s, t);
-   // glm::vec3 second = bfMathGetNormal(np, f, s);
-   //
-   //// On 1 line
-   // if (glm::length(first) < BF_MATH_ABS_ACCURACY &&
-   //	glm::length(second) < BF_MATH_ABS_ACCURACY) {
-   //	return true;
-   // }
-   // if (glm::dot(first, second) > 1.0f - BF_MATH_ABS_ACCURACY) {
-   //	glm::vec3 fs = s - f;
-   //	glm::vec3 ft = t - f;
-   //	glm::vec3 npf = np - f;
-   //	float volume = glm::dot(glm::cross(fs, ft), npf);
-
-   //	if (glm::abs(volume) < BF_MATH_ABS_ACCURACY) {
-   //		return true;
-   //	}
-   //}
-
-   ///*if ((CHECK_FLOAT_EQUALITY_TO_NULL(first.x, 0.0f) &&
-   //	 CHECK_FLOAT_EQUALITY_TO_NULL(first.y, 0.0f) &&
-   //	 CHECK_FLOAT_EQUALITY_TO_NULL(first.z, 0.0f))
-   //	 ||
-   //	(CHECK_FLOAT_EQUALITY_TO_NULL(second.x, 0.0f) &&
-   //	 CHECK_FLOAT_EQUALITY_TO_NULL(second.y, 0.0f) &&
-   //	 CHECK_FLOAT_EQUALITY_TO_NULL(second.z, 0.0f)))
-   //{
-   //	first = bfMathGetNormal(f, s, t);
-   //	second = bfMathGetNormal(np, f, s);
-   //}*/
-
-   // glm::vec3 delta = second - first;
-
-   // if ((delta.x <= BF_MATH_ABS_ACCURACY) &&
-   //	(delta.y <= BF_MATH_ABS_ACCURACY) &&
-   //	(delta.z <= BF_MATH_ABS_ACCURACY))
-   //	return true;
-   // else
-   //	return false;
 }
 
 bool
@@ -1067,6 +1025,49 @@ bfMathFindBezierNormals(
    return true;
 }
 
+bool
+bfMathCreateBezier2From2Lines(
+    const BfSingleLine& l1, const BfSingleLine& l2, BfBezierCurve& c
+)
+{  // clang-format off
+   //
+   if (!bfMathIsSingleLinesInPlain(l1, l2)) { 
+      return false;
+   }
+
+   if (c.n() != 2) { 
+      return false; 
+
+   }
+
+   auto back_intersection = bfMathFindLinesIntersection(l1, l2, BF_MATH_FIND_LINES_INTERSECTION_ANY);
+
+   if (std::isnan(back_intersection.x) || 
+       std::isnan(back_intersection.y) || 
+       std::isnan(back_intersection.z)) { 
+      return false;
+   }
+
+   BfVertex3 average_l1{
+       (l1.dVertices().at(0).pos + l1.dVertices().at(1).pos) * 0.5f,
+        l1.dVertices().at(0).color,
+        l1.dVertices().at(0).normals,
+   };
+   BfVertex3 average_l2{
+       (l2.dVertices().at(0).pos + l2.dVertices().at(1).pos) * 0.5f,
+        l2.dVertices().at(0).color,
+        l2.dVertices().at(0).normals,
+   };
+
+   c.dVertices().clear();
+   c.dVertices().emplace_back(std::move(average_l1));
+   c.dVertices().emplace_back(BfVertex3{back_intersection, l2.dVertices().at(0).color, l2.dVertices().at(0).normals});
+   c.dVertices().emplace_back(std::move(average_l2));
+
+   return true;
+
+}  // clang-format on
+
 glm::mat4
 bfOrtho(float right, float left, float bot, float top, float far, float near)
 {
@@ -1107,6 +1108,13 @@ bfOrtho(float right, float left, float bot, float top, float far, float near)
 //	return splinePoints;
 // }
 
+BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m)
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
+    , __n{in_n}
+    , __out_vertices_count{in_m}
+{
+}
+
 BfBezierCurve::BfBezierCurve(
     size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert
 )
@@ -1143,6 +1151,16 @@ BfBezierCurve::BfBezierCurve(BfBezierCurve&& ncurve) noexcept
     , __out_vertices_count{ncurve.__out_vertices_count}
 {
    this->__dvertices = std::move(ncurve.__dvertices);
+   this->__main_color = ncurve.__main_color;
+   this->__pPipeline = ncurve.__pPipeline;
+}
+
+BfBezierCurve::BfBezierCurve(const BfBezierCurve& ncurve)
+    : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
+    , __n{ncurve.__n}
+    , __out_vertices_count{ncurve.__out_vertices_count}
+{
+   this->__dvertices = ncurve.__dvertices;
    this->__main_color = ncurve.__main_color;
    this->__pPipeline = ncurve.__pPipeline;
 }
@@ -1495,7 +1513,8 @@ BfCircle::get_tangent_vert(const BfVertex3& P) const
    if (!bfMathIsVertexInPlain(plane, P.pos))
    {
       throw std::runtime_error(
-          "BfCircle::get_tangent_vert - point not in the same plane as circle"
+          "BfCircle::get_tangent_vert - point not in the same plane as "
+          "circle"
       );
    }
 
@@ -1678,6 +1697,110 @@ BfCircleFilled::_center() const
 
    return __dvertices[0];
 }
+
+BfCircleFilledWithHandles::BfCircleFilledWithHandles(
+    size_t m, const BfVertex3& center, float radius
+)
+{
+   auto circle = std::make_shared<BfCircle>(m, center, radius);
+   circle->createVertices();
+   circle->createIndices();
+   add_l(circle);
+   circle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+   );
+
+   auto center_handle = std::make_shared<BfCircleFilled>(
+       m,
+       &circle->dVertices().at(0),
+       BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+   );
+   center_handle->createVertices();
+   center_handle->createIndices();
+   center_handle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+   );
+   add_l(center_handle);
+
+   m_rHandleVert = circle->vertices().at(0);
+   auto r_handle = std::make_shared<BfCircleFilled>(
+       m,
+       &m_rHandleVert,
+       BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+   );
+   r_handle->createVertices();
+   r_handle->createIndices();
+   r_handle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+   );
+   add_l(r_handle);
+
+   createVertices();
+}
+BfCircleFilledWithHandles::BfCircleFilledWithHandles(
+    size_t m, BfVertex3* center, float radius
+)
+{
+   auto circle = std::make_shared<BfCircle>(m, center, radius);
+   circle->createVertices();
+   circle->createIndices();
+   add_l(circle);
+   circle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
+   );
+
+   auto center_handle = std::make_shared<BfCircleFilled>(
+       m,
+       &circle->dVertices().at(0),
+       BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+   );
+   center_handle->createVertices();
+   center_handle->createIndices();
+   center_handle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+   );
+   add_l(center_handle);
+
+   createVertices();
+}
+
+std::shared_ptr<BfCircle>
+BfCircleFilledWithHandles::circle() noexcept
+{
+   return std::dynamic_pointer_cast<BfCircle>(this->get_object_by_index(0));
+}
+
+std::shared_ptr<BfCircleFilled>
+BfCircleFilledWithHandles::centerHandle() noexcept
+{
+   return std::dynamic_pointer_cast<BfCircleFilled>(this->get_object_by_index(1)
+   );
+}
+
+std::shared_ptr<BfCircleFilled>
+BfCircleFilledWithHandles::radiusHandle() noexcept
+{
+   return std::dynamic_pointer_cast<BfCircleFilled>(this->get_object_by_index(2)
+   );
+}
+
+void
+BfCircleFilledWithHandles::createVertices()
+{
+   for (size_t i = 0; i < this->get_obj_count(); ++i)
+   {
+      auto obj = this->get_object_by_index(i);
+      obj->createVertices();
+      obj->createIndices();
+   }
+   this->update_buffer();
+}
+
+// void
+// BfCircleFilledWithHandles::update()
+// {
+//    BfDrawLayer::update();
+// }
 
 //
 //
@@ -2005,7 +2128,7 @@ BfDoubleTube::createVertices()
       __vertices.emplace_back(BfVertex3{p3_, __main_color, towardsCenterNormal});      // 2_'| 13
       __vertices.emplace_back(BfVertex3{p4_, __main_color, fromCenterNormal});         // 3_ | 14
       __vertices.emplace_back(BfVertex3{p4_, __main_color, towardsCenterNormal});      // 3_'| 15
-      // clang-format on
+          // clang-format on
    }
 }
 
