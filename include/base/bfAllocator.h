@@ -9,7 +9,10 @@
 
 class BfAllocator
 {
-   BfAllocator() {}
+   BfAllocator()
+       : m_allocator{nullptr}
+   {
+   }
 
 public:
    static BfAllocator& inst()
@@ -18,26 +21,24 @@ public:
       return m;
    }
 
-   void create(VkDevice device, VkInstance instance, VkPhysicalDevice pdevice)
+   static void create(
+       VkDevice device, VkInstance instance, VkPhysicalDevice pdevice
+   )
    {
       VmaAllocatorCreateInfo info{
           .physicalDevice = pdevice,
           .device = device,
           .instance = instance,
       };
-      // VmaAllocatorCreateInfo info{};
-      // info.device = device;
-      // info.instance = instance;
-      // info.physicalDevice = pdevice;
-
-      if (vmaCreateAllocator(&info, &m_allocator) != VK_SUCCESS)
+      if (vmaCreateAllocator(&info, &inst().m_allocator) != VK_SUCCESS)
       {
          throw std::runtime_error("Allocator was not created");
       }
+      std::cout << "Allocator created... " << inst().m_allocator << "\n";
    }
-   void destroy() { vmaDestroyAllocator(m_allocator); }
 
-   VmaAllocator get() { return m_allocator; }
+   static void destroy() { vmaDestroyAllocator(inst().m_allocator); }
+   static VmaAllocator get() { return inst().m_allocator; }
 
 private:
    VmaAllocator m_allocator;

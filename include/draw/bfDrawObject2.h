@@ -15,10 +15,10 @@
 namespace obj
 {
 
-class BfDrawObject;
+class BfDrawObjectBase;
 
 using BfIndex = uint32_t;
-using BfObj = std::shared_ptr<BfDrawObject>;
+using BfObj = std::shared_ptr<BfDrawObjectBase>;
 
 /**
  * @class BfDrawControlProxy
@@ -28,7 +28,7 @@ using BfObj = std::shared_ptr<BfDrawObject>;
 class BfDrawControlProxy
 {
 public:
-   BfDrawControlProxy(BfDrawObject& obj);
+   BfDrawControlProxy(BfDrawObjectBase& obj);
    std::vector<int32_t> vertexOffset() const;
    std::vector<int32_t> indexOffset() const;
 
@@ -51,16 +51,35 @@ public:
    ) const;
 
 private:
-   BfDrawObject& m_obj;
+   BfDrawObjectBase& m_obj;
 };
 
-class BfDrawObject : public std::enable_shared_from_this<BfDrawObject>,
-                     public BfObjectId
+class BfDrawDebugProxy
 {
 public:
-   BfDrawObject(
+   BfDrawDebugProxy(BfDrawObjectBase& obj);
+
+   void printVertices();
+   void printIndices();
+
+private:
+   BfDrawObjectBase& m_obj;
+};
+
+class BfDrawObjectBase : public std::enable_shared_from_this<BfDrawObjectBase>,
+                         public BfObjectId
+{
+public:
+   enum Type
+   {
+      OBJECT,
+      LAYER
+   };
+
+   BfDrawObjectBase(
        BfOTypeName typeName,
        VkPipeline pl,
+       Type type,
        BfObj root = nullptr,
        size_t max_vertex = 2000,
        size_t max_obj = 20
@@ -68,31 +87,63 @@ public:
 
    const std::vector<BfVertex3>& vertices() const { return m_vertices; }
    const std::vector<BfIndex>& indices() const { return m_indices; }
+   const Type drawtype() const { return m_type; }
 
    virtual void make();
 
    friend BfDrawControlProxy;
    BfDrawControlProxy control() { return BfDrawControlProxy(*this); };
 
+   friend BfDrawDebugProxy;
+   BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
+
 protected:
    virtual BfObjectData _objectData();
 
 protected:
-   bool m_isBuffer;
-
    VkPipeline m_pipeline;
    glm::mat4 m_modelMatrix;
-
-   std::unique_ptr<BfObjectBuffer> m_buffer;
 
    std::vector<BfVertex3> m_vertices;
    std::vector<BfIndex> m_indices;
 
    BfObj m_root;
    std::vector<BfObj> m_children;
+
+private:
+   std::unique_ptr<BfObjectBuffer> m_buffer;
+   Type m_type;
+   bool m_isBuffer;
 };
 
-class TestObj : protected BfDrawObject
+class BfDrawObject : protected BfDrawObjectBase
+{
+public:
+   BfDrawObject(BfOTypeName typeName, VkPipeline pl, BfObj root);
+   virtual void make() override;
+};
+
+class BfDrawLayer : protected BfDrawObjectBase
+{
+public:
+   BfDrawLayer(
+       BfOTypeName typeName,
+       BfObj root = nullptr,
+       size_t max_vertex = 2000,
+       size_t max_obj = 20
+   );
+   BfDrawControlProxy control() = delete;
+   virtual void make() override;
+};
+
+class BfDrawRootLayer : protected BfDrawLayer
+{
+public:
+   BfDrawRootLayer(size_t max_vertex = 2000, size_t max_obj = 20);
+   virtual void make() override;
+};
+
+class TestObj : public BfDrawObject
 {
 public:
    TestObj(BfObj root)
@@ -101,14 +152,12 @@ public:
              *BfPipelineHandler::instance()->getPipeline(
                  BfPipelineType_Triangles
              ),
-             root,
-             20,
-             20
+             root
          )
    {
    }
 
-   virtual void make()
+   virtual void make() override
    {
       m_vertices = {
           {-1.0f, -1.0f, 0.0f},
@@ -116,7 +165,7 @@ public:
           {1.0f, 1.0f, 0.0f},
           {1.0f, -1.0f, 0.0f},
       };
-      m_indices = {0, 1, 3, 1, 2, 3};
+      m_indices = {0, 1, 3, 1, 2, 3, 3, 0, 1};
    }
 };
 

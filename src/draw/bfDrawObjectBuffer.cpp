@@ -10,54 +10,55 @@ BfBuffer::BfBuffer(
     VmaAllocationCreateFlags flags
 )
 {
-   // clang-format off
-      VkBufferCreateInfo bufferInfo{
-          .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-          .pNext = nullptr,
-          .size = allocSize,
-          .usage = usage
-      };
-      VmaAllocationCreateInfo vmaAllocInfo
-      {
-         .flags = flags, 
-         .usage = memoryUsage,
-      };
-      //
-      auto res = vmaCreateBuffer(
-         BfAllocator::inst().get(),
-         &bufferInfo, 
-         &vmaAllocInfo, 
-         &m_buffer, 
-         &m_alloc, 
-         &m_allocinfo
-      );
+   VkBufferCreateInfo bufferInfo{
+       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+       .pNext = nullptr,
+       .size = allocSize,
+       .usage = usage
+   };
+   VmaAllocationCreateInfo vmaAllocInfo{
+       .flags = flags,
+       .usage = memoryUsage,
+   };
 
-      if (res == VK_SUCCESS) {
-         m_isalloc = true;
-         m_size = allocSize;
-      } else { 
-         throw std::runtime_error("buffer was not created. Aborting...\n");
-         abort();
-      }
+   auto res = vmaCreateBuffer(
+       BfAllocator::get(),
+       &bufferInfo,
+       &vmaAllocInfo,
+       &m_buffer,
+       &m_alloc,
+       &m_allocinfo
+   );
+
+   if (res == VK_SUCCESS)
+   {
+      m_isalloc = true;
+      m_size = allocSize;
+   }
+   else
+   {
+      throw std::runtime_error("buffer was not created. Aborting...\n");
+      abort();
+   }
    // clang-format on
 }
 
 BfBuffer::~BfBuffer()
 {
-   vmaDestroyBuffer(BfAllocator::inst().get(), m_buffer, m_alloc);
+   vmaDestroyBuffer(BfAllocator::get(), m_buffer, m_alloc);
 }
 
 void*
 BfBuffer::map()
 {
-   vmaMapMemory(BfAllocator::inst().get(), m_alloc, &m_pData);
+   vmaMapMemory(BfAllocator::get(), m_alloc, &m_pData);
    return m_pData;
 }
 
 void
 BfBuffer::unmap()
 {
-   vmaUnmapMemory(BfAllocator::inst().get(), m_alloc);
+   vmaUnmapMemory(BfAllocator::get(), m_alloc);
 }
 
 void

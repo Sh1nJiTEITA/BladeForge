@@ -1,9 +1,11 @@
 #include "bfDrawObject2.h"
 
+#include <stdexcept>
+
 namespace obj
 {
 
-BfDrawControlProxy::BfDrawControlProxy(BfDrawObject& obj)
+BfDrawControlProxy::BfDrawControlProxy(BfDrawObjectBase& obj)
     : m_obj{obj}
 {
 }
@@ -41,6 +43,12 @@ BfDrawControlProxy::indexOffset() const
 const glm::mat4&
 BfDrawControlProxy::model() const
 {
+   if (m_obj.m_type == BfDrawObjectBase::LAYER)
+   {
+      throw std::runtime_error(
+          "[BfDrawControlProxy] cant use model() method inside LAYER"
+      );
+   }
    return m_obj.m_modelMatrix;
 }
 bool
@@ -72,28 +80,59 @@ BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
 {
    auto& g = m_obj;
 
-   auto innerMap = [](const auto& container, void* data, size_t* offset) {
-      size_t size = sizeof(BfVertex3) * container.size();
+   auto innerMap = [](auto container, void* data, size_t* offset) {
+      // size_t size = sizeof(BfVertex3) * container.size();
+      // memcpy(reinterpret_cast<char*>(data) + *offset, container.data(),
+      // size); *offset += size;
+      size_t size =
+          sizeof(typename std::decay_t<decltype(container)>::value_type) *
+          container.size();
+      std::cout << "Copying " << size << " bytes to "
+                << " buffer at offset " << *offset << "\n";
       memcpy(reinterpret_cast<char*>(data) + *offset, container.data(), size);
       *offset += size;
    };
 
    if (isBuffer())
    {  // clang-format off
+      std::cout << "Updating root buffer\n";
       void* p_vertex = g.m_buffer->vertex().map();
       void* p_index = g.m_buffer->index().map();
-      {
+      
          size_t offset_v = 0;
          size_t offset_i = 0;
 
-         innerMap(g.vertices(), p_vertex, &offset_v);
-         innerMap(g.indices(), p_index, &offset_i);
+      std::cout << "mapping vertices\n";
+         m_obj.debug().printVertices();
+         
+         size_t size_v = sizeof(BfVertex3) * g.vertices().size();
+         memcpy(
+             reinterpret_cast<char *>(p_vertex) + offset_v,
+             g.vertices().data(),
+             size_v 
+         );
+         offset_v += size_v;
+
+
+      std::cout << "mapping indices\n";
+
+         m_obj.debug().printIndices();
+         size_t size_i = sizeof(uint32_t) * g.indices().size();
+         memcpy(
+             reinterpret_cast<char *>(p_index) + offset_i,
+             g.indices().data(),
+             size_i 
+         );
+         offset_v += size_i;
+
+         // innerMap(g.vertices(), p_vertex, &offset_v);
+         // innerMap(g.indices(), p_index, &offset_i);
 
          for (const auto& child : g.m_children)
          {
             child->control().updateBuffer(p_vertex, p_index, &offset_v, &offset_i);
          }
-      }
+      
       g.m_buffer->vertex().unmap();
       g.m_buffer->index().unmap();
    }
@@ -148,21 +187,53 @@ BfDrawControlProxy::draw(
           VK_INDEX_TYPE_UINT32
       );
    }
+
+   vkCmdBindPipeline(
+       combuffer,
+       VK_PIPELINE_BIND_POINT_GRAPHICS,
+       m_obj.m_pipeline
+   );
+
    vkCmdDrawIndexed(
        combuffer,
        g.indices().size(),
        1,
-       index_offsets[0] + index_offset,
-       index_offsets[0] + vertex_offset,
+       // index_offsets[0] + index_offset,
+       index_offset,
+       // vertex_offsets[0] + vertex_offset,
+       vertex_offset,
        offset
    );
 }
 
-/*  BfDrawObject */
+BfDrawDebugProxy::BfDrawDebugProxy(BfDrawObjectBase& obj)
+    : m_obj{obj}
+{
+}
 
-BfDrawObject::BfDrawObject(
+void
+BfDrawDebugProxy::printVertices()
+{
+   for (auto v : m_obj.m_vertices)
+   {
+      std::cout << v << "\n";
+   }
+}
+void
+BfDrawDebugProxy::printIndices()
+{
+   for (auto i : m_obj.m_indices)
+   {
+      std::cout << i << "\n";
+   }
+}
+
+/*  BfDrawObjectBase */
+
+BfDrawObjectBase::BfDrawObjectBase(
     BfOTypeName typeName,
     VkPipeline pl,
+    Type type,
     BfObj root,
     size_t max_vertex,
     size_t max_obj
@@ -172,28 +243,43 @@ BfDrawObject::BfDrawObject(
     , m_modelMatrix{1.0f}
     , m_root{root}
     , m_isBuffer{root == nullptr}
+    , m_type{type}
 {
    if (root == nullptr)
    {
-      m_buffer = std::make_unique<BfObjectBuffer>(
-          sizeof(BfVertex3),
-          max_vertex,
-          max_obj
-      );
+      if (m_type == Type::LAYER)
+      {
+         m_buffer = std::make_unique<BfObjectBuffer>(
+             sizeof(BfVertex3),
+             max_vertex,
+             max_obj
+         );
+      }
+      else
+      {
+         throw std::runtime_error(
+             "Trying to construct draw object with type "
+             " <object> but not root layer provided"
+         );
+      }
    }
 }
 
 void
-BfDrawObject::make()
+BfDrawObjectBase::make()
 {
-   for (auto child : m_children)
-   {
-      child->make();
-   }
+   throw std::runtime_error(
+       "[BfDrawObjectBase] make() method must be implemented. Dont use base "
+       "class. Use BfDrawObject / BfDrawLayer"
+   );
+   // for (auto child : m_children)
+   // {
+   //    child->make();
+   // }
 }
 
 BfObjectData
-BfDrawObject::_objectData()
+BfDrawObjectBase::_objectData()
 {
    return {
        .model_matrix = m_modelMatrix,
@@ -204,4 +290,43 @@ BfDrawObject::_objectData()
    };
 }
 
+BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl, BfObj root)
+    : BfDrawObjectBase{typeName, pl, OBJECT, root, 0, 0} {};
+
+void
+BfDrawObject::make()
+{
+   throw std::runtime_error("[BfDrawObject] make() method must be implemented");
+}
+
+BfDrawLayer::BfDrawLayer(
+    BfOTypeName typeName, BfObj root, size_t max_vertex, size_t max_obj
+)
+    : BfDrawObjectBase(typeName, nullptr, LAYER, root, max_vertex, max_obj)
+{
+}
+
+void
+BfDrawLayer::make()
+{
+   throw std::runtime_error(
+       "[BfDrawLayer] make() method must be implemented. No vertices creation!"
+   );
+}
+
+BfDrawRootLayer::BfDrawRootLayer(size_t max_vertex, size_t max_obj)
+    : BfDrawLayer("Root Layer", nullptr, max_vertex, max_obj)
+{
+}
+
+void
+BfDrawRootLayer::make()
+{
+   for (auto child : m_children)
+   {
+      child->make();
+   }
+}
+
 };  // namespace obj
+//

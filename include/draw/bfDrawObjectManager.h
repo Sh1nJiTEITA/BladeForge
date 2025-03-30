@@ -20,6 +20,8 @@ public:
       return m;
    }
 
+   void bindDescriptor(BfDescriptor* descriptor) { m_descriptor = descriptor; }
+
    void add(BfObj obj)
    {
       if (!obj->control().isBuffer())
@@ -57,7 +59,6 @@ public:
       {
          size_t vertex_offset = 0;
          size_t index_offset = 0;
-
          obj->control().draw(
              command_buffer,
              obj_data_offset,

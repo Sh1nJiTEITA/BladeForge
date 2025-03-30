@@ -144,17 +144,17 @@ BfMain::__init()
    BfPipelineHandler::instance()->create<BfPipelineBuilderLine>(
        BfPipelineType_Lines,
        BfPipelineLayoutType_Main,
-       "shaders/lines"
+       fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/lines"
    );
    BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
        BfPipelineType_Triangles,
        BfPipelineLayoutType_Main,
-       "shaders/triangle"
+       fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/triangle"
    );
    BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
        BfPipelineType_Axis,
        BfPipelineLayoutType_Main,
-       "shaders/axis"
+       fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/axis"
    );
 
    bfCreateStandartFrameBuffers(__base);
@@ -167,7 +167,9 @@ BfMain::__init()
 
    bfBindAllocatorToLayerHandler(__base);
 
-   __gui.bindSettings("./scripts/guiconfig.lua");
+   __gui.bindSettings(
+       BfConfigManager::getInstance()->exePath() / "scripts/guiconfig.lua"
+   );
    bfInitImGUI(__base);
    {
       __gui.bindDefaultFont();
@@ -305,7 +307,10 @@ BfMain::__loop()
    //
 
    auto test = std::make_shared<obj::TestObj>(nullptr);
-   // obj::BfDrawManager::inst().add(test);
+   test->make();
+   test->control().updateBuffer();
+
+   obj::BfDrawManager::inst().add(test);
 
    // BfLayerHandler
    {

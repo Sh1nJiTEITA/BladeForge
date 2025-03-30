@@ -34,7 +34,7 @@ layout(location = 3) out vec3 fragPos;
 layout(location = 4) flat out uint obj_index;
 
 void main() {
-    
+    // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z);
     vec4 coo = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
     outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 
     gl_Position = coo;

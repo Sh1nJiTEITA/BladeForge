@@ -327,11 +327,6 @@ BfLayerHandler::del(size_t id)
 void
 BfLayerHandler::map_model_matrices(size_t frame_index)
 {
-   size_t obj_count = this->get_whole_obj_count();
-
-   std::vector<BfObjectData> obj_datas;
-   obj_datas.reserve(obj_count);
-
    if (!__pDescriptor->is_usage(BfDescriptorModelMtxUsage))
    {
       throw std::runtime_error(
@@ -346,21 +341,7 @@ BfLayerHandler::map_model_matrices(size_t frame_index)
       size_t offset = 0;
       for (const auto& layer : __layers)
       {
-         /*for (const auto& obj : layer->__objects) {
-                 BfObjectData obj_data = obj->get_obj_data();
-                 memcpy(reinterpret_cast<char*>(data) + offset, &obj_data,
-         sizeof(BfObjectData)); offset += sizeof(BfObjectData);
-         }*/
-
          layer->map_model_matrices(frame_index, offset, data);
-
-         /*std::vector<BfObjectData> obj_data = layer->get_obj_model_matrices();
-         if (obj_data.empty()) {
-                 throw std::runtime_error("Input layer object data is empty");
-         }
-
-         std::copy(obj_data.begin(), obj_data.end(), obj_datas.begin() +
-         offset); offset += obj_data.size();*/
       }
    }
    __pDescriptor->unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);

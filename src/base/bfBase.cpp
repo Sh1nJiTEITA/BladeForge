@@ -1440,6 +1440,7 @@ bfInitOwnDescriptors(BfBase &base)
    // base.descriptor.map_textures();
 
    base.layer_handler.bind_descriptor(&base.descriptor);
+   obj::BfDrawManager::inst().bindDescriptor(&base.descriptor);
 
    bfCreateBuffer(
        &base.id_image_buffer,
@@ -2603,13 +2604,13 @@ bfDestroyIDMapImage(BfBase &base)
 BfEvent
 bfCreateAllocator(BfBase &base)
 {
-   auto instance = BfAllocator::inst();
-   instance.create(
+   BfAllocator::create(
        base.device,
        base.instance,
        base.physical_device->physical_device
    );
-   base.allocator = instance.get();
+   base.allocator = BfAllocator::get();
+   std::cout << " base allocator: " << base.allocator << "\n";
 
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -2635,8 +2636,7 @@ bfCreateAllocator(BfBase &base)
 BfEvent
 bfDestroyAllocator(BfBase &base)
 {
-   auto instance = BfAllocator::inst();
-   instance.destroy();
+   BfAllocator::destroy();
    vmaDestroyAllocator(base.allocator);
    // //
    BfSingleEvent event{};
@@ -3415,7 +3415,7 @@ bfMainRecordCommandBuffer(BfBase &base)
           1
       );
 
-      base.layer_handler.draw(local_buffer);
+      // base.layer_handler.draw(local_buffer);
 
       obj::BfDrawManager::inst().draw(local_buffer);
    }
@@ -3793,13 +3793,15 @@ bfUpdateUniformBuffer(BfBase &base)
       bfUpdateUniformViewNew(base);
    }
 
-   {  // AXIS MODEL MATRIX
-      glm::mat4 moveMatrix = glm::mat4(1.0f);
-      glm::vec3 translation = glm::vec3(0.0f, 0.0f, -5.0f);
-      moveMatrix = glm::translate(moveMatrix, translation);
-   }
+   // {  // AXIS MODEL MATRIX
+   //    glm::mat4 moveMatrix = glm::mat4(1.0f);
+   //    glm::vec3 translation = glm::vec3(0.0f, 0.0f, -5.0f);
+   //    moveMatrix = glm::translate(moveMatrix, translation);
+   // }
 
-   base.layer_handler.map_model_matrices(base.current_frame);
+   // base.layer_handler.map_model_matrices(base.current_frame);
+
+   obj::BfDrawManager::inst().mapModels(base.current_frame);
 }
 
 void

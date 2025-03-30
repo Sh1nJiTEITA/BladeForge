@@ -486,7 +486,9 @@ BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
       {
          form->name.push_back(obj.get<std::string>("name"));
       }
-      else if (std::filesystem::exists("./resources/fonts/Cousine-Regular.ttf"))
+      else if (std::filesystem::exists(
+                   exePath() / "./resources/fonts/Cousine-Regular.ttf"
+               ))
       {
          form->name.push_back("Cousine-Regular.ttf");
       }
@@ -518,7 +520,7 @@ BfConfigManager::fillFormFontSettings(sol::table obj, BfFormFontSettings* form)
       for (const auto& font_path : font_paths)
       {
          form->font_directory_paths.push_back(
-             fs::path(font_path.second.as<std::string>())
+             exePath() / fs::path(font_path.second.as<std::string>())
          );
       }
       BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);

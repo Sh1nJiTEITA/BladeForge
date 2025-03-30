@@ -1245,7 +1245,7 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
    _createInitialEdges();
    _createCmaxLines();
    _createCircleSkeleton();
-   _createOutShape();
+   // _createOutShape();
    createVertices();
 }
 
