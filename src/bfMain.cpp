@@ -7,6 +7,8 @@
 #include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
+#include "bfDrawObject2.h"
+#include "bfDrawObjectManager.h"
 #include "bfPipeline.h"
 #include "bfWindow.h"
 #include "imgui.h"
@@ -301,6 +303,9 @@ BfMain::__loop()
    // arrow_x->createVertices();
    // arrow_x->createIndices();
    //
+
+   auto test = std::make_shared<obj::TestObj>(nullptr);
+   // obj::BfDrawManager::inst().add(test);
 
    // BfLayerHandler
    {

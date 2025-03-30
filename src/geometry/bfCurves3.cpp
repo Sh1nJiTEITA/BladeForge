@@ -1478,6 +1478,28 @@ BfCircle::get_center() const
    return __dvertices[0];
 }
 
+BfVertex3&
+BfCircle::get_center()
+{
+   switch (__depMode)
+   {
+      case BfDrawObjDependencies_Mode_No: {
+         if (!__dvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return __dvertices[0];
+      }
+      case BfDrawObjDependencies_Mode_Ptr: {
+         if (!__pdvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return *__pdvertices[0];
+      }
+   }
+
+   return __dvertices[0];
+}
+
 const BfVertex3&
 BfCircle::get_first() const noexcept
 {
@@ -1698,6 +1720,28 @@ BfCircleFilled::_center() const
    return __dvertices[0];
 }
 
+BfVertex3&
+BfCircleFilled::_center()
+{
+   switch (__depMode)
+   {
+      case BfDrawObjDependencies_Mode_No: {
+         if (!__dvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return __dvertices[0];
+      }
+      case BfDrawObjDependencies_Mode_Ptr: {
+         if (!__pdvertices.size())
+            throw std::runtime_error("No addded center vertex inside dvertices"
+            );
+         return *__pdvertices[0];
+      }
+   }
+
+   return __dvertices[0];
+}
+
 BfCircleFilledWithHandles::BfCircleFilledWithHandles(
     size_t m, const BfVertex3& center, float radius
 )
@@ -1751,7 +1795,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
 
    auto center_handle = std::make_shared<BfCircleFilled>(
        m,
-       &circle->dVertices().at(0),
+       center,
        BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
    );
    center_handle->createVertices();
@@ -1760,6 +1804,19 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
    );
    add_l(center_handle);
+
+   m_rHandleVert = circle->vertices().at(0);
+   auto r_handle = std::make_shared<BfCircleFilled>(
+       m,
+       &m_rHandleVert,
+       BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
+   );
+   r_handle->createVertices();
+   r_handle->createIndices();
+   r_handle->bind_pipeline(
+       BfPipelineHandler::instance()->getPipeline(BfPipelineType_Triangles)
+   );
+   add_l(r_handle);
 
    createVertices();
 }

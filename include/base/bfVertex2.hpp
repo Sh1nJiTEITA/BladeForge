@@ -2,6 +2,7 @@
 #define BF_VERTEX2_H
 
 // Graphics Libs
+#include <glm/fwd.hpp>
 #ifdef _WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #elif __linux__
@@ -71,6 +72,25 @@ struct BfVertex3
    {
    }
 
+   glm::vec3 operator=(const BfVertex3 &o) { return o.pos; }
+
+   float &x() { return pos.x; }
+   float &y() { return pos.y; }
+   float &z() { return pos.z; }
+
+   float &r() { return color.r; }
+   float &g() { return color.g; }
+   float &b() { return color.b; }
+
+   float &nx() { return normals.x; }
+   float &ny() { return normals.y; }
+   float &nz() { return normals.z; }
+
+   BfVertex3(float x, float y, float z)
+       : BfVertex3(glm::vec3{x, y, z})
+   {
+   }
+
    BfVertex3(glm::vec3 ipos)
        : pos{ipos}, color{1.0f, 1.0f, 1.0f}, normals{0.0f, 0.0f, 0.0f}
 
@@ -81,11 +101,6 @@ struct BfVertex3
        : pos{ipos}, color{icol}, normals{inor}
 
    {
-   }
-
-   static inline BfVertex3 fromPos(const glm::vec3 &pos)
-   {
-      return BfVertex3{pos};
    }
 
    inline bool equal(const BfVertex3 &o) const

@@ -275,6 +275,8 @@ class BfBladeSection2 : public BfDrawLayerAccessed<BfBladeSection2_Part>
    /*! Хранение `id` элементов для их поиска */
    std::unordered_map<BfBladeSection2_Part, uint32_t> m_idMap;
 
+   std::vector<BfVertex3> m_cmaxCenterVertices;
+
 public:
    /**
     * @brief Дефолтный конструктор

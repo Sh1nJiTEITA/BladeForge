@@ -1243,7 +1243,6 @@ BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
    _createAverageCurve();
    _createCmax();
    _createInitialEdges();
-   // _createBack();
    _createCmaxLines();
    _createCircleSkeleton();
    _createOutShape();
@@ -1284,8 +1283,7 @@ BfBladeSection2::remake()
       // NOTE: Если количество точек увеличится то это надо будет сделать тут
       for (size_t i = 0; i < m_info->cmax.size(); ++i)
       {
-         BfVertex3 aveCoo = aveCurve->calcBfV3(m_info->cmax[i].relativeCoordinate);
-         cmaxs->get_object_by_index(i)->dVertices()[0] = aveCoo;
+         m_cmaxCenterVertices.at(i) = aveCurve->calcBfV3(m_info->cmax[i].relativeCoordinate);
       }
    }
 
@@ -1350,14 +1348,14 @@ BfBladeSection2::remake()
          auto old_tangent_1 = std::dynamic_pointer_cast<BfSingleLine>(
             tlines_layer_front->get_object_by_index(i)
          );
-         old_tangent_1->dVertices().at(0) =  tline_direction_1.xyz() + normals[0].pos;
-         old_tangent_1->dVertices().at(1) = -tline_direction_1.xyz() + normals[0].pos;
+         old_tangent_1->dVertices().at(0) =  glm::vec3(tline_direction_1) + normals[0].pos;
+         old_tangent_1->dVertices().at(1) = glm::vec3(-tline_direction_1) + normals[0].pos;
          
          auto old_tangent_2 = std::dynamic_pointer_cast<BfSingleLine>(
             tlines_layer_back->get_object_by_index(i)
          );
-         old_tangent_2->dVertices().at(0) =  tline_direction_2.xyz() + normals[1].pos;
-         old_tangent_2->dVertices().at(1) = -tline_direction_2.xyz() + normals[1].pos;
+         old_tangent_2->dVertices().at(0) =  glm::vec3(tline_direction_2) + normals[1].pos;
+         old_tangent_2->dVertices().at(1) = -glm::vec3(tline_direction_2) + normals[1].pos;
 
          i++;
       }
@@ -1429,8 +1427,8 @@ BfBladeSection2::_createAverageCurve()
    BFBS2_LOG("Outlet direction '" << BFVEC3_STR(outletDirection) << "'");
 
    glm::vec3 intersectionP = bfMathFindLinesIntersection(
-       BfSingleLine(inletP, inletP + inletDirection.xyz()),
-       BfSingleLine(outletP, outletP + outletDirection.xyz()),
+       BfSingleLine(inletP, inletP + glm::vec3(inletDirection)),
+       BfSingleLine(outletP, outletP + glm::vec3(outletDirection)),
        BF_MATH_FIND_LINES_INTERSECTION_ANY
    );
 
@@ -1456,18 +1454,26 @@ BfBladeSection2::_createCmax()
 
    for (const auto &cmax : m_info->cmax)
    {
-      BfVertex3 aveCoo = aveCurve->calcBfV3(cmax.relativeCoordinate);
-      // TODO: Make defines for default number of vertices
-      auto cmax_obj = std::make_shared<BfCircle>(100, aveCoo, cmax.radius);
-      BFBS2_LOG(
-          "Added cmax with aveCoo '" << BFVEC3_STR(aveCoo.pos) << "' radius '"
-                                     << cmax.radius << "'"
+      auto v = m_cmaxCenterVertices.insert(
+         m_cmaxCenterVertices.end(), 
+         aveCurve->calcBfV3(cmax.relativeCoordinate)
       );
+
+      // TODO: Make defines for default number of vertices
+      auto cmax_obj = std::make_shared<BfCircleFilledWithHandles>(
+         100, 
+         &(*v), cmax.radius
+      );
+
+      // BFBS2_LOG(
+      //     "Added cmax with aveCoo '" << BFVEC3_STR(m_cmaxCenterVertices.rbegin()->pos) << "' radius '"
+      //                                << cmax.radius << "'"
+      // );
       cmax_obj->set_color(BF_BLADESECTION_CMAX_COLOR);
       cmax_obj->createVertices();
-      cmax_obj->createIndices();
-      cmax_obj->bind_pipeline(&m_info->l_pipeline);
-      cmaxLayer->add_l(cmax_obj);
+      // cmax_obj->createIndices();
+      // cmax_obj->bind_pipeline(&m_info->l_pipeline);
+      cmaxLayer->add(cmax_obj);
    }
    _addPart(cmaxLayer, BfBladeSection2_Part_Cmax);
 }  // clang-format on
@@ -1572,8 +1578,8 @@ BfBladeSection2::_createCmaxLines()
       
       // auto tline_1 = std::make_shared<BfSingleLine>(tline_direction_1.xyz() * normals[0].pos + 1.f, 
       //                                               tline_direction_1.xyz() * normals[0].pos - 1.f);
-      auto tline_1 = std::make_shared<BfSingleLine>( tline_direction_1.xyz() + normals[0].pos, 
-                                                    -tline_direction_1.xyz() + normals[0].pos);
+      auto tline_1 = std::make_shared<BfSingleLine>( glm::vec3(tline_direction_1) + normals[0].pos, 
+                                                    -glm::vec3(tline_direction_1) + normals[0].pos);
       // auto tline_1 = std::make_shared<BfSingleLine>(normals[0].pos, 
       //                                               -tline_direction_1.xyz() + normals[0].pos);
       tline_1->bind_pipeline(&m_info->l_pipeline);
@@ -1582,8 +1588,8 @@ BfBladeSection2::_createCmaxLines()
       tline_1->createIndices();
       tlines_layer_front->add_l(tline_1);
 
-      auto tline_2 = std::make_shared<BfSingleLine>( tline_direction_2.xyz() + normals[1].pos,
-                                                    -tline_direction_2.xyz() + normals[1].pos);
+      auto tline_2 = std::make_shared<BfSingleLine>( glm::vec3(tline_direction_2) + normals[1].pos,
+                                                    -glm::vec3(tline_direction_2) + normals[1].pos);
       tline_2->bind_pipeline(&m_info->l_pipeline);
       tline_2->set_color({0.0f, 1.0f, 0.0f});
       tline_2->createVertices();

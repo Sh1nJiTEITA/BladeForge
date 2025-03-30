@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-std=c++20) # optional to use c++11
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-OPTION(IS_BUILD_TESTS OFF)
+option(IS_BUILD_TESTS "build tests" ON)
 
 
 file(
@@ -278,10 +278,17 @@ target_link_libraries(bfotherlib PUBLIC bfexternallib)
 set(BF_DRAW
     "src/draw/bfDrawObject.cpp"
     "src/draw/bfLayerHandler.cpp"
-    "src/draw/bfLayerKiller.cpp")
+    "src/draw/bfLayerKiller.cpp"
+    "src/draw/bfDrawObjectBuffer.cpp"
+    "src/draw/bfDrawObject2.cpp"
+)
 
 add_library(bfdrawlib STATIC ${BF_DRAW})
 target_link_libraries(bfdrawlib PUBLIC bfexternallib)
+
+
+find_package(Boost REQUIRED) 
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
 
 # Add source to this project's executable.
@@ -292,7 +299,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
- 
+# target_link_libraries(${PROJECT_NAME} LINK_PUBLIC Boost::Boost)
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
+
+
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 file(COPY "${CMAKE_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_BINARY_DIR}/")
@@ -315,7 +325,11 @@ endif(WIN32)
 # target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
 
 
-find_package(Catch2 REQUIRED)
+
+
+
+
+
 
 # GLM
 # add_subdirectory(external/glm)
@@ -331,7 +345,10 @@ find_package(Catch2 REQUIRED)
 
 # Tests
 # ~~~
-if (IS_BUILD_TESTS)
+
+find_package(Catch2 REQUIRED)
+
+# if (${IS_BUILD_TESTS})
 add_executable(
   tests
   # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
@@ -349,24 +366,26 @@ add_executable(
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
   # "tests/bez_test.cpp"
   # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" "include/other/bfMath.hpp"
-  # "src/other/bfMath.cpp"
-  "tests/sol2_lua_test.cpp" "tests/filedialog_test.cpp"
+  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" 
+
+  "include/other/bfMath.hpp"
+  "src/other/bfMath.cpp"
+
+  "./tests/object.cpp"
+  # "tests/filedialog_test.cpp"
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
-  ${SOURCES})
+)
+
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-# target_link_libraries(tests PRIVATE GPUOpen::VulkanMemoryAllocator)
-# target_link_libraries(tests PRIVATE ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES})
-# target_link_libraries(tests PRIVATE imgui imgui-vulkan imgui-glfw)
+target_link_libraries(tests PUBLIC bfbaselib)
+target_link_libraries(tests PUBLIC bfgeometrylib)
+target_link_libraries(tests PUBLIC bfotherlib)
+target_link_libraries(tests PUBLIC bfdrawlib)
+target_link_libraries(tests PUBLIC bfinteractionlib)
+target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
 
-target_link_libraries(tests PUBLIC bfexternallib)
-target_include_directories(tests PUBLIC "C:/VulkanSDK/1.4.304.0/Include")
-# target_link_libraries(tests PRIVATE splines-lib)
 
-include_directories(external/eigen)
-include_directories(external/splines-lib)
-# target_link_libraries(tests PRIVATE glm)
-target_link_libraries(tests PRIVATE glm::glm)
 
-endif(IS_BUILD_TESTS)
 
+# endif(${IS_BUILD_TESTS})
+#

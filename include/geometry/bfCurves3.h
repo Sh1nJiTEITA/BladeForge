@@ -177,6 +177,7 @@ public:
 #define BF_CIRCLE_DEFINE_TYPE_3_VERTICES 0x2
 
 class BfCircleFilled;
+class BfCircleFilledWithHandles;
 
 class BfCircle : public BfDrawObj
 {
@@ -197,6 +198,7 @@ public:
    );
 
    const BfVertex3& get_center() const;
+   BfVertex3& get_center();
    const BfVertex3& get_first() const noexcept;
    const BfVertex3& get_second() const noexcept;
    const BfVertex3& get_third() const noexcept;
@@ -208,6 +210,7 @@ public:
    virtual void createVertices() override;
 
    friend BfCircleFilled;
+   friend BfCircleFilledWithHandles;
 };
 
 //
@@ -242,16 +245,22 @@ public:
    virtual void update() override;
 #endif
 
-private:
    const BfVertex3& _center() const;
+   BfVertex3& _center();
 };
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 class BfCircleFilledWithHandles : public BfDrawLayer
 {
-   // std::shared_ptr<BfCircle> m_circle;
-   // std::shared_ptr<BfCircleFilled> m_centerHandle;
-   // std::shared_ptr<BfCircleFilled> m_radiusHandle;
-
    BfVertex3 m_rHandleVert;
 
 public:
@@ -263,11 +272,6 @@ public:
    std::shared_ptr<BfCircleFilled> radiusHandle() noexcept;
 
    virtual void createVertices();
-   // virtual void createIndices() override;
-
-   // #if defined(BF_CURVES3_GUI)
-   //    virtual void update() override;
-   // #endif
 };
 
 //

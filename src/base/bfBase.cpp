@@ -3,11 +3,12 @@
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
 
-#include <memory>
 #include <stdexcept>
 
+#include "bfAllocator.h"
 #include "bfCamera.h"
 #include "bfDescriptor.h"
+#include "bfDrawObjectManager.h"
 #include "bfEvent.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
@@ -2602,36 +2603,46 @@ bfDestroyIDMapImage(BfBase &base)
 BfEvent
 bfCreateAllocator(BfBase &base)
 {
+   auto instance = BfAllocator::inst();
+   instance.create(
+       base.device,
+       base.instance,
+       base.physical_device->physical_device
+   );
+   base.allocator = instance.get();
+
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 
-   VmaAllocatorCreateInfo info{};
-   info.device = base.device;
-   info.instance = base.instance;
-   info.physicalDevice = base.physical_device->physical_device;
-
-   if (vmaCreateAllocator(&info, &base.allocator) != VK_SUCCESS)
-   {
-      event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_FAILURE;
-      event.success = false;
-   }
-   else
-   {
-      event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_SUCCESS;
-      event.success = true;
-   }
+   // VmaAllocatorCreateInfo info{};
+   // info.device = base.device;
+   // info.instance = base.instance;
+   // info.physicalDevice = base.physical_device->physical_device;
+   //
+   // if (vmaCreateAllocator(&info, &base.allocator) != VK_SUCCESS)
+   // {
+   //    event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_FAILURE;
+   //    event.success = false;
+   // }
+   // else
+   // {
+   event.action = BF_ACTION_TYPE_CREATE_VMA_ALLOCATOR_SUCCESS;
+   event.success = true;
+   // }
    return BfEvent(event);
 }
 
 BfEvent
 bfDestroyAllocator(BfBase &base)
 {
+   auto instance = BfAllocator::inst();
+   instance.destroy();
    vmaDestroyAllocator(base.allocator);
-
+   // //
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
    event.action = BF_ACTION_TYPE_DESTROY_VMA_ALLOCATOR;
-
+   //
    return BfEvent(event);
 }
 
@@ -3405,6 +3416,8 @@ bfMainRecordCommandBuffer(BfBase &base)
       );
 
       base.layer_handler.draw(local_buffer);
+
+      obj::BfDrawManager::inst().draw(local_buffer);
    }
    vkCmdEndRenderPass(local_buffer);
 
