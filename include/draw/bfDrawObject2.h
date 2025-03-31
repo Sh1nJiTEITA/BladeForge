@@ -4,7 +4,9 @@
 #include <vulkan/vulkan_core.h>
 
 #include <memory>
+#include <random>
 
+#include "bfDrawObject.h"
 #include "bfDrawObjectBuffer.h"
 #include "bfObjectId.h"
 #include "bfPipeline.h"
@@ -73,14 +75,14 @@ public:
    enum Type
    {
       OBJECT,
-      LAYER
+      LAYER,
+      ROOT_LAYER,
    };
 
    BfDrawObjectBase(
        BfOTypeName typeName,
        VkPipeline pl,
        Type type,
-       BfObj root = nullptr,
        size_t max_vertex = 2000,
        size_t max_obj = 20
    );
@@ -115,50 +117,66 @@ protected:
 private:
    std::unique_ptr<BfObjectBuffer> m_buffer;
    Type m_type;
-   bool m_isBuffer;
 };
 
+/**
+ * @class BfDrawObject
+ * @brief
+ *
+ */
 class BfDrawObject : public BfDrawObjectBase
 {
 public:
-   BfDrawObject(BfOTypeName typeName, VkPipeline pl, BfObj root);
+   BfDrawObject(BfOTypeName typeName, VkPipeline pl);
    virtual void make() override;
 
    void add() = delete;
 };
 
+/**
+ * @class BfDrawLayer
+ * @brief
+ *
+ */
 class BfDrawLayer : public BfDrawObjectBase
 {
 public:
-   BfDrawLayer(
-       BfOTypeName typeName,
-       BfObj root = nullptr,
-       size_t max_vertex = 2000,
-       size_t max_obj = 20
-   );
-   virtual void make() override;
+   BfDrawLayer(BfOTypeName typeName);
 
+   virtual void make() override;
    const std::vector<BfVertex3>& vertices() const = delete;
    const std::vector<BfIndex>& indices() const = delete;
 };
 
-class BfDrawRootLayer : public BfDrawLayer
+/**
+ * @class BfDrawRootLayer
+ * @brief
+ *
+ */
+class BfDrawRootLayer : public BfDrawObjectBase
 {
 public:
    BfDrawRootLayer(size_t max_vertex = 2000, size_t max_obj = 20);
+
    virtual void make() override;
+   const std::vector<BfVertex3>& vertices() const = delete;
+   const std::vector<BfIndex>& indices() const = delete;
 };
 
+/**
+ * @class TestObj
+ * @brief
+ *
+ */
 class TestObj : public BfDrawObject
 {
 public:
-   TestObj(BfObj root)
+   TestObj()
        : BfDrawObject(
              "TestObj",
              *BfPipelineHandler::instance()->getPipeline(
                  BfPipelineType_Triangles
-             ),
-             root
+             )
          )
    {
    }
@@ -175,16 +193,20 @@ public:
    }
 };
 
+/**
+ * @class TestObj2
+ * @brief
+ *
+ */
 class TestObj2 : public BfDrawObject
 {
 public:
-   TestObj2(BfObj root)
+   TestObj2()
        : BfDrawObject(
              "TestObj2",
              *BfPipelineHandler::instance()->getPipeline(
                  BfPipelineType_Triangles
-             ),
-             root
+             )
          )
    {
    }
@@ -197,6 +219,77 @@ public:
           {1.0f, 0.0f, 1.0f},
           {1.0f, 0.0f, -1.0f},
       };
+      m_indices = {0, 1, 3, 1, 2, 3};
+   }
+};
+
+/**
+ * @class TestLayer
+ * @brief
+ *
+ */
+class TestLayer : public BfDrawLayer
+{
+public:
+   TestLayer()
+       : BfDrawLayer("Test layer")
+   {
+   }
+
+   virtual void make() override
+   {
+      auto test1 = std::make_shared<TestObj>();
+      test1->make();
+      add(test1);
+      auto test2 = std::make_shared<TestObj2>();
+      test2->make();
+      add(test2);
+   }
+};
+
+class RandomPlane : public BfDrawObject
+{
+public:
+   RandomPlane()
+       : BfDrawObject(
+             "RandomPlane",
+             *BfPipelineHandler::instance()->getPipeline(
+                 BfPipelineType_Triangles
+             )
+         )
+   {
+   }
+
+   virtual void make() override
+   {
+      static std::random_device rd;
+      static std::mt19937 gen(rd());
+      std::uniform_real_distribution<float> dist(-5.0f, 5.0f);
+      std::uniform_real_distribution<float> angleDist(
+          0.0f,
+          glm::radians(360.0f)
+      );
+
+      glm::vec3 translation = {dist(gen), 0.0f, dist(gen)};
+      float rotationAngle = angleDist(gen);
+      glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation);
+      transform =
+          glm::rotate(transform, rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+      std::vector<glm::vec3> baseVertices = {
+          {-0.5f, 0.0f, -0.5f},
+          {-0.5f, 0.0f, 0.5f},
+          {0.5f, 0.0f, 0.5f},
+          {0.5f, 0.0f, -0.5f},
+      };
+
+      m_vertices.clear();
+      for (const auto& v : baseVertices)
+      {
+         glm::vec4 transformed = transform * glm::vec4(v, 1.0f);
+         m_vertices.push_back({transformed.x, transformed.y, transformed.z});
+      }
+
       m_indices = {0, 1, 3, 1, 2, 3};
    }
 };

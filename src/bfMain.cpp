@@ -307,21 +307,25 @@ BfMain::__loop()
    // arrow_x->createIndices();
    //
 
-   auto test_layer = std::make_shared<obj::BfDrawRootLayer>(2000, 5);
+   auto test_root = std::make_shared<obj::BfDrawRootLayer>(2000, 10);
+   auto test_layer2 = std::make_shared<obj::TestLayer>();
 
-   auto test = std::make_shared<obj::TestObj>(test_layer);
-   test->make();
+   for (int i = 0; i < 5; ++i)
+   {
+      auto t = std::make_shared<obj::RandomPlane>();
+      test_root->add(t);
+   }
 
-   auto test2 = std::make_shared<obj::TestObj2>(test_layer);
-   test2->make();
+   // auto test = std::make_shared<obj::TestObj>(test_layer);
+   // auto test2 = std::make_shared<obj::TestObj2>(test_layer);
+   //
+   // test_layer->add(test);
+   // test_layer->add(test2);
+   test_root->add(test_layer2);
+   test_root->make();
+   test_root->control().updateBuffer();
 
-   assert(test_layer->control().isBuffer());
-
-   test_layer->add(test);
-   test_layer->add(test2);
-   test_layer->control().updateBuffer();
-
-   obj::BfDrawManager::inst().add(test_layer);
+   obj::BfDrawManager::inst().add(test_root);
 
    // BfLayerHandler
    {

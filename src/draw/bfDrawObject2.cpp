@@ -38,7 +38,7 @@ BfDrawControlProxy::vertexOffset() const
 
       // offset[i] = growing_offset;
       // growing_offset += size;
-      if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
 
       auto size = m_obj.m_children[i]->vertices().size();
       offset.push_back(growing_offset);
@@ -68,7 +68,7 @@ BfDrawControlProxy::indexOffset() const
       //        "vertices inside LAYER object"
       //    );
       // }
-      if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
 
       auto size = m_obj.m_children[i]->indices().size();
       offset.push_back(growing_offset);
@@ -91,7 +91,7 @@ BfDrawControlProxy::model() const
 bool
 BfDrawControlProxy::isBuffer() const
 {
-   return m_obj.m_isBuffer;
+   return m_obj.m_type == BfDrawObjectBase::ROOT_LAYER;
 }
 
 void
@@ -297,41 +297,37 @@ BfDrawObjectBase::BfDrawObjectBase(
     BfOTypeName typeName,
     VkPipeline pl,
     Type type,
-    BfObj root,
     size_t max_vertex,
     size_t max_obj
 )
     : BfObjectId{typeName}
     , m_pipeline{pl}
     , m_modelMatrix{1.0f}
-    , m_root{root}
-    , m_isBuffer{root == nullptr}
     , m_type{type}
+    , m_root{nullptr}
 {
-   if (root == nullptr)
+   if (type == BfDrawObjectBase::ROOT_LAYER)
    {
-      if (m_type == Type::LAYER)
-      {
-         m_buffer = std::make_unique<BfObjectBuffer>(
-             sizeof(BfVertex3),
-             max_vertex,
-             max_obj
-         );
-      }
-      else
-      {
-         throw std::runtime_error(
-             "Trying to construct draw object with type "
-             " <object> but not root layer provided"
-         );
-      }
+      m_buffer = std::make_unique<BfObjectBuffer>(
+          sizeof(BfVertex3),
+          max_vertex,
+          max_obj
+      );
    }
+   // else
+   // {
+   //    throw std::runtime_error(
+   //        "Trying to construct draw object with type "
+   //        " <object> but not root layer provided"
+   //    );
+   // }
 }
 
 void
 BfDrawObjectBase::add(BfObj n)
 {
    m_children.push_back(n);
+   m_root = shared_from_this();
 }
 
 void
@@ -341,10 +337,6 @@ BfDrawObjectBase::make()
        "[BfDrawObjectBase] make() method must be implemented. Dont use base "
        "class. Use BfDrawObject / BfDrawLayer"
    );
-   // for (auto child : m_children)
-   // {
-   //    child->make();
-   // }
 }
 
 BfObjectData
@@ -359,8 +351,10 @@ BfDrawObjectBase::_objectData()
    };
 }
 
-BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl, BfObj root)
-    : BfDrawObjectBase{typeName, pl, OBJECT, root, 0, 0} {};
+/* BfDrawObject */
+
+BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl)
+    : BfDrawObjectBase{typeName, pl, OBJECT, 0, 0} {};
 
 void
 BfDrawObject::make()
@@ -368,10 +362,9 @@ BfDrawObject::make()
    throw std::runtime_error("[BfDrawObject] make() method must be implemented");
 }
 
-BfDrawLayer::BfDrawLayer(
-    BfOTypeName typeName, BfObj root, size_t max_vertex, size_t max_obj
-)
-    : BfDrawObjectBase(typeName, nullptr, LAYER, root, max_vertex, max_obj)
+/* BfDrawLayer */
+BfDrawLayer::BfDrawLayer(BfOTypeName typeName)
+    : BfDrawObjectBase(typeName, nullptr, LAYER, 0, 0)
 {
 }
 
@@ -383,8 +376,9 @@ BfDrawLayer::make()
    );
 }
 
+/* BfDrawRootLayer */
 BfDrawRootLayer::BfDrawRootLayer(size_t max_vertex, size_t max_obj)
-    : BfDrawLayer("Root Layer", nullptr, max_vertex, max_obj)
+    : BfDrawObjectBase("Root Layer", nullptr, ROOT_LAYER, max_vertex, max_obj)
 {
 }
 
@@ -396,6 +390,5 @@ BfDrawRootLayer::make()
       child->make();
    }
 }
-
 };  // namespace obj
 //
