@@ -27,18 +27,83 @@ using BfObjWeak = std::weak_ptr<BfDrawObjectBase>;
  * @class BfDrawControlProxy
  * @brief Proxy class to work with render/vulkan bindings
  *
+ * @note Не рассчитан на использование вне контекста работы
+ * с отрисовкой
+ *
  */
 class BfDrawControlProxy
 {
 public:
    BfDrawControlProxy(BfDrawObjectBase& obj);
+
+   /**
+    *
+    *
+    * @brief Гененирует оффсет для вертексов на конкретный
+    * уровень
+    *
+    * @note Используется для LAYER
+    */
    std::vector<int32_t> vertexOffset() const;
+
+   /**
+    *
+    *
+    * @brief Генерирует оффсет для индексов для конкретного уровня
+    *
+    * @note Используется для LAYER
+    */
    std::vector<int32_t> indexOffset() const;
 
+   /**
+    *
+    *
+    * @brief Возвращает данную модельную матрицу
+    *
+    * @note Используется для OBJECT
+    */
    const glm::mat4& model() const;
+
+   /**
+    *
+    *
+    * @brief Является ли объект буффером, то есть было ли данного
+    * объекта созданы буфферы и выделана память
+    *
+    * @note Используется для LAYER
+    *
+    * @return ...
+    */
    bool isBuffer() const;
+
+   /**
+    * @brief Загружает данные о модельной матрице в `data`,
+    * меняет `offset` с учетом загруженных данных
+    *
+    * @note Используется для LAYER & OBJECT
+    *
+    * @param frame_index  TODO: deprecate
+    * @param offset ...
+    * @param data указатель на открытую для мапа память
+    */
    void mapModel(size_t frame_index, size_t& offset, void* data) const;
 
+   /**
+    * @brief Обновляет содержимое буфера.
+    * Создано и работает только для слоев, которые содержат буффер,
+    * таких как `BfDrawRootLayer` - которые создаются как верхние
+    * слои.
+    *
+    * @note Функция рекурсивная, поэтому для ручного использования
+    * где-то - предоставлять аргументы не следует
+    *
+    * @note Используется для LAYER
+    *
+    * @param v указатель на открутую память точек
+    * @param i указатель на открутую память индексов
+    * @param off_v оффсет точек
+    * @param off_i оффсет индексов
+    */
    void updateBuffer(
        void* v = nullptr,
        void* i = nullptr,
@@ -46,6 +111,18 @@ public:
        size_t* off_i = nullptr
    );
 
+   /**
+    * @brief Запускает процесс рендера данного объекта.
+    * Если это OBJECT -> рендерит геометрию
+    * Если это LAYER -> рекурсивно рендерит одъекты внутри
+    *
+    * @note Используется для LAYER & OBJECT
+    *
+    * @param combuffer командный буффер открытый для рендер пасса
+    * @param offset оффсет, то же самое что рендер-айди
+    * @param index_offset оффсет для индексов для конкретного буффера
+    * @param vertex_offset оффсет для точек для конкретного буффера
+    */
    void draw(
        VkCommandBuffer combuffer,
        size_t offset,
@@ -57,11 +134,16 @@ private:
    BfDrawObjectBase& m_obj;
 };
 
+/**
+ * @class BfDrawDebugProxy
+ * @brief Создан для хранения методов, которые могут
+ * потребоваться при отладке
+ *
+ */
 class BfDrawDebugProxy
 {
 public:
    BfDrawDebugProxy(BfDrawObjectBase& obj);
-
    void printVertices();
    void printIndices();
 
@@ -69,17 +151,39 @@ private:
    BfDrawObjectBase& m_obj;
 };
 
+/**
+ * @class BfDrawObjectBase
+ * @brief Базовый класс объектов. Объект наследует BfObjectId, который
+ * содержит методы для работы с `id`
+ *
+ */
 class BfDrawObjectBase : public std::enable_shared_from_this<BfDrawObjectBase>,
                          public BfObjectId
 {
 public:
+   /**
+    * @brief База объекта может быть 1 из 3 типов, которые влияют на логику
+    * рендеринга
+    */
    enum Type
    {
-      OBJECT,
-      LAYER,
-      ROOT_LAYER,
+      OBJECT,     /** Содержит только точки и индексы, без детей */
+      LAYER,      /** Содержит OBJECT & LAYERS, но без точек и индексов*/
+      ROOT_LAYER, /** Аналогично LAYER, но имеет свой vkbuffer */
    };
 
+   /**
+    * @brief Дефолтный конструктор. Так как это базовый класс, который не
+    * сглаживает углы при создании объектов, то нужно указать все параметры:
+    *
+    * @param typeName Тип объекта (название)
+    * @param pl Пайплайн для рендеринга. Используется только для OBJECT
+    * @param type Тип объекта
+    * @param max_vertex Максимальное количество точек. Используется только для
+    * ROOT_LAYER
+    * @param max_obj Максимальное количество индексов. Используется только для
+    * ROOT_LAYER
+    */
    BfDrawObjectBase(
        BfOTypeName typeName,
        VkPipeline pl,
@@ -88,12 +192,46 @@ public:
        size_t max_obj = 20
    );
 
+   /**
+    *
+    *
+    * @brief Точки...
+    *
+    * @return ...
+    */
    const std::vector<BfVertex3>& vertices() const { return m_vertices; }
+
+   /**
+    *
+    *
+    * @brief Индексы...
+    *
+    * @return ...
+    */
    const std::vector<BfIndex>& indices() const { return m_indices; }
+
+   /**
+    * @brief Тип объекта
+    *
+    * @return ...
+    */
    const Type drawtype() const { return m_type; }
 
+   /**
+    * @brief Добавляет слой или объект в ЭТОТ объект, если
+    * он является ROOT_LAYER | LAYER
+    *
+    * @param n объект
+    */
    void add(BfObj n);
 
+   /**
+    * @brief Построение объекта.
+    * Если OBJECT -> генерация точек и индексов
+    * Если LAYER -> генерация объектов и добавление их в слой
+    * Если ROOT_LAYER -> генерация (вызов make()) для всех внутренних элементов
+    * слоя
+    */
    virtual void make();
 
    friend BfDrawControlProxy;

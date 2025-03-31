@@ -326,6 +326,10 @@ BfDrawObjectBase::BfDrawObjectBase(
 void
 BfDrawObjectBase::add(BfObj n)
 {
+   if (m_type == OBJECT)
+   {
+      std::runtime_error("Trying to add DrawObjectBase to OBJECT");
+   }
    m_children.push_back(n);
    m_root = shared_from_this();
 }
