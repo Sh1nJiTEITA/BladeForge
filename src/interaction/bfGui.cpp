@@ -3,6 +3,7 @@
 #include <glm/trigonometric.hpp>
 
 #include "bfCamera.h"
+#include "bfTypeManager.h"
 #include "imgui.h"
 
 BfGui::BfGui()
@@ -341,14 +342,17 @@ BfGui::presentToolType()
    {
       ImGui::BeginTooltip();
 
-      ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
-                       BfObjID::find_type(__ptr_base->pos_id)
-                   )))
-                      .c_str());
+      // ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
+      //                  BfObjID::find_type(__ptr_base->pos_id)
+      //              )))
+      //                 .c_str());
 
-      ImGui::Text((
-          std::string("id=").append(std::to_string(__ptr_base->pos_id)).c_str()
-      ));
+      ImGui::Text(
+          "type=%s",
+          obj::BfTypeManager::inst().getTypeById(__ptr_base->pos_id)
+      );
+
+      ImGui::Text("id=%i", __ptr_base->pos_id);
       ImGui::EndTooltip();
    }
 }

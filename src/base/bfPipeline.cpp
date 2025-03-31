@@ -427,7 +427,7 @@ BfPipelineInterfaceStd::genMultisampleState()
    VkPipelineMultisampleStateCreateInfo multisampleState{};
    // clang-format off
    multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisampleState.sampleShadingEnable = VK_TRUE;
+   multisampleState.sampleShadingEnable = VK_FALSE;
    multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
    multisampleState.minSampleShading = 1.0f;           // Optional
    multisampleState.pSampleMask = nullptr;             // Optional

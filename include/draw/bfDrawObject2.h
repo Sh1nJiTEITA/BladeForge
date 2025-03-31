@@ -21,6 +21,7 @@ class BfDrawObjectBase;
 
 using BfIndex = uint32_t;
 using BfObj = std::shared_ptr<BfDrawObjectBase>;
+using BfObjWeak = std::weak_ptr<BfDrawObjectBase>;
 
 /**
  * @class BfDrawControlProxy
@@ -111,7 +112,7 @@ protected:
    std::vector<BfVertex3> m_vertices;
    std::vector<BfIndex> m_indices;
 
-   BfObj m_root;
+   BfObjWeak m_root;
    std::vector<BfObj> m_children;
 
 private:

@@ -23,6 +23,8 @@ class BfTypeManager
    > m_types;
    // clang-format on
 
+   std::unordered_map<BfOId, BfOType> m_id;
+
    BfTypeManager() {};
 
 protected:
@@ -56,7 +58,11 @@ public:
       }
    };
 
-   BfOTypeName getType(BfOId id) { return m_types.left.at(id); }
+   void regId(BfOType type, BfOId id) { m_id[id] = type; }
+   void remId(BfOId id) { m_id.erase(id); }
+
+   BfOTypeName getTypeByTypeId(BfOType id) { return m_types.left.at(id); }
+   BfOTypeName getTypeById(BfOId id) { return m_types.left.at(m_id.at(id)); }
 };
 inline BfOType BfTypeManager::m_counter = 0;
 

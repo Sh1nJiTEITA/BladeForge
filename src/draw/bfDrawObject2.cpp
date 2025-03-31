@@ -304,7 +304,7 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_pipeline{pl}
     , m_modelMatrix{1.0f}
     , m_type{type}
-    , m_root{nullptr}
+    , m_root{}
 {
    if (type == BfDrawObjectBase::ROOT_LAYER)
    {

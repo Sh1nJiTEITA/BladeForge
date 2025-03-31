@@ -2,6 +2,7 @@ out/
 .vs/
 CMakePresets.json
 .cache/
-build/
+build*/
 *.spv
 imgui.ini
+

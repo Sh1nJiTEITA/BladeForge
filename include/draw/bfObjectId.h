@@ -18,7 +18,10 @@ public:
        : m_type{obj::BfTypeManager::inst().regType(typeName)}
        , m_value{m_counter++}
    {
+      obj::BfTypeManager::inst().regId(m_type, m_value);
    }
+
+   virtual ~BfObjectId() { obj::BfTypeManager::inst().remId(m_type); }
 
    explicit BfObjectId(const BfObjectId& other)
        : m_type{other.m_type}, m_value{other.m_value}
@@ -32,7 +35,7 @@ public:
 
    BfOTypeName typeName() const
    {
-      return BfTypeManager::inst().getType(m_type);
+      return BfTypeManager::inst().getTypeByTypeId(m_type);
    }
    BfOId type() const { return m_type; }
    BfOId id() const { return m_value; }

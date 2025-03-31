@@ -9,6 +9,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "bfAllocator.h"
 #include "bfBase.h"
 #include "bfCurves.hpp"
 #include "bfDrawObject.h"
@@ -2251,7 +2252,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
     size_t in_m, std::vector<BfVertex3>&& dvert
 )
     : BfDrawLayer(
-          bfGetBase()->allocator,
+          BfAllocator::get(),
           sizeof(BfVertex3),
           2000,
           20,

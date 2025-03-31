@@ -93,7 +93,7 @@ struct BfBase
 
    BfDrawLayer *section_layer = nullptr;
 
-   VmaAllocator allocator;
+   // VmaAllocator allocator;
    bool is_resized;
    uint32_t pos_id;
 

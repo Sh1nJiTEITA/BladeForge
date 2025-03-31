@@ -19,7 +19,7 @@ public:
        VmaMemoryUsage memoryUsage,
        VmaAllocationCreateFlags flags = 0
    );
-   ~BfBuffer();
+   virtual ~BfBuffer();
 
    VmaAllocation& allocation() { return m_alloc; }
    VkBuffer& raw() { return m_buffer; }

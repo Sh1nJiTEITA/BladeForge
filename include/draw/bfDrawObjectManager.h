@@ -69,6 +69,15 @@ public:
       }
    }
 
+   void kill()
+   {
+      for (auto l : m_rootObjects)
+      {
+         l.reset();
+      }
+      m_rootObjects.clear();
+   }
+
 private:
    BfDescriptor* m_descriptor;
    std::vector<BfObj> m_rootObjects;

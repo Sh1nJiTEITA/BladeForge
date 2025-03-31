@@ -1391,7 +1391,7 @@ bfInitOwnDescriptors(BfBase &base)
 
    BfDescriptorCreateInfo info_model_mtx{};
    info_model_mtx.usage = BfDescriptorModelMtxUsage;
-   info_model_mtx.vma_allocator = base.allocator;
+   info_model_mtx.vma_allocator = BfAllocator::get();
 
    info_model_mtx.pBuffer_info = &binfo_model_mtx;
 
@@ -1413,7 +1413,7 @@ bfInitOwnDescriptors(BfBase &base)
 
    BfDescriptorCreateInfo info_view{};
    info_view.usage = BfDescriptorViewDataUsage;
-   info_view.vma_allocator = base.allocator;
+   info_view.vma_allocator = BfAllocator::get();
 
    info_view.pBuffer_info = &binfo_view;
 
@@ -1444,7 +1444,7 @@ bfInitOwnDescriptors(BfBase &base)
 
    bfCreateBuffer(
        &base.id_image_buffer,
-       base.allocator,
+       BfAllocator::get(),
        // base.swap_chain_extent.height * base.swap_chain_extent.width *
        3 * sizeof(uint32_t),
        VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -2433,14 +2433,14 @@ bfCreateDepthBuffer(BfBase &base)
        VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
    auto res = vmaCreateImage(
-       base.allocator,
+       BfAllocator::get(),
        &dimg_info,
        &dimg_allocinfo,
        &base.depth_image.image,
        &base.depth_image.allocation,
        nullptr
    );
-   base.depth_image.allocator = base.allocator;
+   base.depth_image.allocator = BfAllocator::get();
 
    VkImageViewCreateInfo dview_info = bfPopulateDepthImageViewCreateInfo(
        base.depth_format,
@@ -2543,7 +2543,8 @@ bfCreateIDMapImage(BfBase &base)
    {
       auto image_event = bfCreateImage(
           &holder->images_id[frame_index],
-          base.allocator,
+          // base.allocator,
+          BfAllocator::get(),
           &id_image_create_info,
           &allocinfo
       );
@@ -2609,8 +2610,8 @@ bfCreateAllocator(BfBase &base)
        base.instance,
        base.physical_device->physical_device
    );
-   base.allocator = BfAllocator::get();
-   std::cout << " base allocator: " << base.allocator << "\n";
+   // base.allocator = BfAllocator::get();
+   // std::cout << " base allocator: " << base.allocator << "\n";
 
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -2637,7 +2638,7 @@ BfEvent
 bfDestroyAllocator(BfBase &base)
 {
    BfAllocator::destroy();
-   vmaDestroyAllocator(base.allocator);
+   // vmaDestroyAllocator(base.allocator);
    // //
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -2649,20 +2650,20 @@ bfDestroyAllocator(BfBase &base)
 BfEvent
 bfCreateTextureLoader(BfBase &base)
 {
-   base.texture_loader = BfTextureLoader(
-       base.physical_device,
-       &base.device,
-       &base.allocator,
-       &base.command_pool
-   );
-
-   base.texture_loader.create_imgui_descriptor_pool();
-   base.texture_loader.create_imgui_descriptor_set_layout();
-
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-   event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
-   return event;
+   // base.texture_loader = BfTextureLoader(
+   //     base.physical_device,
+   //     &base.device,
+   //     &BfAllocator::pget(),
+   //     &base.command_pool
+   // );
+   //
+   // base.texture_loader.create_imgui_descriptor_pool();
+   // base.texture_loader.create_imgui_descriptor_set_layout();
+   //
+   // BfSingleEvent event{};
+   // event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+   // event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
+   // return event;
 }
 
 BfEvent
@@ -2683,7 +2684,8 @@ bfLoadTextures(BfBase &base)
 BfEvent
 bfBindAllocatorToLayerHandler(BfBase &base)
 {
-   return base.layer_handler.bind_allocator(&base.allocator);
+   VmaAllocator alloc = BfAllocator::get();
+   return base.layer_handler.bind_allocator(&alloc);
 }
 
 // BfEvent
