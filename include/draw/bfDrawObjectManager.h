@@ -59,6 +59,7 @@ public:
       {
          size_t vertex_offset = 0;
          size_t index_offset = 0;
+
          obj->control().draw(
              command_buffer,
              obj_data_offset,

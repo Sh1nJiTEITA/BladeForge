@@ -45,9 +45,9 @@ public:
 
    void draw(
        VkCommandBuffer combuffer,
-       size_t& offset,
-       size_t& index_offset,
-       size_t& vertex_offset
+       size_t offset,
+       size_t index_offset,
+       size_t vertex_offset
    ) const;
 
 private:
@@ -89,6 +89,8 @@ public:
    const std::vector<BfIndex>& indices() const { return m_indices; }
    const Type drawtype() const { return m_type; }
 
+   void add(BfObj n);
+
    virtual void make();
 
    friend BfDrawControlProxy;
@@ -116,14 +118,16 @@ private:
    bool m_isBuffer;
 };
 
-class BfDrawObject : protected BfDrawObjectBase
+class BfDrawObject : public BfDrawObjectBase
 {
 public:
    BfDrawObject(BfOTypeName typeName, VkPipeline pl, BfObj root);
    virtual void make() override;
+
+   void add() = delete;
 };
 
-class BfDrawLayer : protected BfDrawObjectBase
+class BfDrawLayer : public BfDrawObjectBase
 {
 public:
    BfDrawLayer(
@@ -132,11 +136,13 @@ public:
        size_t max_vertex = 2000,
        size_t max_obj = 20
    );
-   BfDrawControlProxy control() = delete;
    virtual void make() override;
+
+   const std::vector<BfVertex3>& vertices() const = delete;
+   const std::vector<BfIndex>& indices() const = delete;
 };
 
-class BfDrawRootLayer : protected BfDrawLayer
+class BfDrawRootLayer : public BfDrawLayer
 {
 public:
    BfDrawRootLayer(size_t max_vertex = 2000, size_t max_obj = 20);
@@ -165,7 +171,33 @@ public:
           {1.0f, 1.0f, 0.0f},
           {1.0f, -1.0f, 0.0f},
       };
-      m_indices = {0, 1, 3, 1, 2, 3, 3, 0, 1};
+      m_indices = {0, 1, 3, 1, 2, 3};
+   }
+};
+
+class TestObj2 : public BfDrawObject
+{
+public:
+   TestObj2(BfObj root)
+       : BfDrawObject(
+             "TestObj2",
+             *BfPipelineHandler::instance()->getPipeline(
+                 BfPipelineType_Triangles
+             ),
+             root
+         )
+   {
+   }
+
+   virtual void make() override
+   {
+      m_vertices = {
+          {-1.0f, 0.0f, -1.0f},
+          {-1.0f, 0.0f, 1.0f},
+          {1.0f, 0.0f, 1.0f},
+          {1.0f, 0.0f, -1.0f},
+      };
+      m_indices = {0, 1, 3, 1, 2, 3};
    }
 };
 

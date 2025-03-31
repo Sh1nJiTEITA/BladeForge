@@ -1,5 +1,6 @@
 ﻿#include <imgui_impl_vulkan.h>
 
+#include <cassert>
 #include <memory>
 
 #include "bfAxis.h"
@@ -306,11 +307,21 @@ BfMain::__loop()
    // arrow_x->createIndices();
    //
 
-   auto test = std::make_shared<obj::TestObj>(nullptr);
-   test->make();
-   test->control().updateBuffer();
+   auto test_layer = std::make_shared<obj::BfDrawRootLayer>(2000, 5);
 
-   obj::BfDrawManager::inst().add(test);
+   auto test = std::make_shared<obj::TestObj>(test_layer);
+   test->make();
+
+   auto test2 = std::make_shared<obj::TestObj2>(test_layer);
+   test2->make();
+
+   assert(test_layer->control().isBuffer());
+
+   test_layer->add(test);
+   test_layer->add(test2);
+   test_layer->control().updateBuffer();
+
+   obj::BfDrawManager::inst().add(test_layer);
 
    // BfLayerHandler
    {

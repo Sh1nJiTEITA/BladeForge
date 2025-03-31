@@ -13,14 +13,36 @@ BfDrawControlProxy::BfDrawControlProxy(BfDrawObjectBase& obj)
 std::vector<int32_t>
 BfDrawControlProxy::vertexOffset() const
 {
-   std::vector<int32_t> offset(1 + m_obj.m_children.size());
-   size_t growing_offset = m_obj.m_vertices.size();
-   offset[0] = growing_offset;
+   // Check not to calc offsets for OBJECT
+   if (m_obj.m_type == BfDrawObjectBase::OBJECT)
+   {
+      throw std::runtime_error("OBJECT cant have vertex layer offsets");
+   }
+
+   std::vector<int32_t> offset;
+   offset.reserve(m_obj.m_children.size());
+   size_t growing_offset = 0;
 
    for (size_t i = 0; i < m_obj.m_children.size(); i++)
    {
-      offset[i + 1] = growing_offset;
-      growing_offset += m_obj.m_children[i]->vertices().size();
+      // auto size = m_obj.m_children[i]->vertices().size();
+      //
+      // // Check if layer has vertices inside?
+      // if ((m_obj.m_type == BfDrawObjectBase::LAYER) && (size != 0))
+      // {
+      //    throw std::runtime_error(
+      //        "Trying to calc vertexOffset() but found "
+      //        "vertices inside LAYER object"
+      //    );
+      // }
+
+      // offset[i] = growing_offset;
+      // growing_offset += size;
+      if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+
+      auto size = m_obj.m_children[i]->vertices().size();
+      offset.push_back(growing_offset);
+      growing_offset += size;
    }
    return offset;
 }
@@ -28,14 +50,29 @@ BfDrawControlProxy::vertexOffset() const
 std::vector<int32_t>
 BfDrawControlProxy::indexOffset() const
 {
-   std::vector<int32_t> offset(1 + m_obj.m_children.size());
-   size_t growing_offset = m_obj.m_indices.size();
-   offset[0] = growing_offset;
+   if (m_obj.m_type == BfDrawObjectBase::OBJECT)
+   {
+      throw std::runtime_error("OBJECT cant have index layer offsets");
+   }
+
+   std::vector<int32_t> offset;
+   offset.reserve(m_obj.m_children.size());
+   size_t growing_offset = 0;
 
    for (size_t i = 0; i < m_obj.m_children.size(); i++)
    {
-      offset[i + 1] = growing_offset;
-      growing_offset += m_obj.m_children[i]->indices().size();
+      // if ((m_obj.m_type == BfDrawObjectBase::LAYER))
+      // {
+      //    throw std::runtime_error(
+      //        "Trying to calc vertexOffset() but found "
+      //        "vertices inside LAYER object"
+      //    );
+      // }
+      if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+
+      auto size = m_obj.m_children[i]->indices().size();
+      offset.push_back(growing_offset);
+      growing_offset += size;
    }
    return offset;
 }
@@ -61,17 +98,26 @@ void
 BfDrawControlProxy::mapModel(size_t frame_index, size_t& offset, void* data)
     const
 {
-   BfObjectData obj_data = m_obj._objectData();
-   memcpy(
-       reinterpret_cast<char*>(data) + offset,
-       &obj_data,
-       sizeof(BfObjectData)
-   );
-   offset += sizeof(BfObjectData);
+   auto& g = m_obj;
 
-   for (size_t i = 0; i < m_obj.m_children.size(); i++)
+   // If current DrawObject is OBJECT -> map model data
+   // to descriptor and add offset
+   if (g.m_type == BfDrawObjectBase::OBJECT)
    {
-      m_obj.m_children[i]->control().mapModel(frame_index, offset, data);
+      BfObjectData obj_data = g._objectData();
+      memcpy(
+          reinterpret_cast<char*>(data) + offset,
+          &obj_data,
+          sizeof(BfObjectData)
+      );
+      offset += sizeof(BfObjectData);
+   }
+   else
+   {
+      for (size_t i = 0; i < g.m_children.size(); i++)
+      {
+         g.m_children[i]->control().mapModel(frame_index, offset, data);
+      }
    }
 }
 
@@ -80,130 +126,147 @@ BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
 {
    auto& g = m_obj;
 
-   auto innerMap = [](auto container, void* data, size_t* offset) {
-      // size_t size = sizeof(BfVertex3) * container.size();
-      // memcpy(reinterpret_cast<char*>(data) + *offset, container.data(),
-      // size); *offset += size;
-      size_t size =
-          sizeof(typename std::decay_t<decltype(container)>::value_type) *
-          container.size();
-      std::cout << "Copying " << size << " bytes to "
-                << " buffer at offset " << *offset << "\n";
+   // Flexible lambda to map both index/vertex data
+   auto innerMap = [](auto container,
+                      size_t single_size,
+                      void* data,
+                      size_t* offset) {
+      // Size of container to copy to
+      // sizeof(typename std::decay_t<decltype(container)>::value_type) *
+      // container.size();
+      // Copy transoformed byte codes to buffer pointer
+      std::cout << "copying single_size=" << single_size << "\n";
+      size_t size = container.size() * single_size;
       memcpy(reinterpret_cast<char*>(data) + *offset, container.data(), size);
       *offset += size;
    };
 
+   if (isBuffer() && (v || i || off_v || off_i))
+   {
+      throw std::runtime_error(
+          "Trying to update buffer but updateBuffer() method seems to work "
+          "incorrect."
+          "input layer has buffer, but void pointers or offset pointers "
+          "provided"
+      );
+   }
+
    if (isBuffer())
-   {  // clang-format off
-      std::cout << "Updating root buffer\n";
+   {
       void* p_vertex = g.m_buffer->vertex().map();
       void* p_index = g.m_buffer->index().map();
-      
-         size_t offset_v = 0;
-         size_t offset_i = 0;
 
-      std::cout << "mapping vertices\n";
-         m_obj.debug().printVertices();
-         
-         size_t size_v = sizeof(BfVertex3) * g.vertices().size();
-         memcpy(
-             reinterpret_cast<char *>(p_vertex) + offset_v,
-             g.vertices().data(),
-             size_v 
-         );
-         offset_v += size_v;
+      size_t offset_v = 0;
+      size_t offset_i = 0;
 
+      for (const auto& child : g.m_children)
+      {
+         child->control().updateBuffer(p_vertex, p_index, &offset_v, &offset_i);
+      }
 
-      std::cout << "mapping indices\n";
-
-         m_obj.debug().printIndices();
-         size_t size_i = sizeof(uint32_t) * g.indices().size();
-         memcpy(
-             reinterpret_cast<char *>(p_index) + offset_i,
-             g.indices().data(),
-             size_i 
-         );
-         offset_v += size_i;
-
-         // innerMap(g.vertices(), p_vertex, &offset_v);
-         // innerMap(g.indices(), p_index, &offset_i);
-
-         for (const auto& child : g.m_children)
-         {
-            child->control().updateBuffer(p_vertex, p_index, &offset_v, &offset_i);
-         }
-      
       g.m_buffer->vertex().unmap();
       g.m_buffer->index().unmap();
    }
    else
-   {  
+   {
+      // clang-format off
       if (v == nullptr) throw std::runtime_error("vertex* = nullptr");
       if (i == nullptr) throw std::runtime_error("index* = nullptr");
       if (off_v == nullptr) throw std::runtime_error("offset_vertex* = nullptr");
       if (off_i == nullptr) throw std::runtime_error("offset_index* = nullptr");
-      
-      innerMap(g.vertices(), v, off_v);
-      innerMap(g.indices(), i, off_i);
+      // clang-format on
 
-      for (const auto& child : g.m_children)
+      // If current DrawObject is OBJECT -> copy data
+      // to buffer. Each OBJECT object can't have children
+      // so where is no need to iterator over children.
+      if (g.m_type == BfDrawObjectBase::OBJECT)
       {
-         child->control().updateBuffer(v, i, off_v, off_i); 
-      }
+         size_t size = sizeof(BfVertex3) * g.vertices().size();
+         memcpy(reinterpret_cast<char*>(v) + *off_v, g.vertices().data(), size);
+         *off_v += size;
 
-   }  // clang-format on
+         size = sizeof(uint32_t) * g.indices().size();
+         memcpy(reinterpret_cast<char*>(i) + *off_i, g.indices().data(), size);
+         *off_i += size;
+
+         // innerMap(g.vertices(), sizeof(BfVertex3), v, off_v);
+         // innerMap(g.indices(), sizeof(uint32_t), i, off_i);
+      }
+      // If current DrawObject is LAYER -> iterate over
+      // children and search for OBJECTs to map data or
+      // other layers to search other OBJECTs recursively
+      else
+      {
+         for (const auto& child : g.m_children)
+         {
+            child->control().updateBuffer(v, i, off_v, off_i);
+         }
+      }
+   }
 }
 
 void
 BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
-    size_t& offset,
-    size_t& index_offset,
-    size_t& vertex_offset
+    size_t offset,
+    size_t index_offset,
+    size_t vertex_offset
 ) const
 {
    auto& g = m_obj;
 
-   auto index_offsets = indexOffset();
-   auto vertex_offsets = vertexOffset();
-
-   if (isBuffer())
+   if (g.m_type == BfDrawObjectBase::OBJECT)
    {
-      std::vector<VkDeviceSize> vert_offset = {0};
-
-      // Local elements
-      vkCmdBindVertexBuffers(
+      // DRAW SINGLE OBJECT
+      vkCmdBindPipeline(
           combuffer,
-          0,
-          1,
-          &g.m_buffer.get()->vertex().raw(),
-          vert_offset.data()
+          VK_PIPELINE_BIND_POINT_GRAPHICS,
+          g.m_pipeline
       );
-
-      vkCmdBindIndexBuffer(
+      vkCmdDrawIndexed(
           combuffer,
-          g.m_buffer.get()->index().raw(),
-          0,
-          VK_INDEX_TYPE_UINT32
+          g.indices().size(),
+          1,
+          index_offset,
+          vertex_offset,
+          offset
       );
    }
+   else  // IF LAYER
+   {
+      if (isBuffer())
+      {
+         std::vector<VkDeviceSize> vert_offset = {0};
+         // Local elements
+         vkCmdBindVertexBuffers(
+             combuffer,
+             0,
+             1,
+             &g.m_buffer.get()->vertex().raw(),
+             vert_offset.data()
+         );
 
-   vkCmdBindPipeline(
-       combuffer,
-       VK_PIPELINE_BIND_POINT_GRAPHICS,
-       m_obj.m_pipeline
-   );
+         vkCmdBindIndexBuffer(
+             combuffer,
+             g.m_buffer.get()->index().raw(),
+             0,
+             VK_INDEX_TYPE_UINT32
+         );
+      }
 
-   vkCmdDrawIndexed(
-       combuffer,
-       g.indices().size(),
-       1,
-       // index_offsets[0] + index_offset,
-       index_offset,
-       // vertex_offsets[0] + vertex_offset,
-       vertex_offset,
-       offset
-   );
+      auto calc_index_offsets = indexOffset();
+      auto calc_vertex_offsets = vertexOffset();
+
+      for (size_t i = 0; i < g.m_children.size(); ++i)
+      {
+         g.m_children.at(i)->control().draw(
+             combuffer,
+             offset + i,
+             index_offset + calc_index_offsets[i],
+             vertex_offset + calc_vertex_offsets[i]
+         );
+      }
+   }
 }
 
 BfDrawDebugProxy::BfDrawDebugProxy(BfDrawObjectBase& obj)
@@ -263,6 +326,12 @@ BfDrawObjectBase::BfDrawObjectBase(
          );
       }
    }
+}
+
+void
+BfDrawObjectBase::add(BfObj n)
+{
+   m_children.push_back(n);
 }
 
 void
