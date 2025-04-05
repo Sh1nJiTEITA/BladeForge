@@ -300,11 +300,12 @@ if(WIN32)
 endif(WIN32)
 
 # CATCH 2 add_subdirectory(external/catch2) Tests
-# ~~~
-
 find_package(Catch2 REQUIRED)
 
-# if (${IS_BUILD_TESTS})
+add_library(bfgeometrytestlib STATIC ${BF_GEOMETRY})
+target_compile_definitions(bfgeometrytestlib PUBLIC BF_CURVES4_NO_PIPELINE)
+target_link_libraries(bfgeometrytestlib PUBLIC bfexternallib)
+
 add_executable(
   tests #
   # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp" #
@@ -326,11 +327,10 @@ add_executable(
   "./tests/curves4.cpp" #
   # "tests/filedialog_test.cpp" # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" )
 )
-target_compile_definitions(tests PUBLIC BF_CURVES4_NO_PIPELINE)
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PUBLIC bfbaselib)
-target_link_libraries(tests PUBLIC bfgeometrylib)
+target_link_libraries(tests PUBLIC bfgeometrytestlib)
 target_link_libraries(tests PUBLIC bfotherlib)
 target_link_libraries(tests PUBLIC bfdrawlib)
 target_link_libraries(tests PUBLIC bfinteractionlib)

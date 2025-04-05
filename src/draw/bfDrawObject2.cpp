@@ -269,6 +269,19 @@ BfDrawControlProxy::draw(
    }
 }
 
+void
+BfDrawControlProxy::toggleHover(int status)
+{
+   if (status == -1)
+   {
+      m_obj.isHovered = !m_obj.isHovered;
+   }
+   else
+   {
+      m_obj.isHovered = static_cast<bool>(status);
+   }
+}
+
 BfDrawDebugProxy::BfDrawDebugProxy(BfDrawObjectBase& obj)
     : m_obj{obj}
 {
@@ -343,6 +356,29 @@ BfDrawObjectBase::make()
    );
 }
 
+BfObj
+BfDrawObjectBase::root()
+{
+   if (auto v = m_root.lock())
+   {
+      if (v->m_root.expired())
+      {
+         if (v->control().isBuffer())
+         {
+            return v;
+         }
+         else
+         {
+            throw std::runtime_error(
+                "Root does not exist but this layer does not have buffer "
+            );
+         }
+      }
+      return v->root();
+   }
+   return shared_from_this();
+}
+
 BfObjectData
 BfDrawObjectBase::_objectData()
 {
@@ -358,7 +394,9 @@ BfDrawObjectBase::_objectData()
 /* BfDrawObject */
 
 BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl, uint32_t disc)
-    : BfDrawObjectBase{typeName, pl, OBJECT, 0, 0}, m_discretization{disc}
+    : BfDrawObjectBase{typeName, pl, OBJECT, 0, 0}
+    , m_discretization{disc}
+    , m_color{1.0f, 1.0f, 1.0f}
 {
 }
 

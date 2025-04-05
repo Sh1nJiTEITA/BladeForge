@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+
 // #include <catch2/catch_session.hpp>
 
 #define VMA_IMPLEMENTATION

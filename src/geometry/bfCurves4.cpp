@@ -1,5 +1,9 @@
 #include <bfCurves4.h>
 
+#include <cmath>
+#include <glm/common.hpp>
+#include <stdexcept>
+
 namespace curves
 {
 
@@ -8,9 +12,99 @@ namespace math
 
 glm::vec3
 findLinesIntersection(
-    const BfSingleLine& line1, const BfSingleLine& line2, int mode
+    const curves::BfSingleLine& line1,
+    const curves::BfSingleLine& line2,
+    int mode
 )
 {
+   if (isVerticesInPlain(
+           line1.first(),
+           line1.second(),
+           line2.first(),
+           line2.second()
+       ))
+   {
+      glm::vec3 a1 = line1.first().pos;
+      glm::vec3 b1 = line1.directionFromStart();
+
+      glm::vec3 a2 = line2.first().pos;
+      glm::vec3 b2 = line2.directionFromStart();
+
+      float frac = b1.x * b2.y - b1.y * b2.x;
+
+      float t1 =
+          (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
+      float t2 =
+          (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) / (-frac);
+
+      // if lines are parallel
+      if (glm::isnan(t1) || glm::isnan(t2))
+      {
+         return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+      }
+      if (mode == BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES)
+      {
+         if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f))
+         {
+            return a1 + b1 * t1;
+         }
+         else
+         {
+            return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+         }
+      }
+      else if (mode == BF_MATH_FIND_LINES_INTERSECTION_ANY)
+      {
+         return a1 + b1 * t1;
+      }
+      else
+      {
+         throw std::runtime_error(
+             "Invalid bfMathFindLinesIntersection mode inputed"
+         );
+      }
+   }
+   else
+   {
+      return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+   }
+}
+
+std::vector<BfVertex3>
+calcCircleVertices(
+    const BfVertex3& center,
+    float radius,
+    uint32_t m_discretization,
+    const glm::vec3& color
+)
+{
+   glm::vec3 orth_1;
+   glm::vec3 orth_2;
+   glm::vec3 normal = center.normals;
+
+   if (std::abs(normal.x) > std::abs(normal.y))
+   {
+      orth_1 = glm::normalize(glm::vec3(-normal.z, 0.0f, normal.x));
+   }
+   else
+   {
+      orth_1 = glm::normalize(glm::vec3(0.0f, normal.z, -normal.y));
+   }
+   orth_2 = glm::normalize(glm::cross(normal, orth_1));
+
+   std::vector<BfVertex3> v;
+
+   for (size_t i = 0; i < m_discretization + 1; ++i)
+   {
+      float theta = 2 * BF_PI * i / m_discretization;
+      v.emplace_back(
+          center.pos + radius * cosf(theta) * orth_1 +
+              radius * sinf(theta) * orth_2,
+          color,
+          normal
+      );
+   }
+   return v;
 }
 
 }  // namespace math
@@ -51,6 +145,27 @@ BfSingleLine::make()
    _genIndicesStandart();
 };
 
+void
+BfCircleCenter::make()
+{
+   m_indices.clear();
+   m_vertices = std::move(
+       math::calcCircleVertices(m_center, m_radius, m_discretization, m_color)
+   );
+   _genIndicesStandart();
+}
+
+const BfVertex3&
+BfCircleCenter::center() const
+{
+   return m_center;
+}
+const float
+BfCircleCenter::radius() const
+{
+   return m_radius;
+}
+
 const BfVertex3&
 Bfcircle3Vertices::first() const
 {
@@ -67,9 +182,129 @@ Bfcircle3Vertices::third() const
    return m_third;
 }
 
+const float
+Bfcircle3Vertices::radius() const
+{
+   if (std::isnan(m_radius))
+   {
+      throw std::runtime_error(
+          "Tring to get circle radius but its Nan."
+          " Call make() method before this function"
+      );
+   }
+   return m_radius;
+}
+
+const BfVertex3&
+Bfcircle3Vertices::center() const
+{
+   if (glm::any(glm::isnan(m_center.pos)) ||
+       glm::any(glm::isnan(m_center.color)) ||
+       glm::any(glm::isnan(m_center.normals)))
+   {
+      throw std::runtime_error(
+          "Tring to get circle center but some of its commponents is Nan."
+          " Call make() method before this function"
+      );
+   }
+   return m_center;
+}
+
 void
 Bfcircle3Vertices::make()
 {
+   m_vertices.clear();
+   m_indices.clear();
+
+   BfSingleLine l_12(m_first, m_second);
+   BfSingleLine l_23(m_second, m_third);
+   BfSingleLine l_31(m_third, m_first);
+
+   glm::vec3 ave_12 = (m_first.pos + m_second.pos) * 0.5f;
+   glm::vec3 ave_23 = (m_second.pos + m_third.pos) * 0.5f;
+   glm::vec3 ave_31 = (m_third.pos + m_first.pos) * 0.5f;
+
+   glm::vec3 v_12 = l_12.directionFromStart();
+   glm::vec3 v_23 = l_23.directionFromStart();
+   glm::vec3 v_31 = l_31.directionFromStart();
+
+   glm::vec3 n_12 = glm::cross(glm::cross(v_12, v_23), v_12);
+   glm::vec3 n_23 = glm::cross(glm::cross(v_23, v_12), v_23);
+   glm::vec3 n_31 = glm::cross(glm::cross(v_31, v_23), v_31);
+
+   BfSingleLine per_l_12(ave_12, ave_12 + n_12);
+   BfSingleLine per_l_23(ave_23, ave_23 + n_23);
+   BfSingleLine per_l_31(ave_31, ave_31 + n_31);
+
+   BfVertex3 center;
+   center.pos = curves::math::findLinesIntersection(
+       per_l_12,
+       per_l_23,
+       BF_MATH_FIND_LINES_INTERSECTION_ANY
+   );
+
+   // TODO
+   if (glm::isnan(center.pos.x) || glm::isnan(center.pos.y) ||
+       glm::isnan(center.pos.z))
+   {
+      if (m_first.equal(m_second))
+      {
+         m_center = BfVertex3(
+             {m_first.pos.x + m_second.pos.x * 0.5f,
+              m_first.pos.y + m_second.pos.y * 0.5f,
+              m_first.pos.z + m_second.pos.z * 0.5f},
+
+             m_first.color,
+             m_first.normals
+         );
+         m_radius = glm::distance(m_first.pos, m_second.pos) * 0.5f;
+      }
+      else if (m_second.equal(m_third))
+      {
+         m_center = BfVertex3(
+             {m_third.pos.x + m_second.pos.x * 0.5f,
+              m_third.pos.y + m_second.pos.y * 0.5f,
+              m_third.pos.z + m_second.pos.z * 0.5f},
+
+             m_third.color,
+             m_third.normals
+         );
+         m_radius = glm::distance(m_second.pos, m_third.pos) * 0.5f;
+      }
+      else if (m_third.equal(m_first))
+      {
+         m_center = BfVertex3(
+             {m_first.pos.x + m_third.pos.x * 0.5f,
+              m_first.pos.y + m_third.pos.y * 0.5f,
+              m_first.pos.z + m_third.pos.z * 0.5f},
+
+             m_first.color,
+             m_first.normals
+         );
+         m_radius = glm::distance(m_third.pos, m_first.pos) * 0.5f;
+      }
+      return;
+   }
+
+   float rad_1 = glm::distance(center.pos, m_first.pos);
+   float rad_2 = glm::distance(center.pos, m_first.pos);
+   float rad_3 = glm::distance(center.pos, m_first.pos);
+
+   if (!CHECK_FLOAT_EQUALITY(rad_1, rad_2) ||
+       !CHECK_FLOAT_EQUALITY(rad_2, rad_3) ||
+       !CHECK_FLOAT_EQUALITY(rad_3, rad_1))
+   {
+      throw std::runtime_error("Circle was'n made -> different radious");
+   }
+
+   center.normals = math::calcPlaneCoeffs(m_first, m_second, m_third);
+
+   m_radius = rad_1;
+   m_center = center;
+   m_vertices = std::move(
+       math::calcCircleVertices(m_center, m_radius, m_discretization, m_color)
+   );
+   _genIndicesStandart();
 }
 
 }  // namespace curves

@@ -3,6 +3,7 @@
 #include <glm/trigonometric.hpp>
 
 #include "bfCamera.h"
+#include "bfDrawObjectManager.h"
 #include "bfTypeManager.h"
 #include "imgui.h"
 
@@ -756,6 +757,7 @@ BfGui::presentInfo()
       ImGui::Text(pitch_string.c_str());
       ImGui::Text(mpos_string.c_str());
       ImGui::Text(selected_id_string.c_str());
+      ImGui::Text("NewId: %i", obj::BfDrawManager::inst().getHovered());
       ImGui::Separator();
       {
 #define BF_SPLIT_VEC3(VEC) VEC.x, VEC.y, VEC.z
@@ -763,7 +765,6 @@ BfGui::presentInfo()
 #define BF_SPLIT_BFKEYSTATE(KEY)                                   \
    KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld, \
        KEY.isPressedInitial
-
          auto pCam = BfCamera::instance();
 
          ImGui::Text("CameraMode(BfBase): %d", __ptr_base->camera_mode);

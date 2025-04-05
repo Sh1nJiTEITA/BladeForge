@@ -2,6 +2,7 @@
 #define BF_VERTEX2_H
 
 // Graphics Libs
+#include <cmath>
 #include <glm/fwd.hpp>
 #include <type_traits>
 #ifdef _WIN32
@@ -120,6 +121,15 @@ struct BfVertex3
    )
        : pos{std::move(ipos)}, color{std::move(icol)}, normals{std::move(inor)}
    {
+   }
+
+   static BfVertex3 nan()
+   {
+      return BfVertex3{
+          glm::vec3(std::nanf("")),
+          glm::vec3(std::nanf("")),
+          glm::vec3(std::nanf(""))
+      };
    }
 
    inline bool equal(const BfVertex3 &o) const

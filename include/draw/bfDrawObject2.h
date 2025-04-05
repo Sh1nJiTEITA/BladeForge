@@ -153,6 +153,8 @@ public:
        size_t vertex_offset
    ) const;
 
+   void toggleHover(int status = -1);
+
 private:
    BfDrawObjectBase& m_obj;
 };
@@ -174,6 +176,12 @@ private:
    BfDrawObjectBase& m_obj;
 };
 
+class BfGuiIntegration
+{
+protected:
+   bool isHovered;
+};
+
 /**
  * @class BfDrawObjectBase
  * @brief Базовый класс объектов. Объект наследует BfObjectId, который
@@ -181,7 +189,8 @@ private:
  *
  */
 class BfDrawObjectBase : public std::enable_shared_from_this<BfDrawObjectBase>,
-                         public BfObjectId
+                         public BfObjectId,
+                         protected obj::BfGuiIntegration
 {
 public:
    /**
@@ -264,6 +273,8 @@ public:
    friend BfDrawDebugProxy;
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
 
+   BfObj root();
+
 protected:
    virtual BfObjectData _objectData();
 
@@ -303,6 +314,8 @@ public:
     */
    void add() = delete;
 
+   glm::vec3& color() { return m_color; }
+
 protected:
    /**
     * @brief Генерирует индексы. Для каждого вертекса
@@ -311,6 +324,7 @@ protected:
     */
    void _genIndicesStandart();
    uint32_t m_discretization;
+   glm::vec3 m_color;
 };
 
 /**

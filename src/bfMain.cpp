@@ -80,7 +80,10 @@ BfMain::__poll_events()
    }
    else
    {
-      __base.pos_id = bfGetCurrentObjectId(__base);
+      auto hovered = bfGetCurrentObjectId(__base);
+      __base.pos_id = hovered;
+
+      obj::BfDrawManager::inst().setHovered(hovered);
    }
 
    __process_keys();

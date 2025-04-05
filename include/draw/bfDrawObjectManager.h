@@ -22,6 +22,9 @@ public:
 
    void bindDescriptor(BfDescriptor* descriptor) { m_descriptor = descriptor; }
 
+   void setHovered(uint32_t id) { m_hoveredid = id; }
+   uint32_t getHovered() noexcept { return m_hoveredid; }
+
    void add(BfObj obj)
    {
       if (!obj->control().isBuffer())
@@ -79,6 +82,7 @@ public:
    }
 
 private:
+   uint32_t m_hoveredid;
    BfDescriptor* m_descriptor;
    std::vector<BfObj> m_rootObjects;
 };
