@@ -357,8 +357,10 @@ BfDrawObjectBase::_objectData()
 
 /* BfDrawObject */
 
-BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl)
-    : BfDrawObjectBase{typeName, pl, OBJECT, 0, 0} {};
+BfDrawObject::BfDrawObject(BfOTypeName typeName, VkPipeline pl, uint32_t disc)
+    : BfDrawObjectBase{typeName, pl, OBJECT, 0, 0}, m_discretization{disc}
+{
+}
 
 void
 BfDrawObject::make()

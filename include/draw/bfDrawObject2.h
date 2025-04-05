@@ -13,12 +13,29 @@
 #include "bfVertex2.hpp"
 
 // clang-format off
+
+
+/**
+ * @def BF_PIPELINE(type)
+ * @brief Retrieves a pipeline of the given type if pipeline support is enabled;
+ *        otherwise returns nullptr.
+ *
+ * If @c BF_CURVES4_NO_PIPELINE is defined, then @c BF_PIPELINE(...) evaluates
+ * to @c nullptr. Otherwise, it includes the @c bfPipeline.h header and defines
+ * @c BF_PIPELINE(type) to dereference the result of
+ * @c BfPipelineHandler::instance()->getPipeline(type).
+ */
 #if defined(BF_CURVES4_NO_PIPELINE)
 #   define BF_PIPELINE(...) nullptr
 #else
 #   include "bfPipeline.h"
 #   define BF_PIPELINE(type) *BfPipelineHandler::instance()->getPipeline(type)
 #endif
+//
+//
+//
+//
+//
 // clang-format on
 
 namespace obj
@@ -273,7 +290,7 @@ private:
 class BfDrawObject : public BfDrawObjectBase
 {
 public:
-   BfDrawObject(BfOTypeName typeName, VkPipeline pl);
+   BfDrawObject(BfOTypeName typeName, VkPipeline plm, uint32_t disc = 200);
 
    /**
     * @brief Должен быть определен для любого объекта
@@ -293,6 +310,7 @@ protected:
     * когда нужно будет использовать цвет.
     */
    void _genIndicesStandart();
+   uint32_t m_discretization;
 };
 
 /**

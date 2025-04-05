@@ -228,8 +228,8 @@ target_link_libraries(bfbaselib PUBLIC bfexternallib)
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp" "src/geometry/bfCurves3.cpp"
-    "src/geometry/bfCurves3_gui.cpp" "src/geometry/bfBladeSection.cpp"
-    "src/geometry/bfAxis.cpp")
+    "src/geometry/bfCurves4.cpp" "src/geometry/bfCurves3_gui.cpp"
+    "src/geometry/bfBladeSection.cpp" "src/geometry/bfAxis.cpp")
 
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
@@ -322,9 +322,8 @@ add_executable(
   # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" # "tests/bez_test.cpp" #
   # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp" #
   # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp"
-  # "include/other/bfMath.hpp"
-  # "src/other/bfMath.cpp"
-  "./tests/object.cpp" "./tests/curves4.cpp" #
+  "include/other/bfMath.hpp" "src/other/bfMath.cpp" "./tests/object.cpp"
+  "./tests/curves4.cpp" #
   # "tests/filedialog_test.cpp" # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" )
 )
 target_compile_definitions(tests PUBLIC BF_CURVES4_NO_PIPELINE)
