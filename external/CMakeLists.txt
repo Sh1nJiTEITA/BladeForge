@@ -18,8 +18,7 @@ target_include_directories(
   INTERFACE ${Vulkan_INCLUDE_DIRS}
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/${BF_IMGUI_DIR_NAME}/backends/
-  PUBLIC C:/VulkanSDK/1.4.304.0/Include
-)
+  PUBLIC C:/VulkanSDK/1.4.304.0/Include)
 
 set(BF_IMPLOT_DIR_NAME "implot")
 
@@ -50,16 +49,12 @@ target_link_libraries(bfexternallib PUBLIC ${Vulkan_LIBRARIES}
 
 target_link_libraries(bfexternallib PUBLIC glfw)
 
-
-
-
 if(WIN32)
   set(LUA_INCLUDE_DIR "C:/msys64/mingw64/include")
   set(LUA_LIBRARIES "C:/msys64/mingw64/lib/liblua.dll.a")
-elseif(UNIX) 
+elseif(UNIX)
   find_package(Lua REQUIRED)
 endif()
-
 
 target_link_libraries(bfexternallib PUBLIC sol2::sol2 ${LUA_LIBRARIES})
 target_include_directories(bfexternallib PUBLIC ${LUA_INCLUDE_DIR})
@@ -71,7 +66,7 @@ set(IMGUI_IMPL_VULKAN
     CACHE BOOL "" FORCE)
 
 find_package(glm CONFIG REQUIRED)
-target_link_libraries(bfexternallib  PRIVATE glm::glm)
+target_link_libraries(bfexternallib PRIVATE glm::glm)
 
 if(WIN32)
   set(VulkanMemoryAllocator_DIR
@@ -79,4 +74,4 @@ if(WIN32)
 endif(WIN32)
 
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-target_link_libraries(bfexternallib PRIVATE GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(bfexternallib PUBLIC GPUOpen::VulkanMemoryAllocator)

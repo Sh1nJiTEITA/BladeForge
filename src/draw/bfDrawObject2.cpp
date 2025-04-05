@@ -366,6 +366,18 @@ BfDrawObject::make()
    throw std::runtime_error("[BfDrawObject] make() method must be implemented");
 }
 
+void
+BfDrawObject::_genIndicesStandart()
+{
+   m_indices.clear();
+   m_indices.reserve(m_vertices.size());
+
+   for (size_t i = 0; i < m_vertices.size(); ++i)
+   {
+      m_indices.emplace_back(i);
+   }
+}
+
 /* BfDrawLayer */
 BfDrawLayer::BfDrawLayer(BfOTypeName typeName)
     : BfDrawObjectBase(typeName, nullptr, LAYER, 0, 0)

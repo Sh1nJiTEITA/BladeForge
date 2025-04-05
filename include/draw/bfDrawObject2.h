@@ -6,17 +6,23 @@
 #include <memory>
 #include <random>
 
-#include "bfDrawObject.h"
 #include "bfDrawObjectBuffer.h"
 #include "bfObjectId.h"
-#include "bfPipeline.h"
 #include "bfTypeManager.h"
 #include "bfUniforms.h"
 #include "bfVertex2.hpp"
 
+// clang-format off
+#if defined(BF_CURVES4_NO_PIPELINE)
+#   define BF_PIPELINE(...) nullptr
+#else
+#   include "bfPipeline.h"
+#   define BF_PIPELINE(type) *BfPipelineHandler::instance()->getPipeline(type)
+#endif
+// clang-format on
+
 namespace obj
 {
-
 class BfDrawObjectBase;
 
 using BfIndex = uint32_t;
@@ -179,10 +185,10 @@ public:
     * @param typeName Тип объекта (название)
     * @param pl Пайплайн для рендеринга. Используется только для OBJECT
     * @param type Тип объекта
-    * @param max_vertex Максимальное количество точек. Используется только для
-    * ROOT_LAYER
-    * @param max_obj Максимальное количество индексов. Используется только для
-    * ROOT_LAYER
+    * @param max_vertex Максимальное количество точек. Используется только
+    * для ROOT_LAYER
+    * @param max_obj Максимальное количество индексов. Используется только
+    * для ROOT_LAYER
     */
    BfDrawObjectBase(
        BfOTypeName typeName,
@@ -229,8 +235,9 @@ public:
     * @brief Построение объекта.
     * Если OBJECT -> генерация точек и индексов
     * Если LAYER -> генерация объектов и добавление их в слой
-    * Если ROOT_LAYER -> генерация (вызов make()) для всех внутренних элементов
-    * слоя
+    * Если ROOT_LAYER -> генерация (вызов make()) для всех внутренних
+    * элементов слоя
+    *
     */
    virtual void make();
 
@@ -267,9 +274,25 @@ class BfDrawObject : public BfDrawObjectBase
 {
 public:
    BfDrawObject(BfOTypeName typeName, VkPipeline pl);
+
+   /**
+    * @brief Должен быть определен для любого объекта
+    */
    virtual void make() override;
 
+   /**
+    * @brief Так как объект не может иметь детей,
+    * этот метод ему не нужен
+    */
    void add() = delete;
+
+protected:
+   /**
+    * @brief Генерирует индексы. Для каждого вертекса
+    * Создается свой индекс. Работает хорошо для случаев,
+    * когда нужно будет использовать цвет.
+    */
+   void _genIndicesStandart();
 };
 
 /**
@@ -283,22 +306,46 @@ public:
    BfDrawLayer(BfOTypeName typeName);
 
    virtual void make() override;
+
+   /**
+    * @brief Так как слой не может иметь точки, этот метод ему не нужен
+    */
    const std::vector<BfVertex3>& vertices() const = delete;
+
+   /**
+    * @brief Так как слой не может иметь индексы, этот метод ему не нужен
+    */
    const std::vector<BfIndex>& indices() const = delete;
 };
 
 /**
  * @class BfDrawRootLayer
- * @brief
- *
+ * @brief Слой объект для хранения других слоев.
+ * Имеет свой буффер.
  */
 class BfDrawRootLayer : public BfDrawObjectBase
 {
 public:
+   /**
+    * @brief Создаем слой
+    *
+    * @param max_vertex Максимальное количество точек в объекте
+    * @param max_obj Максимальное количество объектов
+    */
    BfDrawRootLayer(size_t max_vertex = 2000, size_t max_obj = 20);
 
+   /**
+    * @brief вызывает make() всех объектов внутри
+    */
    virtual void make() override;
+
+   /**
+    * @brief Так как слой не может иметь точки, этот метод ему не нужен
+    */
    const std::vector<BfVertex3>& vertices() const = delete;
+   /**
+    * @brief Так как слой не может иметь индексы, этот метод ему не нужен
+    */
    const std::vector<BfIndex>& indices() const = delete;
 };
 
@@ -311,12 +358,7 @@ class TestObj : public BfDrawObject
 {
 public:
    TestObj()
-       : BfDrawObject(
-             "TestObj",
-             *BfPipelineHandler::instance()->getPipeline(
-                 BfPipelineType_Triangles
-             )
-         )
+       : BfDrawObject("TestObj", BF_PIPELINE(BfPipelineType_Triangles))
    {
    }
 
@@ -341,12 +383,7 @@ class TestObj2 : public BfDrawObject
 {
 public:
    TestObj2()
-       : BfDrawObject(
-             "TestObj2",
-             *BfPipelineHandler::instance()->getPipeline(
-                 BfPipelineType_Triangles
-             )
-         )
+       : BfDrawObject("TestObj2", BF_PIPELINE(BfPipelineType_Triangles))
    {
    }
 
@@ -390,12 +427,7 @@ class RandomPlane : public BfDrawObject
 {
 public:
    RandomPlane()
-       : BfDrawObject(
-             "RandomPlane",
-             *BfPipelineHandler::instance()->getPipeline(
-                 BfPipelineType_Triangles
-             )
-         )
+       : BfDrawObject("RandomPlane", BF_PIPELINE(BfPipelineType_Triangles))
    {
    }
 

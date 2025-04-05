@@ -1,8 +1,6 @@
 #ifndef BF_CUSTOM_ALLOCATOR_H
 #define BF_CUSTOM_ALLOCATOR_H
 
-#include <vulkan/vulkan_core.h>
-
 #include <stdexcept>
 
 #include "bfVariative.hpp"

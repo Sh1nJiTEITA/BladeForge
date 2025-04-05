@@ -44,7 +44,7 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << std::endl;
 
-   BfBezier bezier1                    = bezier2.get_derivative();
+   BfBezier bezier1 = bezier2.get_derivative();
 
    std::vector<BfVertex3> plot_points1 = bezier1.update_and_get_vertices(50);
    for (int i = 0; i < plot_points1.size(); i++)
@@ -59,7 +59,7 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << std::endl;
 
-   int                    count = 50;
+   int count = 50;
    std::vector<glm::vec3> out_points(count + 1);
    std::vector<glm::vec3> out_points_e(count + 1);
    std::vector<glm::vec3> out_points_der2(count + 1);
@@ -144,10 +144,12 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << "Eleveting" << std::endl;
 
-   std::vector<glm::vec3> def_points2{{0.0f, 0.0f, 0.0f},
-                                      {0.0f, 1.0f, 0.0f},
-                                      {1.0f, 1.0f, 0.0f}};
-   BfBezier               bezier2_(2, def_points2);
+   std::vector<glm::vec3> def_points2{
+       {0.0f, 0.0f, 0.0f},
+       {0.0f, 1.0f, 0.0f},
+       {1.0f, 1.0f, 0.0f}
+   };
+   BfBezier bezier2_(2, def_points2);
 
    BfBezier elev_bezier2_ = bezier2_.get_elevated_order()
                                 .get_elevated_order()
@@ -173,7 +175,7 @@ TEST_CASE("CURVES_H", "[single-file]")
 
    BfMatrix mat_1_ml = BfMatrix::multiply(mat_1, mat_2);
 
-   float det_mat_1   = BfMatrix::det(mat_2);
+   float det_mat_1 = BfMatrix::det(mat_2);
 
    BfMatrix mat_5(
        5,
@@ -186,13 +188,14 @@ TEST_CASE("CURVES_H", "[single-file]")
            21,22,23,24,25*/
            6.0,  1.0, 0.0, 4.0, 0,   6.0, 3.0, 8.0, 0.0, 4,   1.0, 0.0, 0.0,
            14.0, 0,   0.0, 1.0, 0.0, 2.0, 0,   0.0, 0.0, 2.0, 0.0, 2,
-       });
-   float det_mat_5   = BfMatrix::det(mat_5);
+       }
+   );
+   float det_mat_5 = BfMatrix::det(mat_5);
 
    BfMatrix inv_mat5 = BfMatrix::inverse(mat_5);
 
-   BfMatrix mat5__1  = BfMatrix::multiply(mat_5, inv_mat5);
-   BfMatrix mat5__2  = BfMatrix::multiply(inv_mat5, mat_5);
+   BfMatrix mat5__1 = BfMatrix::multiply(mat_5, inv_mat5);
+   BfMatrix mat5__2 = BfMatrix::multiply(inv_mat5, mat_5);
 
    std::cout << std::endl;
    std::cout << std::endl;
@@ -203,9 +206,10 @@ TEST_CASE("CURVES_H", "[single-file]")
                                       { 220,60,0.0 },*/
                                       {0.0f, 150.0f, 30.0f},
                                       {100.0f, 250.0f, 50.0f},
-                                      {250.0f, 200.0f, 70.0f}};
+                                      {250.0f, 200.0f, 70.0f}
+   };
 
-   BfBezier               com_bez(2, com_bez_def);
+   BfBezier com_bez(2, com_bez_def);
    std::vector<BfVertex3> com_bez_v = com_bez.update_and_get_vertices(30);
 
    std::cout << std::endl;
@@ -237,7 +241,7 @@ TEST_CASE("CURVES_H", "[single-file]")
        //{ 400, 80, 0.0}
    };
 
-   BfBezier               com_bez2(3, com_bez_def2);
+   BfBezier com_bez2(3, com_bez_def2);
    std::vector<BfVertex3> com_bez_v2 = com_bez2.update_and_get_vertices(30);
 
    std::cout << std::endl;
@@ -254,7 +258,7 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << "Single com_der 2" << std::endl;
 
-   BfBezier               com_bez_der = com_bez2.get_derivative();
+   BfBezier com_bez_der = com_bez2.get_derivative();
    std::vector<BfVertex3> com_bez_der_v =
        com_bez_der.update_and_get_vertices(30);
 
@@ -267,9 +271,9 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::pair<glm::vec3, glm::vec3> fff = com_bez2.get_bbox_t();
    std::pair<glm::vec3, glm::vec3> fff_po;
 
-   fff_po.first.x  = com_bez2.get_single_vertex(fff.first.x).x;
-   fff_po.first.y  = com_bez2.get_single_vertex(fff.first.y).y;
-   fff_po.first.z  = com_bez2.get_single_vertex(fff.first.z).z;
+   fff_po.first.x = com_bez2.get_single_vertex(fff.first.x).x;
+   fff_po.first.y = com_bez2.get_single_vertex(fff.first.y).y;
+   fff_po.first.z = com_bez2.get_single_vertex(fff.first.z).z;
 
    fff_po.second.x = com_bez2.get_single_vertex(fff.second.x).x;
    fff_po.second.y = com_bez2.get_single_vertex(fff.second.y).y;
@@ -279,9 +283,9 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << "allign2" << std::endl;
 
-   BfBezier               all_b = com_bez.get_alligned(BF_PLANE_XZ, BF_AXIS_X);
+   BfBezier all_b = com_bez.get_alligned(BF_PLANE_XZ, BF_AXIS_X);
    std::vector<BfVertex3> com_bez_vert333 = com_bez.update_and_get_vertices(30);
-   std::vector<BfVertex3> all_b_vert      = all_b.update_and_get_vertices(30);
+   std::vector<BfVertex3> all_b_vert = all_b.update_and_get_vertices(30);
 
    for (int i = 0; i < com_bez_vert333.size(); i++)
    {
@@ -304,19 +308,20 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << std::endl;
    std::cout << "INTERSECTIONS" << std::endl;
 
-   BfBezier _bezier2(3,
-                     {{0.2, 1.5, 0.0f},
-                      {1.2, 0.2, 0.0f},
-                      {2.2, 0.95, 0.0f},
-                      {1.4, 2.4, 0.0f}});
+   BfBezier _bezier2(
+       3,
+       {{0.2, 1.5, 0.0f}, {1.2, 0.2, 0.0f}, {2.2, 0.95, 0.0f}, {1.4, 2.4, 0.0f}}
+   );
    // BfBezier bezier2a = bezier2.get_alligned(BF_PLANE_XY, BF_AXIS_Z);
-   BfBezier _bezier2a(3,
-                      {{0.5, 0.35, 0.0f},
-                       {0.45, 2.35, 0.0f},
-                       {2.2, 2.35, 0.0f},
-                       {2.2, 1.35, 0.0f}});
+   BfBezier _bezier2a(
+       3,
+       {{0.5, 0.35, 0.0f},
+        {0.45, 2.35, 0.0f},
+        {2.2, 2.35, 0.0f},
+        {2.2, 1.35, 0.0f}}
+   );
 
-   std::vector<BfVertex3> bezier2_vert  = _bezier2.update_and_get_vertices(30);
+   std::vector<BfVertex3> bezier2_vert = _bezier2.update_and_get_vertices(30);
    std::vector<BfVertex3> bezier2a_vert = _bezier2a.update_and_get_vertices(30);
 
    std::vector<glm::vec3> inters;
@@ -346,11 +351,12 @@ TEST_CASE("CURVES_H", "[single-file]")
 
        {2000, 1500, 0.0f},
 
-       {2400.0f, 0 + 150.0f, 0.0f}};
+       {2400.0f, 0 + 150.0f, 0.0f}
+   };
 
-   BfBezier               _bezier3(4, bez3_dp);
+   BfBezier _bezier3(4, bez3_dp);
    std::vector<BfVertex3> bezier3_vert = _bezier3.update_and_get_vertices(30);
-   float                  len3         = BfBezier::get_approx_length(_bezier3);
+   float len3 = BfBezier::get_approx_length(_bezier3);
 
    std::cout << std::endl;
    std::cout << std::endl;
@@ -376,7 +382,7 @@ TEST_CASE("CURVES_H", "[single-file]")
       bez3_dp[i] = bez3_dp[i] - 1000.0f * grad[i];
    }
 
-   BfBezier               bezier3_lessl(4, bez3_dp);
+   BfBezier bezier3_lessl(4, bez3_dp);
    std::vector<BfVertex3> bezier3_lessl_vert =
        bezier3_lessl.update_and_get_vertices(30);
 
@@ -402,8 +408,8 @@ TEST_CASE("CURVES_H", "[single-file]")
    std::cout << "Handles" << std::endl;
 
    std::vector<BfVertex3> handles_vertices = _bezier3.get_handles_vertices(100);
-   std::vector<uint16_t>  handles_indices  = _bezier3.get_handles_indices();
-   std::vector<glm::vec3> handles_centers  = _bezier3.get_vertices();
+   std::vector<uint16_t> handles_indices = _bezier3.get_handles_indices();
+   std::vector<glm::vec3> handles_centers = _bezier3.get_vertices();
 
    for (int i = 0; i < handles_vertices.size(); i++)
    {

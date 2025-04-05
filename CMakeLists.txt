@@ -7,7 +7,6 @@ add_compile_options(-std=c++20) # optional to use c++11
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(IS_BUILD_TESTS "build tests" ON)
 
-
 file(
   GLOB SUBDIRECTORIES
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -56,8 +55,7 @@ set(SHADER_PACK_PATHS
     "${CMAKE_SOURCE_DIR}/shaders/thick_lines"
     "${CMAKE_SOURCE_DIR}/shaders/lines"
     "${CMAKE_SOURCE_DIR}/shaders/triangle"
-    "${CMAKE_SOURCE_DIR}/shaders/axis"
-)
+    "${CMAKE_SOURCE_DIR}/shaders/axis")
 
 if(WIN32)
   if(EXISTS ${VULKAN_SHADER_COMPILER})
@@ -93,7 +91,7 @@ if(WIN32)
       message(${LOCAL_MESSAGE})
       list(APPEND ALL_SHADER_FILES ${ALL_LOCAL_SHADER_FILES})
     endforeach()
-  
+
     foreach(SHADER_FILE ${ALL_SHADER_FILES})
       get_filename_component(NEW_FILE_EXT ${SHADER_FILE} EXT)
       string(REPLACE "." "" NEW_FILE_EXT ${NEW_FILE_EXT})
@@ -224,21 +222,17 @@ set(BF_BASE
     "src/base/bfHolder.cpp"
     "src/base/bfWindow.cpp"
     "src/base/bfPipeline.cpp"
-    "src/base/bfCamera.cpp"
-)
+    "src/base/bfCamera.cpp")
 add_library(bfbaselib STATIC ${BF_BASE})
 target_link_libraries(bfbaselib PUBLIC bfexternallib)
 
 set(BF_GEOMETRY
-    "include/geometry/bfCurves.hpp"
-    "src/geometry/bfCurves3.cpp"
-    "src/geometry/bfCurves3_gui.cpp"
-    "src/geometry/bfBladeSection.cpp"
+    "include/geometry/bfCurves.hpp" "src/geometry/bfCurves3.cpp"
+    "src/geometry/bfCurves3_gui.cpp" "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfAxis.cpp")
 
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
-
 
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"
@@ -254,12 +248,10 @@ set(BF_INTERACTION
     "src/interaction/bfGuiCreateWindowSingleLine.cpp"
     "src/interaction/bfGuiCreateWindowCircleWithHandles.cpp"
     "src/interaction/bfGuiWindow.cpp"
-    "src/interaction/bfGuiCamera.cpp"
-)
+    "src/interaction/bfGuiCamera.cpp")
 add_library(bfinteractionlib STATIC ${BF_INTERACTION})
 target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
 target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
-
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"
@@ -274,35 +266,27 @@ set(BF_OTHER
 add_library(bfotherlib STATIC ${BF_OTHER})
 target_link_libraries(bfotherlib PUBLIC bfexternallib)
 
-
 set(BF_DRAW
-    "src/draw/bfDrawObject.cpp"
-    "src/draw/bfLayerHandler.cpp"
-    "src/draw/bfLayerKiller.cpp"
-    "src/draw/bfDrawObjectBuffer.cpp"
-    "src/draw/bfDrawObject2.cpp"
-)
+    "src/draw/bfDrawObject.cpp" "src/draw/bfLayerHandler.cpp"
+    "src/draw/bfLayerKiller.cpp" "src/draw/bfDrawObjectBuffer.cpp"
+    "src/draw/bfDrawObject2.cpp")
 
 add_library(bfdrawlib STATIC ${BF_DRAW})
 target_link_libraries(bfdrawlib PUBLIC bfexternallib)
 
-
-find_package(Boost REQUIRED) 
-INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
 
 # Add source to this project's executable.
-add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp" "include/BfMain.h")
+add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp"
+                               "include/BfMain.h")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC bfbaselib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
-# target_link_libraries(${PROJECT_NAME} LINK_PUBLIC Boost::Boost)
 target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
-
-
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 file(COPY "${CMAKE_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_BINARY_DIR}/")
@@ -315,66 +299,35 @@ if(WIN32)
   set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3")
 endif(WIN32)
 
-# find_package(glfw3 REQUIRED) find_package(Vulkan REQUIRED)
-#
-# include_directories(${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
-# link_directories(${Vulkan_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS})
-# target_link_libraries(BladeForge PRIVATE ${Vulkan_LIBRARIES})
-#
-# target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
-# target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
-
-
-
-
-
-
-
-
-# GLM
-# add_subdirectory(external/glm)
-
-
-# add_subdirectory(external/splines-lib) target_link_libraries(${PROJECT_NAME}
-# PRIVATE splines-lib)
-
-# add_subdirectory(external/imgui_doc) target_link_libraries(${PROJECT_NAME}
-# PUBLIC imgui imgui-vulkan imgui-glfw)
-
-# CATCH 2 add_subdirectory(external/catch2)
-
-# Tests
+# CATCH 2 add_subdirectory(external/catch2) Tests
 # ~~~
 
 find_package(Catch2 REQUIRED)
 
 # if (${IS_BUILD_TESTS})
 add_executable(
-  tests
-  # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/main_api.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/curves.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/memory_test.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/matrix.cpp"
-  # "${CMAKE_SOURCE_DIR}/include/bfBase.h"
-  # "${CMAKE_SOURCE_DIR}/include/BfEvent.h"
-  # "${CMAKE_SOURCE_DIR}/src/bfEvent.cpp"
-  # "${CMAKE_SOURCE_DIR}/include/bfVariative.hpp"
-  # "${CMAKE_SOURCE_DIR}/src/bfBase.cpp"
-  # "${CMAKE_SOURCE_DIR}/include/bfWindow.h"
-  # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
-  # "tests/bez_test.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp"
-  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" 
-
-  "include/other/bfMath.hpp"
-  "src/other/bfMath.cpp"
-
-  "./tests/object.cpp"
-  # "tests/filedialog_test.cpp"
-  # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp"
+  tests #
+  # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/main_api.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/curves.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/memory_test.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/matrix.cpp" #
+  # "${CMAKE_SOURCE_DIR}/include/bfBase.h" #
+  # "${CMAKE_SOURCE_DIR}/include/BfEvent.h" #
+  # "${CMAKE_SOURCE_DIR}/src/bfEvent.cpp" #
+  # "${CMAKE_SOURCE_DIR}/include/bfVariative.hpp" #
+  # "${CMAKE_SOURCE_DIR}/src/bfBase.cpp" #
+  # "${CMAKE_SOURCE_DIR}/include/bfWindow.h" #
+  # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" # "tests/bez_test.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp" #
+  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp"
+  # "include/other/bfMath.hpp"
+  # "src/other/bfMath.cpp"
+  "./tests/object.cpp" "./tests/curves4.cpp" #
+  # "tests/filedialog_test.cpp" # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" )
 )
+target_compile_definitions(tests PUBLIC BF_CURVES4_NO_PIPELINE)
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(tests PUBLIC bfbaselib)
@@ -383,9 +336,9 @@ target_link_libraries(tests PUBLIC bfotherlib)
 target_link_libraries(tests PUBLIC bfdrawlib)
 target_link_libraries(tests PUBLIC bfinteractionlib)
 target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(tests PUBLIC bfexternallib)
 
-
-
+# foreach(subdir ${SUBDIRECTORIES}) target_include_directories(tests PUBLIC
+# include/${subdir}) endforeach()
 
 # endif(${IS_BUILD_TESTS})
-#

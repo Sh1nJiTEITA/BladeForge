@@ -75,7 +75,8 @@ BfPipelineHandler::get(BfPipelineType type)
 VkPipeline*
 BfPipelineHandler::getPipeline(BfPipelineType type)
 {
-   return &get(type)->pipeline;
+   BfPipelineData* found = get(type);
+   return found ? &found->pipeline : nullptr;
 }
 
 VkPipelineLayout*

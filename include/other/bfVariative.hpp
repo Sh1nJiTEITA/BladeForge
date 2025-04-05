@@ -32,10 +32,10 @@
 #include <sstream>
 #include <vector>
 
-// #define VMA_IMPLEMENTATION
 // #include "vma/vk_mem_alloc.h"
 // #include "vk_mem_alloc.h"
 
+// #define VMA_IMPLEMENTATION
 #ifdef _WIN32
 #include "vma/vk_mem_alloc.h"
 #elif defined(__unix__) || defined(__linux__)

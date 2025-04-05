@@ -3,16 +3,14 @@
 
 // Graphics Libs
 #include <glm/fwd.hpp>
+#include <type_traits>
 #ifdef _WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #elif __linux__
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
 
-// #define GLFW_INCLUDE_VULKAN
-// #include <GLFW/glfw3.h>
-// #define GLFW_EXPOSE_NATIVE_WIN32
-// #include "GLFW/glfw3native.h"
+#include "bfVariative.hpp"
 
 // STL
 #include <array>
@@ -22,9 +20,7 @@
 // External
 // #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 // #include <glm/glm.hpp>
-#include "bfBuffer.h"
 #include "bfMath.hpp"
-#include "bfUniforms.h"
 
 struct bfVertex
 {
@@ -73,6 +69,11 @@ struct BfVertex3
    }
 
    glm::vec3 operator=(const BfVertex3 &o) { return o.pos; }
+   bool operator==(const BfVertex3 &o)
+   {
+      return o.pos == this->pos && o.normals == this->normals &&
+             o.color == this->color;
+   };
 
    float &x() { return pos.x; }
    float &y() { return pos.y; }
@@ -86,20 +87,38 @@ struct BfVertex3
    float &ny() { return normals.y; }
    float &nz() { return normals.z; }
 
+   BfVertex3(BfVertex3 &&m) noexcept
+       : pos{std::move(m.pos)}
+       , color{std::move(m.color)}
+       , normals{std::move(m.normals)}
+   {
+   }
+
+   BfVertex3(const BfVertex3 &m) noexcept
+       : pos{m.pos}, color{m.color}, normals{m.normals}
+   {
+   }
+
    BfVertex3(float x, float y, float z)
-       : BfVertex3(glm::vec3{x, y, z})
+       : pos{x, y, z}, color{1.0f, 1.0f, 1.0f}, normals{0.0f, 0.0f, 0.0f}
    {
    }
 
-   BfVertex3(glm::vec3 ipos)
-       : pos{ipos}, color{1.0f, 1.0f, 1.0f}, normals{0.0f, 0.0f, 0.0f}
-
-   {
-   }
-
-   BfVertex3(glm::vec3 ipos, glm::vec3 icol, glm::vec3 inor)
+   BfVertex3(
+       const glm::vec3 &ipos,
+       const glm::vec3 &icol = {1.0f, 1.0f, 1.0f},
+       const glm::vec3 &inor = {0.0f, 0.0f, 0.0f}
+   )
        : pos{ipos}, color{icol}, normals{inor}
+   {
+   }
 
+   BfVertex3(
+       glm::vec3 &&ipos,
+       glm::vec3 &&icol = {1.0f, 1.0f, 1.0f},
+       glm::vec3 &&inor = {0.0f, 0.0f, 0.0f}
+   )
+       : pos{std::move(ipos)}, color{std::move(icol)}, normals{std::move(inor)}
    {
    }
 
