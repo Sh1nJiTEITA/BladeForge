@@ -350,7 +350,7 @@ BfGui::presentToolType()
 
       ImGui::Text(
           "type=%s",
-          obj::BfTypeManager::inst().getTypeById(__ptr_base->pos_id)
+          obj::BfTypeManager::inst().getTypeNameById(__ptr_base->pos_id)
       );
 
       ImGui::Text("id=%i", __ptr_base->pos_id);

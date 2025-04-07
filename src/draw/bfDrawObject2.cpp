@@ -1,6 +1,9 @@
 #include "bfDrawObject2.h"
 
+#include <memory>
 #include <stdexcept>
+
+#include "bfTypeManager.h"
 
 namespace obj
 {
@@ -210,7 +213,8 @@ BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
     size_t offset,
     size_t index_offset,
-    size_t vertex_offset
+    size_t vertex_offset,
+    uint32_t hovered_id
 ) const
 {
    auto& g = m_obj;
@@ -231,6 +235,8 @@ BfDrawControlProxy::draw(
           vertex_offset,
           offset
       );
+      g.isHovered = g.id() == hovered_id;
+      m_obj.processDragging();
    }
    else  // IF LAYER
    {
@@ -263,7 +269,8 @@ BfDrawControlProxy::draw(
              combuffer,
              offset + i,
              index_offset + calc_index_offsets[i],
-             vertex_offset + calc_vertex_offsets[i]
+             vertex_offset + calc_vertex_offsets[i],
+             hovered_id
          );
       }
    }
@@ -336,6 +343,18 @@ BfDrawObjectBase::BfDrawObjectBase(
    // }
 }
 
+std::shared_ptr<BfDrawObjectBase>
+BfDrawObjectBase::clone() const
+{
+   return std::make_shared<BfDrawObjectBase>(
+       BfTypeManager::inst().getTypeNameByTypeId(m_type),
+       m_pipeline,
+       m_type,
+       0,
+       0
+   );
+}
+
 void
 BfDrawObjectBase::add(BfObj n)
 {
@@ -344,7 +363,8 @@ BfDrawObjectBase::add(BfObj n)
       std::runtime_error("Trying to add DrawObjectBase to OBJECT");
    }
    m_children.push_back(n);
-   m_root = shared_from_this();
+   // m_root = shared_from_this();
+   n->m_root = shared_from_this();
 }
 
 void
@@ -404,6 +424,18 @@ void
 BfDrawObject::make()
 {
    throw std::runtime_error("[BfDrawObject] make() method must be implemented");
+}
+
+std::shared_ptr<BfDrawObjectBase>
+BfDrawObject::clone() const
+{
+   auto pre_cloned = std::make_shared<BfDrawObject>(
+       BfTypeManager::inst().getTypeNameByTypeId(type()),
+       m_pipeline,
+       m_discretization
+   );
+   pre_cloned->copy(*this);
+   return pre_cloned;
 }
 
 void

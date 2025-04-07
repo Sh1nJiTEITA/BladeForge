@@ -329,15 +329,16 @@ add_executable(
 )
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-target_link_libraries(tests PUBLIC bfbaselib)
 target_link_libraries(tests PUBLIC bfgeometrytestlib)
 target_link_libraries(tests PUBLIC bfotherlib)
 target_link_libraries(tests PUBLIC bfdrawlib)
 target_link_libraries(tests PUBLIC bfinteractionlib)
 target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(tests PUBLIC bfexternallib)
+target_link_libraries(tests PUBLIC bfbaselib)
 
-# foreach(subdir ${SUBDIRECTORIES}) target_include_directories(tests PUBLIC
-# include/${subdir}) endforeach()
+foreach(subdir ${SUBDIRECTORIES})
+  target_include_directories(tests PUBLIC include/${subdir})
+endforeach()
 
 # endif(${IS_BUILD_TESTS})

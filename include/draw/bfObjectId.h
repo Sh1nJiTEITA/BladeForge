@@ -35,7 +35,7 @@ public:
 
    BfOTypeName typeName() const
    {
-      return BfTypeManager::inst().getTypeByTypeId(m_type);
+      return BfTypeManager::inst().getTypeNameByTypeId(m_type);
    }
    BfOId type() const { return m_type; }
    BfOId id() const { return m_value; }

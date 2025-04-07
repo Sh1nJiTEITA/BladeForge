@@ -3,7 +3,6 @@
 
 #include <GLFW/glfw3.h>
 
-#include <map>
 #include <unordered_map>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -16,8 +15,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/vec2.hpp>
-
-#include "bfCurves3.h"
 
 template <int KEY>
 struct BfKeyState

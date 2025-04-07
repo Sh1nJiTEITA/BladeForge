@@ -6,8 +6,12 @@
 #include <unordered_map>
 #include <utility>
 
+#include "bfCamera.h"
 #include "bfDrawObject2.h"
 #include "bfVertex2.hpp"
+
+namespace obj
+{
 
 namespace curves
 {
@@ -97,8 +101,8 @@ std::vector<BfVertex3> calcCircleVertices(
 #define BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES 0x1
 #define BF_MATH_FIND_LINES_INTERSECTION_ANY 0x2
 glm::vec3 findLinesIntersection(
-    const curves::BfSingleLine& line1,
-    const curves::BfSingleLine& line2,
+    const obj::curves::BfSingleLine& line1,
+    const obj::curves::BfSingleLine& line2,
     int mode = BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES
 );
 
@@ -179,34 +183,71 @@ private:
    BfVertex3 m_third;
 };
 
-// class BfCircleCenterFilled : public obj::BfDrawObject
-// {
-// public:
-//    template <typename T, typename U, typename B>
-//    BfCircleCenterFilled(T&& P_1, U&& P_2, B&& P_3)
-//        : obj::
-//              BfDrawObject{"Circle center filled",
-//              BF_PIPELINE(BfPipelineType_Triangles), 200}
-//        , m_first{std::forward<T>(P_1)}
-//        , m_second{std::forward<U>(P_2)}
-//        , m_third{std::forward<B>(P_3)}
-//        , m_radius{std::nanf("")}
-//        , m_center{BfVertex3::nan()}
-//    {
-//    }
-//
-//    float radius() const noexcept;
-//    const glm::vec3& tangent() const noexcept;
-//
-//    virtual void make() override;
-//
-//    BfVertex3& center();
-//
-// private:
-//    float m_radius;
-//    BfVertex3 m_center;
-// };
+class BfCircleCenterFilled : public obj::BfDrawObject
+{
+public:
+   // clang-format off
+   template <typename T>
+   BfCircleCenterFilled(T&& center, float radius)
+       : obj::BfDrawObject{"Circle center filled", 
+                           BF_PIPELINE(BfPipelineType_Triangles), 200}
+       , m_radius{radius}
+       , m_center{center}
+   {
+   }
+   // clang-format on
 
-}  // namespace curves
+   float radius() const noexcept;
+   const BfVertex3& center() const noexcept;
+   virtual void make() override;
+
+   virtual void copy(const BfDrawObjectBase& obj) override
+   {
+      BfDrawObject::copy(obj);
+      const auto& casted = static_cast<const BfCircleCenterFilled&>(obj);
+      m_radius = casted.m_radius;
+      m_center = casted.m_center;
+   }
+
+   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
+
+protected:
+   float m_radius;
+   BfVertex3 m_center;
+};
+
+class BfHandle : public BfCircleCenterFilled
+{
+public:
+   template <typename T>
+   BfHandle(T&& center, float radius)
+       : BfCircleCenterFilled(std::forward<T>(center), radius)
+   {
+   }
+
+   BfHandle(const BfHandle& o)
+       : BfCircleCenterFilled(o.center(), o.radius())
+   {
+   }
+   virtual void processDragging() override;
+
+   virtual void copy(const BfDrawObjectBase& obj) override
+   {
+      BfCircleCenterFilled::copy(obj);
+      const auto& casted = static_cast<const BfHandle&>(obj);
+      m_initialMousePos = casted.m_initialMousePos;
+      m_initialCenterPos = casted.m_initialCenterPos;
+   }
+
+   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
+
+private:
+   glm::vec3 m_initialMousePos;
+   glm::vec3 m_initialCenterPos;
+   bool m_isDraggingStarted = false;
+};
+};  // namespace curves
+
+}  // namespace obj
 
 #endif

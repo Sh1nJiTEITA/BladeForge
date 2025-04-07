@@ -67,7 +67,8 @@ public:
              command_buffer,
              obj_data_offset,
              index_offset,
-             vertex_offset
+             vertex_offset,
+             m_hoveredid
          );
       }
    }

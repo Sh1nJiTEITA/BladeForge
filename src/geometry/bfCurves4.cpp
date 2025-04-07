@@ -2,7 +2,15 @@
 
 #include <cmath>
 #include <glm/common.hpp>
+#include <glm/geometric.hpp>
+#include <memory>
 #include <stdexcept>
+
+#include "bfCamera.h"
+#include "imgui.h"
+
+namespace obj
+{
 
 namespace curves
 {
@@ -12,8 +20,8 @@ namespace math
 
 glm::vec3
 findLinesIntersection(
-    const curves::BfSingleLine& line1,
-    const curves::BfSingleLine& line2,
+    const obj::curves::BfSingleLine& line1,
+    const obj::curves::BfSingleLine& line2,
     int mode
 )
 {
@@ -93,6 +101,7 @@ calcCircleVertices(
    orth_2 = glm::normalize(glm::cross(normal, orth_1));
 
    std::vector<BfVertex3> v;
+   v.reserve(m_discretization);
 
    for (size_t i = 0; i < m_discretization + 1; ++i)
    {
@@ -237,7 +246,7 @@ Bfcircle3Vertices::make()
    BfSingleLine per_l_31(ave_31, ave_31 + n_31);
 
    BfVertex3 center;
-   center.pos = curves::math::findLinesIntersection(
+   center.pos = obj::curves::math::findLinesIntersection(
        per_l_12,
        per_l_23,
        BF_MATH_FIND_LINES_INTERSECTION_ANY
@@ -307,4 +316,89 @@ Bfcircle3Vertices::make()
    _genIndicesStandart();
 }
 
+float
+BfCircleCenterFilled::radius() const noexcept
+{
+   return m_radius;
+}
+
+const BfVertex3&
+BfCircleCenterFilled::center() const noexcept
+{
+   return m_center;
+}
+
+void
+BfCircleCenterFilled::make()
+{
+   m_indices.clear();
+   m_vertices = std::move(
+       math::calcCircleVertices(m_center, m_radius, m_discretization, m_color)
+   );
+   m_indices.reserve(m_vertices.size());
+   for (size_t i = 1; i < m_vertices.size() - 2; ++i)
+   {
+      m_indices.emplace_back(0);
+      m_indices.emplace_back(i);
+      m_indices.emplace_back(i + 1);
+   }
+}
+
+std::shared_ptr<BfDrawObjectBase>
+BfCircleCenterFilled::clone() const
+{
+   auto cloned = std::make_shared<BfCircleCenterFilled>(m_center, m_radius);
+   cloned->copy(*this);
+   return cloned;
+}
+
+void
+BfHandle::processDragging()
+{
+   bool is_dragging = (isHovered && ImGui::IsMouseDown(ImGuiMouseButton_Left));
+
+   auto inst = BfCamera::m_pInstance;
+   if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
+   {
+      // Calculate the initial offset between the object's center and the mouse
+      // position
+
+      if (!m_isDraggingStarted)
+      {
+         // Store the initial positions when the dragging starts
+         m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
+         m_initialCenterPos = m_center.pos;
+         m_isDraggingStarted = true;
+      }
+
+      // Calculate the difference (offset) between the initial mouse position
+      // and the center of the object
+      glm::vec3 mouse_offset =
+          BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
+
+      // Update the object’s center position based on this offset, keeping it
+      // relative
+      m_center.pos = m_initialCenterPos + mouse_offset;
+
+      // You can make your copy if necessary, or just continue with the camera
+      // update
+      make();
+      root()->control().updateBuffer();
+   }
+   else
+   {
+      m_isDraggingStarted = false;
+   }
+}
+
+std::shared_ptr<BfDrawObjectBase>
+BfHandle::clone() const
+{
+   auto cloned = std::make_shared<BfHandle>(m_center, m_radius);
+   cloned->copy(*this);
+   return cloned;
+}
+
 }  // namespace curves
+}  // namespace obj
+//

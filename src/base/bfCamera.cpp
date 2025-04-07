@@ -1,12 +1,12 @@
 #include "bfCamera.h"
 
 #include <GLFW/glfw3.h>
+#include <imgui.h>
 
 #include <algorithm>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/trigonometric.hpp>
 
-#include "bfCurves3.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -15,7 +15,6 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/vec2.hpp>
-#include <iostream>
 #include <stdexcept>
 
 template <int KEY>

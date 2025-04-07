@@ -9,6 +9,7 @@
 #include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
+#include "bfCurves4.h"
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
 #include "bfPipeline.h"
@@ -256,16 +257,24 @@ BfMain::__loop()
    // zAxis->createIndices();
 
    auto test_root = std::make_shared<obj::BfDrawRootLayer>(2000, 10);
-   auto test_layer2 = std::make_shared<obj::TestLayer>();
-   //
-   // for (int i = 0; i < 5; ++i)
-   // {
-   //    auto t = std::make_shared<obj::RandomPlane>();
-   //    test_root->add(t);
-   // }
-   //
-   test_root->add(test_layer2);
-   test_root->make();
+
+   // auto filled_circle = std::make_shared<obj::curves::BfCircleCenterFilled>(
+   //     BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
+   //     0.1f
+   // );
+   // filled_circle->make();
+   auto circle = std::make_shared<obj::curves::BfHandle>(
+       BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
+       0.1f
+   );
+   circle->make();
+   auto clone_circle = circle->clone();
+   clone_circle->make();
+
+   test_root->add(clone_circle);
+   // test_root->add(circle);
+   // test_root->make();
+
    test_root->control().updateBuffer();
 
    obj::BfDrawManager::inst().add(test_root);

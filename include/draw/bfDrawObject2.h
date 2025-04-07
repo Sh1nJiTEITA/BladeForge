@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <random>
+#include <stdexcept>
 
 #include "bfDrawObjectBuffer.h"
 #include "bfObjectId.h"
@@ -150,7 +151,8 @@ public:
        VkCommandBuffer combuffer,
        size_t offset,
        size_t index_offset,
-       size_t vertex_offset
+       size_t vertex_offset,
+       uint32_t hovered_id
    ) const;
 
    void toggleHover(int status = -1);
@@ -176,8 +178,11 @@ private:
    BfDrawObjectBase& m_obj;
 };
 
-class BfGuiIntegration
+class BfGuiIntegration2
 {
+public:
+   virtual void processDragging() {}
+
 protected:
    bool isHovered;
 };
@@ -190,7 +195,7 @@ protected:
  */
 class BfDrawObjectBase : public std::enable_shared_from_this<BfDrawObjectBase>,
                          public BfObjectId,
-                         protected obj::BfGuiIntegration
+                         public obj::BfGuiIntegration2
 {
 public:
    /**
@@ -223,6 +228,8 @@ public:
        size_t max_vertex = 2000,
        size_t max_obj = 20
    );
+
+   virtual std::shared_ptr<BfDrawObjectBase> clone() const;
 
    /**
     *
@@ -274,6 +281,12 @@ public:
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
 
    BfObj root();
+   virtual void copy(const BfDrawObjectBase& obj)
+   {
+      m_root = obj.m_root;
+      m_modelMatrix = obj.m_modelMatrix;
+      m_pipeline = obj.m_pipeline;
+   }
 
 protected:
    virtual BfObjectData _objectData();
@@ -315,6 +328,17 @@ public:
    void add() = delete;
 
    glm::vec3& color() { return m_color; }
+
+   virtual void copy(const BfDrawObjectBase& obj) override
+   {
+      BfDrawObjectBase::copy(obj);
+
+      const auto& casted = static_cast<const BfDrawObject&>(obj);
+      m_color = casted.m_color;
+      m_discretization = casted.m_discretization;
+   }
+
+   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
 
 protected:
    /**
