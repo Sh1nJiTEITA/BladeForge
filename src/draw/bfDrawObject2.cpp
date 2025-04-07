@@ -125,7 +125,9 @@ BfDrawControlProxy::mapModel(size_t frame_index, size_t& offset, void* data)
 }
 
 void
-BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
+BfDrawControlProxy::updateBuffer(
+    bool make, void* v, void* i, size_t* off_v, size_t* off_i
+)
 {
    auto& g = m_obj;
 
@@ -149,7 +151,12 @@ BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
 
       for (const auto& child : g.m_children)
       {
-         child->control().updateBuffer(p_vertex, p_index, &offset_v, &offset_i);
+         // if (make)
+         // {
+         //    child->make();
+         // }
+         child->control()
+             .updateBuffer(make, p_vertex, p_index, &offset_v, &offset_i);
       }
 
       g.m_buffer->vertex().unmap();
@@ -187,7 +194,11 @@ BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
       {
          for (const auto& child : g.m_children)
          {
-            child->control().updateBuffer(v, i, off_v, off_i);
+            if (make)
+            {
+               child->make();
+            }
+            child->control().updateBuffer(make, v, i, off_v, off_i);
          }
       }
    }
@@ -386,8 +397,9 @@ BfDrawObjectBase::root()
    //
    //
 
-   std::cout << "inside " << BfTypeManager::inst().getTypeNameByTypeId(type())
-             << "\n";
+   // std::cout << "inside " <<
+   // BfTypeManager::inst().getTypeNameByTypeId(type())
+   //           << "\n";
 
    if (control().isBuffer())
    {

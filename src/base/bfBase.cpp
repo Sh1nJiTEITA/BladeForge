@@ -3763,6 +3763,32 @@ bfUpdateUniformViewNew(BfBase &base)
 
    ubo.view = BfCamera::instance()->view();
    ubo.proj = BfCamera::instance()->projection();
+
+   // std::cout << "extent w/h: " << base.swap_chain_extent.width << " "
+   //           << base.swap_chain_extent.height << "\n";
+   //
+   // std::cout << "Matrix proj(4x4):\n";
+   // for (int row = 0; row < 4; ++row)
+   // {
+   //    std::cout << "[ ";
+   //    for (int col = 0; col < 4; ++col)
+   //    {
+   //       std::cout << std::setw(10) << ubo.proj[col][row] << " ";
+   //    }
+   //    std::cout << "]\n";
+   // }
+   //
+   // std::cout << "Matrix view(4x4):\n";
+   // for (int row = 0; row < 4; ++row)
+   // {
+   //    std::cout << "[ ";
+   //    for (int col = 0; col < 4; ++col)
+   //    {
+   //       std::cout << std::setw(10) << ubo.view[col][row] << " ";
+   //    }
+   //    std::cout << "]\n";
+   // }
+
    ubo.cursor_pos = {base.window->xpos, base.window->ypos};
    ubo.id_on_cursor = base.pos_id;
    ubo.camera_pos = base.window->pos;

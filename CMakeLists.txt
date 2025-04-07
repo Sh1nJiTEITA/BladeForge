@@ -15,6 +15,9 @@ list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.h$")
 list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.cpp$")
 list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.hpp$")
 
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ffloat-store")
+# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffloat-store")
+#
 foreach(subdir ${SUBDIRECTORIES})
   message("Subfolder found: ${subdir}")
   include_directories(include/${subdir})

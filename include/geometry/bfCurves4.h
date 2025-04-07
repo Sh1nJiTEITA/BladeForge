@@ -4,6 +4,7 @@
 #include <cmath>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #include "bfCamera.h"
@@ -93,12 +94,21 @@ private:
    BfVertex3 m_third;
 };
 
+template <typename T, math::IsBfVertex3Variation<T> = true>
 class BfCircleCenterFilled : public obj::BfDrawObject
 {
 public:
    // clang-format off
-   template <typename T>
+   // template< typename U > 
    BfCircleCenterFilled(T&& center, float radius)
+       : obj::BfDrawObject{"Circle center filled", 
+                           BF_PIPELINE(BfPipelineType_Triangles), 200}
+       , m_radius{radius}
+       , m_center{std::move(center)}
+   {
+   }
+
+   BfCircleCenterFilled(const T& center, float radius)
        : obj::BfDrawObject{"Circle center filled", 
                            BF_PIPELINE(BfPipelineType_Triangles), 200}
        , m_radius{radius}
@@ -107,49 +117,139 @@ public:
    }
    // clang-format on
 
-   float radius() const noexcept;
-   const BfVertex3& center() const noexcept;
-   virtual void make() override;
+   float radius() const noexcept { return m_radius; }
+   BfVertex3& center()
+   {
+      using _T = std::decay_t<T>;
+      if constexpr (std::is_pointer_v<_T>)
+      {
+         return *m_center;
+      }
+      else
+      {
+         m_center;
+      }
+   }
+
+   virtual void make() override
+   {
+      m_indices.clear();
+      m_vertices = std::move(math::calcCircleVertices(
+          center(),
+          m_radius,
+          m_discretization,
+          m_color
+      ));
+      m_indices.reserve(m_vertices.size());
+      for (size_t i = 1; i < m_vertices.size() - 2; ++i)
+      {
+         m_indices.emplace_back(0);
+         m_indices.emplace_back(i);
+         m_indices.emplace_back(i + 1);
+      }
+   }
+
+   virtual std::shared_ptr<BfDrawObjectBase> clone() const override
+   {
+      auto cloned =
+          std::make_shared<BfCircleCenterFilled<T>>(m_center, m_radius);
+      cloned->copy(*this);
+      return cloned;
+   }
 
    virtual void copy(const BfDrawObjectBase& obj) override
    {
       BfDrawObject::copy(obj);
-      const auto& casted = static_cast<const BfCircleCenterFilled&>(obj);
+      const auto& casted = static_cast<const BfCircleCenterFilled<T>&>(obj);
       m_radius = casted.m_radius;
       m_center = casted.m_center;
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
-
 protected:
    float m_radius;
-   BfVertex3 m_center;
+   T m_center;
 };
 
-class BfHandle : public BfCircleCenterFilled
+template <typename T, math::IsBfVertex3Variation<T> = true>
+class BfHandle : public BfCircleCenterFilled<T>
 {
 public:
-   template <typename T>
+   // template <typename U>
+   // BfHandle(U&& center, float radius)
+   //     : BfCircleCenterFilled<T>(std::forward<U>(center), radius)
+   // {
+   // }
+   //
    BfHandle(T&& center, float radius)
-       : BfCircleCenterFilled(std::forward<T>(center), radius)
+       : BfCircleCenterFilled<T>(std::move(center), radius)
    {
    }
 
-   BfHandle(const BfHandle& o)
-       : BfCircleCenterFilled(o.center(), o.radius())
+   BfHandle(const T& center, float radius)
+       : BfCircleCenterFilled<T>(center, radius)
    {
    }
-   virtual void processDragging() override;
+
+   // BfHandle(const BfHandle& o)
+   //     : BfCircleCenterFilled(o.center(), o.radius())
+   // {
+   // }
+   // virtual void processDragging() override;
 
    virtual void copy(const BfDrawObjectBase& obj) override
    {
-      BfCircleCenterFilled::copy(obj);
-      const auto& casted = static_cast<const BfHandle&>(obj);
+      BfCircleCenterFilled<T>::copy(obj);
+      const auto& casted = static_cast<const BfHandle<T>&>(obj);
       m_initialMousePos = casted.m_initialMousePos;
       m_initialCenterPos = casted.m_initialCenterPos;
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
+   virtual void processDragging() override
+   {
+      bool is_dragging =
+          (this->isHovered && ImGui::IsMouseDown(ImGuiMouseButton_Left));
+
+      auto inst = BfCamera::m_pInstance;
+      if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
+      {
+         // Calculate the initial offset between the object's center and the
+         // mouse position
+
+         if (!m_isDraggingStarted)
+         {
+            // Store the initial positions when the dragging starts
+            m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
+            m_initialCenterPos = this->center().pos;
+            m_isDraggingStarted = true;
+         }
+
+         // Calculate the difference (offset) between the initial mouse position
+         // and the center of the object
+         glm::vec3 mouse_offset =
+             BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
+
+         // Update the object’s center position based on this offset, keeping it
+         // relative
+         this->center().pos = m_initialCenterPos + mouse_offset;
+
+         // You can make your copy if necessary, or just continue with the
+         // camera update
+         this->make();
+         this->root()->control().updateBuffer(true);
+      }
+      else
+      {
+         m_isDraggingStarted = false;
+      }
+   }
+
+   std::shared_ptr<BfDrawObjectBase> clone() const override
+   {
+      auto cloned =
+          std::make_shared<BfHandle<T>>(this->m_center, this->m_radius);
+      cloned->copy(*this);
+      return cloned;
+   }
 
 private:
    glm::vec3 m_initialMousePos;
@@ -253,7 +353,6 @@ public:
       {
          t = static_cast<float>(i) / static_cast<float>(m_discretization - 1);
          auto v = this->calc(t);
-         std::cout << v << "\n";
          m_vertices.push_back(std::move(v));
       }
       m_indices.reserve(m_discretization);
@@ -320,7 +419,7 @@ public:
       this->add(curve);
       for (const auto& v : *curve.get())
       {
-         this->add(std::make_shared<curves::BfHandle>(v, 0.01f));
+         this->add(std::make_shared<curves::BfHandle<BfVertex3*>>(v, 0.01f));
       }
    }
 

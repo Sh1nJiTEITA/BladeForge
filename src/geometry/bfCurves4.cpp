@@ -214,89 +214,93 @@ Bfcircle3Vertices::make()
    );
    _genIndicesStandart();
 }
+//
+// float
+// BfCircleCenterFilled::radius() const noexcept
+// {
+//    return m_radius;
+// }
+//
+// const BfVertex3&
+// BfCircleCenterFilled::center() const noexcept
+// {
+//    return m_center;
+// }
+//
+// void
+// BfCircleCenterFilled::make()
+// {
+//    m_indices.clear();
+//    m_vertices = std::move(
+//        math::calcCircleVertices(m_center, m_radius, m_discretization,
+//        m_color)
+//    );
+//    m_indices.reserve(m_vertices.size());
+//    for (size_t i = 1; i < m_vertices.size() - 2; ++i)
+//    {
+//       m_indices.emplace_back(0);
+//       m_indices.emplace_back(i);
+//       m_indices.emplace_back(i + 1);
+//    }
+// }
+//
+// std::shared_ptr<BfDrawObjectBase>
+// BfCircleCenterFilled::clone() const
+// {
+//    auto cloned = std::make_shared<BfCircleCenterFilled>(m_center, m_radius);
+//    cloned->copy(*this);
+//    return cloned;
+// }
 
-float
-BfCircleCenterFilled::radius() const noexcept
-{
-   return m_radius;
-}
-
-const BfVertex3&
-BfCircleCenterFilled::center() const noexcept
-{
-   return m_center;
-}
-
-void
-BfCircleCenterFilled::make()
-{
-   m_indices.clear();
-   m_vertices = std::move(
-       math::calcCircleVertices(m_center, m_radius, m_discretization, m_color)
-   );
-   m_indices.reserve(m_vertices.size());
-   for (size_t i = 1; i < m_vertices.size() - 2; ++i)
-   {
-      m_indices.emplace_back(0);
-      m_indices.emplace_back(i);
-      m_indices.emplace_back(i + 1);
-   }
-}
-
-std::shared_ptr<BfDrawObjectBase>
-BfCircleCenterFilled::clone() const
-{
-   auto cloned = std::make_shared<BfCircleCenterFilled>(m_center, m_radius);
-   cloned->copy(*this);
-   return cloned;
-}
-
-void
-BfHandle::processDragging()
-{
-   bool is_dragging = (isHovered && ImGui::IsMouseDown(ImGuiMouseButton_Left));
-
-   auto inst = BfCamera::m_pInstance;
-   if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
-   {
-      // Calculate the initial offset between the object's center and the mouse
-      // position
-
-      if (!m_isDraggingStarted)
-      {
-         // Store the initial positions when the dragging starts
-         m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
-         m_initialCenterPos = m_center.pos;
-         m_isDraggingStarted = true;
-      }
-
-      // Calculate the difference (offset) between the initial mouse position
-      // and the center of the object
-      glm::vec3 mouse_offset =
-          BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
-
-      // Update the object’s center position based on this offset, keeping it
-      // relative
-      m_center.pos = m_initialCenterPos + mouse_offset;
-
-      // You can make your copy if necessary, or just continue with the camera
-      // update
-      make();
-      root()->control().updateBuffer();
-   }
-   else
-   {
-      m_isDraggingStarted = false;
-   }
-}
-
-std::shared_ptr<BfDrawObjectBase>
-BfHandle::clone() const
-{
-   auto cloned = std::make_shared<BfHandle>(m_center, m_radius);
-   cloned->copy(*this);
-   return cloned;
-}
+// void
+// BfHandle::processDragging()
+// {
+//    bool is_dragging = (isHovered &&
+//    ImGui::IsMouseDown(ImGuiMouseButton_Left));
+//
+//    auto inst = BfCamera::m_pInstance;
+//    if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
+//    {
+//       // Calculate the initial offset between the object's center and the
+//       mouse
+//       // position
+//
+//       if (!m_isDraggingStarted)
+//       {
+//          // Store the initial positions when the dragging starts
+//          m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
+//          m_initialCenterPos = m_center.pos;
+//          m_isDraggingStarted = true;
+//       }
+//
+//       // Calculate the difference (offset) between the initial mouse position
+//       // and the center of the object
+//       glm::vec3 mouse_offset =
+//           BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
+//
+//       // Update the object’s center position based on this offset, keeping it
+//       // relative
+//       m_center.pos = m_initialCenterPos + mouse_offset;
+//
+//       // You can make your copy if necessary, or just continue with the
+//       camera
+//       // update
+//       make();
+//       root()->control().updateBuffer();
+//    }
+//    else
+//    {
+//       m_isDraggingStarted = false;
+//    }
+// }
+//
+// std::shared_ptr<BfDrawObjectBase>
+// BfHandle::clone() const
+// {
+//    auto cloned = std::make_shared<BfHandle>(m_center, m_radius);
+//    cloned->copy(*this);
+//    return cloned;
+// }
 
 glm::vec3
 BfBezier::calcNormal(float t) const

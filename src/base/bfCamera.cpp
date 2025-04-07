@@ -4,17 +4,16 @@
 #include <imgui.h>
 
 #include <algorithm>
-#include <glm/ext/quaternion_common.hpp>
-#include <glm/trigonometric.hpp>
-
-#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/trigonometric.hpp>
 #include <glm/vec2.hpp>
+#include <iostream>
 #include <stdexcept>
 
 template <int KEY>
@@ -104,6 +103,8 @@ BfCamera::view()
 glm::mat4
 BfCamera::projection()
 {
+   float ratio =
+       static_cast<double>(m_extent.y) / static_cast<double>(m_extent.x);
    switch (m_mode)
    {
       case BfCameraMode_Perspective:
@@ -121,23 +122,34 @@ BfCamera::projection()
              100.0f
          );
       case BfCameraMode_Ortho:
-         return glm::ortho(
-             0.f,
-             1.f,
-             1.f * m_extent.y / m_extent.x,
-             0.f * m_extent.y / m_extent.x,
-             0.f,
-             100.0f
+         return static_cast<glm::mat4>(
+             // glm::ortho(-0.5, 0.5, 0.5 * ratio, -0.5 * ratio, -1000.0,
+             // 1000.0)
+             glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
          );
+
+         // return glm::ortho(
+         //     0.f,
+         //     1.f,
+         //     -1.f * m_extent.y / m_extent.x,
+         //     0.f * m_extent.y / m_extent.x
+         //     // 0.f,
+         //     // 100.0f
+         // );
       case BfCameraMode_OrthoCentered:
-         return glm::ortho(
-             -0.5f,
-             0.5f,
-             0.5f * m_extent.y / m_extent.x,
-             -0.5f * m_extent.y / m_extent.x,
-             0.f,
-             100.0f
+         return static_cast<glm::mat4>(
+             // glm::ortho(-0.5, 0.5, 0.5 * ratio, -0.5 * ratio, -1000.0,
+             // 1000.0)
+             glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
          );
+         // return glm::ortho(
+         //     0.0,
+         //     1.0,
+         //     1.0 * static_cast<double>(m_extent.y / m_extent.x),
+         //     0.0 * static_cast<double>(m_extent.y / m_extent.x),
+         //     0.1,
+         //     1000.0
+         // );
    }
    throw std::runtime_error("Underfined camera mode (proj)");
 }

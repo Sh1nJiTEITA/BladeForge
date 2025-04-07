@@ -129,6 +129,7 @@ public:
     * @param off_i оффсет индексов
     */
    void updateBuffer(
+       bool make = false,
        void* v = nullptr,
        void* i = nullptr,
        size_t* off_v = nullptr,
