@@ -190,6 +190,34 @@ public:
       }
    }
 
+   // BfBezier2(std::vector<T>&& vec)
+   //     : std::vector<T>{std::move(vec)}
+   //     , obj::BfDrawObject{
+   //           "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
+   //       }
+   // {
+   //    if (this->size() < 3)
+   //    {
+   //       throw std::runtime_error(
+   //           "Bezier curve with < 3 control points is not handled"
+   //       );
+   //    }
+   // }
+   //
+   // BfBezier2(const std::vector<T>& vec)
+   //     : std::vector<T>{vec}
+   //     , obj::BfDrawObject{
+   //           "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
+   //       }
+   // {
+   //    if (this->size() < 3)
+   //    {
+   //       throw std::runtime_error(
+   //           "Bezier curve with < 3 control points is not handled"
+   //       );
+   //    }
+   // }
+
    glm::vec3 calcNormal(float t) const
    {
       return math::BfBezierBase::calcNormal(*this, t);
@@ -277,14 +305,18 @@ public:
 //
 //
 
-class BfBezierWithHandles : public obj::BfDrawLayer
+class BfBezierWithHandles : public obj::BfDrawLayer,
+                            public std::vector<BfVertex3>
 {
 public:
    template <typename... Args>
    BfBezierWithHandles(Args&&... args)
        : obj::BfDrawLayer("Bezier curve with handles")
+       , std::vector<BfVertex3>{std::forward<Args>(args)...}
    {
-      auto curve = std::make_shared<curves::BfBezier2<BfVertex3>>(args...);
+      auto curve = std::make_shared<curves::BfBezier2<BfVertex3*>>(
+          _genControlVerticesPointers()
+      );
       this->add(curve);
       for (const auto& v : *curve.get())
       {
@@ -302,6 +334,16 @@ public:
    }
 
 private:
+   std::vector<BfVertex3*> _genControlVerticesPointers()
+   {
+      std::vector<BfVertex3*> tmp;
+      tmp.reserve(this->size());
+      for (auto& it : *this)
+      {
+         tmp.push_back(&it);
+      }
+      return tmp;
+   }
 };
 
 };  // namespace curves

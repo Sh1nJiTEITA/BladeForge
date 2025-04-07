@@ -15,11 +15,6 @@ namespace obj
 namespace curves
 {
 
-namespace math
-{
-
-}  // namespace math
-
 const BfVertex3&
 BfSingleLine::first() const
 {
