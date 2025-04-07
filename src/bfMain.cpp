@@ -263,18 +263,29 @@ BfMain::__loop()
    //     0.1f
    // );
    // filled_circle->make();
-   auto circle = std::make_shared<obj::curves::BfHandle>(
-       BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
-       0.1f
+   // auto circle = std::make_shared<obj::curves::BfHandle>(
+   //     BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
+   //     0.1f
+   // );
+   // circle->make();
+
+   auto bez = std::make_shared<obj::curves::BfBezierWithHandles>(
+       BfVertex3{glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}},
+       BfVertex3{
+           glm::vec3(.5f, .5f, 0.0f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       },
+       BfVertex3{
+           glm::vec3(1.f, 0.0f, 0.0f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       }
    );
-   circle->make();
-   auto clone_circle = circle->clone();
-   clone_circle->make();
+   bez->make();
 
-   test_root->add(clone_circle);
    // test_root->add(circle);
-   // test_root->make();
-
+   test_root->add(bez);
    test_root->control().updateBuffer();
 
    obj::BfDrawManager::inst().add(test_root);

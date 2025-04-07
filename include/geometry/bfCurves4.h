@@ -2,12 +2,14 @@
 #define BF_CURVES4_H
 
 #include <cmath>
-#include <type_traits>
-#include <unordered_map>
+#include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include "bfCamera.h"
 #include "bfDrawObject2.h"
+#include "bfObjectMath.h"
+#include "bfPipeline.h"
 #include "bfVertex2.hpp"
 
 namespace obj
@@ -15,98 +17,6 @@ namespace obj
 
 namespace curves
 {
-
-class BfSingleLine;
-
-namespace math
-{
-#define BF_PI glm::pi<float>()
-#define BF_MATH_ABS_ACCURACY 10e-5
-#define BF_MATH_DEFAULT_DERIVATIVE_STEP 10e-5
-
-template <typename T, typename U, typename B>
-bool
-isVerticesInPlain(T&& _f, U&& _s, B&& _t)
-{
-   return true;
-}
-
-template <typename T, typename U, typename B, typename A, typename... Args>
-bool
-isVerticesInPlain(T&& _f, U&& _s, B&& _t, A&& _np, Args&&... args)
-{
-   auto np = BfVertex3{std::forward<A>(_np)};
-   auto f = BfVertex3{std::forward<T>(_f)};
-   auto s = BfVertex3{std::forward<U>(_s)};
-   auto t = BfVertex3{std::forward<B>(_t)};
-
-   // clang-format off
-   return (glm::abs(
-               glm::dot(
-                  glm::cross(s.pos - f.pos, 
-                             t.pos - f.pos),
-                  np.pos - f.pos
-               )
-          ) < BF_MATH_ABS_ACCURACY) && 
-   isVerticesInPlain(std::move(_s), 
-                     std::move(_t), 
-                     std::move(_np), 
-                     std::forward<Args>(args)...);
-   // clang-format on
-}
-
-template <typename T, typename U, typename B>
-glm::vec4
-calcPlaneCoeffs(T&& _f, U&& _s, B&& _t)
-{
-   auto f = BfVertex3{std::forward<T>(_f)}.pos;
-   auto s = BfVertex3{std::forward<U>(_s)}.pos;
-   auto t = BfVertex3{std::forward<B>(_t)}.pos;
-
-   glm::mat3 xd = {f.y, f.z, 1, s.y, s.z, 1, t.y, t.z, 1};
-   glm::mat3 yd = {f.x, f.z, 1, s.x, s.z, 1, t.x, t.z, 1};
-   glm::mat3 zd = {f.x, f.y, 1, s.x, s.y, 1, t.x, t.y, 1};
-
-   auto direction = glm::vec3(
-       glm::determinant(xd),
-       -glm::determinant(yd),
-       glm::determinant(zd)
-   );
-
-   glm::mat3 D = {f.x, f.y, f.z, s.x, s.y, s.z, t.x, t.y, t.z};
-
-   return {direction, -glm::determinant(D)};
-}
-
-std::vector<BfVertex3> calcCircleVertices(
-    const BfVertex3& center,
-    float radius,
-    uint32_t m_discretization,
-    const glm::vec3& color
-);
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-#define BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES 0x1
-#define BF_MATH_FIND_LINES_INTERSECTION_ANY 0x2
-glm::vec3 findLinesIntersection(
-    const obj::curves::BfSingleLine& line1,
-    const obj::curves::BfSingleLine& line2,
-    int mode = BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES
-);
-
-};  // namespace math
 
 class BfSingleLine : public obj::BfDrawObject
 {
@@ -246,6 +156,154 @@ private:
    glm::vec3 m_initialCenterPos;
    bool m_isDraggingStarted = false;
 };
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+template <typename T, math::IsBfVertex3Variation<T> = true>
+class BfBezier2 : public obj::BfDrawObject, public std::vector<T>
+{
+public:
+   template <typename... Args>
+   BfBezier2(Args&&... args)
+       : std::vector<T>{std::forward<Args>(args)...}
+       , obj::BfDrawObject{
+             "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
+         }
+   {
+      if (this->size() < 3)
+      {
+         throw std::runtime_error(
+             "Bezier curve with < 3 control points is not handled"
+         );
+      }
+   }
+
+   glm::vec3 calcNormal(float t) const
+   {
+      return math::BfBezierBase::calcNormal(*this, t);
+   }
+
+   glm::vec3 calcTangent(float t) const
+   {
+      return math::BfBezierBase::calcTangent(*this, t);
+   }
+
+   glm::vec3 calcDerivative(float t) const
+   {
+      return math::BfBezierBase::calcDerivative(*this, t);
+   }
+
+   float length() const { return math::BfBezierBase::length(*this); }
+
+   BfVertex3 calc(float t) const
+   {
+      auto v = math::BfBezierBase::calc(*this, t);
+      v.color = m_color;
+      return v;
+   }
+
+   virtual void make() override
+   {
+      m_vertices.clear();
+      m_indices.clear();
+
+      float t;
+      m_vertices.reserve(m_discretization);
+      for (int i = 0; i < m_discretization; i++)
+      {
+         t = static_cast<float>(i) / static_cast<float>(m_discretization - 1);
+         auto v = this->calc(t);
+         std::cout << v << "\n";
+         m_vertices.push_back(std::move(v));
+      }
+      m_indices.reserve(m_discretization);
+      _genIndicesStandart();
+   }
+};
+
+class BfBezier : public obj::BfDrawObject, public std::vector<BfVertex3>
+{
+public:
+   template <typename... Args>
+   BfBezier(Args&&... args)
+       : std::vector<BfVertex3>{args...}
+       , obj::BfDrawObject{
+             "Bezier curve", BF_PIPELINE(BfPipelineType_Lines), 400
+         }
+   {
+      if (this->size() < 3)
+      {
+         throw std::runtime_error(
+             "Bezier curve with < 3 control points is not handled"
+         );
+      }
+   }
+
+   glm::vec3 calcNormal(float t) const;
+   glm::vec3 calcTangent(float t) const;
+   glm::vec3 calcDerivative(float t) const;
+   float length() const;
+
+   BfVertex3 calc(float t) const;
+   virtual void make() override;
+};
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+class BfBezierWithHandles : public obj::BfDrawLayer
+{
+public:
+   template <typename... Args>
+   BfBezierWithHandles(Args&&... args)
+       : obj::BfDrawLayer("Bezier curve with handles")
+   {
+      auto curve = std::make_shared<curves::BfBezier2<BfVertex3>>(args...);
+      this->add(curve);
+      for (const auto& v : *curve.get())
+      {
+         this->add(std::make_shared<curves::BfHandle>(v, 0.01f));
+      }
+   }
+
+   virtual void make() override
+   {
+      _assignRoots();
+      for (auto child : m_children)
+      {
+         child->make();
+      }
+   }
+
+private:
+};
+
 };  // namespace curves
 
 }  // namespace obj

@@ -227,9 +227,13 @@ add_library(bfbaselib STATIC ${BF_BASE})
 target_link_libraries(bfbaselib PUBLIC bfexternallib)
 
 set(BF_GEOMETRY
-    "include/geometry/bfCurves.hpp" "src/geometry/bfCurves3.cpp"
-    "src/geometry/bfCurves4.cpp" "src/geometry/bfCurves3_gui.cpp"
-    "src/geometry/bfBladeSection.cpp" "src/geometry/bfAxis.cpp")
+    "include/geometry/bfCurves.hpp"
+    "src/geometry/bfCurves3.cpp"
+    "src/geometry/bfCurves4.cpp"
+    "src/geometry/bfCurves3_gui.cpp"
+    "src/geometry/bfBladeSection.cpp"
+    "src/geometry/bfAxis.cpp"
+    "src/geometry/bfObjectMath.cpp")
 
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)

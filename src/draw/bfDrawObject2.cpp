@@ -129,21 +129,6 @@ BfDrawControlProxy::updateBuffer(void* v, void* i, size_t* off_v, size_t* off_i)
 {
    auto& g = m_obj;
 
-   // Flexible lambda to map both index/vertex data
-   auto innerMap = [](auto container,
-                      size_t single_size,
-                      void* data,
-                      size_t* offset) {
-      // Size of container to copy to
-      // sizeof(typename std::decay_t<decltype(container)>::value_type) *
-      // container.size();
-      // Copy transoformed byte codes to buffer pointer
-      std::cout << "copying single_size=" << single_size << "\n";
-      size_t size = container.size() * single_size;
-      memcpy(reinterpret_cast<char*>(data) + *offset, container.data(), size);
-      *offset += size;
-   };
-
    if (isBuffer() && (v || i || off_v || off_i))
    {
       throw std::runtime_error(
@@ -363,8 +348,9 @@ BfDrawObjectBase::add(BfObj n)
       std::runtime_error("Trying to add DrawObjectBase to OBJECT");
    }
    m_children.push_back(n);
+   auto weak = this->weak_from_this();
    // m_root = shared_from_this();
-   n->m_root = shared_from_this();
+   n->m_root = weak_from_this();
 }
 
 void
@@ -379,24 +365,41 @@ BfDrawObjectBase::make()
 BfObj
 BfDrawObjectBase::root()
 {
+   // if (auto v = m_root.lock())
+   // {
+   //    if (v->m_root.expired())
+   //    {
+   //       if (v->control().isBuffer())
+   //       {
+   //          return v;
+   //       }
+   //       else
+   //       {
+   //          throw std::runtime_error(
+   //              "Root does not exist but this layer does not have buffer "
+   //          );
+   //       }
+   //    }
+   //    return v->root();
+   // }
+   // return shared_from_this();
+   //
+   //
+
+   std::cout << "inside " << BfTypeManager::inst().getTypeNameByTypeId(type())
+             << "\n";
+
+   if (control().isBuffer())
+   {
+      return shared_from_this();
+   }
+
    if (auto v = m_root.lock())
    {
-      if (v->m_root.expired())
-      {
-         if (v->control().isBuffer())
-         {
-            return v;
-         }
-         else
-         {
-            throw std::runtime_error(
-                "Root does not exist but this layer does not have buffer "
-            );
-         }
-      }
       return v->root();
    }
-   return shared_from_this();
+
+   throw std::runtime_error("Reached top of tree but no buffer found.");
 }
 
 BfObjectData
@@ -409,6 +412,16 @@ BfDrawObjectBase::_objectData()
        .id = id(),
        .line_thickness = 0.00025f
    };
+}
+
+void
+BfDrawObjectBase::_assignRoots()
+{
+   for (auto child : m_children)
+   {
+      child->m_root = weak_from_this();
+      child->_assignRoots();
+   }
 }
 
 /* BfDrawObject */

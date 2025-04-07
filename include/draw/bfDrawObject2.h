@@ -290,6 +290,7 @@ public:
 
 protected:
    virtual BfObjectData _objectData();
+   void _assignRoots();
 
 protected:
    VkPipeline m_pipeline;

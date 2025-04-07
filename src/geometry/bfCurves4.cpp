@@ -18,104 +18,6 @@ namespace curves
 namespace math
 {
 
-glm::vec3
-findLinesIntersection(
-    const obj::curves::BfSingleLine& line1,
-    const obj::curves::BfSingleLine& line2,
-    int mode
-)
-{
-   if (isVerticesInPlain(
-           line1.first(),
-           line1.second(),
-           line2.first(),
-           line2.second()
-       ))
-   {
-      glm::vec3 a1 = line1.first().pos;
-      glm::vec3 b1 = line1.directionFromStart();
-
-      glm::vec3 a2 = line2.first().pos;
-      glm::vec3 b2 = line2.directionFromStart();
-
-      float frac = b1.x * b2.y - b1.y * b2.x;
-
-      float t1 =
-          (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * b2.x) / (-frac);
-      float t2 =
-          (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) / (-frac);
-
-      // if lines are parallel
-      if (glm::isnan(t1) || glm::isnan(t2))
-      {
-         return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
-      }
-      if (mode == BF_MATH_FIND_LINES_INTERSECTION_BETWEEN_VERTICES)
-      {
-         if ((t1 >= 0.0f) && (t1 <= 1.0f) && (t2 >= 0.0f) && (t2 <= 1.0f))
-         {
-            return a1 + b1 * t1;
-         }
-         else
-         {
-            return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
-         }
-      }
-      else if (mode == BF_MATH_FIND_LINES_INTERSECTION_ANY)
-      {
-         return a1 + b1 * t1;
-      }
-      else
-      {
-         throw std::runtime_error(
-             "Invalid bfMathFindLinesIntersection mode inputed"
-         );
-      }
-   }
-   else
-   {
-      return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
-   }
-}
-
-std::vector<BfVertex3>
-calcCircleVertices(
-    const BfVertex3& center,
-    float radius,
-    uint32_t m_discretization,
-    const glm::vec3& color
-)
-{
-   glm::vec3 orth_1;
-   glm::vec3 orth_2;
-   glm::vec3 normal = center.normals;
-
-   if (std::abs(normal.x) > std::abs(normal.y))
-   {
-      orth_1 = glm::normalize(glm::vec3(-normal.z, 0.0f, normal.x));
-   }
-   else
-   {
-      orth_1 = glm::normalize(glm::vec3(0.0f, normal.z, -normal.y));
-   }
-   orth_2 = glm::normalize(glm::cross(normal, orth_1));
-
-   std::vector<BfVertex3> v;
-   v.reserve(m_discretization);
-
-   for (size_t i = 0; i < m_discretization + 1; ++i)
-   {
-      float theta = 2 * BF_PI * i / m_discretization;
-      v.emplace_back(
-          center.pos + radius * cosf(theta) * orth_1 +
-              radius * sinf(theta) * orth_2,
-          color,
-          normal
-      );
-   }
-   return v;
-}
-
 }  // namespace math
 
 const BfVertex3&
@@ -247,8 +149,10 @@ Bfcircle3Vertices::make()
 
    BfVertex3 center;
    center.pos = obj::curves::math::findLinesIntersection(
-       per_l_12,
-       per_l_23,
+       ave_12,
+       ave_12 + n_12,
+       ave_23,
+       ave_23 + n_23,
        BF_MATH_FIND_LINES_INTERSECTION_ANY
    );
 
@@ -397,6 +301,60 @@ BfHandle::clone() const
    auto cloned = std::make_shared<BfHandle>(m_center, m_radius);
    cloned->copy(*this);
    return cloned;
+}
+
+glm::vec3
+BfBezier::calcNormal(float t) const
+{
+   auto casted = static_cast<std::vector<BfVertex3>>(*this);
+   return math::BfBezierBase::calcNormal(casted, t);
+}
+
+glm::vec3
+BfBezier::calcTangent(float t) const
+{
+   auto casted = static_cast<std::vector<BfVertex3>>(*this);
+   return math::BfBezierBase::calcTangent(casted, t);
+}
+
+glm::vec3
+BfBezier::calcDerivative(float t) const
+{
+   auto casted = static_cast<std::vector<BfVertex3>>(*this);
+   return math::BfBezierBase::calcDerivative(casted, t);
+}
+
+float
+BfBezier::length() const
+{
+   auto casted = static_cast<std::vector<BfVertex3>>(*this);
+   return math::BfBezierBase::length(casted);
+}
+
+BfVertex3
+BfBezier::calc(float t) const
+{
+   auto casted = static_cast<std::vector<BfVertex3>>(*this);
+   auto v = math::BfBezierBase::calc(casted, t);
+   v.color = m_color;
+   return v;
+}
+
+void
+BfBezier::make()
+{
+   m_vertices.clear();
+   m_indices.clear();
+
+   float t;
+   m_vertices.reserve(m_discretization);
+   for (int i = 0; i < m_discretization; i++)
+   {
+      t = static_cast<float>(i) / static_cast<float>(m_discretization - 1);
+      m_vertices.push_back(this->calc(t));
+   }
+   m_indices.reserve(m_discretization);
+   _genIndicesStandart();
 }
 
 }  // namespace curves
