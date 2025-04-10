@@ -51,26 +51,27 @@ BfSingleLine::make()
    _genIndicesStandart();
 };
 
-void
-BfCircleCenter::make()
-{
-   m_indices.clear();
-   m_vertices = std::move(
-       math::calcCircleVertices(m_center, m_radius, m_discretization, m_color)
-   );
-   _genIndicesStandart();
-}
-
-const BfVertex3&
-BfCircleCenter::center() const
-{
-   return m_center;
-}
-const float
-BfCircleCenter::radius() const
-{
-   return m_radius;
-}
+// void
+// BfCircleCenter::make()
+// {
+//    m_indices.clear();
+//    m_vertices = std::move(
+//        math::calcCircleVertices(m_center, m_radius, m_discretization,
+//        m_color)
+//    );
+//    _genIndicesStandart();
+// }
+//
+// const BfVertex3&
+// BfCircleCenter::center() const
+// {
+//    return m_center;
+// }
+// const float
+// BfCircleCenter::radius() const
+// {
+//    return m_radius;
+// }
 
 const BfVertex3&
 Bfcircle3Vertices::first() const

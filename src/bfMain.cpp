@@ -285,7 +285,20 @@ BfMain::__loop()
    bez->make();
 
    // test_root->add(circle);
-   test_root->add(bez);
+   // test_root->add(bez);
+
+   auto cirhan = std::make_shared<obj::curves::BfCircleCenterWithHandles>(
+       BfVertex3{
+           glm::vec3(-0.5f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       },
+       0.5f
+   );
+   cirhan->make();
+
+   test_root->add(cirhan);
+
    test_root->control().updateBuffer();
 
    obj::BfDrawManager::inst().add(test_root);
