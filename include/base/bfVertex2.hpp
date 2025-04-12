@@ -4,7 +4,10 @@
 // Graphics Libs
 #include <cmath>
 #include <glm/fwd.hpp>
+#include <glm/vector_relational.hpp>
 #include <type_traits>
+#include <utility>
+#include <variant>
 #ifdef _WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #elif __linux__
@@ -134,9 +137,7 @@ struct BfVertex3
 
    inline bool equal(const BfVertex3 &o) const
    {
-      return CHECK_FLOAT_EQUALITY(o.pos.x, pos.x) &&
-             CHECK_FLOAT_EQUALITY(o.pos.y, pos.y) &&
-             CHECK_FLOAT_EQUALITY(o.pos.z, pos.z);
+      return glm::all(glm::equal(this->pos, o.pos));
    }
 
    static inline VkVertexInputBindingDescription getBindingDescription()
@@ -180,6 +181,66 @@ struct BfVertex3
 
       return os;
    }
+};
+
+struct BfVertex3Uni
+{
+   using var = std::variant<BfVertex3, BfVertex3 *>;
+
+   // clang-format off
+   
+   BfVertex3Uni() : m_value { BfVertex3{} } {}
+   explicit BfVertex3Uni(var&& v) noexcept : m_value { std::move(v) } {}
+   explicit BfVertex3Uni(const var& v) : m_value { v } {}
+   explicit BfVertex3Uni(const BfVertex3Uni& o) : m_value { o.m_value } {}
+   explicit BfVertex3Uni(BfVertex3Uni&& o) noexcept: m_value { std::move(o.m_value) }{}
+   constexpr BfVertex3Uni& operator=(const BfVertex3Uni& o) { m_value = o.m_value; return *this; }
+   constexpr BfVertex3Uni& operator=(BfVertex3Uni&& o) noexcept { m_value = std::move(o.m_value); return *this; }
+   
+   // template< typename ... Args >
+   // BfVertex3Uni(Args&& ...args) : m_value( std::in_place_type<BfVertex3>, { std::forward<Args>(args)... } ) { }
+
+   glm::vec3 &pos() { return get().pos; }
+   const glm::vec3 &pos() const { return get().pos; }
+
+   glm::vec3 &color() { return get().color; }
+   const glm::vec3 &color() const { return get().color; }
+
+   glm::vec3 &normals() { return get().normals; }
+   const glm::vec3 &normals() const { return get().normals; }
+
+   BfVertex3 *getp() { return &get(); }
+   const BfVertex3 *getp() const { return &get(); }
+
+   BfVertex3 &get()
+   {
+      // clang-format off
+      return *std::visit([](auto &&v) -> BfVertex3* {
+         using _T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v< _T, BfVertex3 >) { return &v; }
+            if constexpr (std::is_same_v< _T, BfVertex3* >) { return v; }
+         },
+         m_value
+      );
+      // clanf-format on
+   }
+
+   const BfVertex3 &get() const
+   {
+      // clang-format off
+      return *std::visit([](auto &&v) -> const BfVertex3* {
+         using _T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v< _T, BfVertex3 >) { return &v; }
+            if constexpr (std::is_same_v< _T, BfVertex3* >) { return v; }
+         },
+         m_value
+      );
+      // clanf-format on
+   }
+
+
+private:
+   var m_value;
 };
 
 struct BfVertex4

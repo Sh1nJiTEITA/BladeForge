@@ -68,7 +68,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector<int32_t> vertexOffset() const;
+   std::vector<int32_t> vertexOffset(size_t last = 0) const;
 
    /**
     *
@@ -77,7 +77,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector<int32_t> indexOffset() const;
+   std::vector<int32_t> indexOffset(size_t last = 0) const;
 
    /**
     *
@@ -150,9 +150,9 @@ public:
     */
    void draw(
        VkCommandBuffer combuffer,
-       size_t offset,
-       size_t index_offset,
-       size_t vertex_offset,
+       size_t* offset,
+       size_t* index_offset,
+       size_t* vertex_offset,
        uint32_t hovered_id
    ) const;
 
@@ -205,8 +205,8 @@ public:
     */
    enum Type
    {
-      OBJECT, /** Содержит только точки и индексы, без детей */
-      LAYER, /** Содержит OBJECT & LAYERS, но без точек и индексов*/
+      OBJECT,     /** Содержит только точки и индексы, без детей */
+      LAYER,      /** Содержит OBJECT & LAYERS, но без точек и индексов*/
       ROOT_LAYER, /** Аналогично LAYER, но имеет свой vkbuffer */
    };
 
@@ -374,6 +374,76 @@ public:
     * @brief Так как слой не может иметь индексы, этот метод ему не нужен
     */
    const std::vector<BfIndex>& indices() const = delete;
+};
+
+template <class PartEnum>
+class BfDrawLayerWithAccess : public obj::BfDrawLayer
+{
+public:
+   using pObj = std::shared_ptr<BfDrawObjectBase>;
+
+   BfDrawLayerWithAccess(BfOTypeName typeName)
+       : obj::BfDrawLayer(typeName)
+   {
+   }
+
+protected:
+   std::unordered_map<PartEnum, BfOId> m_idMap;
+
+   template <PartEnum part>
+   void _addPart(pObj obj)
+   {
+      this->add(obj);
+      m_idMap[part] = obj->id();
+      std::cout << "Added id=" << obj->id() << " type=" << obj->type()
+                << " typename=\"" << obj->typeName()
+                << "\" part=" << static_cast<uint32_t>(part) << "\n";
+   }
+
+   template <typename T, typename... Args>
+   std::shared_ptr<T> _addPartForward(PartEnum part, Args&&... args)
+   {
+      auto item = std::make_shared<T>(std::forward<Args>(args)...);
+      _addPart<part>(item);
+      return item;
+   }
+
+   template <PartEnum part, typename T, typename... Args>
+   std::shared_ptr<T> _addPartForward(Args&&... args)
+   {
+      auto item = std::make_shared<T>(std::forward<Args>(args)...);
+      _addPart<part>(item);
+      return item;
+   };
+
+   pObj _findObjectById(BfOId id)
+   {
+      // clang-format off
+      auto b = std::find_if(m_children.begin(), m_children.end(), 
+         [&id](const pObj& o) {
+            return o->id() == id;    
+         }
+      );
+      if (b == m_children.end()) { 
+         throw std::runtime_error("Cant find object by id");
+      }
+      return *b;
+      // clang-format on
+   }
+
+   template <class Cast>
+   std::shared_ptr<Cast> _part(PartEnum e)
+   {
+      auto id = m_idMap[e];
+      return std::static_pointer_cast<Cast>(_findObjectById(id));
+   }
+
+   template <PartEnum part, class Cast>
+   std::shared_ptr<Cast> _part()
+   {
+      auto id = m_idMap[part];
+      return std::static_pointer_cast<Cast>(_findObjectById(id));
+   }
 };
 
 /**

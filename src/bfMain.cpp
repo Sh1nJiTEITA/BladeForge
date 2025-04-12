@@ -6,6 +6,7 @@
 #include "bfAllocator.h"
 #include "bfAxis.h"
 #include "bfBase.h"
+#include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
@@ -269,38 +270,46 @@ BfMain::__loop()
    // );
    // circle->make();
 
-   auto bez = std::make_shared<obj::curves::BfBezierWithHandles>(
-       BfVertex3{glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}},
-       BfVertex3{
-           glm::vec3(.5f, .5f, 0.0f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       },
-       BfVertex3{
-           glm::vec3(1.f, 0.0f, 0.0f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       }
-   );
-   bez->make();
+   // auto bez = std::make_shared<obj::curves::BfBezierWH>(
+   //     BfVertex3{glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3{0.0f,
+   //     0.0f, 1.0f}}, BfVertex3{
+   //         glm::vec3(.5f, .5f, 0.0f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     },
+   //     BfVertex3{
+   //         glm::vec3(1.f, 0.0f, 0.0f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     }
+   // );
+   // bez->make();
 
    // test_root->add(circle);
    // test_root->add(bez);
 
-   auto cirhan = std::make_shared<obj::curves::BfCircleCenterWithHandles>(
-       BfVertex3{
-           glm::vec3(-0.5f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       },
-       0.5f
-   );
-   cirhan->make();
+   // auto cirhan = std::make_shared<obj::curves::BfCircleCenterWH>(
+   //     BfVertex3{
+   //         glm::vec3(-0.5f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     },
+   //     0.5f
+   // );
+   // cirhan->make();
+   // test_root->add(cirhan);
 
-   test_root->add(cirhan);
+   // auto l = std::make_shared<obj::curves::BfSingleLineWH>(&v1, &v2);
+   // l->make();
+   // test_root->add(l);
+
+   auto bs = std::make_shared<obj::section::BfBladeSection>(
+       obj::section::SectionCreateInfo{}
+   );
+   bs->make();
+   test_root->add(bs);
 
    test_root->control().updateBuffer();
-
    obj::BfDrawManager::inst().add(test_root);
 
    // BfLayerHandler
@@ -390,7 +399,7 @@ BfMain::BfMain()
     , __holder{}
     ,
     // __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
-    __cam{BfCameraMode_OrthoCentered}
+    __cam{BfCameraMode_Ortho}
 {
 }
 

@@ -123,33 +123,14 @@ BfCamera::projection()
          );
       case BfCameraMode_Ortho:
          return static_cast<glm::mat4>(
-             // glm::ortho(-0.5, 0.5, 0.5 * ratio, -0.5 * ratio, -1000.0,
-             // 1000.0)
              glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
          );
-
-         // return glm::ortho(
-         //     0.f,
-         //     1.f,
-         //     -1.f * m_extent.y / m_extent.x,
-         //     0.f * m_extent.y / m_extent.x
-         //     // 0.f,
-         //     // 100.0f
-         // );
       case BfCameraMode_OrthoCentered:
          return static_cast<glm::mat4>(
              // glm::ortho(-0.5, 0.5, 0.5 * ratio, -0.5 * ratio, -1000.0,
              // 1000.0)
              glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
          );
-         // return glm::ortho(
-         //     0.0,
-         //     1.0,
-         //     1.0 * static_cast<double>(m_extent.y / m_extent.x),
-         //     0.0 * static_cast<double>(m_extent.y / m_extent.x),
-         //     0.1,
-         //     1000.0
-         // );
    }
    throw std::runtime_error("Underfined camera mode (proj)");
 }

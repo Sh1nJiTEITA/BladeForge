@@ -65,9 +65,9 @@ public:
 
          obj->control().draw(
              command_buffer,
-             obj_data_offset,
-             index_offset,
-             vertex_offset,
+             &obj_data_offset,
+             &index_offset,
+             &vertex_offset,
              m_hoveredid
          );
       }

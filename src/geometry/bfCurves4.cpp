@@ -15,41 +15,41 @@ namespace obj
 namespace curves
 {
 
-const BfVertex3&
-BfSingleLine::first() const
-{
-   return m_first;
-}
-const BfVertex3&
-BfSingleLine::second() const
-{
-   return m_second;
-}
-const float
-BfSingleLine::length() const
-{
-   return glm::distance(m_first.pos, m_second.pos);
-}
-glm::vec3
-BfSingleLine::directionFromStart() const
-{
-   return glm::normalize(m_second.pos - m_first.pos);
-}
-glm::vec3
-BfSingleLine::directionFromEnd() const
-{
-   return -directionFromStart();
-}
-
-void
-BfSingleLine::make()
-{
-   m_vertices.clear();
-   m_indices.clear();
-
-   m_vertices = {m_first, m_second};
-   _genIndicesStandart();
-};
+// const BfVertex3&
+// BfSingleLine::first() const
+// {
+//    return m_first;
+// }
+// const BfVertex3&
+// BfSingleLine::second() const
+// {
+//    return m_second;
+// }
+// const float
+// BfSingleLine::length() const
+// {
+//    return glm::distance(m_first.pos, m_second.pos);
+// }
+// glm::vec3
+// BfSingleLine::directionFromStart() const
+// {
+//    return glm::normalize(m_second.pos - m_first.pos);
+// }
+// glm::vec3
+// BfSingleLine::directionFromEnd() const
+// {
+//    return -directionFromStart();
+// }
+//
+// void
+// BfSingleLine::make()
+// {
+//    m_vertices.clear();
+//    m_indices.clear();
+//
+//    m_vertices = {m_first, m_second};
+//    _genIndicesStandart();
+// };
 
 // void
 // BfCircleCenter::make()
@@ -139,9 +139,9 @@ Bfcircle3Vertices::make()
    glm::vec3 n_23 = glm::cross(glm::cross(v_23, v_12), v_23);
    glm::vec3 n_31 = glm::cross(glm::cross(v_31, v_23), v_31);
 
-   BfSingleLine per_l_12(ave_12, ave_12 + n_12);
-   BfSingleLine per_l_23(ave_23, ave_23 + n_23);
-   BfSingleLine per_l_31(ave_31, ave_31 + n_31);
+   BfSingleLine per_l_12(BfVertex3(ave_12), BfVertex3(ave_12 + n_12));
+   BfSingleLine per_l_23(BfVertex3(ave_23), BfVertex3(ave_23 + n_23));
+   BfSingleLine per_l_31(BfVertex3(ave_31), BfVertex3(ave_31 + n_31));
 
    BfVertex3 center;
    center.pos = obj::curves::math::findLinesIntersection(

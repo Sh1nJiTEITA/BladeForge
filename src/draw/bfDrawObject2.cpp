@@ -14,7 +14,7 @@ BfDrawControlProxy::BfDrawControlProxy(BfDrawObjectBase& obj)
 }
 
 std::vector<int32_t>
-BfDrawControlProxy::vertexOffset() const
+BfDrawControlProxy::vertexOffset(size_t last) const
 {
    // Check not to calc offsets for OBJECT
    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
@@ -24,7 +24,7 @@ BfDrawControlProxy::vertexOffset() const
 
    std::vector<int32_t> offset;
    offset.reserve(m_obj.m_children.size());
-   size_t growing_offset = 0;
+   size_t growing_offset = last;
 
    for (size_t i = 0; i < m_obj.m_children.size(); i++)
    {
@@ -41,7 +41,8 @@ BfDrawControlProxy::vertexOffset() const
 
       // offset[i] = growing_offset;
       // growing_offset += size;
-      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER)
+      // continue;
 
       auto size = m_obj.m_children[i]->vertices().size();
       offset.push_back(growing_offset);
@@ -51,7 +52,7 @@ BfDrawControlProxy::vertexOffset() const
 }
 
 std::vector<int32_t>
-BfDrawControlProxy::indexOffset() const
+BfDrawControlProxy::indexOffset(size_t last) const
 {
    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
    {
@@ -60,7 +61,7 @@ BfDrawControlProxy::indexOffset() const
 
    std::vector<int32_t> offset;
    offset.reserve(m_obj.m_children.size());
-   size_t growing_offset = 0;
+   size_t growing_offset = last;
 
    for (size_t i = 0; i < m_obj.m_children.size(); i++)
    {
@@ -71,7 +72,8 @@ BfDrawControlProxy::indexOffset() const
       //        "vertices inside LAYER object"
       //    );
       // }
-      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER) continue;
+      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER)
+      // continue;
 
       auto size = m_obj.m_children[i]->indices().size();
       offset.push_back(growing_offset);
@@ -79,6 +81,78 @@ BfDrawControlProxy::indexOffset() const
    }
    return offset;
 }
+
+// std::vector<int32_t>
+// BfDrawControlProxy::vertexOffset() const
+// {
+//    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
+//    {
+//       throw std::runtime_error("OBJECT can't have vertex layer offsets");
+//    }
+//
+//    std::vector<int32_t> offset;
+//    offset.reserve(m_obj.m_children.size());
+//    size_t growing_offset = 0;
+//
+//    // Loop through children and calculate vertex offsets
+//    for (size_t i = 0; i < m_obj.m_children.size(); i++)
+//    {
+//       auto& child = m_obj.m_children[i];
+//
+//       // Ensure the child has vertices
+//       auto size = child->vertices().size();
+//
+//       // Check if the child is a valid layer with vertices
+//       if (size > 0)
+//       {
+//          offset.push_back(static_cast<int32_t>(growing_offset));
+//          growing_offset += size;  // Accumulate the size
+//       }
+//       else
+//       {
+//          // If there are no vertices, we skip this child
+//          offset.push_back(static_cast<int32_t>(growing_offset));
+//       }
+//    }
+//
+//    return offset;
+// }
+
+// std::vector<int32_t>
+// BfDrawControlProxy::indexOffset() const
+// {
+//    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
+//    {
+//       throw std::runtime_error("OBJECT can't have index layer offsets");
+//    }
+//
+//    std::vector<int32_t> offset;
+//    offset.reserve(m_obj.m_children.size());
+//    size_t growing_offset = 0;
+//
+//    // Loop through children and calculate index offsets
+//    for (size_t i = 0; i < m_obj.m_children.size(); i++)
+//    {
+//       auto& child = m_obj.m_children[i];
+//
+//       // Ensure the child has indices
+//       auto size = child->indices().size();
+//
+//       // Check if the child has indices
+//       if (size > 0)
+//       {
+//          offset.push_back(static_cast<int32_t>(growing_offset));
+//          growing_offset += size;  // Accumulate the size
+//       }
+//       else
+//       {
+//          // If there are no indices, we skip this child
+//          offset.push_back(static_cast<int32_t>(growing_offset));
+//       }
+//    }
+//
+//    return offset;
+// }
 
 const glm::mat4&
 BfDrawControlProxy::model() const
@@ -151,12 +225,13 @@ BfDrawControlProxy::updateBuffer(
 
       for (const auto& child : g.m_children)
       {
-         // if (make)
-         // {
-         //    child->make();
-         // }
-         child->control()
-             .updateBuffer(make, p_vertex, p_index, &offset_v, &offset_i);
+         // clang-format off
+         child->control().updateBuffer(make, 
+                                       p_vertex, 
+                                       p_index, 
+                                       &offset_v, 
+                                       &offset_i);
+         // clang-format on
       }
 
       g.m_buffer->vertex().unmap();
@@ -207,9 +282,9 @@ BfDrawControlProxy::updateBuffer(
 void
 BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
-    size_t offset,
-    size_t index_offset,
-    size_t vertex_offset,
+    size_t* offset,
+    size_t* index_offset,
+    size_t* vertex_offset,
     uint32_t hovered_id
 ) const
 {
@@ -227,10 +302,15 @@ BfDrawControlProxy::draw(
           combuffer,
           g.indices().size(),
           1,
-          index_offset,
-          vertex_offset,
-          offset
+          *index_offset,
+          *vertex_offset,
+          *offset
       );
+
+      *offset += 1;
+      *index_offset += g.indices().size();
+      *vertex_offset += g.vertices().size();
+
       g.isHovered = g.id() == hovered_id;
       m_obj.processDragging();
    }
@@ -256,18 +336,16 @@ BfDrawControlProxy::draw(
          );
       }
 
-      auto calc_index_offsets = indexOffset();
-      auto calc_vertex_offsets = vertexOffset();
-
       for (size_t i = 0; i < g.m_children.size(); ++i)
       {
-         g.m_children.at(i)->control().draw(
-             combuffer,
-             offset + i,
-             index_offset + calc_index_offsets[i],
-             vertex_offset + calc_vertex_offsets[i],
-             hovered_id
-         );
+         // clang-format off
+          g.m_children.at(i)->control().draw(
+              combuffer,
+              offset,
+              index_offset,
+              vertex_offset,
+              hovered_id
+          );
       }
    }
 }
