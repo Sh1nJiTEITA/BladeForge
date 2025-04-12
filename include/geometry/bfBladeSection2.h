@@ -1,6 +1,8 @@
 #ifndef BF_NEW_BLADESECTION2_H
 #define BF_NEW_BLADESECTION2_H
 
+#include <glm/geometric.hpp>
+#include <glm/vector_relational.hpp>
 #include <memory>
 
 #include "bfCurves4.h"
@@ -38,7 +40,7 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section")
        , m_info{std::forward<T>(info)}
    {
-      // auto& g = m_info;
+      auto& g = m_info;
       auto oChord = _addPartForward<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
          BfVertex3{
             glm::vec3{ 0.0f, 0.0f, 0.0f }, 
@@ -46,45 +48,79 @@ public:
             glm::vec3{ 0.0f, 0.0f, 1.0f }
          },
          BfVertex3{
-            glm::vec3{ m_info.chord, 0.0f, 0.0f }, 
+            glm::vec3{ g.chord, 0.0f, 0.0f }, 
             glm::vec3{ 0.5f, 0.5f, 0.1f },
             glm::vec3{ 0.0f, 0.0f, 1.0f }
          }
       );
-      // this->add(oChord);
+      m_lastChordL = oChord->left().get();
+      m_lastChordR = oChord->right().get();
 
       auto oChordLeft = _addPartForward<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
          _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->left().getp(),
-         // BfVertex3{
-         //    glm::vec3{ 1.5f, 0.5f, 0.0f }, 
-         //    glm::vec3{ 0.5f, 0.5f, 0.1f },
-         //    glm::vec3{ 0.0f, 0.0f, 1.0f }
-         // },
          BfVertex3{
-            glm::vec3{ 0.5f, 0.5f, 0.0f }, 
+            glm::vec3{ oChord->left().pos().x, g.chord, 0.0f }, 
             glm::vec3{ 0.5f, 0.5f, 0.1f },
             glm::vec3{ 0.0f, 0.0f, 1.0f }
          }
       );
-      // this->add(oChordLeft);
 
-      std::cout << oChordLeft->left().get() << "\n";
-      std::cout << oChordLeft->right().get() << "\n";
+      auto oChordRight = _addPartForward<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
+         _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
+         BfVertex3{
+            glm::vec3{ oChord->right().pos().x, g.chord, 0.0f }, 
+            glm::vec3{ 0.5f, 0.5f, 0.1f },
+            glm::vec3{ 0.0f, 0.0f, 1.0f }
+         }
+      );
 
-      // clang-format on
+
    }
 
    virtual void make() override
    {
       _assignRoots();
-      for (auto& child : m_children)
+
+      premake(); 
       {
-         std::cout << "Makeing child " << child->id() << " inside section\n";
-         child->make();
+         for (auto& child : m_children)
+         {
+            child->make();
+         }
+      }
+      postmake();    
+   }
+
+   virtual void premake() { 
+      auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
+      auto oChordL = _part<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>();
+      auto oChordR = _part<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>();
+
+      m_info.chord = oChord->line()->length();
+
+      if (!oChord->left().get().equal(m_lastChordL) ||
+          !oChord->right().get().equal(m_lastChordR)) 
+      { 
+         auto line = oChord->line();
+         auto up = glm::normalize(-glm::cross(line->directionFromStart(),
+                                              line->first().normals));
+
+         oChordL->right().pos() = oChord->left().pos() + up * m_info.chord;
+         oChordR->right().pos() = oChord->right().pos() + up * m_info.chord;
       }
    }
 
+   virtual void postmake() 
+   { 
+      auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
+      m_lastChordL = oChord->left().get();
+      m_lastChordR = oChord->right().get();
+   }
+
 private:
+   BfVertex3 m_lastChordL; 
+   BfVertex3 m_lastChordR; 
+
    SectionCreateInfo m_info;
 };
 

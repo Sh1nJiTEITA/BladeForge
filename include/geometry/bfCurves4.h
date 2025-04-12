@@ -587,12 +587,16 @@ public:
    BfVertex3Uni& right() { return m_right; }
    const BfVertex3Uni& right() const { return m_right; }
 
+   std::shared_ptr<curves::BfSingleLine> line()
+   {
+      return std::static_pointer_cast<curves::BfSingleLine>(m_children[2]);
+   }
+
    virtual void make() override
    {
       _assignRoots();
       for (auto& child : m_children)
       {
-         std::cout << "Making child " << child->id() << " inside singleline\n";
          child->make();
       }
    }
