@@ -22,7 +22,7 @@ namespace std
 {
 string to_string(const BfGuiCreateWindowContainer&, int);
 string to_string(const BfGuiCreateWindowContainerObj&, int);
-}  // namespace std
+} // namespace std
 
 // === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === ===
@@ -64,7 +64,7 @@ protected:
    ImVec2 __window_size = {150, 150};
    ImVec2 __old_outter_pos;
 
-   std::list<ptrContainer> __containers;
+   std::list< ptrContainer > __containers;
    wptrContainer __root_container;
 
    static swapFuncType __swapFunc;
@@ -114,10 +114,10 @@ public:
    static void changeCursorStyle();
 
    // ITER
-   std::list<ptrContainer>::iterator begin();
-   std::list<ptrContainer>::iterator end();
-   std::list<ptrContainer>::reverse_iterator rbegin();
-   std::list<ptrContainer>::reverse_iterator rend();
+   std::list< ptrContainer >::iterator begin();
+   std::list< ptrContainer >::iterator end();
+   std::list< ptrContainer >::reverse_iterator rbegin();
+   std::list< ptrContainer >::reverse_iterator rend();
 
    void add(ptrContainer container);
    void rem(ptrContainer container);
@@ -132,14 +132,14 @@ public:
 };
 BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowContainer);
 
-void BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>&);
+void BfGetWindowsUnderMouse(std::vector< ImGuiWindow* >&);
 
 // === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === ===
 
 class BfGuiCreateWindowContainerObj
     : public BfGuiCreateWindowContainer,
-      public std::enable_shared_from_this<BfGuiCreateWindowContainerObj>
+      public std::enable_shared_from_this< BfGuiCreateWindowContainerObj >
 {
    BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowContainerObj);
 
@@ -154,8 +154,8 @@ protected:
    ImVec2 __header_button_size = {20.0f, 20.0f};
 
    BfDrawLayerCreateInfo __layer_create_info;
-   std::shared_ptr<BfDrawLayer> __layer_obj;
-   std::weak_ptr<BfDrawLayer> __ptr_root;
+   std::shared_ptr< BfDrawLayer > __layer_obj;
+   std::weak_ptr< BfDrawLayer > __ptr_root;
 
    virtual void __pushButtonColorStyle();
    virtual void __popButtonColorStyle();
@@ -175,7 +175,7 @@ protected:
    virtual void __processDragDropTarget();
 
    virtual void __createObj();
-   void __addToLayer(std::shared_ptr<BfDrawLayer> add_to);
+   void __addToLayer(std::shared_ptr< BfDrawLayer > add_to);
    ImVec2 __totalHeaderButtonsSize();
 
 public:
@@ -187,8 +187,8 @@ public:
 
 #if defined(BF_CONFIG_MANAGER_TESTING)
    friend void checkBaseContainer(
-       std::shared_ptr<BfGuiCreateWindowContainerObj>,
-       std::shared_ptr<BfGuiCreateWindowContainerObj> r
+       std::shared_ptr< BfGuiCreateWindowContainerObj >,
+       std::shared_ptr< BfGuiCreateWindowContainerObj > r
    );
 #endif
 
@@ -201,7 +201,7 @@ BF_GUI_CREATE_WINDOW_REGISTER_TYPE_SOURCE(BfGuiCreateWindowContainerObj);
 
 class BfGuiCreateWindowContainerPopup
     : public BfGuiCreateWindowContainer,
-      public std::enable_shared_from_this<BfGuiCreateWindowContainerPopup>
+      public std::enable_shared_from_this< BfGuiCreateWindowContainerPopup >
 {
    BF_GUI_CREATE_WINDOW_REGISTER_TYPE(BfGuiCreateWindowContainerPopup);
 
@@ -215,13 +215,13 @@ protected:
    virtual void __renderHeader() override;
 
 public:
-   std::function<void(wptrContainer root)> __renderPopupContentFunc;
+   std::function< void(wptrContainer root) > __renderPopupContentFunc;
 
    BfGuiCreateWindowContainerPopup(
        wptrContainer root,
        int side = BfGuiCreateWindowContainerPopup_Side_Right,
        bool is_force_render = false,
-       std::function<void(wptrContainer)> popup_func = nullptr
+       std::function< void(wptrContainer) > popup_func = nullptr
    );
 
    int side() noexcept;

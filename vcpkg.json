@@ -1,0 +1,35 @@
+{
+  "name": "bladeforge",
+  "version": "0.1.0",
+  "dependencies": [
+    "boost-bimap",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "glfw-binding",
+        "vulkan-binding"
+      ]
+    },
+    "implot",
+    "sol2",
+    "vulkan-memory-allocator",
+    "xtensor",
+    "xtensor-blas",
+    "xtl"
+  ],
+  "overrides": [
+    {
+      "name": "xtensor",
+      "version": "0.25.0"
+    },
+    {
+      "name": "xtensor-blas",
+      "version": "0.21.0"
+    },
+    {
+      "name": "xtl",
+      "version": "0.7.5"
+    }
+  ]
+}

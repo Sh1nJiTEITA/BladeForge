@@ -18,7 +18,7 @@
 
 // Function definitions
 BfEvent
-bfCreateInstance(BfBase &base)
+bfCreateInstance(BfBase& base)
 {
    if (enableValidationLayers)
    {
@@ -31,14 +31,14 @@ bfCreateInstance(BfBase &base)
    uint32_t layerCount;
    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-   std::vector<VkLayerProperties> avaliableLayers(layerCount);
+   std::vector< VkLayerProperties > avaliableLayers(layerCount);
 
    vkEnumerateInstanceLayerProperties(&layerCount, avaliableLayers.data());
 
    // std::cout << "Checking validation layers support. " << "Available
    // Layers:\n";
    int i = 0;
-   for (const auto &layer : avaliableLayers)
+   for (const auto& layer : avaliableLayers)
    {
       std::cout << i << ". " << layer.layerName << '\n';
       i++;
@@ -49,12 +49,12 @@ bfCreateInstance(BfBase &base)
 
    i = 0;
    is_validation_layers_supported = true;
-   for (auto &vLayer : bfvValidationLayers)
+   for (auto& vLayer : bfvValidationLayers)
    {
       bool isLayer = false;
       std::cout << i << ") " << vLayer << '\n';
 
-      for (const auto &layerProperties : avaliableLayers)
+      for (const auto& layerProperties : avaliableLayers)
       {
          if (strcmp(vLayer, layerProperties.layerName) == 0)
          {
@@ -72,17 +72,18 @@ bfCreateInstance(BfBase &base)
 
    if (enableValidationLayers && !is_validation_layers_supported)
    {
-      throw std::runtime_error("Validation layers requested, but not available."
+      throw std::runtime_error(
+          "Validation layers requested, but not available."
       );
    }
    // Get Required Extensions
    uint32_t glfwExtensionCount = 0;
-   const char **glfwExtensions;
+   const char** glfwExtensions;
    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
    // std::vector<const char*> extensions(glfwExtensions, glfwExternsions +
    // glfwExtensionCount);
-   std::vector<const char *> extensions(
+   std::vector< const char* > extensions(
        glfwExtensions,
        glfwExtensions + glfwExtensionCount
    );
@@ -104,7 +105,7 @@ bfCreateInstance(BfBase &base)
    VkInstanceCreateInfo instanceInfo{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
    instanceInfo.pApplicationInfo = &appInfo;
    instanceInfo.enabledExtensionCount =
-       static_cast<uint32_t>(extensions.size());
+       static_cast< uint32_t >(extensions.size());
    instanceInfo.ppEnabledExtensionNames = extensions.data();
 
    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -113,7 +114,7 @@ bfCreateInstance(BfBase &base)
    if (enableValidationLayers)
    {
       instanceInfo.enabledLayerCount =
-          static_cast<uint32_t>(bfvValidationLayers.size());
+          static_cast< uint32_t >(bfvValidationLayers.size());
 
       instanceInfo.ppEnabledLayerNames = bfvValidationLayers.data();
 
@@ -122,8 +123,8 @@ bfCreateInstance(BfBase &base)
       features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
       features.enabledValidationFeatureCount = bfvValidationFeatures.size();
       features.pEnabledValidationFeatures = bfvValidationFeatures.data();
-      features.pNext = (VkDebugUtilsMessengerEXT *)&debugCreateInfo;
-      instanceInfo.pNext = (VkValidationFeaturesEXT *)&features;
+      features.pNext = (VkDebugUtilsMessengerEXT*)&debugCreateInfo;
+      instanceInfo.pNext = (VkValidationFeaturesEXT*)&features;
    }
    else
    {
@@ -155,7 +156,7 @@ bfCreateInstance(BfBase &base)
 }
 
 BfEvent
-bfDestroyInstance(BfBase &base)
+bfDestroyInstance(BfBase& base)
 {
    vkDestroyInstance(base.instance, nullptr);
 
@@ -167,7 +168,7 @@ bfDestroyInstance(BfBase &base)
 }
 
 BfEvent
-bfDestroyDebufMessenger(BfBase &base)
+bfDestroyDebufMessenger(BfBase& base)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_DESTROY_EVENT;
@@ -193,7 +194,7 @@ bfDestroyDebufMessenger(BfBase &base)
 }
 
 BfEvent
-bfCreateDebugMessenger(BfBase &base)
+bfCreateDebugMessenger(BfBase& base)
 {
    // If layer is disabled, то DebugMessenger is not neccesery
    if (!enableValidationLayers)
@@ -237,7 +238,7 @@ bfCreateDebugMessenger(BfBase &base)
 }
 
 BfEvent
-bfCreateSurface(BfBase &base)
+bfCreateSurface(BfBase& base)
 {
    BfSingleEvent event{};
    if (glfwCreateWindowSurface(
@@ -262,7 +263,7 @@ bfCreateSurface(BfBase &base)
 }
 
 BfEvent
-bfDestroySurface(BfBase &base)
+bfDestroySurface(BfBase& base)
 {
    vkDestroySurfaceKHR(base.instance, base.surface, nullptr);
 
@@ -274,7 +275,7 @@ bfDestroySurface(BfBase &base)
 }
 
 BfEvent
-bfCreatePhysicalDevice(BfBase &base)
+bfCreatePhysicalDevice(BfBase& base)
 {
    uint32_t deviceCount = 0;
    vkEnumeratePhysicalDevices(base.instance, &deviceCount, nullptr);
@@ -288,18 +289,18 @@ bfCreatePhysicalDevice(BfBase &base)
    }
 
    // Else:
-   std::vector<VkPhysicalDevice> devices(deviceCount);
+   std::vector< VkPhysicalDevice > devices(deviceCount);
    vkEnumeratePhysicalDevices(base.instance, &deviceCount, devices.data());
 
    // Check devices for suitablity
-   for (const auto &device : devices)
+   for (const auto& device : devices)
    {
       BfPhysicalDevice bf_device{};
       bf_device.physical_device = device;
 
       BfHolder::__bfpHolder->physical_devices.push_back(bf_device);
 
-      BfPhysicalDevice *pPhysicalDevice =
+      BfPhysicalDevice* pPhysicalDevice =
           &BfHolder::__bfpHolder->physical_devices.back();
 
       bool is_suitable;
@@ -340,23 +341,22 @@ bfCreatePhysicalDevice(BfBase &base)
 }
 
 BfEvent
-bfCreateLogicalDevice(BfBase &base)
+bfCreateLogicalDevice(BfBase& base)
 {
    base.physical_device->queue_family_indices;
 
-   std::set<uint32_t> uniqueQueueFamilies;
+   std::set< uint32_t > uniqueQueueFamilies;
    std::transform(
        base.physical_device->queue_family_indices.cbegin(),
        base.physical_device->queue_family_indices.cend(),
        std::inserter(uniqueQueueFamilies, uniqueQueueFamilies.begin()),
-       [](const std::pair<BfvEnQueueType, std::optional<uint32_t>> &key_value) {
-          return key_value.second.value();
-       }
+       [](const std::pair< BfvEnQueueType, std::optional< uint32_t > >&
+              key_value) { return key_value.second.value(); }
    );
 
    float queuePriority = 1.0f;
 
-   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+   std::vector< VkDeviceQueueCreateInfo > queueCreateInfos;
    for (uint32_t queueFamily : uniqueQueueFamilies)
    {
       VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -377,14 +377,14 @@ bfCreateLogicalDevice(BfBase &base)
    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
    createInfo.queueCreateInfoCount =
-       static_cast<uint32_t>(queueCreateInfos.size());
+       static_cast< uint32_t >(queueCreateInfos.size());
    createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
    createInfo.pEnabledFeatures = &deviceFeatures;
 
    // SWAP-CHAIN extensions (and others)
    createInfo.enabledExtensionCount =
-       static_cast<uint32_t>(bfvDeviceExtensions.size());
+       static_cast< uint32_t >(bfvDeviceExtensions.size());
    createInfo.ppEnabledExtensionNames = bfvDeviceExtensions.data();
 
    VkPhysicalDeviceShaderDrawParametersFeatures
@@ -398,7 +398,7 @@ bfCreateLogicalDevice(BfBase &base)
    if (enableValidationLayers)
    {
       createInfo.enabledLayerCount =
-          static_cast<uint32_t>(bfvValidationLayers.size());
+          static_cast< uint32_t >(bfvValidationLayers.size());
       createInfo.ppEnabledLayerNames = bfvValidationLayers.data();
    }
    else
@@ -425,7 +425,7 @@ bfCreateLogicalDevice(BfBase &base)
       event.action = BfEnActionType::BF_ACTION_TYPE_INIT_LOGICAL_DEVICE_SUCCESS;
    }
 
-   for (auto &it : base.physical_device->queue_family_indices)
+   for (auto& it : base.physical_device->queue_family_indices)
    {
       vkGetDeviceQueue(
           base.device,
@@ -438,7 +438,7 @@ bfCreateLogicalDevice(BfBase &base)
 }
 
 BfEvent
-bfDestroyLogicalDevice(BfBase &base)
+bfDestroyLogicalDevice(BfBase& base)
 {
    vkDestroyDevice(base.device, nullptr);
 
@@ -450,7 +450,7 @@ bfDestroyLogicalDevice(BfBase &base)
 }
 
 BfEvent
-bfCreateSwapchain(BfBase &base)
+bfCreateSwapchain(BfBase& base)
 {
    BfSwapChainSupport swapChainSupport;
    bfGetSwapChainSupport(
@@ -495,8 +495,8 @@ bfCreateSwapchain(BfBase &base)
            indices.presentFamily.value()
    };
    */
-   std::vector<uint32_t> queueFamilyIndices;
-   for (auto &it : base.physical_device->queue_family_indices)
+   std::vector< uint32_t > queueFamilyIndices;
+   for (auto& it : base.physical_device->queue_family_indices)
    {
       queueFamilyIndices.push_back(it.second.value());
    }
@@ -570,7 +570,7 @@ bfCreateSwapchain(BfBase &base)
 }
 
 BfEvent
-bfDestroySwapchain(BfBase &base)
+bfDestroySwapchain(BfBase& base)
 {
    vkDestroySwapchainKHR(base.device, base.swap_chain, nullptr);
 
@@ -582,10 +582,10 @@ bfDestroySwapchain(BfBase &base)
 }
 
 BfEvent
-bfCreateImageViews(BfBase &base)
+bfCreateImageViews(BfBase& base)
 {
    // NUMBER OF IMAGES -> NUMBER OF VIEWS
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
    holder->image_views.resize(base.image_pack_count);
 
    for (size_t i = 0; i < base.image_pack_count; i++)
@@ -666,7 +666,7 @@ bfCreateImageViews(BfBase &base)
 }
 
 BfEvent
-bfDestroyImageViews(BfBase &base)
+bfDestroyImageViews(BfBase& base)
 {
    auto holder = bfGetpHolder();
    for (size_t i = 0; i < holder->image_views.size(); i++)
@@ -686,7 +686,7 @@ bfDestroyImageViews(BfBase &base)
 }
 
 BfEvent
-bfCreateStandartRenderPass(BfBase &base)
+bfCreateStandartRenderPass(BfBase& base)
 {
    // Color attachment
    // Id map attachment
@@ -720,7 +720,7 @@ bfCreateStandartRenderPass(BfBase &base)
    colorAttachmentRef.attachment = 0;
    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-   std::vector<VkAttachmentReference> attachment_refs{
+   std::vector< VkAttachmentReference > attachment_refs{
        colorAttachmentRef,
        id_map_attachment_ref
    };
@@ -784,13 +784,13 @@ bfCreateStandartRenderPass(BfBase &base)
 
    // Create render pass
 
-   std::vector<VkAttachmentDescription> attachments{
+   std::vector< VkAttachmentDescription > attachments{
        colorAttachment,
        id_map_attachment,
        depth_attachment
    };
 
-   std::vector<VkSubpassDependency> dependencies{
+   std::vector< VkSubpassDependency > dependencies{
        dependency,
        id_dependency,
        depth_dependency
@@ -830,7 +830,7 @@ bfCreateStandartRenderPass(BfBase &base)
 }
 
 BfEvent
-bfDestroyStandartRenderPass(BfBase &base)
+bfDestroyStandartRenderPass(BfBase& base)
 {
    vkDestroyRenderPass(base.device, base.standart_render_pass, nullptr);
 
@@ -842,7 +842,7 @@ bfDestroyStandartRenderPass(BfBase &base)
 }
 
 BfEvent
-bfCreateGUIRenderPass(BfBase &base)
+bfCreateGUIRenderPass(BfBase& base)
 {
    VkAttachmentDescription attachment = {};
    attachment.format = base.swap_chain_format;
@@ -868,7 +868,7 @@ bfCreateGUIRenderPass(BfBase &base)
    dependency.dstSubpass = 0;
    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-   dependency.srcAccessMask = 0;  // or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   dependency.srcAccessMask = 0; // or VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
    VkRenderPassCreateInfo info = {};
@@ -901,7 +901,7 @@ bfCreateGUIRenderPass(BfBase &base)
 }
 
 BfEvent
-bfDestroyGUIRenderPass(BfBase &base)
+bfDestroyGUIRenderPass(BfBase& base)
 {
    vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
    vkDestroyRenderPass(base.device, base.gui_render_pass, nullptr);
@@ -1359,19 +1359,19 @@ bfDestroyGUIRenderPass(BfBase &base)
 // }
 
 BfEvent
-bfDestroyOwnDescriptors(BfBase &base)
+bfDestroyOwnDescriptors(BfBase& base)
 {
    base.descriptor.kill();
    return BfEvent();
 }
 
 BfEvent
-bfInitOwnDescriptors(BfBase &base)
+bfInitOwnDescriptors(BfBase& base)
 {
    base.descriptor.set_frames_in_flight(MAX_FRAMES_IN_FLIGHT);
    base.descriptor.bind_device(base.device);
 
-   std::vector<VkDescriptorPoolSize> sizes = {
+   std::vector< VkDescriptorPoolSize > sizes = {
        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},
        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10},
        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10},
@@ -1425,7 +1425,7 @@ bfInitOwnDescriptors(BfBase &base)
 
    info_view.layout_binding = BfDescriptorSetGlobal;
 
-   std::vector<BfDescriptorCreateInfo> infos{
+   std::vector< BfDescriptorCreateInfo > infos{
        info_model_mtx,
        info_view,
    };
@@ -1457,25 +1457,26 @@ bfInitOwnDescriptors(BfBase &base)
 }
 
 void
-bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo)
+bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
-   if (!enableValidationLayers) return;
+   if (!enableValidationLayers)
+      return;
 
    createInfo = {};
    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
    createInfo.messageSeverity = {
-       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |     // Just info (e.g.
-                                                          // creation info)
-       VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |  // Diagnostic info
-       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |  // Warning (bug)
-       VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT      // Warning (potential
-                                                          // crush)
+       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |    // Just info (e.g.
+                                                         // creation info)
+       VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | // Diagnostic info
+       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | // Warning (bug)
+       VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT     // Warning (potential
+                                                         // crush)
    };
    createInfo.messageType = {
-       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |     // Unrelated perfomance
-                                                         // (mb ok)
-       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |  // Possiable mistake
-                                                         // (not ok)
+       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |    // Unrelated perfomance
+                                                        // (mb ok)
+       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | // Possiable mistake
+                                                        // (not ok)
        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT  // Potential non-optimal
                                                         // use of VK
    };
@@ -1483,14 +1484,14 @@ bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo)
 }
 
 BfEvent
-bfaReadFile(std::vector<char> &data, const std::string &filename)
+bfaReadFile(std::vector< char >& data, const std::string& filename)
 {
    std::ifstream file(
        // FILE-name
        filename,
        // Modes
-       std::ios::ate |       // Read from the end
-           std::ios::binary  // Read file as binary (avoid text transformations)
+       std::ios::ate |      // Read from the end
+           std::ios::binary // Read file as binary (avoid text transformations)
    );
 
    BfSingleEvent event{};
@@ -1832,9 +1833,9 @@ bfaReadFile(std::vector<char> &data, const std::string &filename)
 // }
 
 BfEvent
-bfCreateStandartFrameBuffers(BfBase &base)
+bfCreateStandartFrameBuffers(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
    holder->standart_framebuffers.resize(base.image_pack_count);
 
    std::stringstream ss_s;
@@ -1850,7 +1851,7 @@ bfCreateStandartFrameBuffers(BfBase &base)
    {
       base.image_packs[i].pStandart_Buffer = &holder->standart_framebuffers[i];
 
-      std::vector<VkImageView> attachments = {
+      std::vector< VkImageView > attachments = {
           *base.image_packs[i].pImage_view,
           *base.image_packs[i].pImage_view_id,
           base.depth_image.view
@@ -1904,7 +1905,7 @@ bfCreateStandartFrameBuffers(BfBase &base)
 }
 
 BfEvent
-bfDestroyStandartFrameBuffers(BfBase &base)
+bfDestroyStandartFrameBuffers(BfBase& base)
 {
    auto holder = bfGetpHolder();
 
@@ -1925,9 +1926,9 @@ bfDestroyStandartFrameBuffers(BfBase &base)
 }
 
 BfEvent
-bfCreateGUIFrameBuffers(BfBase &base)
+bfCreateGUIFrameBuffers(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
    holder->gui_framebuffers.resize(base.image_pack_count);
 
    std::stringstream ss_s;
@@ -1993,7 +1994,7 @@ bfCreateGUIFrameBuffers(BfBase &base)
 }
 
 BfEvent
-bfDestroyGUIFrameBuffers(BfBase &base)
+bfDestroyGUIFrameBuffers(BfBase& base)
 {
    auto holder = bfGetpHolder();
 
@@ -2010,7 +2011,7 @@ bfDestroyGUIFrameBuffers(BfBase &base)
 }
 
 BfEvent
-bfCreateCommandPool(BfBase &base)
+bfCreateCommandPool(BfBase& base)
 {
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -2043,7 +2044,7 @@ bfCreateCommandPool(BfBase &base)
 }
 
 BfEvent
-bfDestroyCommandPool(BfBase &base)
+bfDestroyCommandPool(BfBase& base)
 {
    vkDestroyCommandPool(base.device, base.command_pool, nullptr);
 
@@ -2055,7 +2056,7 @@ bfDestroyCommandPool(BfBase &base)
 }
 
 BfEvent
-bfCreateGUIDescriptorPool(BfBase &base)
+bfCreateGUIDescriptorPool(BfBase& base)
 {
    VkDescriptorPoolSize pool_sizes[] = {
        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
@@ -2078,7 +2079,7 @@ bfCreateGUIDescriptorPool(BfBase &base)
    return BfEvent();
 }
 BfEvent
-bfDestroyGUIDescriptorPool(BfBase &base)
+bfDestroyGUIDescriptorPool(BfBase& base)
 {
    vkDestroyDescriptorPool(base.device, base.gui_descriptor_pool, nullptr);
 
@@ -2093,9 +2094,9 @@ bfDestroyGUIDescriptorPool(BfBase &base)
 }
 
 BfEvent
-bfCreateStandartCommandBuffers(BfBase &base)
+bfCreateStandartCommandBuffers(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
 
    if (holder->standart_command_buffers.size() != MAX_FRAMES_IN_FLIGHT)
    {
@@ -2111,7 +2112,7 @@ bfCreateStandartCommandBuffers(BfBase &base)
    allocInfo.commandPool = base.command_pool;
    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
    allocInfo.commandBufferCount =
-       static_cast<uint32_t>(holder->standart_command_buffers.size());
+       static_cast< uint32_t >(holder->standart_command_buffers.size());
 
    if (vkAllocateCommandBuffers(
            base.device,
@@ -2132,7 +2133,7 @@ bfCreateStandartCommandBuffers(BfBase &base)
 }
 
 BfEvent
-bfDestroyStandartCommandBuffers(BfBase &base)
+bfDestroyStandartCommandBuffers(BfBase& base)
 {
    auto holder = bfGetpHolder();
 
@@ -2151,9 +2152,9 @@ bfDestroyStandartCommandBuffers(BfBase &base)
 }
 
 BfEvent
-bfCreateGUICommandBuffers(BfBase &base)
+bfCreateGUICommandBuffers(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
 
    if (holder->gui_command_buffers.size() != MAX_FRAMES_IN_FLIGHT)
    {
@@ -2165,7 +2166,7 @@ bfCreateGUICommandBuffers(BfBase &base)
    allocInfo.commandPool = base.command_pool;
    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
    allocInfo.commandBufferCount =
-       static_cast<uint32_t>(holder->gui_command_buffers.size());
+       static_cast< uint32_t >(holder->gui_command_buffers.size());
 
    if (vkAllocateCommandBuffers(
            base.device,
@@ -2185,7 +2186,7 @@ bfCreateGUICommandBuffers(BfBase &base)
 }
 
 BfEvent
-bfDestroyGUICommandBuffers(BfBase &base)
+bfDestroyGUICommandBuffers(BfBase& base)
 {
    auto holder = bfGetpHolder();
 
@@ -2204,9 +2205,9 @@ bfDestroyGUICommandBuffers(BfBase &base)
 }
 
 BfEvent
-bfCreateSyncObjects(BfBase &base)
+bfCreateSyncObjects(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
 
    if (holder->available_image_semaphores.size() != MAX_FRAMES_IN_FLIGHT)
       holder->available_image_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -2222,7 +2223,7 @@ bfCreateSyncObjects(BfBase &base)
 
    VkFenceCreateInfo fenceInfo{};
    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;  // For first frame render
+   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; // For first frame render
 
    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
    {
@@ -2262,7 +2263,7 @@ bfCreateSyncObjects(BfBase &base)
 }
 
 BfEvent
-bfDestorySyncObjects(BfBase &base)
+bfDestorySyncObjects(BfBase& base)
 {
    auto holder = bfGetpHolder();
    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -2288,7 +2289,7 @@ bfDestorySyncObjects(BfBase &base)
 }
 
 BfEvent
-bfInitImGUI(BfBase &base)
+bfInitImGUI(BfBase& base)
 {
    // Setup Dear ImGui context
    IMGUI_CHECKVERSION();
@@ -2299,13 +2300,13 @@ bfInitImGUI(BfBase &base)
 }
 
 BfEvent
-bfPostInitImGui(BfBase &base)
+bfPostInitImGui(BfBase& base)
 {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    (void)io;
-   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
+   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 
-   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
    ImGui::StyleColorsClassic();
 
@@ -2361,7 +2362,7 @@ bfPostInitImGui(BfBase &base)
    init_info.CheckVkResultFn = check_vk_result;
 
    if (true == false)
-   {  // FONTS TODO: RECREATE LOGIC IN OTHER FUNCTION
+   { // FONTS TODO: RECREATE LOGIC IN OTHER FUNCTION
       //
 
       ImFontConfig config;
@@ -2396,7 +2397,7 @@ bfPostInitImGui(BfBase &base)
 }
 
 BfEvent
-bfDestroyImGUI(BfBase &base)
+bfDestroyImGUI(BfBase& base)
 {
    ImPlot::DestroyContext();
    ImGui_ImplVulkan_Shutdown();
@@ -2411,13 +2412,10 @@ bfDestroyImGUI(BfBase &base)
 }
 
 BfEvent
-bfCreateDepthBuffer(BfBase &base)
+bfCreateDepthBuffer(BfBase& base)
 {
-   VkExtent3D depthImageExtent = {
-       base.swap_chain_extent.width,
-       base.swap_chain_extent.height,
-       1
-   };
+   VkExtent3D depthImageExtent =
+       {base.swap_chain_extent.width, base.swap_chain_extent.height, 1};
 
    base.depth_format = VK_FORMAT_D32_SFLOAT;
 
@@ -2471,7 +2469,7 @@ bfCreateDepthBuffer(BfBase &base)
 }
 
 BfEvent
-bfDestroyDepthBuffer(BfBase &base)
+bfDestroyDepthBuffer(BfBase& base)
 {
    bfDestroyImageView(&base.depth_image, base.device);
    // vkDestroyImageView(base.device, base.depth_image.view, nullptr);
@@ -2487,19 +2485,16 @@ bfDestroyDepthBuffer(BfBase &base)
 }
 
 BfEvent
-bfCreateIDMapImage(BfBase &base)
+bfCreateIDMapImage(BfBase& base)
 {
    VkImageCreateInfo id_image_create_info{};
    // info.flags = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
    id_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    id_image_create_info.pNext = nullptr;
    id_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-   id_image_create_info.format = VK_FORMAT_R32_UINT;  // base.swap_chain_format;
-   id_image_create_info.extent = {
-       base.swap_chain_extent.width,
-       base.swap_chain_extent.height,
-       1
-   };
+   id_image_create_info.format = VK_FORMAT_R32_UINT; // base.swap_chain_format;
+   id_image_create_info.extent =
+       {base.swap_chain_extent.width, base.swap_chain_extent.height, 1};
    id_image_create_info.mipLevels = 1;
    id_image_create_info.arrayLayers = 1;
    id_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -2583,7 +2578,7 @@ bfCreateIDMapImage(BfBase &base)
 }
 
 BfEvent
-bfDestroyIDMapImage(BfBase &base)
+bfDestroyIDMapImage(BfBase& base)
 {
    auto holder = bfGetpHolder();
    for (int frame_index = 0; frame_index < base.image_pack_count; frame_index++)
@@ -2603,7 +2598,7 @@ bfDestroyIDMapImage(BfBase &base)
 }
 
 BfEvent
-bfCreateAllocator(BfBase &base)
+bfCreateAllocator(BfBase& base)
 {
    BfAllocator::create(
        base.device,
@@ -2635,7 +2630,7 @@ bfCreateAllocator(BfBase &base)
 }
 
 BfEvent
-bfDestroyAllocator(BfBase &base)
+bfDestroyAllocator(BfBase& base)
 {
    BfAllocator::destroy();
    // vmaDestroyAllocator(base.allocator);
@@ -2648,7 +2643,7 @@ bfDestroyAllocator(BfBase &base)
 }
 
 BfEvent
-bfCreateTextureLoader(BfBase &base)
+bfCreateTextureLoader(BfBase& base)
 {
    // base.texture_loader = BfTextureLoader(
    //     base.physical_device,
@@ -2667,14 +2662,14 @@ bfCreateTextureLoader(BfBase &base)
 }
 
 BfEvent
-bfDestroyTextureLoader(BfBase &base)
+bfDestroyTextureLoader(BfBase& base)
 {
    base.texture_loader.kill();
    return BfSingleEvent();
 }
 
 BfEvent
-bfLoadTextures(BfBase &base)
+bfLoadTextures(BfBase& base)
 {
    // BfTexture button =
    // base.texture_loader.load("./resources/buttons/test.png");
@@ -2682,7 +2677,7 @@ bfLoadTextures(BfBase &base)
 }
 
 BfEvent
-bfBindAllocatorToLayerHandler(BfBase &base)
+bfBindAllocatorToLayerHandler(BfBase& base)
 {
    VmaAllocator alloc = BfAllocator::get();
    return base.layer_handler.bind_allocator(&alloc);
@@ -2931,13 +2926,13 @@ bfBindAllocatorToLayerHandler(BfBase &base)
 
 BfEvent
 bfaCreateShaderModule(
-    VkShaderModule &module, VkDevice device, const std::vector<char> &data
+    VkShaderModule& module, VkDevice device, const std::vector< char >& data
 )
 {
    VkShaderModuleCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
    createInfo.codeSize = data.size();
-   createInfo.pCode = reinterpret_cast<const uint32_t *>(data.data());
+   createInfo.pCode = reinterpret_cast< const uint32_t* >(data.data());
 
    BfSingleEvent event{};
    if (vkCreateShaderModule(device, &createInfo, nullptr, &module) ==
@@ -3062,7 +3057,7 @@ bfaCreateShaderModule(
 // }
 
 BfEvent
-bfaRecreateSwapchain(BfBase &base)
+bfaRecreateSwapchain(BfBase& base)
 {
    int width = 0;
    int height = 0;
@@ -3107,8 +3102,8 @@ BfEvent
 bfaCreateShaderCreateInfos(
     VkDevice device,
     std::string path,
-    std::vector<VkShaderModule> &modules,
-    std::vector<VkPipelineShaderStageCreateInfo> &out
+    std::vector< VkShaderModule >& modules,
+    std::vector< VkPipelineShaderStageCreateInfo >& out
 )
 {
    /*
@@ -3121,7 +3116,7 @@ bfaCreateShaderCreateInfos(
            "*.tessc"
    */
 
-   static std::map<std::string, VkShaderStageFlagBits> stage_bits = {
+   static std::map< std::string, VkShaderStageFlagBits > stage_bits = {
        {"vert", VK_SHADER_STAGE_VERTEX_BIT},
        {"frag", VK_SHADER_STAGE_FRAGMENT_BIT},
        {"geom", VK_SHADER_STAGE_GEOMETRY_BIT},
@@ -3134,11 +3129,12 @@ bfaCreateShaderCreateInfos(
    std::stringstream ss;
    ss << " ";
 
-   std::vector<std::string> file_names;
+   std::vector< std::string > file_names;
 
-   for (const auto &entry : std::filesystem::directory_iterator(path))
+   for (const auto& entry : std::filesystem::directory_iterator(path))
    {
-      if (entry.path().extension().string() != ".spv") continue;
+      if (entry.path().extension().string() != ".spv")
+         continue;
       file_names.push_back(entry.path().filename().string());
    }
 
@@ -3147,7 +3143,7 @@ bfaCreateShaderCreateInfos(
 
    for (size_t i = 0; i < file_names.size(); ++i)
    {
-      std::vector<char> code;
+      std::vector< char > code;
       BfEvent e = bfaReadFile(code, path + "/" + file_names[i]);
 
       if (e.single_event.success)
@@ -3186,7 +3182,7 @@ bfaCreateShaderCreateInfos(
 }
 
 void
-bfBeginSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer)
+bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 {
    VkCommandBufferAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -3205,7 +3201,7 @@ bfBeginSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer)
 }
 
 void
-bfEndSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer)
+bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer)
 {
    vkEndCommandBuffer(commandBuffer);
 
@@ -3228,7 +3224,7 @@ bfEndSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer)
 }
 
 void
-bfDrawFrame(BfBase &base)
+bfDrawFrame(BfBase& base)
 {
    // VK_TRUE - wait all fences
    // vkWaitForFences(base.device, 1,
@@ -3286,14 +3282,14 @@ bfDrawFrame(BfBase &base)
    submitInfo.pWaitSemaphores = waitSemaphores;
    submitInfo.pWaitDstStageMask = waitStages;
 
-   std::array<VkCommandBuffer, 2> submitCommandBuffers = {
+   std::array< VkCommandBuffer, 2 > submitCommandBuffers = {
        local_standart_command_bufffer,
        local_gui_command_buffer
    };
 
    submitInfo.pCommandBuffers = submitCommandBuffers.data();
    submitInfo.commandBufferCount =
-       static_cast<uint32_t>(submitCommandBuffers.size());
+       static_cast< uint32_t >(submitCommandBuffers.size());
 
    VkSemaphore signalSemaphores[] = {local_finish_render_image_semaphore};
    submitInfo.signalSemaphoreCount = 1;
@@ -3342,7 +3338,7 @@ bfDrawFrame(BfBase &base)
 }
 
 void
-bfMainRecordCommandBuffer(BfBase &base)
+bfMainRecordCommandBuffer(BfBase& base)
 {
    // Depth buffer
    VkCommandBufferBeginInfo beginInfo{};
@@ -3373,7 +3369,11 @@ bfMainRecordCommandBuffer(BfBase &base)
    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
    renderPassInfo.clearValueCount = 3;
 
-   std::vector<VkClearValue> clear_values{clearColor, clearColor, depth_clear};
+   std::vector< VkClearValue > clear_values{
+       clearColor,
+       clearColor,
+       depth_clear
+   };
 
    renderPassInfo.pClearValues = clear_values.data();
    VkCommandBuffer local_buffer =
@@ -3390,8 +3390,8 @@ bfMainRecordCommandBuffer(BfBase &base)
       VkViewport viewport{};
       viewport.x = 0.0f;
       viewport.y = 0.0f;
-      viewport.width = static_cast<float>(base.swap_chain_extent.width);
-      viewport.height = static_cast<float>(base.swap_chain_extent.height);
+      viewport.width = static_cast< float >(base.swap_chain_extent.width);
+      viewport.height = static_cast< float >(base.swap_chain_extent.height);
       viewport.minDepth = 0.0f;
       viewport.maxDepth = 1.0f;
       vkCmdSetViewport(local_buffer, 0, 1, &viewport);
@@ -3511,10 +3511,10 @@ bfMainRecordCommandBuffer(BfBase &base)
 }
 
 uint32_t
-bfGetCurrentObjectId(BfBase &base)
+bfGetCurrentObjectId(BfBase& base)
 {
    uint32_t id_on_cursor;
-   void *id_on_cursor_ = base.id_image_buffer.allocation_info.pMappedData;
+   void* id_on_cursor_ = base.id_image_buffer.allocation_info.pMappedData;
    memcpy(&id_on_cursor, id_on_cursor_, sizeof(uint32_t));
    return id_on_cursor;
 }
@@ -3522,7 +3522,7 @@ bfGetCurrentObjectId(BfBase &base)
 void
 bfUpdateImGuiPlatformWindows()
 {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    (void)io;
    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
    {
@@ -3533,7 +3533,7 @@ bfUpdateImGuiPlatformWindows()
 
 size_t
 bfPadUniformBufferSize(
-    const BfPhysicalDevice *physical_device, size_t original_size
+    const BfPhysicalDevice* physical_device, size_t original_size
 )
 {
    size_t min_uniform_buffer_offset_allignment =
@@ -3568,7 +3568,7 @@ VkWriteDescriptorSet
 bfWriteDescriptorBuffer(
     VkDescriptorType type,
     VkDescriptorSet dstSet,
-    VkDescriptorBufferInfo *bufferInfo,
+    VkDescriptorBufferInfo* bufferInfo,
     uint32_t binding
 )
 {
@@ -3641,7 +3641,7 @@ bfPopulateDepthStencilStateCreateInfo(
    info.depthTestEnable = bDepthTest ? VK_TRUE : VK_FALSE;
    info.depthWriteEnable = bDepthWrite ? VK_TRUE : VK_FALSE;
    info.depthCompareOp =
-       VK_COMPARE_OP_LESS;  // bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
+       VK_COMPARE_OP_LESS; // bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
    info.depthBoundsTestEnable = VK_FALSE;
    // info.minDepthBounds = -10.0f; // Optional
    // info.maxDepthBounds = 10.0f; // Optional
@@ -3651,9 +3651,9 @@ bfPopulateDepthStencilStateCreateInfo(
 }
 
 BfEvent
-bfCleanUpSwapchain(BfBase &base)
+bfCleanUpSwapchain(BfBase& base)
 {
-   BfHolder *holder = bfGetpHolder();
+   BfHolder* holder = bfGetpHolder();
 
    bfDestroyStandartFrameBuffers(base);
    bfDestroyGUIFrameBuffers(base);
@@ -3669,21 +3669,21 @@ bfCleanUpSwapchain(BfBase &base)
 }
 
 void
-bfUpdateUniformView(BfBase &base)
+bfUpdateUniformView(BfBase& base)
 {
    BfUniformView ubo{};
 
    switch (base.window->cam_mode)
    {
-      case 0:
-         bfCalculateViewPartsFree(base.window);
-         break;
-      case 1:
-         bfCalculateRotateView(base.window);
-         break;
-      case 2:
-         bfCalculateViewPartsS(base.window);
-         break;
+   case 0:
+      bfCalculateViewPartsFree(base.window);
+      break;
+   case 1:
+      bfCalculateRotateView(base.window);
+      break;
+   case 2:
+      bfCalculateViewPartsS(base.window);
+      break;
    }
 
    base.window->cam_mode = 99;
@@ -3739,7 +3739,7 @@ bfUpdateUniformView(BfBase &base)
    ubo.id_on_cursor = base.pos_id;
    ubo.camera_pos = base.window->pos;
 
-   void *view_data = nullptr;
+   void* view_data = nullptr;
    base.descriptor.map_descriptor(
        BfDescriptorViewDataUsage,
        base.current_frame,
@@ -3757,7 +3757,7 @@ bfUpdateUniformView(BfBase &base)
 }
 
 void
-bfUpdateUniformViewNew(BfBase &base)
+bfUpdateUniformViewNew(BfBase& base)
 {
    BfUniformView ubo{};
 
@@ -3794,7 +3794,7 @@ bfUpdateUniformViewNew(BfBase &base)
    ubo.camera_pos = base.window->pos;
    ubo.model = BfCamera::instance()->m_scale;
 
-   void *view_data = nullptr;
+   void* view_data = nullptr;
    base.descriptor.map_descriptor(
        BfDescriptorViewDataUsage,
        base.current_frame,
@@ -3810,7 +3810,7 @@ bfUpdateUniformViewNew(BfBase &base)
 }
 
 void
-bfUpdateUniformBuffer(BfBase &base)
+bfUpdateUniformBuffer(BfBase& base)
 {
    if (base.camera_mode == 0)
    {
@@ -3833,7 +3833,7 @@ bfUpdateUniformBuffer(BfBase &base)
 }
 
 void
-bfCreateSampler(BfBase &base)
+bfCreateSampler(BfBase& base)
 {
    VkSamplerCreateInfo samplerInfo{};
    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -3862,18 +3862,18 @@ bfCreateSampler(BfBase &base)
 }
 
 void
-bfDestorySampler(BfBase &base)
+bfDestorySampler(BfBase& base)
 {
    vkDestroySampler(base.device, base.sampler, nullptr);
 }
 
 void
-bfBindBase(BfBase *new_base)
+bfBindBase(BfBase* new_base)
 {
    __pBase = new_base;
 }
 
-BfBase *
+BfBase*
 bfGetBase()
 {
    if (!__pBase)

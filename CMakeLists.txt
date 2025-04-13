@@ -1,5 +1,11 @@
 ﻿cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
+# Use the VCPKG_ROOT environment variable to set the toolchain path
+set(CMAKE_TOOLCHAIN_FILE
+    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_SUPPRESS_REGENERATION TRUE)
+
 set(CMAKE_CXX_FLAGS "-g -O0")
 set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-std=c++20) # optional to use c++11
@@ -15,9 +21,6 @@ list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.h$")
 list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.cpp$")
 list(FILTER SUBDIRECTORIES EXCLUDE REGEX ".\\.hpp$")
 
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ffloat-store")
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffloat-store")
-#
 foreach(subdir ${SUBDIRECTORIES})
   message("Subfolder found: ${subdir}")
   include_directories(include/${subdir})
@@ -281,9 +284,6 @@ set(BF_DRAW
 
 add_library(bfdrawlib STATIC ${BF_DRAW})
 target_link_libraries(bfdrawlib PUBLIC bfexternallib)
-
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIR})
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp"
