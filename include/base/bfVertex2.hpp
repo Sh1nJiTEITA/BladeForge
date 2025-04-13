@@ -40,10 +40,11 @@ struct bfVertex
 
       return bindingDescription;
    }
-   static inline std::array<VkVertexInputAttributeDescription, 2>
+   static inline std::array< VkVertexInputAttributeDescription, 2 >
    getAttributeDescriptions()
    {
-      std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+      std::array< VkVertexInputAttributeDescription, 2 >
+          attributeDescriptions{};
 
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
@@ -72,33 +73,33 @@ struct BfVertex3
    {
    }
 
-   glm::vec3 operator=(const BfVertex3 &o) { return o.pos; }
-   bool operator==(const BfVertex3 &o)
+   glm::vec3 operator=(const BfVertex3& o) { return o.pos; }
+   bool operator==(const BfVertex3& o)
    {
       return o.pos == this->pos && o.normals == this->normals &&
              o.color == this->color;
    };
 
-   float &x() { return pos.x; }
-   float &y() { return pos.y; }
-   float &z() { return pos.z; }
+   float& x() { return pos.x; }
+   float& y() { return pos.y; }
+   float& z() { return pos.z; }
 
-   float &r() { return color.r; }
-   float &g() { return color.g; }
-   float &b() { return color.b; }
+   float& r() { return color.r; }
+   float& g() { return color.g; }
+   float& b() { return color.b; }
 
-   float &nx() { return normals.x; }
-   float &ny() { return normals.y; }
-   float &nz() { return normals.z; }
+   float& nx() { return normals.x; }
+   float& ny() { return normals.y; }
+   float& nz() { return normals.z; }
 
-   BfVertex3(BfVertex3 &&m) noexcept
+   BfVertex3(BfVertex3&& m) noexcept
        : pos{std::move(m.pos)}
        , color{std::move(m.color)}
        , normals{std::move(m.normals)}
    {
    }
 
-   BfVertex3(const BfVertex3 &m) noexcept
+   BfVertex3(const BfVertex3& m) noexcept
        : pos{m.pos}, color{m.color}, normals{m.normals}
    {
    }
@@ -109,18 +110,18 @@ struct BfVertex3
    }
 
    BfVertex3(
-       const glm::vec3 &ipos,
-       const glm::vec3 &icol = {1.0f, 1.0f, 1.0f},
-       const glm::vec3 &inor = {0.0f, 0.0f, 0.0f}
+       const glm::vec3& ipos,
+       const glm::vec3& icol = {1.0f, 1.0f, 1.0f},
+       const glm::vec3& inor = {0.0f, 0.0f, 0.0f}
    )
        : pos{ipos}, color{icol}, normals{inor}
    {
    }
 
    BfVertex3(
-       glm::vec3 &&ipos,
-       glm::vec3 &&icol = {1.0f, 1.0f, 1.0f},
-       glm::vec3 &&inor = {0.0f, 0.0f, 0.0f}
+       glm::vec3&& ipos,
+       glm::vec3&& icol = {1.0f, 1.0f, 1.0f},
+       glm::vec3&& inor = {0.0f, 0.0f, 0.0f}
    )
        : pos{std::move(ipos)}, color{std::move(icol)}, normals{std::move(inor)}
    {
@@ -135,7 +136,7 @@ struct BfVertex3
       };
    }
 
-   inline bool equal(const BfVertex3 &o) const
+   inline bool equal(const BfVertex3& o) const
    {
       return glm::all(glm::equal(this->pos, o.pos));
    }
@@ -149,10 +150,11 @@ struct BfVertex3
 
       return bindingDescription;
    }
-   static inline std::array<VkVertexInputAttributeDescription, 3>
+   static inline std::array< VkVertexInputAttributeDescription, 3 >
    getAttributeDescriptions()
    {
-      std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+      std::array< VkVertexInputAttributeDescription, 3 >
+          attributeDescriptions{};
 
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
@@ -172,7 +174,7 @@ struct BfVertex3
       return attributeDescriptions;
    }
 
-   friend std::ostream &operator<<(std::ostream &os, const BfVertex3 &vert)
+   friend std::ostream& operator<<(std::ostream& os, const BfVertex3& vert)
    {
       os << "BfVertex3( p(" << vert.pos.x << ", " << vert.pos.y << ", "
          << vert.pos.z << "), c(" << vert.color.r << ", " << vert.color.g
@@ -181,6 +183,48 @@ struct BfVertex3
 
       return os;
    }
+};
+
+template < typename T >
+struct BfVar
+{
+   // clang-format off
+   using var = std::variant< T, T* >;
+
+   BfVar() : m_value { BfVertex3{} } {}
+   explicit BfVar(var&& v) noexcept : m_value { std::move(v) } {}
+   explicit BfVar(const var& v) : m_value { v } {}
+   explicit BfVar(const BfVar& o) : m_value { o.m_value } {}
+   explicit BfVar(BfVar&& o) noexcept: m_value { std::move(o.m_value) }{}
+   constexpr BfVar& operator=(const BfVar& o) { m_value = o.m_value; return *this; }
+   constexpr BfVar& operator=(BfVar&& o) noexcept { m_value = std::move(o.m_value); return *this; }
+
+   T* getp() { return &get(); }
+   const T* getp() const { return &get(); }
+
+   T& get() {
+      return *std::visit([](auto &&v) -> BfVertex3* {
+         using _T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_pointer_v<_T>) { return v; }
+            else { return &v; } 
+         },
+         m_value
+      );
+   }
+
+   const T &get() const { 
+      return *std::visit([](auto &&v) -> BfVertex3* {
+         using _T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_pointer_v<_T>) { return v; }
+            else { return &v; } 
+         },
+         m_value
+      );
+   } 
+   // clanf-format on
+
+private:
+   var m_value;
 };
 
 struct BfVertex3Uni

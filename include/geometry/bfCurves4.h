@@ -21,18 +21,18 @@ namespace obj
 namespace curves
 {
 
-template <typename T>
+template < typename T >
 decltype(auto)
 processT(T&& t)
 {
-   using _T = std::decay_t<T>;
-   if constexpr (std::is_pointer_v<_T>)
+   using _T = std::decay_t< T >;
+   if constexpr (std::is_pointer_v< _T >)
    {
-      return *std::forward<T>(t);
+      return *std::forward< T >(t);
    }
    else
    {
-      return std::forward<T>(t);
+      return std::forward< T >(t);
    }
 }
 
@@ -40,11 +40,11 @@ processT(T&& t)
 class BfSingleLine : public obj::BfDrawObject
 {
 public:
-   template <typename T, typename U>
+   template < typename T, typename U >
    BfSingleLine(T&& fp, U&& sp)
        : obj::BfDrawObject{"Single line", BF_PIPELINE(BfPipelineType_Lines)}
-       , m_first{std::forward<T>(fp)}
-       , m_second{std::forward<U>(sp)}
+       , m_first{std::forward< T >(fp)}
+       , m_second{std::forward< U >(sp)}
    {
    }
 
@@ -87,7 +87,7 @@ private:
    BfVertex3Uni m_second;
 };
 
-template <typename T, math::IsBfVertex3Variation<T> = true>
+template < typename T, math::IsBfVertex3Variation< T > = true >
 class BfCircleCenter : public obj::BfDrawObject
 {
 public:
@@ -115,18 +115,20 @@ public:
    virtual void make() override
    {
       m_indices.clear();
-      m_vertices = std::move(math::calcCircleVertices(
-          center(),
-          m_radius,
-          m_discretization,
-          m_color
-      ));
+      m_vertices = std::move(
+          math::calcCircleVertices(
+              center(),
+              m_radius,
+              m_discretization,
+              m_color
+          )
+      );
       _genIndicesStandart();
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override
+   virtual std::shared_ptr< BfDrawObjectBase > clone() const override
    {
-      auto cloned = std::make_shared<BfCircleCenter<T>>(m_center, m_radius);
+      auto cloned = std::make_shared< BfCircleCenter< T > >(m_center, m_radius);
       cloned->copy(*this);
       return cloned;
    }
@@ -134,7 +136,7 @@ public:
    virtual void copy(const BfDrawObjectBase& obj) override
    {
       BfDrawObject::copy(obj);
-      const auto& casted = static_cast<const BfCircleCenter<T>&>(obj);
+      const auto& casted = static_cast< const BfCircleCenter< T >& >(obj);
       m_radius = casted.m_radius;
       m_center = casted.m_center;
    }
@@ -147,12 +149,12 @@ private:
 class BfCircle2Vertices : public obj::BfDrawObject
 {
 public:
-   template <typename T, typename U>
+   template < typename T, typename U >
    BfCircle2Vertices(T&& center, U&& other)
        : obj::
              BfDrawObject{"Circle center", BF_PIPELINE(BfPipelineType_Lines), 200}
-       , m_center{std::forward<T>(center)}
-       , m_other{std::forward<U>(other)}
+       , m_center{std::forward< T >(center)}
+       , m_other{std::forward< U >(other)}
    {
    }
 
@@ -170,18 +172,20 @@ public:
    virtual void make() override
    {
       m_indices.clear();
-      m_vertices = std::move(math::calcCircleVertices(
-          center(),
-          radius(),
-          m_discretization,
-          m_color
-      ));
+      m_vertices = std::move(
+          math::calcCircleVertices(
+              center(),
+              radius(),
+              m_discretization,
+              m_color
+          )
+      );
       _genIndicesStandart();
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override
+   virtual std::shared_ptr< BfDrawObjectBase > clone() const override
    {
-      auto cloned = std::make_shared<BfCircle2Vertices>(m_center, m_other);
+      auto cloned = std::make_shared< BfCircle2Vertices >(m_center, m_other);
       cloned->copy(*this);
       return cloned;
    }
@@ -189,7 +193,7 @@ public:
    virtual void copy(const BfDrawObjectBase& obj) override
    {
       BfDrawObject::copy(obj);
-      const auto& casted = static_cast<const BfCircle2Vertices&>(obj);
+      const auto& casted = static_cast< const BfCircle2Vertices& >(obj);
       m_other = casted.m_other;
       m_center = casted.m_center;
    }
@@ -202,13 +206,13 @@ private:
 class Bfcircle3Vertices : public obj::BfDrawObject
 {
 public:
-   template <typename T, typename U, typename B>
+   template < typename T, typename U, typename B >
    Bfcircle3Vertices(T&& P_1, U&& P_2, B&& P_3)
        : obj::
              BfDrawObject{"Circle 3 vertices", BF_PIPELINE(BfPipelineType_Lines), 200}
-       , m_first{std::forward<T>(P_1)}
-       , m_second{std::forward<U>(P_2)}
-       , m_third{std::forward<B>(P_3)}
+       , m_first{std::forward< T >(P_1)}
+       , m_second{std::forward< U >(P_2)}
+       , m_third{std::forward< B >(P_3)}
        , m_radius{std::nanf("")}
        , m_center{BfVertex3::nan()}
    {
@@ -294,17 +298,6 @@ public:
    {
    }
 
-   // BfHandle(const T& center, float radius)
-   //     : BfCircleCenterFilled<T>(center, radius)
-   // {
-   // }
-
-   // BfHandle(const BfHandle& o)
-   //     : BfCircleCenterFilled(o.center(), o.radius())
-   // {
-   // }
-   // virtual void processDragging() override;
-
    virtual void copy(const BfDrawObjectBase& obj) override
    {
       BfCircleCenterFilled::copy(obj);
@@ -345,6 +338,8 @@ public:
          // You can make your copy if necessary, or just continue with the
          // camera update
          // this->make();
+         m_isChanged = true;
+
          this->root()->make();
          this->root()->control().updateBuffer(true);
       }
@@ -354,6 +349,11 @@ public:
       }
    }
 
+   virtual void make() override { 
+      BfCircleCenterFilled::make();
+      m_isChanged = false;
+   }
+
    std::shared_ptr<BfDrawObjectBase> clone() const override
    {
       auto cloned = std::make_shared<BfHandle>(this->m_center, this->m_radius);
@@ -361,10 +361,13 @@ public:
       return cloned;
    }
 
+   bool isChanged() const noexcept { return m_isChanged; }
+
 private:
    glm::vec3 m_initialMousePos;
    glm::vec3 m_initialCenterPos;
    bool m_isDraggingStarted = false;
+   bool m_isChanged = false;
 };
 //
 //
@@ -587,10 +590,17 @@ public:
    BfVertex3Uni& right() { return m_right; }
    const BfVertex3Uni& right() const { return m_right; }
 
-   std::shared_ptr<curves::BfSingleLine> line()
+   std::shared_ptr< curves::BfSingleLine > line()
    {
-      return std::static_pointer_cast<curves::BfSingleLine>(m_children[2]);
+      return std::static_pointer_cast< curves::BfSingleLine >(m_children[2]);
    }
+
+   // clang-format off
+   virtual bool isChanged() const noexcept { 
+      return std::static_pointer_cast<curves::BfHandle>(m_children[0])->isChanged() ||
+             std::static_pointer_cast<curves::BfHandle>(m_children[1])->isChanged();
+   }
+   // clang-format on
 
    virtual void make() override
    {
@@ -609,10 +619,10 @@ private:
 class BfCircleCenterWH : public obj::BfDrawLayer
 {
 public:
-   template <typename T>
+   template < typename T >
    BfCircleCenterWH(T&& init_center, float init_radius)
        : obj::BfDrawLayer("Circle with handles")
-       , m_center{std::forward<T>(init_center)}
+       , m_center{std::forward< T >(init_center)}
    {
       // clang-format off
       auto other_pos = m_center.pos() +
@@ -645,6 +655,8 @@ public:
       // clang-format on
    }
 
+   float radius() const { return glm::distance(m_other.pos(), m_center.pos()); }
+
    virtual void make() override
    {
       _assignRoots();
@@ -661,6 +673,13 @@ public:
       }
    }
 
+   // clang-format off
+   virtual bool isChanged() const noexcept { 
+      return std::static_pointer_cast<curves::BfHandle>(m_children[1])->isChanged() ||
+             std::static_pointer_cast<curves::BfHandle>(m_children[2])->isChanged();
+   }
+   // clang-format on
+
 private:
    BfVertex3Uni m_other;
    BfVertex3Uni m_center;
@@ -668,8 +687,8 @@ private:
    glm::vec3 m_lastCenterPos;
 };
 
-};  // namespace curves
+}; // namespace curves
 
-}  // namespace obj
+} // namespace obj
 
 #endif

@@ -1,39 +1,10 @@
-# BasedOnStyle: LLVM
-# IndentWidth: 3
-# Language: Cpp
-# AccessModifierOffset: -3  # Настройка отступа для модификаторов доступа
-#
-# BreakBeforeBraces: Custom
-# BraceWrapping:
-#   AfterClass: false         # Скобка после объявления класса на новой строке
-#   AfterControlStatement: true
-#   AfterEnum: true
-#   AfterFunction: true
-#   AfterNamespace: true
-#   AfterObjCDeclaration: true
-#   AfterStruct: true
-#   AfterUnion: true
-#   BeforeCatch: true
-#   BeforeElse: true
-#   IndentBraces: false
-#
-# AllowAllArgumentsOnNextLine: false
-# AllowAllParametersOfDeclarationOnNextLine: true
-# BinPackArguments: false
-# PackConstructorInitializers: NextLineOnly
-# AlignConsecutiveAssignments: true
-# AlignAfterOpenBracket: Align
-# AllowShortBlocksOnASingleLine: false
-# ColumnLimit: 80
-# SpaceBeforeParens: ControlStatements
-#
-#
-
-
-BasedOnStyle: Google 
+BasedOnStyle: LLVM 
 IndentWidth: 3
 Language: Cpp
-PointerAlignment: Left 
+
+# BreakBeforeDefinitionKeywords: Always
+BreakTemplateDeclarations: Yes
+PointerAlignment: Left
 ReferenceAlignment: Left 
 AccessModifierOffset: -3
 DisableFormat: false
@@ -56,8 +27,8 @@ AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: true
 BinPackArguments: false
 BinPackParameters: false
+SpacesInAngles: true
 PackConstructorInitializers: NextLineOnly
-# AlignAfterOpenBracket: Align
 AllowShortBlocksOnASingleLine: false
 ColumnLimit: 80
 SpaceBeforeParens: ControlStatements
@@ -65,13 +36,10 @@ BreakBeforeConceptDeclarations: Always
 RequiresClausePosition: SingleLine
 BreakBeforeTernaryOperators: true
 
-AlignAfterOpenBracket: BlockIndent
+Cpp11BracedListStyle: true
+SpacesInContainerLiterals: true
 
-# AlignConsecutiveAssignments:
-#   Enabled: true
-#   AcrossEmptyLines: true
-#   AcrossComments: false
-#
+AlignAfterOpenBracket: BlockIndent
 
 BreakConstructorInitializers: BeforeComma
 AlwaysBreakAfterReturnType: TopLevelDefinitions
