@@ -1,6 +1,5 @@
 out/
 .vs/
-CMakePresets.json
 .cache/
 build*/
 *.spv
