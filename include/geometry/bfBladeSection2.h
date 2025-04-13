@@ -17,7 +17,7 @@ struct SectionCreateInfo
    float chord = 1.0f;
    float inletAngle = 30.f;
    float outletAngle = 20.f;
-   float inletRadius = 0.2f;
+   float inletRadius = 0.5f;
    float outletRadius = 0.05f;
 };
 
@@ -28,10 +28,12 @@ enum class BfBladeSectionEnum : uint32_t
    _ChordRightBorder,
 
    InletCircle,
-   OutletCircle
+   OutletCircle,
+
+   AverageInitialCurve,
 };
 
-class BfBladeSection : public obj::BfDrawLayerWithAccess<BfBladeSectionEnum>
+class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
 {
 public:
    using V = BfVertex3;
@@ -81,6 +83,8 @@ private:
 
    void _createCircleEdges();
    void _processCircleEdges();
+
+   void _createAverageInitialCurve();
 
 private:
    BfVertex3 m_lastChordL; 

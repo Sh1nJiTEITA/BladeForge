@@ -333,6 +333,7 @@ add_executable(
   # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp"
   "include/other/bfMath.hpp" "src/other/bfMath.cpp" "./tests/object.cpp"
   "./tests/curves4.cpp" #
+  "./tests/xtensor.cpp"
   # "tests/filedialog_test.cpp" # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" )
 )
 

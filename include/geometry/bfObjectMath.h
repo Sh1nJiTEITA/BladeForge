@@ -571,6 +571,24 @@ public:
          };
       }
    }
+
+   // TODO: implement 
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static std::vector< T > elevateOrder(const std::vector< T >& data) { 
+      std::vector< T > o;
+      o.reserve(data.size() + 1);
+      size_t k = data.size();
+      for (size_t i = 0; i <= data.size(); ++i) { 
+         auto wi = data[i];
+         auto wi_ = (i == 0) ? 0 : data[i - 1];
+         o.push_back({ 
+            glm::vec3(((k - i) * wi + i * wi_) / k),
+            glm::vec3(data[0].color),
+            glm::vec3(data[0].normals)
+         });
+      }
+   }
+
 };
 
 }  // namespace math

@@ -95,6 +95,13 @@ BfBladeSection::_createCircleEdges()
       &g.inletRadius 
    );
 
+   auto outletCircle = _addPartForward<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>(
+      oChord->left().getp(),
+      oChord->right().getp(),
+      oChordR->right().getp(),
+      &g.outletRadius 
+   );
+
    // clang-format on
 }
 
@@ -102,29 +109,22 @@ void
 BfBladeSection::_processCircleEdges()
 {
    // clang-format off
-   auto& g = m_info;
-   auto chord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
-   // auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircleCenterWH>();
-   //
-   // if (inletCircle->isChanged())
-   // {
-   //    // m_info.inletRadius = inletCircle->radius();
-   //    // auto direction_between = glm::normalize(inletCircle->center().pos - inletCircle->other().pos);
-   //    // std::cout << "dir: " << BfVertex3( direction_between  ) << "\n";
-   //    // 
-   //    // // auto direction = inletCircle->center().pos - glm::vec3{ g.inletRadius, g.inletRadius, 0.0f };
-   //    //
-   //    // // inletCircle->center().pos -= direction;
-   //    // 
-   //    // // inletCircle->other().pos = inletCircle->center().pos + direction_between * g.inletRadius;
-   //    //
-   //    //
-   //    // std::cout << "center: " << inletCircle->center()  << "\n";
-   //    // std::cout << "other: " <<  inletCircle->other() << "\n\n";
-   // }
+   // auto& g = m_info;
+   // auto chord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
 
    // clang-format off
 }
+
+
+
+void BfBladeSection::_createAverageInitialCurve() 
+{ 
+   auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
+   auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
+
+   
+}
+
 
 };  // namespace section
 };  // namespace obj

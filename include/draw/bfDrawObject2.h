@@ -44,8 +44,8 @@ namespace obj
 class BfDrawObjectBase;
 
 using BfIndex = uint32_t;
-using BfObj = std::shared_ptr<BfDrawObjectBase>;
-using BfObjWeak = std::weak_ptr<BfDrawObjectBase>;
+using BfObj = std::shared_ptr< BfDrawObjectBase >;
+using BfObjWeak = std::weak_ptr< BfDrawObjectBase >;
 
 /**
  * @class BfDrawControlProxy
@@ -68,7 +68,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector<int32_t> vertexOffset(size_t last = 0) const;
+   std::vector< int32_t > vertexOffset(size_t last = 0) const;
 
    /**
     *
@@ -77,7 +77,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector<int32_t> indexOffset(size_t last = 0) const;
+   std::vector< int32_t > indexOffset(size_t last = 0) const;
 
    /**
     *
@@ -194,9 +194,10 @@ protected:
  * содержит методы для работы с `id`
  *
  */
-class BfDrawObjectBase : public std::enable_shared_from_this<BfDrawObjectBase>,
-                         public BfObjectId,
-                         public obj::BfGuiIntegration2
+class BfDrawObjectBase
+    : public std::enable_shared_from_this< BfDrawObjectBase >,
+      public BfObjectId,
+      public obj::BfGuiIntegration2
 {
 public:
    /**
@@ -230,7 +231,7 @@ public:
        size_t max_obj = 20
    );
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const;
+   virtual std::shared_ptr< BfDrawObjectBase > clone() const;
 
    /**
     *
@@ -239,7 +240,7 @@ public:
     *
     * @return ...
     */
-   const std::vector<BfVertex3>& vertices() const { return m_vertices; }
+   const std::vector< BfVertex3 >& vertices() const { return m_vertices; }
 
    /**
     *
@@ -248,7 +249,7 @@ public:
     *
     * @return ...
     */
-   const std::vector<BfIndex>& indices() const { return m_indices; }
+   const std::vector< BfIndex >& indices() const { return m_indices; }
 
    /**
     * @brief Тип объекта
@@ -297,14 +298,14 @@ protected:
    VkPipeline m_pipeline;
    glm::mat4 m_modelMatrix;
 
-   std::vector<BfVertex3> m_vertices;
-   std::vector<BfIndex> m_indices;
+   std::vector< BfVertex3 > m_vertices;
+   std::vector< BfIndex > m_indices;
 
    BfObjWeak m_root;
-   std::vector<BfObj> m_children;
+   std::vector< BfObj > m_children;
 
 private:
-   std::unique_ptr<BfObjectBuffer> m_buffer;
+   std::unique_ptr< BfObjectBuffer > m_buffer;
    Type m_type;
 };
 
@@ -335,12 +336,12 @@ public:
    {
       BfDrawObjectBase::copy(obj);
 
-      const auto& casted = static_cast<const BfDrawObject&>(obj);
+      const auto& casted = static_cast< const BfDrawObject& >(obj);
       m_color = casted.m_color;
       m_discretization = casted.m_discretization;
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override;
+   virtual std::shared_ptr< BfDrawObjectBase > clone() const override;
 
 protected:
    /**
@@ -368,19 +369,19 @@ public:
    /**
     * @brief Так как слой не может иметь точки, этот метод ему не нужен
     */
-   const std::vector<BfVertex3>& vertices() const = delete;
+   const std::vector< BfVertex3 >& vertices() const = delete;
 
    /**
     * @brief Так как слой не может иметь индексы, этот метод ему не нужен
     */
-   const std::vector<BfIndex>& indices() const = delete;
+   const std::vector< BfIndex >& indices() const = delete;
 };
 
-template <class PartEnum>
+template < class PartEnum >
 class BfDrawLayerWithAccess : public obj::BfDrawLayer
 {
 public:
-   using pObj = std::shared_ptr<BfDrawObjectBase>;
+   using pObj = std::shared_ptr< BfDrawObjectBase >;
 
    BfDrawLayerWithAccess(BfOTypeName typeName)
        : obj::BfDrawLayer(typeName)
@@ -388,31 +389,31 @@ public:
    }
 
 protected:
-   std::unordered_map<PartEnum, BfOId> m_idMap;
+   std::unordered_map< PartEnum, BfOId > m_idMap;
 
-   template <PartEnum part>
+   template < PartEnum part >
    void _addPart(pObj obj)
    {
       this->add(obj);
       m_idMap[part] = obj->id();
       std::cout << "Added id=" << obj->id() << " type=" << obj->type()
                 << " typename=\"" << obj->typeName()
-                << "\" part=" << static_cast<uint32_t>(part) << "\n";
+                << "\" part=" << static_cast< uint32_t >(part) << "\n";
    }
 
-   template <typename T, typename... Args>
-   std::shared_ptr<T> _addPartForward(PartEnum part, Args&&... args)
+   template < typename T, typename... Args >
+   std::shared_ptr< T > _addPartForward(PartEnum part, Args&&... args)
    {
-      auto item = std::make_shared<T>(std::forward<Args>(args)...);
-      _addPart<part>(item);
+      auto item = std::make_shared< T >(std::forward< Args >(args)...);
+      _addPart< part >(item);
       return item;
    }
 
-   template <PartEnum part, typename T, typename... Args>
-   std::shared_ptr<T> _addPartForward(Args&&... args)
+   template < PartEnum part, typename T, typename... Args >
+   std::shared_ptr< T > _addPartForward(Args&&... args)
    {
-      auto item = std::make_shared<T>(std::forward<Args>(args)...);
-      _addPart<part>(item);
+      auto item = std::make_shared< T >(std::forward< Args >(args)...);
+      _addPart< part >(item);
       return item;
    };
 
@@ -431,18 +432,18 @@ protected:
       // clang-format on
    }
 
-   template <class Cast>
-   std::shared_ptr<Cast> _part(PartEnum e)
+   template < class Cast >
+   std::shared_ptr< Cast > _part(PartEnum e)
    {
       auto id = m_idMap[e];
-      return std::static_pointer_cast<Cast>(_findObjectById(id));
+      return std::static_pointer_cast< Cast >(_findObjectById(id));
    }
 
-   template <PartEnum part, class Cast>
-   std::shared_ptr<Cast> _part()
+   template < PartEnum part, class Cast >
+   std::shared_ptr< Cast > _part()
    {
       auto id = m_idMap[part];
-      return std::static_pointer_cast<Cast>(_findObjectById(id));
+      return std::static_pointer_cast< Cast >(_findObjectById(id));
    }
 };
 
@@ -470,11 +471,11 @@ public:
    /**
     * @brief Так как слой не может иметь точки, этот метод ему не нужен
     */
-   const std::vector<BfVertex3>& vertices() const = delete;
+   const std::vector< BfVertex3 >& vertices() const = delete;
    /**
     * @brief Так как слой не может иметь индексы, этот метод ему не нужен
     */
-   const std::vector<BfIndex>& indices() const = delete;
+   const std::vector< BfIndex >& indices() const = delete;
 };
 
 /**
@@ -542,10 +543,10 @@ public:
 
    virtual void make() override
    {
-      auto test1 = std::make_shared<TestObj>();
+      auto test1 = std::make_shared< TestObj >();
       test1->make();
       add(test1);
-      auto test2 = std::make_shared<TestObj2>();
+      auto test2 = std::make_shared< TestObj2 >();
       test2->make();
       add(test2);
    }
@@ -563,8 +564,8 @@ public:
    {
       static std::random_device rd;
       static std::mt19937 gen(rd());
-      std::uniform_real_distribution<float> dist(-5.0f, 5.0f);
-      std::uniform_real_distribution<float> angleDist(
+      std::uniform_real_distribution< float > dist(-5.0f, 5.0f);
+      std::uniform_real_distribution< float > angleDist(
           0.0f,
           glm::radians(360.0f)
       );
@@ -575,7 +576,7 @@ public:
       transform =
           glm::rotate(transform, rotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-      std::vector<glm::vec3> baseVertices = {
+      std::vector< glm::vec3 > baseVertices = {
           {-0.5f, 0.0f, -0.5f},
           {-0.5f, 0.0f, 0.5f},
           {0.5f, 0.0f, 0.5f},
@@ -593,6 +594,6 @@ public:
    }
 };
 
-}  // namespace obj
+} // namespace obj
 
 #endif

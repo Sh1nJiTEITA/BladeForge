@@ -37,6 +37,8 @@ public:
       m_rootObjects.push_back(obj);
    }
 
+   std::shared_ptr< obj::BfDrawObjectBase > find(BfOId id) {}
+
    void mapModels(size_t frame_index)
    {
       // clang-format off
@@ -85,9 +87,9 @@ public:
 private:
    uint32_t m_hoveredid;
    BfDescriptor* m_descriptor;
-   std::vector<BfObj> m_rootObjects;
+   std::vector< BfObj > m_rootObjects;
 };
 
-};  // namespace obj
+}; // namespace obj
 
 #endif

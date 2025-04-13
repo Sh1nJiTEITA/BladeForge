@@ -28,7 +28,7 @@ BfGui::pollEvents()
 }
 
 BfEvent
-BfGui::bindBase(BfBase *base)
+BfGui::bindBase(BfBase* base)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -45,7 +45,7 @@ BfGui::bindBase(BfBase *base)
 }
 
 BfEvent
-BfGui::bindHolder(BfHolder *handler)
+BfGui::bindHolder(BfHolder* handler)
 {
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -107,7 +107,7 @@ BfGui::bindSettings(std::filesystem::path path)
 BfEvent
 BfGui::bindDefaultFont()
 {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    ImFontConfig config;
 
    config.GlyphOffset.y = __settings_form.standart_font.glypth_offset.second;
@@ -115,15 +115,15 @@ BfGui::bindDefaultFont()
 
    static const ImWchar ranges[] = {
        0x0020,
-       0x007F,  // ASCII range
+       0x007F, // ASCII range
        0x0391,
-       0x03A1,  // Greek Capital Letters
+       0x03A1, // Greek Capital Letters
        0x03A3,
-       0x03A9,  // Greek Capital Letters (continued)
+       0x03A9, // Greek Capital Letters (continued)
        0x03B1,
-       0x03C1,  // Greek Small Letters
+       0x03C1, // Greek Small Letters
        0x03C3,
-       0x03C9,  // Greek Small Letters (continued)
+       0x03C9, // Greek Small Letters (continued)
        0
    };
 
@@ -140,7 +140,7 @@ BfGui::bindDefaultFont()
 BfEvent
 BfGui::bindIconFont()
 {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    ImFontConfig config;
 
    config.GlyphOffset.y = __settings_form.icon_font.glypth_offset.second;
@@ -164,7 +164,7 @@ BfGui::bindIconFont()
 BfEvent
 BfGui::bindGreekFont()
 {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    ImFontConfig config;
 
    config.GlyphOffset.y = __settings_form.greek_font.glypth_offset.second;
@@ -191,7 +191,7 @@ BfGui::updateFonts()
 {
    // if (!__default_font or !__icon_font)
    // {
-   ImGuiIO &io = ImGui::GetIO();
+   ImGuiIO& io = ImGui::GetIO();
    io.Fonts->Clear();
 
    bindDefaultFont();
@@ -257,7 +257,7 @@ BfGui::getMenuNewCameraStatusStr()
 }
 
 void
-BfGui::presentLayerHandler()  // FIXME: deprecate
+BfGui::presentLayerHandler() // FIXME: deprecate
 {
    // if (!ImGui::Begin("Layer observer", nullptr, ImGuiWindowFlags_None))
    // {
@@ -354,6 +354,7 @@ BfGui::presentToolType()
       );
 
       ImGui::Text("id=%i", __ptr_base->pos_id);
+
       ImGui::EndTooltip();
    }
 }
@@ -437,9 +438,9 @@ BfGui::presentSettings()
 {
    if (__is_settings)
    {
-      auto createVectorStr = [&](const std::vector<std::string> &d) {
-         std::vector<const char *> c_str_items;
-         for (const auto &item : d)
+      auto createVectorStr = [&](const std::vector< std::string >& d) {
+         std::vector< const char* > c_str_items;
+         for (const auto& item : d)
          {
             c_str_items.push_back(item.c_str());
          }
@@ -455,7 +456,7 @@ BfGui::presentSettings()
                  ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
              ))
          {
-            {  // Standart font
+            { // Standart font
                ImGui::TableNextRow();
                {
                   ImGui::TableSetColumnIndex(0);
@@ -469,7 +470,7 @@ BfGui::presentSettings()
                               this->__settings_form.standart_font.name
                           )
                               .data(),
-                          static_cast<int>(
+                          static_cast< int >(
                               this->__settings_form.standart_font.name.size()
                           )
                       ))
@@ -535,7 +536,7 @@ BfGui::presentSettings()
                      __queue_after_render.push([this]() { updateFonts(); });
                   }
                }
-            }  // ===> Standart Font
+            } // ===> Standart Font
             ImGui::EndTable();
             ImGui::Spacing();
          }
@@ -546,7 +547,7 @@ BfGui::presentSettings()
                  2,
                  ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg
              ))
-         {  // Icon Font
+         { // Icon Font
             ImGui::TableNextRow();
             {
                ImGui::TableSetColumnIndex(0);
@@ -558,7 +559,7 @@ BfGui::presentSettings()
                        &this->__settings_form.icon_font.current,
                        createVectorStr(this->__settings_form.icon_font.name)
                            .data(),
-                       static_cast<int>(
+                       static_cast< int >(
                            this->__settings_form.icon_font.name.size()
                        )
                    ))
@@ -625,7 +626,7 @@ BfGui::presentSettings()
             }
             ImGui::EndTable();
             ImGui::Spacing();
-         }  // ===> Icon font
+         } // ===> Icon font
       }
       ImGui::End();
    }
@@ -706,7 +707,7 @@ BfGui::presentInfo()
       ImGui::Begin("Info", nullptr, flags);
       // Display the frame count here any way you want.
       counter += 1;
-      float x = 1.0;  // displays the frame rate every 1 second
+      float x = 1.0; // displays the frame rate every 1 second
       if ((currentTime - previousTime) >= x)
       {
          print_counter = counter;
@@ -762,8 +763,8 @@ BfGui::presentInfo()
       {
 #define BF_SPLIT_VEC3(VEC) VEC.x, VEC.y, VEC.z
 #define BF_SPLIT_VEC2(VEC) VEC.x, VEC.y
-#define BF_SPLIT_BFKEYSTATE(KEY)                                   \
-   KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld, \
+#define BF_SPLIT_BFKEYSTATE(KEY)                                               \
+   KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld,             \
        KEY.isPressedInitial
          auto pCam = BfCamera::instance();
 
@@ -854,8 +855,8 @@ BfGui::presentEventLog()
    }
 }
 
-void  // FIXME: deprecate
-bfPresentLayerHandler(BfLayerHandler &layer_handler)
+void // FIXME: deprecate
+bfPresentLayerHandler(BfLayerHandler& layer_handler)
 {
    // ImGui::Begin("Layer observer");
    // {
@@ -870,9 +871,9 @@ bfPresentLayerHandler(BfLayerHandler &layer_handler)
 
 void
 bfPresentBladeSectionInside(
-    BfBladeBase *layer,
-    BfBladeSectionCreateInfo *info,
-    BfBladeSectionCreateInfo *old
+    BfBladeBase* layer,
+    BfBladeSectionCreateInfo* info,
+    BfBladeSectionCreateInfo* old
 )
 {
    static int inputFloatMode = 0;
@@ -880,7 +881,7 @@ bfPresentBladeSectionInside(
    auto make_row = [](std::string n,
                       std::string d,
                       std::string dim,
-                      float *value,
+                      float* value,
                       float left,
                       float right) {
       static int count = 0;
@@ -894,12 +895,12 @@ bfPresentBladeSectionInside(
 
       switch (inputFloatMode)
       {
-         case 0:
-            ImGui::InputFloat(dim.c_str(), value);
-            break;
-         case 1:
-            ImGui::SliderFloat(dim.c_str(), value, left, right);
-            break;
+      case 0:
+         ImGui::InputFloat(dim.c_str(), value);
+         break;
+      case 1:
+         ImGui::SliderFloat(dim.c_str(), value, left, right);
+         break;
       }
 
       count++;
@@ -1039,7 +1040,7 @@ bfPresentBladeSectionInside(
 void
 ShowTestPlot()
 {
-   std::vector<glm::vec3> v{
+   std::vector< glm::vec3 > v{
        {0.0, 0.0, 0.0f},
        {1.0, 1.0f, 0.0f},
        {2.0f, 0.0f, 0.0f},
@@ -1047,8 +1048,8 @@ ShowTestPlot()
        {6.0f, -3.0f, 0.0f}
    };
 
-   std::vector<float> v_x;
-   std::vector<float> v_y;
+   std::vector< float > v_x;
+   std::vector< float > v_y;
 
    for (size_t i = 0; i < v.size(); i++)
    {
@@ -1056,19 +1057,19 @@ ShowTestPlot()
       v_y.push_back(v[i].y);
    }
 
-   std::vector<glm::vec2> spl = bfMathSplineFit(v_x, v_y);
+   std::vector< glm::vec2 > spl = bfMathSplineFit(v_x, v_y);
 
    BfCubicSplineCurve spline(50, v);
    spline.createVertices();
 
-   auto compareByX = [](const glm::vec3 &a, const glm::vec3 &b) {
+   auto compareByX = [](const glm::vec3& a, const glm::vec3& b) {
       return a.x < b.x;
    };
 
    // std::sort(v.begin(), v.end(), compareByX);
 
-   std::vector<float> x_;
-   std::vector<float> y_;
+   std::vector< float > x_;
+   std::vector< float > y_;
 
    for (size_t i = 0; i < spl.size(); i++)
    {

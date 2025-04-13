@@ -773,8 +773,14 @@ public:
       );
       this->add(circle);
       
+      glm::vec3 circle_center = circle->center().pos;
+      glm::vec3 direction_to_handle = glm::normalize(circle_center - m_center.pos());
       auto handle = std::make_shared<curves::BfHandle>(
-         this->handleVertex(),
+         BfVertex3( 
+            circle_center + direction_to_handle * m_radius.get(),
+            m_center.color(),
+            m_center.normals()
+         ),
          0.01f
       );
       m_lastHandlePos = handle->center().pos;
@@ -799,8 +805,6 @@ public:
                                glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
 
          handle()->center().pos = curves::math::closestPointOnLine(handle_pos, m_center, m_center.pos() + alpha_dir);
-
-
       }
 
       for (auto child : m_children)
@@ -814,16 +818,6 @@ public:
    BfVertex3 centerVertex() 
    { 
       return circle()->centerVertex();
-   }
-   
-   BfVertex3 handleVertex() 
-   { 
-      float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
-      glm::vec3 direction_to_begin = glm::normalize(m_begin.pos() - m_center.pos());
-      float distance_to_begin = m_radius.get() / glm::tan(glm::radians(alpha) * 0.5f);
-      glm::vec3 vertex_to_center = m_center.pos() + direction_to_begin * distance_to_begin;
-      glm::vec3 direction_to_center = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), m_center.normals()) * glm::vec4(direction_to_begin, 1.0f); 
-      return BfVertex3(vertex_to_center + direction_to_center * (2.0f * m_radius.get()) , m_center.color(), m_center.normals());
    }
 
    std::shared_ptr<curves::BfCircle2LinesWH> circle()  
@@ -845,6 +839,25 @@ private:
    BfVertex3Uni m_end;
    BfVar< float > m_radius;
 };
+
+
+// with guide lines
+class BfBezierWGL : public obj::BfDrawLayer
+{ 
+public: 
+   // template< typename V1, typename V2
+   // BfBezierWGL 
+
+};
+
+
+
+
+
+
+
+
+
 
 
 }; // namespace curves

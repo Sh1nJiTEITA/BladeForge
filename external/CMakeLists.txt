@@ -66,7 +66,13 @@ set(IMGUI_IMPL_VULKAN
     CACHE BOOL "" FORCE)
 
 find_package(glm CONFIG REQUIRED)
-target_link_libraries(bfexternallib PRIVATE glm::glm)
+
+find_package(xtensor REQUIRED)
+find_package(xtensor-blas REQUIRED)
+find_library(BLAS_LIB NAMES openblas)
+
+target_link_libraries(bfexternallib PRIVATE glm::glm xtensor xtensor-blas
+                                            ${BLAS_LIB})
 
 if(WIN32)
   set(VulkanMemoryAllocator_DIR
