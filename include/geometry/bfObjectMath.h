@@ -5,6 +5,7 @@
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <stdexcept>
 #include <utility>
 
@@ -41,7 +42,7 @@ namespace math
  *
  *
  */
-std::vector<BfVertex3> calcCircleVertices(
+std::vector< BfVertex3 > calcCircleVertices(
     const BfVertex3& center,
     float radius,
     uint32_t m_discretization,
@@ -69,13 +70,13 @@ std::vector<BfVertex3> calcCircleVertices(
  *         - Первые три компоненты: нормаль плоскости (A, B, C).
  *         - Четвёртая компонента: константа D уравнения плоскости.
  */
-template <typename T, typename U, typename B>
+template < typename T, typename U, typename B >
 glm::vec4
 calcPlaneCoeffs(T&& _f, U&& _s, B&& _t)
 {
-   auto f = BfVertex3{std::forward<T>(_f)}.pos;
-   auto s = BfVertex3{std::forward<U>(_s)}.pos;
-   auto t = BfVertex3{std::forward<B>(_t)}.pos;
+   auto f = BfVertex3{std::forward< T >(_f)}.pos;
+   auto s = BfVertex3{std::forward< U >(_s)}.pos;
+   auto t = BfVertex3{std::forward< B >(_t)}.pos;
 
    glm::mat3 xd = {f.y, f.z, 1, s.y, s.z, 1, t.y, t.z, 1};
    glm::mat3 yd = {f.x, f.z, 1, s.x, s.z, 1, t.x, t.z, 1};
@@ -127,20 +128,20 @@ calcPlaneCoeffs(T&& _f, U&& _s, B&& _t)
  * @return Возвращает `true`, если все переданные точки лежат в одной плоскости,
  * иначе `false`.
  */
-template <typename T, typename U, typename B>
+template < typename T, typename U, typename B >
 bool
 isVerticesInPlain(T&& _f, U&& _s, B&& _t)
 {
    return true;
 }
-template <typename T, typename U, typename B, typename A, typename... Args>
+template < typename T, typename U, typename B, typename A, typename... Args >
 bool
 isVerticesInPlain(T&& _f, U&& _s, B&& _t, A&& _np, Args&&... args)
 {
-   auto np = BfVertex3{std::forward<A>(_np)};
-   auto f = BfVertex3{std::forward<T>(_f)};
-   auto s = BfVertex3{std::forward<U>(_s)};
-   auto t = BfVertex3{std::forward<B>(_t)};
+   auto np = BfVertex3{std::forward< A >(_np)};
+   auto f = BfVertex3{std::forward< T >(_f)};
+   auto s = BfVertex3{std::forward< U >(_s)};
+   auto t = BfVertex3{std::forward< B >(_t)};
 
    // clang-format off
    return (glm::abs(
@@ -211,13 +212,13 @@ uint32_t binomial(uint32_t n, uint32_t k);
  * @note Векторы, образующие стороны треугольника, вычисляются как разности
  * между координатами точек, после чего вычисляется их векторное произведение.
  */
-template <typename T, typename U, typename A>
+template < typename T, typename U, typename A >
 glm::vec3
 calcPlaneNormal(T&& _p1, U&& _p2, A&& _p3)
 {
-   auto p1 = BfVertex3(std::forward<T>(_p1));
-   auto p2 = BfVertex3(std::forward<T>(_p2));
-   auto p3 = BfVertex3(std::forward<T>(_p3));
+   auto p1 = BfVertex3(std::forward< T >(_p1));
+   auto p2 = BfVertex3(std::forward< T >(_p2));
+   auto p3 = BfVertex3(std::forward< T >(_p3));
 
    glm::vec3 _v1{p2.pos - p1.pos};
    glm::vec3 _v2{p3.pos - p1.pos};
@@ -258,14 +259,14 @@ calcPlaneNormal(T&& _p1, U&& _p2, A&& _p3)
  * @return Точка пересечения двух прямых (вектор 3D). Если пересечение не
  * найдено, возвращается NaN.
  */
-template <typename T, typename U, typename B, typename A>
+template < typename T, typename U, typename B, typename A >
 glm::vec3
 findLinesIntersection(T&& l1begin, U&& l1end, B&& l2begin, A&& l2end, int mode)
 {
-   auto _a1 = BfVertex3(std::forward<T>(l1begin));
-   auto _b1 = BfVertex3(std::forward<U>(l1end));
-   auto _a2 = BfVertex3(std::forward<B>(l2begin));
-   auto _b2 = BfVertex3(std::forward<A>(l2end));
+   auto _a1 = BfVertex3(std::forward< T >(l1begin));
+   auto _b1 = BfVertex3(std::forward< U >(l1end));
+   auto _a2 = BfVertex3(std::forward< B >(l2begin));
+   auto _b2 = BfVertex3(std::forward< A >(l2end));
 
    if (isVerticesInPlain(l1begin, l1end, l2begin, l2end))
    {
@@ -316,13 +317,112 @@ findLinesIntersection(T&& l1begin, U&& l1end, B&& l2begin, A&& l2end, int mode)
 }
 
 /**
+ * @brief Вычисляет угол между тремя вершинами, расположенными в одной
+ * плоскости.
+ *
+ * Эта функция принимает три вершины, вычисляет два вектора, направленные от
+ * второй вершины (вектора `v1` и `v2`), и возвращает угол между ними в
+ * градусах.
+ *
+ * @tparam V1 Тип первого аргумента (вершина 1).
+ * @tparam V2 Тип второго аргумента (вершина 2, вершина, относительно которой
+ * вычисляется угол).
+ * @tparam V3 Тип третьего аргумента (вершина 3).
+ *
+ * @param _v1 Первая вершина (вектор 1).
+ * @param _v2 Вторая вершина (вектор 2, центральная точка).
+ * @param _v3 Третья вершина (вектор 3).
+ *
+ * @return Угол между двумя векторами в градусах.
+ *
+ * @note Угол вычисляется с использованием скалярного произведения, и результат
+ * находится в диапазоне от 0 до 180 градусов.
+ */
+template < typename V1, typename V2, typename V3 >
+float
+angleBetween3Vertices(V1&& _v1, V2&& _v2, V3&& _v3)
+{
+   auto v1 = BfVertex3(std::forward< V1 >(_v1));
+   auto v2 = BfVertex3(std::forward< V2 >(_v2));
+   auto v3 = BfVertex3(std::forward< V3 >(_v3));
+
+   glm::vec3 d1 = glm::normalize(v1.pos - v2.pos);
+   glm::vec3 d2 = glm::normalize(v3.pos - v2.pos);
+
+   return glm::degrees(glm::acos(glm::clamp(glm::dot(d1, d2), -1.0f, 1.0f)));
+}
+
+/**
+ * @brief Calculates the perpendicular distance from a point to a line defined
+ * by two points.
+ *
+ * @param point The point from which the distance is calculated.
+ * @param p1 First point on the line.
+ * @param p2 Second point on the line.
+ * @return float Distance from `point` to the line.
+ */
+template < typename V, typename L1, typename L2 >
+float
+distanceToLine(V&& _v, L1&& _l1, L2&& _l2)
+{
+   auto vert = BfVertex3(std::forward< V >(_v));
+   auto l1 = BfVertex3(std::forward< L1 >(_l1));
+   auto l2 = BfVertex3(std::forward< L2 >(_l2));
+
+   glm::vec3 lineDir = l2.pos - l1.pos;
+   glm::vec3 pointVec = vert.pos - l1.pos;
+
+   glm::vec3 crossProd = glm::cross(lineDir, pointVec);
+   float distance = glm::length(crossProd) / glm::length(lineDir);
+
+   return distance;
+}
+
+/**
+ * @brief Находит ближайшую точку на прямой, заданной двумя вершинами, к
+ * произвольной вершине.
+ *
+ * Эта функция вычисляет точку на прямой, заданной вершинами `line1` и `line2`,
+ * которая находится на минимальном расстоянии до заданной вершины `free`.
+ * Расчёт выполняется с использованием проекции вектора.
+ *
+ * @tparam F Тип произвольной вершины.
+ * @tparam L1 Тип первой вершины прямой.
+ * @tparam L2 Тип второй вершины прямой.
+ *
+ * @param free Произвольная вершина, не обязательно лежащая на прямой.
+ * @param line1 Первая вершина, определяющая прямую.
+ * @param line2 Вторая вершина, определяющая прямую.
+ *
+ * @return Вершина (glm::vec3), лежащая на прямой line1-line2 и ближайшая к
+ * free.
+ */
+template < typename F, typename L1, typename L2 >
+glm::vec3
+closestPointOnLine(F&& free, L1&& line1, L2&& line2)
+{
+   auto p = BfVertex3(std::forward< F >(free));
+   auto a = BfVertex3(std::forward< L1 >(line1));
+   auto b = BfVertex3(std::forward< L2 >(line2));
+
+   glm::vec3 ap = p.pos - a.pos;
+   glm::vec3 ab = b.pos - a.pos;
+   glm::vec3 abNorm = glm::normalize(ab);
+
+   float t = glm::dot(ap, abNorm);
+
+   return a.pos + abNorm * t;
+}
+
+/**
  * @brief Тип, определяющий, является ли тип указателя или объекта BfVertex3.
  *
  * Используется для проверки типа на соответствие BfVertex3.
  */
-template <typename T>
-using IsBfVertex3Variation =
-    std::enable_if_t<std::is_same_v<std::remove_pointer_t<T>, BfVertex3>, bool>;
+template < typename T >
+using IsBfVertex3Variation = std::enable_if_t<
+    std::is_same_v< std::remove_pointer_t< T >, BfVertex3 >,
+    bool >;
 
 /**
  * @brief Базовый класс для работы с кривыми Безье.
@@ -345,8 +445,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Нормаль к кривой в точке t.
     */
-   template <typename T, IsBfVertex3Variation<T> = true>
-   static glm::vec3 calcNormal(const std::vector<T>& data, float t)
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static glm::vec3 calcNormal(const std::vector< T >& data, float t)
    {
       return glm::rotate(
                  glm::mat4(1.0f),
@@ -364,8 +464,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Касательная вектору кривой в точке t.
     */
-   template <typename T, IsBfVertex3Variation<T> = true>
-   static glm::vec3 calcTangent(const std::vector<T>& data, float t)
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static glm::vec3 calcTangent(const std::vector< T >& data, float t)
    {
       return calcDerivative(data, t);
    }
@@ -378,8 +478,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Производная кривой в точке t.
     */
-   template <typename T, IsBfVertex3Variation<T> = true>
-   static glm::vec3 calcDerivative(const std::vector<T>& data, float t)
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static glm::vec3 calcDerivative(const std::vector< T >& data, float t)
    {
       const auto step = 10e-05f;
       glm::vec3 left = calc(data, t - step).pos;
@@ -394,11 +494,11 @@ public:
     * @param data Вектор данных, представляющих кривую Безье.
     * @return Длину кривой.
     */
-   template <typename T, IsBfVertex3Variation<T> = true>
-   static float length(const std::vector<T>& data)
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static float length(const std::vector< T >& data)
    {
-      using _T = std::decay_t<T>;
-      if constexpr (std::is_pointer_v<_T>)
+      using _T = std::decay_t< T >;
+      if constexpr (std::is_pointer_v< _T >)
       {
          float len = 0;
          for (size_t i = 0; i < data.size() - 1; ++i)
@@ -427,8 +527,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Точку на кривой.
     */
-   template <typename T, IsBfVertex3Variation<T> = true>
-   static BfVertex3 calc(const std::vector<T>& data, float t)
+   template < typename T, IsBfVertex3Variation< T > = true >
+   static BfVertex3 calc(const std::vector< T >& data, float t)
    {
       // clang-format off
       using _T = std::decay_t<T>;

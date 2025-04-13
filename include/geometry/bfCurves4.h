@@ -2,7 +2,9 @@
 #define BF_CURVES4_H
 
 #include <cmath>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
 #include <memory>
 #include <stdexcept>
@@ -349,6 +351,7 @@ public:
       }
    }
 
+
    virtual void make() override { 
       BfCircleCenterFilled::make();
       m_isChanged = false;
@@ -657,6 +660,18 @@ public:
 
    float radius() const { return glm::distance(m_other.pos(), m_center.pos()); }
 
+   BfVertex3& center() { return m_center.get(); }
+   const BfVertex3& center() const { return m_center.get(); }
+
+   BfVertex3& other() { return m_other.get(); }
+   const BfVertex3& other() const { return m_other.get(); }
+
+   void setCenter(const BfVertex3& v)
+   {
+      m_lastCenterPos = v.pos;
+      m_center.get() = v;
+   }
+
    virtual void make() override
    {
       _assignRoots();
@@ -686,6 +701,151 @@ private:
 
    glm::vec3 m_lastCenterPos;
 };
+
+class BfCircle2Lines : public obj::BfDrawObject
+{
+public:
+   template < typename V1, typename V2, typename V3, typename R >
+   BfCircle2Lines(V1&& begin, V2&& center, V3&& end, R&& radius)
+       : obj::BfDrawObject(
+             "Circle 2 lines", BF_PIPELINE(BfPipelineType_Lines), 400
+         )
+       , m_begin{std::forward< V1 >(begin)}
+       , m_center{std::forward< V2 >(center)}
+       , m_end{std::forward< V3 >(end)}
+       , m_radius{std::forward< R >(radius)}
+   {
+   }
+
+   // clang-format off
+   virtual void make() override
+   {
+      m_indices.clear();
+      m_vertices = std::move(
+          math::calcCircleVertices(
+              center(),
+              m_radius.get(),
+              m_discretization,
+              m_color
+          )
+      );
+      _genIndicesStandart();
+   }
+   // clang-format on
+
+   // clang-format off
+   BfVertex3 center() 
+   { 
+      float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
+      glm::vec3 direction_to_begin = glm::normalize(m_begin.pos() - m_center.pos());
+      float distance_to_begin = m_radius.get() / glm::tan(glm::radians(alpha) * 0.5f);
+      glm::vec3 vertex_to_center = m_center.pos() + direction_to_begin * distance_to_begin;
+      glm::vec3 direction_to_center = (
+         glm::rotate(glm::mat4(1.0f), -glm::radians(90.0f), m_center.normals()) * glm::vec4(direction_to_begin, 1.0f)
+      );
+      glm::vec3 res = vertex_to_center + direction_to_center * m_radius.get();
+      return BfVertex3(res, m_center.color(), m_center.normals());
+   }
+
+private:
+   BfVertex3Uni m_begin;
+   BfVertex3Uni m_center;
+   BfVertex3Uni m_end;
+   BfVar< float > m_radius;
+};
+
+class BfCircle2LinesWH : public obj::BfDrawLayer
+{
+public:
+   template < typename V1, typename V2, typename V3, typename R >
+   BfCircle2LinesWH(V1&& begin, V2&& center, V3&& end, R&& radius)
+       : obj::BfDrawLayer( "Circle 2 lines with handles")
+       , m_begin{std::forward< V1 >(begin)}
+       , m_center{std::forward< V2 >(center)}
+       , m_end{std::forward< V3 >(end)}
+       , m_radius{std::forward< R >(radius)}
+   {
+      auto circle = std::make_shared<curves::BfCircle2Lines>(
+         m_begin.getp(),
+         m_center.getp(),
+         m_end.getp(),
+         m_radius.getp()
+      );
+      this->add(circle);
+      
+      auto handle = std::make_shared<curves::BfHandle>(
+         this->handleVertex(),
+         0.01f
+      );
+      m_lastHandlePos = handle->center().pos;
+      this->add(handle);
+   }
+
+   // clang-format off
+   virtual void make() override
+   {
+      _assignRoots();
+
+      if ( !glm::all( glm::equal(m_lastHandlePos, handle()->center().pos) ) ) { 
+         // Set new radius from new handle pos
+         glm::vec3 handle_pos = handle()->center().pos;
+         float distance_to_center_vertex = glm::distance(handle_pos, m_center.pos());
+         float distance_to_line = curves::math::distanceToLine(handle_pos, m_begin, m_center);
+         m_radius.get() = (distance_to_center_vertex * distance_to_line) / (distance_to_center_vertex + distance_to_line);
+      
+         // accurate handle pos
+         float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
+         glm::vec3 alpha_dir = glm::rotate(glm::mat4(1.0f), -glm::radians(alpha * 0.5f), m_center.normals()) * 
+                               glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
+
+         handle()->center().pos = curves::math::closestPointOnLine(handle_pos, m_center, m_center.pos() + alpha_dir);
+
+
+      }
+
+      for (auto child : m_children)
+      {
+         child->make();
+      }
+   }
+   // clang-format on
+
+   // clang-format off
+   BfVertex3 centerVertex() 
+   { 
+      return circle()->centerVertex();
+   }
+   
+   BfVertex3 handleVertex() 
+   { 
+      float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
+      glm::vec3 direction_to_begin = glm::normalize(m_begin.pos() - m_center.pos());
+      float distance_to_begin = m_radius.get() / glm::tan(glm::radians(alpha) * 0.5f);
+      glm::vec3 vertex_to_center = m_center.pos() + direction_to_begin * distance_to_begin;
+      glm::vec3 direction_to_center = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), m_center.normals()) * glm::vec4(direction_to_begin, 1.0f); 
+      return BfVertex3(vertex_to_center + direction_to_center * (2.0f * m_radius.get()) , m_center.color(), m_center.normals());
+   }
+
+   std::shared_ptr<curves::BfCircle2LinesWH> circle()  
+   {
+      return std::static_pointer_cast<curves::BfCircle2LinesWH>(m_children[0]);
+   }
+
+   std::shared_ptr<curves::BfHandle> handle()  
+   {
+      return std::static_pointer_cast<curves::BfHandle>(m_children[1]);
+   }
+   
+
+private:
+   glm::vec3 m_lastHandlePos;
+
+   BfVertex3Uni m_begin;
+   BfVertex3Uni m_center;
+   BfVertex3Uni m_end;
+   BfVar< float > m_radius;
+};
+
 
 }; // namespace curves
 

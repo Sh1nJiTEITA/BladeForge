@@ -60,6 +60,8 @@ struct bfVertex
    }
 };
 
+struct BfVertex3Uni;
+
 struct BfVertex3
 {
    glm::vec3 pos;
@@ -194,8 +196,8 @@ struct BfVar
    BfVar() : m_value { BfVertex3{} } {}
    explicit BfVar(var&& v) noexcept : m_value { std::move(v) } {}
    explicit BfVar(const var& v) : m_value { v } {}
-   explicit BfVar(const BfVar& o) : m_value { o.m_value } {}
-   explicit BfVar(BfVar&& o) noexcept: m_value { std::move(o.m_value) }{}
+   BfVar(const BfVar& o) : m_value { o.m_value } {}
+   BfVar(BfVar&& o) noexcept: m_value { std::move(o.m_value) }{}
    constexpr BfVar& operator=(const BfVar& o) { m_value = o.m_value; return *this; }
    constexpr BfVar& operator=(BfVar&& o) noexcept { m_value = std::move(o.m_value); return *this; }
 
@@ -203,7 +205,7 @@ struct BfVar
    const T* getp() const { return &get(); }
 
    T& get() {
-      return *std::visit([](auto &&v) -> BfVertex3* {
+      return *std::visit([](auto &&v) -> T* {
          using _T = std::decay_t<decltype(v)>;
             if constexpr (std::is_pointer_v<_T>) { return v; }
             else { return &v; } 
@@ -213,7 +215,7 @@ struct BfVar
    }
 
    const T &get() const { 
-      return *std::visit([](auto &&v) -> BfVertex3* {
+      return *std::visit([](auto &&v) -> const T* {
          using _T = std::decay_t<decltype(v)>;
             if constexpr (std::is_pointer_v<_T>) { return v; }
             else { return &v; } 
@@ -227,22 +229,18 @@ private:
    var m_value;
 };
 
-struct BfVertex3Uni
+struct BfVertex3Uni : BfVar<BfVertex3>
 {
-   using var = std::variant<BfVertex3, BfVertex3 *>;
-
    // clang-format off
-   
-   BfVertex3Uni() : m_value { BfVertex3{} } {}
-   explicit BfVertex3Uni(var&& v) noexcept : m_value { std::move(v) } {}
-   explicit BfVertex3Uni(const var& v) : m_value { v } {}
-   explicit BfVertex3Uni(const BfVertex3Uni& o) : m_value { o.m_value } {}
-   explicit BfVertex3Uni(BfVertex3Uni&& o) noexcept: m_value { std::move(o.m_value) }{}
-   constexpr BfVertex3Uni& operator=(const BfVertex3Uni& o) { m_value = o.m_value; return *this; }
-   constexpr BfVertex3Uni& operator=(BfVertex3Uni&& o) noexcept { m_value = std::move(o.m_value); return *this; }
-   
-   // template< typename ... Args >
-   // BfVertex3Uni(Args&& ...args) : m_value( std::in_place_type<BfVertex3>, { std::forward<Args>(args)... } ) { }
+   BfVertex3Uni() : BfVar<BfVertex3> { BfVertex3{} } {}
+   BfVertex3Uni(const BfVertex3Uni& o) : BfVar<BfVertex3> { o } {}
+   BfVertex3Uni(BfVertex3Uni&& o) noexcept : BfVar<BfVertex3> { std::move(o) }{}
+   explicit BfVertex3Uni(var&& v) noexcept : BfVar<BfVertex3> { std::move(v) } {}
+   explicit BfVertex3Uni(const var& v) : BfVar<BfVertex3> { v } {}
+   BfVertex3Uni& operator=(const BfVertex3Uni& o) = default;
+   BfVertex3Uni& operator=(BfVertex3Uni&& o) noexcept = default;
+
+   operator BfVertex3&() { return get(); }
 
    glm::vec3 &pos() { return get().pos; }
    const glm::vec3 &pos() const { return get().pos; }
@@ -252,39 +250,6 @@ struct BfVertex3Uni
 
    glm::vec3 &normals() { return get().normals; }
    const glm::vec3 &normals() const { return get().normals; }
-
-   BfVertex3 *getp() { return &get(); }
-   const BfVertex3 *getp() const { return &get(); }
-
-   BfVertex3 &get()
-   {
-      // clang-format off
-      return *std::visit([](auto &&v) -> BfVertex3* {
-         using _T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v< _T, BfVertex3 >) { return &v; }
-            if constexpr (std::is_same_v< _T, BfVertex3* >) { return v; }
-         },
-         m_value
-      );
-      // clanf-format on
-   }
-
-   const BfVertex3 &get() const
-   {
-      // clang-format off
-      return *std::visit([](auto &&v) -> const BfVertex3* {
-         using _T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v< _T, BfVertex3 >) { return &v; }
-            if constexpr (std::is_same_v< _T, BfVertex3* >) { return v; }
-         },
-         m_value
-      );
-      // clanf-format on
-   }
-
-
-private:
-   var m_value;
 };
 
 struct BfVertex4
