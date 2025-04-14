@@ -1,21 +1,42 @@
 {
-  "version": 2,
+  "version": 4,
   "configurePresets": [
     {
-      "name": "vcpkg-lunux",
-      "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build",
+      "name": "win",
+      "displayName": "Windows build",
+      "description": "Build using MinGW and vcpkg on Windows",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows",
+      "conditions": {
+        "os": {
+          "isWindows": true
+        }
+      },
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
       }
     },
     {
-      "name": "vcpkg-windows",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "name": "linux",
+      "displayName": "Linux build",
+      "description": "Build using default toolchain on Linux",
+      "hidden": true,
+      "generator": "Unix MakeFiles",
+      "binaryDir": "${sourceDir}/build/linux",
+      "conditions": {
+        "os": {
+          "isLinux": true
+        }
+      },
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
+    },
+    {
+      "name": "default",
+      "inherits": [ "win", "linux" ]
     }
   ]
 }
