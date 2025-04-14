@@ -8,6 +8,13 @@
 #include <glm/trigonometric.hpp>
 #include <stdexcept>
 #include <utility>
+#include <xtensor-blas/xlinalg.hpp>
+#include <xtensor/xadapt.hpp>
+#include <xtensor/xarray.hpp>
+#include <xtensor/xbuilder.hpp>
+#include <xtensor/xmanipulation.hpp>
+#include <xtensor/xtensor_forward.hpp>
+#include <xtensor/xview.hpp>
 
 #include "bfVertex2.hpp"
 
@@ -414,6 +421,8 @@ closestPointOnLine(F&& free, L1&& line1, L2&& line2)
    return a.pos + abNorm * t;
 }
 
+xt::xarray< double > bernsteinRow(int degree, double t);
+
 /**
  * @brief Тип, определяющий, является ли тип указателя или объекта BfVertex3.
  *
@@ -577,17 +586,63 @@ public:
    static std::vector< T > elevateOrder(const std::vector< T >& data) { 
       std::vector< T > o;
       o.reserve(data.size() + 1);
+      o.push_back(*data.begin());
       size_t k = data.size();
-      for (size_t i = 0; i <= data.size(); ++i) { 
+      for (size_t i = 1; i <= data.size(); ++i) { 
          auto wi = data[i];
-         auto wi_ = (i == 0) ? 0 : data[i - 1];
+         auto wi_ = data[i - 1];
          o.push_back({ 
-            glm::vec3(((k - i) * wi + i * wi_) / k),
+            glm::vec3(((k - i) * data[i] + i * data[i - 1]) / k),
             glm::vec3(data[0].color),
             glm::vec3(data[0].normals)
          });
       }
+      o.push_back(*data.rbegin());
+      return o;
    }
+
+   // template < typename T, IsBfVertex3Variation< T > = true >
+   static std::vector< BfVertex3 > lowerOrder(const std::vector< BfVertex3 >& control_points, int samples = 20) { 
+      int n = control_points.size() - 1;
+      int k = n - 1;
+
+      std::vector<double> t_values(samples);
+      for (int i = 0; i < samples; ++i) { 
+         t_values[i] = static_cast<double>(i) / (samples - 1);
+      }
+
+      xt::xarray<double> Bn = xt::zeros<double>({samples, n + 1});
+      xt::xarray<double> Bk = xt::zeros<double>({samples, k + 1});
+      for (int i = 0; i < samples; ++i) { 
+         xt::row(Bn, i) = bernsteinRow(n, t_values[i]);
+         xt::row(Bk, i) = bernsteinRow(k, t_values[i]);
+      }
+
+      xt::xarray<double> P = xt::zeros<double>({n+1, 3});
+      for (int i = 0; i <= n; ++i) { 
+         P(i, 0) = control_points[i].pos.x;
+         P(i, 1) = control_points[i].pos.y;
+         P(i, 2) = control_points[i].pos.z;
+      }
+
+      auto RHS = xt::linalg::dot(Bn, P);
+      auto BkT = xt::transpose(Bk);
+      auto Q = xt::linalg::dot(
+         xt::linalg::inv(xt::linalg::dot(BkT, Bk)),
+         xt::linalg::dot(BkT, RHS)
+      );
+
+      std::vector<BfVertex3> reduced(k + 1); 
+      for (int i = 0; i <= k; ++i) { 
+         reduced[i] = BfVertex3(
+            glm::vec3( Q(i, 0), Q(i, 1), Q(i, 2)),
+            control_points.begin()->color,
+            control_points.begin()->normals
+         );
+      }
+      return reduced;
+   }
+
 
 };
 

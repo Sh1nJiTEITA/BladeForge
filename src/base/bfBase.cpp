@@ -2306,7 +2306,9 @@ bfPostInitImGui(BfBase& base)
    (void)io;
    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
 
+#if defined(_WIN32)
    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+#endif
 
    ImGui::StyleColorsClassic();
 

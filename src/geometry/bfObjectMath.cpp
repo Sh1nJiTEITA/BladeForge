@@ -7,7 +7,7 @@ namespace curves
 namespace math
 {
 
-std::vector<BfVertex3>
+std::vector< BfVertex3 >
 calcCircleVertices(
     const BfVertex3& center,
     float radius,
@@ -29,12 +29,12 @@ calcCircleVertices(
    }
    orth_2 = glm::normalize(glm::cross(normal, orth_1));
 
-   std::vector<BfVertex3> v;
+   std::vector< BfVertex3 > v;
    v.reserve(m_discretization);
 
    for (size_t i = 0; i < m_discretization + 1; ++i)
    {
-      float theta = 2 * glm::pi<float>() * i / m_discretization;
+      float theta = 2 * glm::pi< float >() * i / m_discretization;
       v.emplace_back(
           center.pos + radius * cosf(theta) * orth_1 +
               radius * sinf(theta) * orth_2,
@@ -48,7 +48,7 @@ calcCircleVertices(
 uint32_t
 factorial(uint32_t n)
 {
-   const static std::map<uint32_t, uint32_t> m{
+   const static std::map< uint32_t, uint32_t > m{
        {1, 1},
        {2, 2},
        {3, 6},
@@ -77,6 +77,18 @@ binomial(uint32_t n, uint32_t k)
    return math::factorial(n) / math::factorial(k) / math::factorial(n - k);
 }
 
-}  // namespace math
-}  // namespace curves
-}  // namespace obj
+xt::xarray< double >
+bernsteinRow(int degree, double t)
+{
+   xt::xarray< double > row = xt::zeros< double >({degree + 1});
+   for (int i = 0; i <= degree; ++i)
+   {
+      double binom = binomial(degree, i);
+      row(i) = binom * std::pow(t, i) * std::pow(1 - t, degree - i);
+   }
+   return row;
+}
+
+} // namespace math
+} // namespace curves
+} // namespace obj

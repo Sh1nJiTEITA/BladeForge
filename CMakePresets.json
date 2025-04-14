@@ -6,7 +6,7 @@
       "displayName": "Windows build",
       "description": "Build using MinGW and vcpkg on Windows",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/windows",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
@@ -22,7 +22,7 @@
       "displayName": "Linux build",
       "description": "Build using default toolchain on Linux",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build/linux",
+      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
