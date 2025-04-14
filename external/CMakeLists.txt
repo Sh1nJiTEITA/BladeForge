@@ -6,7 +6,8 @@ add_library(bfexternallib INTERFACE)
 # Единственная non-vcpkg
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/splines-lib)
 target_link_libraries(bfexternallib INTERFACE splines-lib)
-target_include_directories(bfexternallib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/splines-lib)
+target_include_directories(bfexternallib
+                           INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/splines-lib)
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -16,7 +17,7 @@ find_package(xtl CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 # Проблемы с MINGW laplas решаются так
-if (WIN32)
+if(WIN32)
   find_package(OpenBLAS CONFIG REQUIRED)
 
   set(LAPACK_LINKER_FLAGS "-lopenblas")
@@ -26,6 +27,8 @@ if (WIN32)
   set(BLAS_FOUND TRUE)
   set(LAPACK_INCLUDE_DIRS "")
   set(LAPACK_INCLUDE_DIR "")
+else()
+  find_package(OpenBLAS CONFIG REQUIRED)
 endif()
 
 find_package(xtensor CONFIG REQUIRED)
@@ -44,7 +47,9 @@ elseif(UNIX)
 endif()
 target_include_directories(bfexternallib INTERFACE ${LUA_INCLUDE_DIR})
 
-set(IMGUI_IMPL_VULKAN ON CACHE BOOL "" FORCE)
+set(IMGUI_IMPL_VULKAN
+    ON
+    CACHE BOOL "" FORCE)
 
 target_link_libraries(
   bfexternallib
