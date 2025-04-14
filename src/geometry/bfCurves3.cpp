@@ -794,7 +794,7 @@ bfMathGenerateTriangleField(std::vector<BfVertex3> v)
 
    // return out;
 
-   //// Подготовка входных данных для библиотеки Triangle
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Triangle
    // std::vector<double> points;
    // std::vector<int> segments;
 
@@ -804,24 +804,24 @@ bfMathGenerateTriangleField(std::vector<BfVertex3> v)
    //	points.push_back(static_cast<double>(vertex.pos.z));
    // }
 
-   //// Опции для триангуляции
+   //// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
    // char options[] = "p";
 
-   //// Создаем структуру triangulateio для входных данных и результатов
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ triangulateio пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
    // struct triangulateio in, out;
 
-   //// Инициализируем структуры triangulateio
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ triangulateio
    // memset(&in, 0, sizeof(struct triangulateio));
    // memset(&out, 0, sizeof(struct triangulateio));
 
-   //// Заполняем структуру in данными
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ in пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
    // in.numberofpoints = points.size() / 3;
    // in.pointlist = &points[0];
 
-   //// Выполняем триангуляцию
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
    // triangulate(options, &in, &out, NULL);
 
-   //// Результаты триангуляции хранятся в структуре out
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ out
    // std::vector<std::array<glm::vec3, 3>> triangles;
    // for (int i = 0; i < out.numberoftriangles; ++i) {
    //	std::array<glm::vec3, 3> triangle;
@@ -830,14 +830,14 @@ bfMathGenerateTriangleField(std::vector<BfVertex3> v)
    //		triangle[j] = glm::vec3(
    //			static_cast<float>(out.pointlist[vertexIndex * 2]),
    //			static_cast<float>(out.pointlist[vertexIndex * 2 + 1]),
-   //			0.0f // Здесь предполагается, что треугольники находятся
-   // в плоскости XY
+   //			0.0f // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+   // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ XY
    //		);
    //	}
    //	triangles.push_back(triangle);
    // }
 
-   //// Освобождаем память, выделенную для результатов
+   //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
    // free(out.pointlist);
    // free(out.trianglelist);
 
@@ -1073,13 +1073,13 @@ glm::mat4
 bfOrtho(float right, float left, float bot, float top, float far, float near)
 {
    glm::mat4 m(1.0f);
-   m[0][0] = 2.0f / (right - left);
-   m[1][1] = 2.0f / (top - bot);
-   m[2][2] = -2.0f / (far - near);
-   m[0][3] = -(right + left) / (right - left);
-   m[1][3] = -(top + bot) / (top - bot);
-   m[2][3] = -(far + near) / (far - near);
-   m[3][3] = 1;
+   // m[0][0] = 2.0f / (right - left);
+   // m[1][1] = 2.0f / (top - bot);
+   // m[2][2] = -2.0f / (far - near);
+   // m[0][3] = -(right + left) / (right - left);
+   // m[1][3] = -(top + bot) / (top - bot);
+   // m[2][3] = -(far + near) / (far - near);
+   // m[3][3] = 1;
    return m;
 }
 
@@ -1880,11 +1880,6 @@ BfArc::BfArc(
 {
 }
 
-std::shared_ptr<BfBezierCurve>
-BfArc::toBezier()
-{
-   // BfVertex3 P1
-}
 
 void
 BfArc::createVertices()
@@ -2010,7 +2005,7 @@ BfTube::BfTube(
 )
     : __out_m{m}, __radius_begin{radius_begin}, __radius_end{radius_end}
 {
-   // їїїїїїїї, їїї їїїїїїї їїїїїїїїїї ї їїїї їїїїїїї (їїї їїїїї їїїїї)
+   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
    bfAssert(glm::length2(glm::cross(begin.pos, end.pos)) < 1e-6f);
    __dvertices.push_back(begin);
    __dvertices.push_back(end);

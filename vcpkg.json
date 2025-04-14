@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "dependencies": [
     "boost-bimap",
+    "glm",
     {
       "name": "imgui",
       "features": [
@@ -12,6 +13,7 @@
       ]
     },
     "implot",
+    "openblas",
     "sol2",
     "vulkan-memory-allocator",
     "xtensor",

@@ -69,6 +69,8 @@ BfGui::bindSettings(std::filesystem::path path)
       wchar_t path[FILENAME_MAX] = {0};
       GetModuleFileNameW(nullptr, path, FILENAME_MAX);
       return std::filesystem::path(path).parent_path().string();
+#elif defined(_WIN32)
+      return std::filesystem::path(".");
 #else
       char path[FILENAME_MAX];
       ssize_t count = readlink("/proc/self/exe", path, FILENAME_MAX);

@@ -202,6 +202,7 @@ public:
    const BfVertex3& get_first() const noexcept;
    const BfVertex3& get_second() const noexcept;
    const BfVertex3& get_third() const noexcept;
+   
 
    const float get_radius() const noexcept;
 
@@ -297,7 +298,6 @@ public:
        const BfVertex3& P_3
    );
 
-   std::shared_ptr<BfBezierCurve> toBezier();
    // TODO: Make
    virtual void createVertices() override;
 };
