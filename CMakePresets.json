@@ -1,42 +1,36 @@
 {
   "version": 4,
   "configurePresets": [
-    {
+      {
       "name": "win",
       "displayName": "Windows build",
       "description": "Build using MinGW and vcpkg on Windows",
-      "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/windows",
-      "conditions": {
-        "os": {
-          "isWindows": true
-        }
-      },
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
       "name": "linux",
       "displayName": "Linux build",
       "description": "Build using default toolchain on Linux",
-      "hidden": true,
-      "generator": "Unix MakeFiles",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/linux",
-      "conditions": {
-        "os": {
-          "isLinux": true
-        }
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
-    },
-    {
-      "name": "default",
-      "inherits": [ "win", "linux" ]
     }
   ]
 }
