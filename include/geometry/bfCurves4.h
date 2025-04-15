@@ -520,7 +520,7 @@ public:
 //
 //
 
-class BfBezierWH : public obj::BfDrawLayer, public std::vector<BfVertex3>
+class BfBezierWH : public obj::BfDrawLayer, public std::vector<BfVertex3Uni>
 {
 public:
    template <typename... Args>
@@ -548,13 +548,13 @@ public:
    }
 
 private:
-   std::vector<BfVertex3*> _genControlVerticesPointers()
+   std::vector<BfVertex3Uni> _genControlVerticesPointers()
    {
-      std::vector<BfVertex3*> tmp;
+      std::vector<BfVertex3Uni> tmp;
       tmp.reserve(this->size());
       for (auto& it : *this)
       {
-         tmp.push_back(&it);
+         tmp.push_back(BfVertex3Uni(it.getp()));
       }
       return tmp;
    }
