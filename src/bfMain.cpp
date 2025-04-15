@@ -75,7 +75,7 @@ void
 BfMain::__poll_events()
 {
    glfwPollEvents();
-   auto &io = ImGui::GetIO();
+   auto& io = ImGui::GetIO();
 
    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
    {
@@ -148,17 +148,17 @@ BfMain::__init()
        BfPipelineLayoutType_Main,
        __base.descriptor.getAllLayouts()
    );
-   BfPipelineHandler::instance()->create<BfPipelineBuilderLine>(
+   BfPipelineHandler::instance()->create< BfPipelineBuilderLine >(
        BfPipelineType_Lines,
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/lines"
    );
-   BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTriangle >(
        BfPipelineType_Triangles,
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/triangle"
    );
-   BfPipelineHandler::instance()->create<BfPipelineBuilderTriangle>(
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTriangle >(
        BfPipelineType_Axis,
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/axis"
@@ -257,7 +257,7 @@ BfMain::__loop()
    // zAxis->createVertices();
    // zAxis->createIndices();
 
-   auto test_root = std::make_shared<obj::BfDrawRootLayer>(2000, 10);
+   auto test_root = std::make_shared< obj::BfDrawRootLayer >(2000, 10);
 
    // auto filled_circle = std::make_shared<obj::curves::BfCircleCenterFilled>(
    //     BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
@@ -270,23 +270,27 @@ BfMain::__loop()
    // );
    // circle->make();
 
-   // auto bez = std::make_shared<obj::curves::BfBezierWH>(
-   //     BfVertex3{glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3{0.0f,
-   //     0.0f, 1.0f}}, BfVertex3{
-   //         glm::vec3(.5f, .5f, 0.0f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     },
-   //     BfVertex3{
-   //         glm::vec3(1.f, 0.0f, 0.0f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     }
-   // );
-   // bez->make();
+   auto bez = std::make_shared< obj::curves::BfBezierWH >(
+       BfVertex3Uni{BfVertex3(
+           glm::vec3(0.0f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       )},
+       BfVertex3Uni{BfVertex3(
+           glm::vec3(.5f, .5f, 0.0f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       )},
+       BfVertex3Uni{BfVertex3(
+           glm::vec3(1.f, 0.0f, 0.0f),
+           glm::vec3(1.0f),
+           glm::vec3{0.0f, 0.0f, 1.0f}
+       )}
+   );
+   bez->make();
 
    // test_root->add(circle);
-   // test_root->add(bez);
+   test_root->add(bez);
 
    // auto cirhan = std::make_shared<obj::curves::BfCircleCenterWH>(
    //     BfVertex3{
@@ -303,7 +307,7 @@ BfMain::__loop()
    // l->make();
    // test_root->add(l);
 
-   auto bs = std::make_shared<obj::section::BfBladeSection>(
+   auto bs = std::make_shared< obj::section::BfBladeSection >(
        obj::section::SectionCreateInfo{}
    );
    bs->make();
@@ -312,38 +316,10 @@ BfMain::__loop()
    test_root->control().updateBuffer();
    obj::BfDrawManager::inst().add(test_root);
 
-   // BfLayerHandler
-   // {
-   //    auto otherLayer = std::make_shared<BfDrawLayer>(
-   //        BfAllocator::get(),
-   //        sizeof(BfVertex3),
-   //        100000,
-   //        10,
-   //        false
-   //    );
-   //    __other_layer = otherLayer.get();
-   //    __base.layer_handler.add(otherLayer);
-   //    // __other_layer->add(
-   //    // std::make_shared<BfAxis3DPack>(&__base.triangle_pipeline));
-   //    __other_layer->add(std::make_shared<BfAxis3DPack>(
-   //        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Axis)
-   //    ));
-   //
-   //    __other_layer->update_buffer();
-   // }
-   // {
-   //    auto bladeBases = std::make_shared<BfDrawLayer>(
-   //        BfAllocator::get(),
-   //        sizeof(BfVertex3),
-   //        1000,
-   //        1000,
-   //        false
-   //    );
-   //    __blade_bases = bladeBases.get();
-   //    __base.layer_handler.add(bladeBases);
-   // }
-
    bfSetOrthoLeft(__base.window);
+
+   int bez_order = bez->size();
+
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
       __poll_events();
@@ -371,6 +347,17 @@ BfMain::__loop()
       __gui.presentCameraWindow();
 
       // ImGui::ShowDemoWindow();
+
+      ImGui::Begin("Bezier");
+
+      if (ImGui::InputInt("Order of bezier", &bez_order))
+      {
+         bez->elevateOrder();
+         test_root->make();
+         test_root->control().updateBuffer();
+      }
+
+      ImGui::End();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();

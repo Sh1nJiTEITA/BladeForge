@@ -387,13 +387,12 @@ private:
 //
 //
 
-template <typename T, math::IsBfVertex3Variation<T> = true>
-class BfBezier2 : public obj::BfDrawObject, public std::vector<T>
+class BfBezier2 : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
 {
 public:
    template <typename... Args>
    BfBezier2(Args&&... args)
-       : std::vector<T>{std::forward<Args>(args)...}
+       : std::vector<BfVertex3Uni>{std::forward<Args>(args)...}
        , obj::BfDrawObject{
              "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
          }
@@ -405,34 +404,6 @@ public:
          );
       }
    }
-
-   // BfBezier2(std::vector<T>&& vec)
-   //     : std::vector<T>{std::move(vec)}
-   //     , obj::BfDrawObject{
-   //           "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
-   //       }
-   // {
-   //    if (this->size() < 3)
-   //    {
-   //       throw std::runtime_error(
-   //           "Bezier curve with < 3 control points is not handled"
-   //       );
-   //    }
-   // }
-   //
-   // BfBezier2(const std::vector<T>& vec)
-   //     : std::vector<T>{vec}
-   //     , obj::BfDrawObject{
-   //           "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
-   //       }
-   // {
-   //    if (this->size() < 3)
-   //    {
-   //       throw std::runtime_error(
-   //           "Bezier curve with < 3 control points is not handled"
-   //       );
-   //    }
-   // }
 
    glm::vec3 calcNormal(float t) const
    {
@@ -476,7 +447,7 @@ public:
    }
 };
 
-class BfBezier : public obj::BfDrawObject, public std::vector<BfVertex3>
+class BfBezier : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
 {
 public:
    template <typename... Args>
@@ -526,15 +497,15 @@ public:
    template <typename... Args>
    BfBezierWH(Args&&... args)
        : obj::BfDrawLayer("Bezier curve with handles")
-       , std::vector<BfVertex3>{std::forward<Args>(args)...}
+       , std::vector<BfVertex3Uni>{std::forward<Args>(args)...}
    {
-      auto curve = std::make_shared<curves::BfBezier2<BfVertex3*>>(
+      auto curve = std::make_shared<curves::BfBezier2>(
           _genControlVerticesPointers()
       );
       this->add(curve);
-      for (const auto& v : *curve.get())
+      for (auto& v : *curve)
       {
-         this->add(std::make_shared<curves::BfHandle>(v, 0.01f));
+         this->add(std::make_shared<curves::BfHandle>(v.getp(), 0.01f));
       }
    }
 
@@ -545,6 +516,25 @@ public:
       {
          child->make();
       }
+   }
+   
+   void elevateOrder() { 
+      // FIXME: Тут нужно перессмотреть вставку элементов... так как они
+      // вставляются в конец, а это не совсем правильно
+      auto new_vertices = math::BfBezierBase::elevateOrder(*this);
+      size_t i = 0;
+      for (size_t i = 0; i < new_vertices.size() - 1; ++i) { 
+         (*this)[i].pos() = new_vertices[i].pos();
+      }
+      this->push_back(*new_vertices.rbegin());
+      this->add(std::make_shared<curves::BfHandle>(this->rbegin()->getp(), 0.01f));
+
+      auto curve = m_children[0];
+      auto casted_curve = std::static_pointer_cast<curves::BfBezier2>(curve);
+      auto new_pointers = this->_genControlVerticesPointers();
+      casted_curve->assign(new_pointers.begin(), new_pointers.end());
+      // BfVertex3* last = this->rbegin()->getp();
+      // casted_curve->insert(casted_curve->end() - 1, BfVertex3Uni(last));
    }
 
 private:

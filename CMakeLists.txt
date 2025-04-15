@@ -1,18 +1,17 @@
 ﻿cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-if (WIN32)
-  # Проект точно собирается под x64-mingw-static - поэтому
-  # форсим всем зависимости использовать именно его
+if(WIN32)
+  # Проект точно собирается под x64-mingw-static - поэтому форсим всем
+  # зависимости использовать именно его
 
   # TODO: добавить поддержку MSVC - это реально, но пока что не нужно
   set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
 
-  # Так как lapack не работает из коробки с MINGW, то 
-  # используется OpenBLAS, но так как в xtensor-blas -
-  # жестко прописан lapack - то таким образом можно
-  # изменить это поведение, так как OpenBLAS содержит
-  # в себе lapack
-  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+  # Так как lapack не работает из коробки с MINGW, то используется OpenBLAS, но
+  # так как в xtensor-blas - жестко прописан lapack - то таким образом можно
+  # изменить это поведение, так как OpenBLAS содержит в себе lapack
+  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+                        ${CMAKE_MODULE_PATH})
 endif()
 
 set(CMAKE_TOOLCHAIN_FILE
@@ -244,7 +243,7 @@ set(BF_BASE
     "src/base/bfPipeline.cpp"
     "src/base/bfCamera.cpp")
 add_library(bfbaselib STATIC ${BF_BASE})
-target_link_libraries(bfbaselib PUBLIC bfexternallib )
+target_link_libraries(bfbaselib PUBLIC bfexternallib)
 
 set(BF_GEOMETRY
     "include/geometry/bfCurves.hpp"
@@ -276,7 +275,7 @@ set(BF_INTERACTION
     "src/interaction/bfGuiCamera.cpp")
 add_library(bfinteractionlib STATIC ${BF_INTERACTION})
 target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
-target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib )
+target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
 
 set(BF_OTHER
     # "include/other/BfExecutionTime.hpp"
@@ -297,7 +296,7 @@ set(BF_DRAW
     "src/draw/bfDrawObject2.cpp")
 
 add_library(bfdrawlib STATIC ${BF_DRAW})
-target_link_libraries(bfdrawlib PUBLIC bfexternallib )
+target_link_libraries(bfdrawlib PUBLIC bfexternallib)
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp"
@@ -308,8 +307,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
-
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
+# target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")
 file(COPY "${CMAKE_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_BINARY_DIR}/")
@@ -327,7 +325,7 @@ find_package(Catch2 REQUIRED)
 
 add_library(bfgeometrytestlib STATIC ${BF_GEOMETRY})
 target_compile_definitions(bfgeometrytestlib PUBLIC BF_CURVES4_NO_PIPELINE)
-target_link_libraries(bfgeometrytestlib PUBLIC bfexternallib )
+target_link_libraries(bfgeometrytestlib PUBLIC bfexternallib)
 
 add_executable(
   tests #
@@ -357,7 +355,7 @@ target_link_libraries(tests PUBLIC bfgeometrytestlib)
 target_link_libraries(tests PUBLIC bfotherlib)
 target_link_libraries(tests PUBLIC bfdrawlib)
 target_link_libraries(tests PUBLIC bfinteractionlib)
-target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
+# target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(tests PUBLIC bfexternallib)
 target_link_libraries(tests PUBLIC bfbaselib)
 

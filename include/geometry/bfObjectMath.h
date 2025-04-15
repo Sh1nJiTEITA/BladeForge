@@ -1,6 +1,7 @@
 #ifndef BF_OBJECT_MATH_H
 #define BF_OBJECT_MATH_H
 
+#include <cassert>
 #include <cmath>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/scalar_constants.hpp>
@@ -16,7 +17,6 @@
 #include <xtensor/xmanipulation.hpp>
 #include <xtensor/xtensor_forward.hpp>
 #include <xtensor/xview.hpp>
-
 
 #include "bfVertex2.hpp"
 
@@ -425,7 +425,6 @@ closestPointOnLine(F&& free, L1&& line1, L2&& line2)
 
 xt::xarray< double > bernsteinRow(int degree, double t);
 
-
 /**
  * @brief Тип, определяющий, является ли тип указателя или объекта BfVertex3.
  *
@@ -457,8 +456,7 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Нормаль к кривой в точке t.
     */
-   template < typename T, IsBfVertex3Variation< T > = true >
-   static glm::vec3 calcNormal(const std::vector< T >& data, float t)
+   static glm::vec3 calcNormal(const std::vector< BfVertex3Uni >& data, float t)
    {
       return glm::rotate(
                  glm::mat4(1.0f),
@@ -476,8 +474,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Касательная вектору кривой в точке t.
     */
-   template < typename T, IsBfVertex3Variation< T > = true >
-   static glm::vec3 calcTangent(const std::vector< T >& data, float t)
+   static glm::vec3
+   calcTangent(const std::vector< BfVertex3Uni >& data, float t)
    {
       return calcDerivative(data, t);
    }
@@ -490,8 +488,8 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Производная кривой в точке t.
     */
-   template < typename T, IsBfVertex3Variation< T > = true >
-   static glm::vec3 calcDerivative(const std::vector< T >& data, float t)
+   static glm::vec3
+   calcDerivative(const std::vector< BfVertex3Uni >& data, float t)
    {
       const auto step = 10e-05f;
       glm::vec3 left = calc(data, t - step).pos;
@@ -506,29 +504,15 @@ public:
     * @param data Вектор данных, представляющих кривую Безье.
     * @return Длину кривой.
     */
-   template < typename T, IsBfVertex3Variation< T > = true >
-   static float length(const std::vector< T >& data)
+   static float length(const std::vector< BfVertex3Uni >& data)
    {
-      using _T = std::decay_t< T >;
-      if constexpr (std::is_pointer_v< _T >)
+      float len = 0;
+      for (size_t i = 0; i < data.size() - 1; ++i)
       {
-         float len = 0;
-         for (size_t i = 0; i < data.size() - 1; ++i)
-         {
-            len += glm::length(data[i + 1]->pos - data[i]->pos);
-         }
+         len += glm::length(data[i + 1].pos() - data[i].pos());
+      }
 
-         return len;
-      }
-      else
-      {
-         float len = 0;
-         for (size_t i = 0; i < data.size() - 1; ++i)
-         {
-            len += glm::length(data[i + 1].pos - data[i].pos);
-         }
-         return len;
-      }
+      return len;
    }
 
    /**
@@ -539,65 +523,45 @@ public:
     * @param t Параметр для вычисления точки на кривой.
     * @return Точку на кривой.
     */
-   template < typename T, IsBfVertex3Variation< T > = true >
-   static BfVertex3 calc(const std::vector< T >& data, float t)
+   static BfVertex3 calc(const std::vector< BfVertex3Uni >& data, float t)
    {
       // clang-format off
-      using _T = std::decay_t<T>;
       glm::vec3 _v{0.0f};
       uint8_t n = data.size() - 1;
-
-      if constexpr (std::is_pointer_v<_T>)
+ 
+      for (size_t i = 0; i <= n; ++i)
       {
-         for (size_t i = 0; i <= n; ++i)
-         {
-            _v += static_cast<float>(
-                      math::binomial(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)
-                  ) * data.at(i)->pos;
-         }
-
-         return BfVertex3{
-             std::move(_v),
-             glm::vec3{1.0f},
-             curves::math::calcPlaneNormal(data.at(0)->pos,
-                                           data.at(1)->pos,
-                                           data.at(2)->pos)
-         };
+         _v += static_cast<float>(
+            math::binomial(n, i) * std::pow(1 - t, n - i) * std::pow(t, i)
+         ) * data.at(i).pos();
       }
-      else
-      {
-         for (size_t i = 0; i <= n; ++i)
-         {
-            _v += static_cast<float>(
-                      math::binomial(n, i) * std::pow(1 - t, n - i) *
-                      std::pow(t, i)
-                  ) * data.at(i).pos;
-         }
 
-         return BfVertex3{
-             std::move(_v),
-             glm::vec3{1.0f},
-             curves::math::calcPlaneNormal(data.at(0).pos,
-                                           data.at(1).pos,
-                                           data.at(2).pos)
-         };
-      }
+      return BfVertex3{
+          std::move(_v),
+          glm::vec3{1.0f},
+          curves::math::calcPlaneNormal(data.at(0).pos(),
+                                        data.at(1).pos(),
+                                        data.at(2).pos())
+      };
+   
    }
 
    static xt::xarray< double> controlOrderMatrix(size_t n) { 
       xt::xarray< double > M = xt::zeros<double>({n + 1, n});
       M(0, 0) = 1.0;
       M(n, n - 1) = 1.0;
-      for (size_t i = 1; i < n + 1; ++i) { 
-         M(i, i - 1) =  static_cast<double>(i) / static_cast<double>(n + 1);
-         M(i, i) =  1 - static_cast<double>(i) / static_cast<double>(n + 1);
+      for (size_t i = 1; i < n; ++i) { 
+         M(i, i - 1) =  static_cast<double>(i) / static_cast<double>(n);
+         M(i, i) =  1 - static_cast<double>(i) / static_cast<double>(n);
       }
+      std::cout << M << "\n";
       return M;
    }
 
    static std::vector< BfVertex3Uni > elevateOrder(const std::vector< BfVertex3Uni >& data) { 
-      size_t n = data.size();
-      xt::xarray<double> old = xt::zeros<double>({n, static_cast<size_t>(3)});
+      size_t n = data.size() - 1;
+
+      xt::xarray<double> old = xt::zeros<double>({data.size(), static_cast<size_t>(3)});
       size_t i = 0;
       for (auto&& v : data) { 
          old(i, 0) = v.pos().x;
@@ -605,65 +569,22 @@ public:
          old(i, 2) = v.pos().z;
          i++;
       }
-      xt::xarray<double> M = BfBezierBase::controlOrderMatrix(n);
-      xt::xarray<double> result = M * old;
-      std::vector< BfVertex3Uni > output(data);
-      output.resize(n + 1);
-      i = 0;
-      for (auto&& v : output) {
-         if (i >= result.shape()[0]) break;
-         auto& pos = v.pos();
-         pos.x = result(i, 0);
-         pos.y = result(i, 1);
-         pos.z = result(i, 2);
-         ++i;
+      xt::xarray<double> M = BfBezierBase::controlOrderMatrix(n + 1);
+      xt::xarray<double> result = xt::linalg::dot(M, old);
+      std::vector< BfVertex3Uni > output;
+      output.resize(data.size() + 1);
+      for (size_t i = 0; i < data.size() + 1; ++i) {
+         output[i].pos() = glm::vec3{ 
+            result(i, 0),
+            result(i, 1),
+            result(i, 2)
+         };
+         output[i].color() = data[0].color();
+         output[i].normals() = data[0].normals();
       }
+      std::cout << "new v \n" << result << "\n";
       return output;
    }
-
-   // template < typename T, IsBfVertex3Variation< T > = true >
-   // static std::vector< BfVertex3 > lowerOrder(const std::vector< BfVertex3 >& control_points, int samples = 20) { 
-   //    int n = control_points.size() - 1;
-   //    int k = n - 1;
-   //
-   //    std::vector<double> t_values(samples);
-   //    for (int i = 0; i < samples; ++i) { 
-   //       t_values[i] = static_cast<double>(i) / (samples - 1);
-   //    }
-   //
-   //    xt::xarray<double> Bn = xt::zeros<double>({samples, n + 1});
-   //    xt::xarray<double> Bk = xt::zeros<double>({samples, k + 1});
-   //    for (int i = 0; i < samples; ++i) { 
-   //       xt::row(Bn, i) = bernsteinRow(n, t_values[i]);
-   //       xt::row(Bk, i) = bernsteinRow(k, t_values[i]);
-   //    }
-   //
-   //    xt::xarray<double> P = xt::zeros<double>({n+1, 3});
-   //    for (int i = 0; i <= n; ++i) { 
-   //       P(i, 0) = control_points[i].pos.x;
-   //       P(i, 1) = control_points[i].pos.y;
-   //       P(i, 2) = control_points[i].pos.z;
-   //    }
-   //
-   //    auto RHS = xt::linalg::dot(Bn, P);
-   //    auto BkT = xt::transpose(Bk);
-   //    auto Q = xt::linalg::dot(
-   //       xt::linalg::inv(xt::linalg::dot(BkT, Bk)),
-   //       xt::linalg::dot(BkT, RHS)
-   //    );
-   //
-   //    std::vector<BfVertex3> reduced(k + 1); 
-   //    for (int i = 0; i <= k; ++i) { 
-   //       reduced[i] = BfVertex3(
-   //          glm::vec3( Q(i, 0), Q(i, 1), Q(i, 2)),
-   //          control_points.begin()->color,
-   //          control_points.begin()->normals
-   //       );
-   //    }
-   //    return reduced;
-   // }
-
-
 };
 
 }  // namespace math

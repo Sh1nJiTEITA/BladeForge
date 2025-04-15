@@ -306,36 +306,31 @@ Bfcircle3Vertices::make()
 glm::vec3
 BfBezier::calcNormal(float t) const
 {
-   auto casted = static_cast<std::vector<BfVertex3>>(*this);
-   return math::BfBezierBase::calcNormal(casted, t);
+   return math::BfBezierBase::calcNormal(*this, t);
 }
 
 glm::vec3
 BfBezier::calcTangent(float t) const
 {
-   auto casted = static_cast<std::vector<BfVertex3>>(*this);
-   return math::BfBezierBase::calcTangent(casted, t);
+   return math::BfBezierBase::calcTangent(*this, t);
 }
 
 glm::vec3
 BfBezier::calcDerivative(float t) const
 {
-   auto casted = static_cast<std::vector<BfVertex3>>(*this);
-   return math::BfBezierBase::calcDerivative(casted, t);
+   return math::BfBezierBase::calcDerivative(*this, t);
 }
 
 float
 BfBezier::length() const
 {
-   auto casted = static_cast<std::vector<BfVertex3>>(*this);
-   return math::BfBezierBase::length(casted);
+   return math::BfBezierBase::length(*this);
 }
 
 BfVertex3
 BfBezier::calc(float t) const
 {
-   auto casted = static_cast<std::vector<BfVertex3>>(*this);
-   auto v = math::BfBezierBase::calc(casted, t);
+   auto v = math::BfBezierBase::calc(*this, t);
    v.color = m_color;
    return v;
 }
@@ -350,13 +345,13 @@ BfBezier::make()
    m_vertices.reserve(m_discretization);
    for (int i = 0; i < m_discretization; i++)
    {
-      t = static_cast<float>(i) / static_cast<float>(m_discretization - 1);
+      t = static_cast< float >(i) / static_cast< float >(m_discretization - 1);
       m_vertices.push_back(this->calc(t));
    }
    m_indices.reserve(m_discretization);
    _genIndicesStandart();
 }
 
-}  // namespace curves
-}  // namespace obj
+} // namespace curves
+} // namespace obj
 //
