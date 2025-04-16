@@ -270,27 +270,27 @@ BfMain::__loop()
    // );
    // circle->make();
 
-   auto bez = std::make_shared< obj::curves::BfBezierWH >(
-       BfVertex3Uni{BfVertex3(
-           glm::vec3(0.0f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       )},
-       BfVertex3Uni{BfVertex3(
-           glm::vec3(.5f, .5f, 0.0f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       )},
-       BfVertex3Uni{BfVertex3(
-           glm::vec3(1.f, 0.0f, 0.0f),
-           glm::vec3(1.0f),
-           glm::vec3{0.0f, 0.0f, 1.0f}
-       )}
-   );
-   bez->make();
+   // auto bez = std::make_shared< obj::curves::BfBezierWH >(
+   //     BfVertex3Uni{BfVertex3(
+   //         glm::vec3(0.0f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     )},
+   //     BfVertex3Uni{BfVertex3(
+   //         glm::vec3(.5f, .5f, 0.0f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     )},
+   //     BfVertex3Uni{BfVertex3(
+   //         glm::vec3(1.f, 0.0f, 0.0f),
+   //         glm::vec3(1.0f),
+   //         glm::vec3{0.0f, 0.0f, 1.0f}
+   //     )}
+   // );
+   // bez->make();
 
    // test_root->add(circle);
-   test_root->add(bez);
+   // test_root->add(bez);
 
    // auto cirhan = std::make_shared<obj::curves::BfCircleCenterWH>(
    //     BfVertex3{
@@ -307,18 +307,18 @@ BfMain::__loop()
    // l->make();
    // test_root->add(l);
 
-   // auto bs = std::make_shared< obj::section::BfBladeSection >(
-   //     obj::section::SectionCreateInfo{}
-   // );
-   // bs->make();
-   // test_root->add(bs);
+   auto bs = std::make_shared< obj::section::BfBladeSection >(
+       obj::section::SectionCreateInfo{}
+   );
+   bs->make();
+   test_root->add(bs);
 
    test_root->control().updateBuffer();
    obj::BfDrawManager::inst().add(test_root);
 
-   bfSetOrthoLeft(__base.window);
+   // bfSetOrthoLeft(__base.window);
 
-   int bez_order = bez->size();
+   // int bez_order = bez->size();
 
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -349,32 +349,30 @@ BfMain::__loop()
 
       // ImGui::ShowDemoWindow();
 
-      ImGui::Begin("Bezier");
+      // ImGui::Begin("Bezier");
+      //
+      // if (ImGui::InputInt("Order of bezier", &bez_order))
+      // {
+      //    if (bez_order > bez->size()) { 
+      //       bez->elevateOrder();
+      //       test_root->make();
+      //       test_root->control().updateBuffer();
+      //    }
+      //    else { 
+      //       bez->lowerateOrder();
+      //       test_root->make();
+      //       test_root->control().updateBuffer();
+      //    }
+      //    
+      // }
+      // if (ImGui::Button("toggle")) { 
+      //    bez->toggleBoundHandles();
+      // }
 
-      if (ImGui::InputInt("Order of bezier", &bez_order))
-      {
-         if (bez_order > bez->size()) { 
-            bez->elevateOrder();
-            test_root->make();
-            test_root->control().updateBuffer();
-         }
-         else { 
-            bez->lowerateOrder();
-            test_root->make();
-            test_root->control().updateBuffer();
-         }
-         
-      }
-      if (ImGui::Button("toggle")) { 
-         bez->toggleBoundHandles();
-      }
-
-
-      ImGui::End();
+      // ImGui::End();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();
-
       bfDrawFrame(__base);
    }
 

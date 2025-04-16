@@ -862,12 +862,19 @@ public:
    {
       _assignRoots();
 
-      if ( !glm::all( glm::equal(m_lastHandlePos, handle()->center().pos) ) ) { 
-         // Set new radius from new handle pos
+      
+
          glm::vec3 handle_pos = handle()->center().pos;
          float distance_to_center_vertex = glm::distance(handle_pos, m_center.pos());
          float distance_to_line = curves::math::distanceToLine(handle_pos, m_begin, m_center);
+
+      if (glm::all(glm::equal(m_begin.pos(), m_oldbegin)) && 
+          glm::all(glm::equal(m_center.pos(), m_oldcenter)) &&
+          glm::all(glm::equal(m_end.pos(), m_oldend))) { 
+
          m_radius.get() = (distance_to_center_vertex * distance_to_line) / (distance_to_center_vertex + distance_to_line);
+      }
+
       
          // accurate handle pos
          float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
@@ -875,24 +882,33 @@ public:
                                glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
 
          handle()->center().pos = curves::math::closestPointOnLine(handle_pos, m_center, m_center.pos() + alpha_dir);
-      }
+
 
       for (auto child : m_children)
       {
          child->make();
       }
+      glm::vec3 circle_center = circle()->center().pos;
+      glm::vec3 direction_to_handle = glm::normalize(circle_center - m_center.pos());
+      handle()->center().pos = circle()->center().pos + direction_to_handle * m_radius.get();
+      handle()->make();
+
+      m_oldbegin = m_begin.pos();
+      m_oldcenter = m_center.pos();
+      m_oldend = m_end.pos();
+
    }
    // clang-format on
 
    // clang-format off
    BfVertex3 centerVertex() 
    { 
-      return circle()->centerVertex();
+      return circle()->center();
    }
 
-   std::shared_ptr<curves::BfCircle2LinesWH> circle()  
+   std::shared_ptr<curves::BfCircle2Lines> circle()  
    {
-      return std::static_pointer_cast<curves::BfCircle2LinesWH>(m_children[0]);
+      return std::static_pointer_cast<curves::BfCircle2Lines>(m_children[0]);
    }
 
    std::shared_ptr<curves::BfHandle> handle()  
@@ -903,6 +919,11 @@ public:
 
 private:
    glm::vec3 m_lastHandlePos;
+
+   glm::vec3 m_oldbegin;
+   glm::vec3 m_oldcenter;
+   glm::vec3 m_oldend;
+
 
    BfVertex3Uni m_begin;
    BfVertex3Uni m_center;
