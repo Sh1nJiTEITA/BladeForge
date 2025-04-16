@@ -16,14 +16,17 @@ namespace bi = boost::bimaps;
 
 class BfTypeManager
 {
-   // clang-format off
-   bi::bimap<
+   using types_map = bi::bimap<
        bi::unordered_set_of<BfOType>,
-       bi::unordered_set_of<BfOTypeName>
-   > m_types;
+       bi::unordered_set_of<BfOTypeName> 
+   >;
+   using id_map = std::unordered_map<BfOId, BfOType>;
+
+   // clang-format off
+   types_map m_types;
    // clang-format on
 
-   std::unordered_map<BfOId, BfOType> m_id;
+   id_map m_id;
 
    BfTypeManager() {};
 
@@ -37,6 +40,13 @@ public:
       static BfTypeManager m;
       return m;
    };
+
+   const types_map& types() { 
+      return m_types; 
+   }
+   const id_map& ids() { 
+      return m_id;
+   }
 
    BfOType regType(BfOTypeName name)
    {

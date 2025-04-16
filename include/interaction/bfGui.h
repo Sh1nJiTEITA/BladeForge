@@ -96,6 +96,7 @@ public:
    void presentSmartLayerObserver();
    void presentInfo();
    void presentCameraWindow();
+   void presentIds();
 
    void toggleRenderCreateWindow();
 

@@ -554,7 +554,6 @@ public:
          M(i, i - 1) =  static_cast<double>(i) / static_cast<double>(n);
          M(i, i) =  1 - static_cast<double>(i) / static_cast<double>(n);
       }
-      std::cout << M << "\n";
       return M;
    }
 
@@ -582,7 +581,41 @@ public:
          output[i].color() = data[0].color();
          output[i].normals() = data[0].normals();
       }
-      std::cout << "new v \n" << result << "\n";
+      return output;
+   }
+
+   static std::vector< BfVertex3Uni > lowerateOrder(const std::vector< BfVertex3Uni >& data) { 
+      size_t n = data.size() - 1;
+
+      xt::xarray<double> old = xt::zeros<double>({data.size(), static_cast<size_t>(3)});
+      size_t i = 0;
+      for (auto&& v : data) { 
+         old(i, 0) = v.pos().x;
+         old(i, 1) = v.pos().y;
+         old(i, 2) = v.pos().z;
+         i++;
+      }
+
+      std::cout << "old " << old << "\n";
+      auto M = BfBezierBase::controlOrderMatrix(n);
+      auto M_transposed = xt::transpose(M);
+      auto I = xt::linalg::dot(M_transposed, M);
+      auto I_inveresed = xt::linalg::inv(I);
+      auto M_res = xt::linalg::dot(I_inveresed, M_transposed);
+      xt::xarray<double> result = xt::linalg::dot(M_res, old);
+      std::cout << "res " << result << "\n";
+
+      std::vector< BfVertex3Uni > output;
+      output.resize(data.size() - 1);
+      for (size_t i = 0; i < data.size() - 1; ++i) {
+         output[i].pos() = glm::vec3{ 
+            result(i, 0),
+            result(i, 1),
+            result(i, 2)
+         };
+         output[i].color() = data[0].color();
+         output[i].normals() = data[0].normals();
+      }
       return output;
    }
 };

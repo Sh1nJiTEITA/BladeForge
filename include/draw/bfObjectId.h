@@ -2,6 +2,7 @@
 #define BF_DRAW_OBJECT_2_H
 
 #include "bfTypeManager.h"
+#include <iostream>
 
 namespace obj
 {
@@ -21,7 +22,11 @@ public:
       obj::BfTypeManager::inst().regId(m_type, m_value);
    }
 
-   virtual ~BfObjectId() { obj::BfTypeManager::inst().remId(m_type); }
+   virtual ~BfObjectId() { 
+      auto& inst = obj::BfTypeManager::inst();
+      std::cout << "Deleting object with id " << this->id() << " and typename " << inst.getTypeNameById(this->id()) << "\n";
+      inst.remId(id()); 
+   }
 
    explicit BfObjectId(const BfObjectId& other)
        : m_type{other.m_type}, m_value{other.m_value}

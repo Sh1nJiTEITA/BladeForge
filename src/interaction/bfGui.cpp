@@ -1,6 +1,7 @@
 #include "bfGui.h"
 
 #include <glm/trigonometric.hpp>
+#include <imgui_internal.h>
 
 #include "bfCamera.h"
 #include "bfDrawObjectManager.h"
@@ -344,11 +345,6 @@ BfGui::presentToolType()
    if (__ptr_base->pos_id != 0)
    {
       ImGui::BeginTooltip();
-
-      // ImGui::Text((std::string("type=").append(bfGetStrNameDrawObjType(
-      //                  BfObjID::find_type(__ptr_base->pos_id)
-      //              )))
-      //                 .c_str());
 
       ImGui::Text(
           "type=%s",
@@ -803,6 +799,49 @@ void
 BfGui::presentCameraWindow()
 {
    __camera_window.render();
+}
+
+void BfGui::presentIds() { 
+   ImGui::Begin("Type Manager");  
+   auto& inst = obj::BfTypeManager::inst();
+   
+   ImGui::BeginTable("types : typename", 2);
+   {
+      ImGui::TableSetupColumn("type");
+      ImGui::TableSetupColumn("typename");
+      ImGui::TableHeadersRow();
+      for (auto& [type, typeName] : inst.types()) { 
+         ImGui::TableNextRow();
+
+         
+         ImGui::TableSetColumnIndex(0);
+         ImGui::Text("%i", type);
+
+         ImGui::TableSetColumnIndex(1);
+         ImGui::Text("%s", typeName);
+      }
+   }
+   ImGui::EndTable();
+
+   ImGui::BeginTable("id : type", 2);
+   {
+      ImGui::TableSetupColumn("id");
+      ImGui::TableSetupColumn("typeName");
+      ImGui::TableHeadersRow();
+      for (auto& [id, type] : inst.ids()) { 
+         ImGui::TableNextRow();
+         
+         ImGui::TableSetColumnIndex(0);
+         ImGui::Text("%i", id);
+
+         ImGui::TableSetColumnIndex(1);
+         ImGui::Text("%s", inst.getTypeNameById(id));
+      }
+   }
+   ImGui::EndTable();
+
+
+   ImGui::End();
 }
 
 void

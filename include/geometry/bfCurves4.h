@@ -563,7 +563,6 @@ public:
       auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
       auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
       auto new_vertices = math::BfBezierBase::elevateOrder(*this);
-      size_t i = 0;
       for (size_t i = 0; i < new_vertices.size() - 1; ++i) 
       { 
          (*this)[i].pos() = new_vertices[i].pos();
@@ -579,6 +578,27 @@ public:
       auto casted_curve = std::static_pointer_cast< curves::BfBezier2 >(curve);
       auto new_pointers = this->_genControlVerticesPointers();
       casted_curve->assign(new_pointers.begin(), new_pointers.end());
+   }
+   
+   void lowerateOrder() { 
+      auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
+      auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
+      auto new_vertices = math::BfBezierBase::lowerateOrder(*this);
+
+      handles_layer->children().pop_back();
+      lines_layer->children().pop_back();
+      this->pop_back();
+
+      for (size_t i = 0; i < new_vertices.size(); ++i) 
+      { 
+         (*this)[i].pos() = new_vertices[i].pos();
+         auto handle = std::static_pointer_cast<curves::BfHandle>(handles_layer->children()[i]);
+         handle->resetPos();
+      }
+
+      auto curve = std::static_pointer_cast< curves::BfBezier2 >(m_children[0]);
+      auto new_pointers = this->_genControlVerticesPointers();
+      curve->assign(new_pointers.begin(), new_pointers.end());
    }
 
 private:

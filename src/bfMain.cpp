@@ -345,6 +345,7 @@ BfMain::__loop()
       __gui.presentCreateWindow();
       __gui.presentSmartLayerObserver();
       __gui.presentCameraWindow();
+      __gui.presentIds();
 
       // ImGui::ShowDemoWindow();
 
@@ -352,9 +353,16 @@ BfMain::__loop()
 
       if (ImGui::InputInt("Order of bezier", &bez_order))
       {
-         bez->elevateOrder();
-         test_root->make();
-         test_root->control().updateBuffer();
+         if (bez_order > bez->size()) { 
+            bez->elevateOrder();
+            test_root->make();
+            test_root->control().updateBuffer();
+         }
+         else { 
+            bez->lowerateOrder();
+            test_root->make();
+            test_root->control().updateBuffer();
+         }
       }
 
       ImGui::End();
