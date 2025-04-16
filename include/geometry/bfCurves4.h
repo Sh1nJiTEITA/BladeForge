@@ -79,7 +79,19 @@ public:
       m_vertices.clear();
       m_indices.clear();
 
-      m_vertices = {m_first.get(), m_second.get()};
+      m_vertices = {
+         { 
+            m_first.get().pos,
+            this->color(), 
+            m_first.get().normals
+         }, 
+         { 
+            m_second.get().pos,
+            this->color(), 
+            m_second.get().normals
+         }, 
+
+      };
       _genIndicesStandart();
    };
 
@@ -251,6 +263,8 @@ public:
 
    float radius() const noexcept { return m_radius; }
    BfVertex3& center() { return m_center.get(); }
+   BfVertex3* centerp() { return m_center.getp(); }
+   
 
    virtual void make() override
    {
@@ -365,6 +379,10 @@ public:
    }
 
    bool isChanged() const noexcept { return m_isChanged; }
+
+   void resetPos() { 
+      m_initialCenterPos = m_center.pos();
+   }
 
 private:
    glm::vec3 m_initialMousePos;
@@ -499,13 +517,36 @@ public:
        : obj::BfDrawLayer("Bezier curve with handles")
        , std::vector<BfVertex3Uni>{std::forward<Args>(args)...}
    {
+      // FIXME: СУПЕР ВРЕМЕННОЕ РЕШЕНИЕ, если при добавлении точек
+      // внутренний вектор сделает ресайз -> все ручки, указывающие
+      // на точки вектора уйдут в segmentation fault
+      this->reserve(100);
       auto curve = std::make_shared<curves::BfBezier2>(
           _genControlVerticesPointers()
       );
       this->add(curve);
+
+      auto handles_layer = std::make_shared<obj::BfDrawLayer>("Handles layer");
+      this->add(handles_layer);
+
+
       for (auto& v : *curve)
       {
-         this->add(std::make_shared<curves::BfHandle>(v.getp(), 0.01f));
+         handles_layer->add(std::make_shared<curves::BfHandle>(v.getp(), 0.01f));
+      }
+
+      auto lines_layer = std::make_shared<obj::BfDrawLayer>("Lines layer");
+      this->add(lines_layer);
+
+      for (auto i = 0; i < this->size() - 1; ++i) { 
+         
+         auto line = std::make_shared<curves::BfSingleLine>(
+            this->at(i).getp(),
+            this->at(i + 1).getp()
+         );
+
+         line->color() = glm::vec3(1.0f, 1.0f, 1.0f);
+         lines_layer->add(line);
       }
    }
 
@@ -519,22 +560,25 @@ public:
    }
    
    void elevateOrder() { 
-      // FIXME: Тут нужно перессмотреть вставку элементов... так как они
-      // вставляются в конец, а это не совсем правильно
+      auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
+      auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
       auto new_vertices = math::BfBezierBase::elevateOrder(*this);
       size_t i = 0;
-      for (size_t i = 0; i < new_vertices.size() - 1; ++i) { 
+      for (size_t i = 0; i < new_vertices.size() - 1; ++i) 
+      { 
          (*this)[i].pos() = new_vertices[i].pos();
+         auto handle = std::static_pointer_cast<curves::BfHandle>(handles_layer->children()[i]);
+         handle->resetPos();
       }
       this->push_back(*new_vertices.rbegin());
-      this->add(std::make_shared<curves::BfHandle>(this->rbegin()->getp(), 0.01f));
+
+      handles_layer->add(std::make_shared< curves::BfHandle >(this->rbegin()->getp(), 0.01f));
+      lines_layer->add(std::make_shared< curves::BfSingleLine >(this->rbegin()->getp(), (this->rbegin() + 1)->getp()));
 
       auto curve = m_children[0];
-      auto casted_curve = std::static_pointer_cast<curves::BfBezier2>(curve);
+      auto casted_curve = std::static_pointer_cast< curves::BfBezier2 >(curve);
       auto new_pointers = this->_genControlVerticesPointers();
       casted_curve->assign(new_pointers.begin(), new_pointers.end());
-      // BfVertex3* last = this->rbegin()->getp();
-      // casted_curve->insert(casted_curve->end() - 1, BfVertex3Uni(last));
    }
 
 private:

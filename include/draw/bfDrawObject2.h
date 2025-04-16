@@ -7,6 +7,7 @@
 #include <random>
 #include <stdexcept>
 
+#include "bfDrawObject.h"
 #include "bfDrawObjectBuffer.h"
 #include "bfObjectId.h"
 #include "bfTypeManager.h"
@@ -375,6 +376,8 @@ public:
     * @brief Так как слой не может иметь индексы, этот метод ему не нужен
     */
    const std::vector< BfIndex >& indices() const = delete;
+   
+   std::vector< BfObj >& children();
 };
 
 template < class PartEnum >

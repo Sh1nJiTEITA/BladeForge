@@ -307,11 +307,11 @@ BfMain::__loop()
    // l->make();
    // test_root->add(l);
 
-   auto bs = std::make_shared< obj::section::BfBladeSection >(
-       obj::section::SectionCreateInfo{}
-   );
-   bs->make();
-   test_root->add(bs);
+   // auto bs = std::make_shared< obj::section::BfBladeSection >(
+   //     obj::section::SectionCreateInfo{}
+   // );
+   // bs->make();
+   // test_root->add(bs);
 
    test_root->control().updateBuffer();
    obj::BfDrawManager::inst().add(test_root);

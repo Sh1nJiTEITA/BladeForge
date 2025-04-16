@@ -562,9 +562,15 @@ BfDrawLayer::BfDrawLayer(BfOTypeName typeName)
 void
 BfDrawLayer::make()
 {
-   throw std::runtime_error(
-       "[BfDrawLayer] make() method must be implemented. No vertices creation!"
-   );
+   _assignRoots();
+   for (auto child : m_children)
+   {
+      child->make();
+   }
+}
+
+std::vector< BfObj >& BfDrawLayer::children() { 
+   return m_children;
 }
 
 /* BfDrawRootLayer */
