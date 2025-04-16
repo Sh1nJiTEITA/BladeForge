@@ -805,7 +805,7 @@ void BfGui::presentIds() {
    ImGui::Begin("Type Manager");  
    auto& inst = obj::BfTypeManager::inst();
    
-   ImGui::BeginTable("types : typename", 2);
+   if (ImGui::BeginTable("types : typename", 2))
    {
       ImGui::TableSetupColumn("type");
       ImGui::TableSetupColumn("typename");
@@ -820,10 +820,10 @@ void BfGui::presentIds() {
          ImGui::TableSetColumnIndex(1);
          ImGui::Text("%s", typeName);
       }
+      ImGui::EndTable();
    }
-   ImGui::EndTable();
 
-   ImGui::BeginTable("id : type", 2);
+   if (ImGui::BeginTable("id : type", 2))
    {
       ImGui::TableSetupColumn("id");
       ImGui::TableSetupColumn("typeName");
@@ -837,8 +837,8 @@ void BfGui::presentIds() {
          ImGui::TableSetColumnIndex(1);
          ImGui::Text("%s", inst.getTypeNameById(id));
       }
+      ImGui::EndTable();
    }
-   ImGui::EndTable();
 
 
    ImGui::End();

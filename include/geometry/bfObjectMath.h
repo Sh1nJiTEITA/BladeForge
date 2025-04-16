@@ -616,6 +616,8 @@ public:
          output[i].color() = data[0].color();
          output[i].normals() = data[0].normals();
       }
+      output.rbegin()->pos() = data.rbegin()->pos();
+      output.begin()->pos() = data.begin()->pos();
       return output;
    }
 };
