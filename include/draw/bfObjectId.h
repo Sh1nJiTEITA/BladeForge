@@ -22,7 +22,7 @@ public:
       obj::BfTypeManager::inst().regId(m_type, m_value);
    }
 
-   virtual ~BfObjectId() { 
+   ~BfObjectId() { 
       auto& inst = obj::BfTypeManager::inst();
       std::cout << "Deleting object with id " << this->id() << " and typename " << inst.getTypeNameById(this->id()) << "\n";
       inst.remId(id()); 

@@ -560,6 +560,7 @@ public:
    }
    
    void elevateOrder() { 
+      bool oldstate = toggleBoundHandles(true);
       auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
       auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
       auto new_vertices = math::BfBezierBase::elevateOrder(*this);
@@ -578,9 +579,11 @@ public:
       auto casted_curve = std::static_pointer_cast< curves::BfBezier2 >(curve);
       auto new_pointers = this->_genControlVerticesPointers();
       casted_curve->assign(new_pointers.begin(), new_pointers.end());
+      toggleBoundHandles(oldstate);
    }
    
    void lowerateOrder() { 
+      bool oldstate = toggleBoundHandles(true);
       auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
       auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
       auto new_vertices = math::BfBezierBase::lowerateOrder(*this);
@@ -599,8 +602,21 @@ public:
       auto curve = std::static_pointer_cast< curves::BfBezier2 >(m_children[0]);
       auto new_pointers = this->_genControlVerticesPointers();
       curve->assign(new_pointers.begin(), new_pointers.end());
+      toggleBoundHandles(oldstate);
    }
 
+   bool toggleHandle(size_t i, int status = -1){ 
+      auto handles = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
+      auto handle = std::static_pointer_cast<curves::BfHandle>(handles->children()[i]);
+      return handle->toggleRender(status);
+   }
+
+   bool toggleBoundHandles(int sts = -1) { 
+      bool f =  toggleHandle(0, sts);
+      bool s = toggleHandle(this->size() - 1, sts);
+      return f && s;
+   }
+   
 private:
    std::vector<BfVertex3Uni> _genControlVerticesPointers()
    {

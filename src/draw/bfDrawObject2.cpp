@@ -293,19 +293,21 @@ BfDrawControlProxy::draw(
    if (g.m_type == BfDrawObjectBase::OBJECT)
    {
       // DRAW SINGLE OBJECT
-      vkCmdBindPipeline(
-          combuffer,
-          VK_PIPELINE_BIND_POINT_GRAPHICS,
-          g.m_pipeline
-      );
-      vkCmdDrawIndexed(
-          combuffer,
-          g.indices().size(),
-          1,
-          *index_offset,
-          *vertex_offset,
-          *offset
-      );
+      if (g.m_isrender) { 
+         vkCmdBindPipeline(
+             combuffer,
+             VK_PIPELINE_BIND_POINT_GRAPHICS,
+             g.m_pipeline
+         );
+         vkCmdDrawIndexed(
+             combuffer,
+             g.indices().size(),
+             1,
+             *index_offset,
+             *vertex_offset,
+             *offset
+         );
+      }
 
       *offset += 1;
       *index_offset += g.indices().size();
@@ -399,6 +401,7 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_modelMatrix{1.0f}
     , m_type{type}
     , m_root{}
+    , m_isrender { true } 
 {
    if (type == BfDrawObjectBase::ROOT_LAYER)
    {

@@ -291,6 +291,17 @@ public:
       m_pipeline = obj.m_pipeline;
    }
 
+   bool toggleRender(int sts = -1) { 
+      bool current = m_isrender;
+      if (sts == -1) { 
+         m_isrender = !m_isrender;
+      }
+      else  {
+         m_isrender = sts;    
+      }
+      return current;
+   }
+
 protected:
    virtual BfObjectData _objectData();
    void _assignRoots();
@@ -308,6 +319,7 @@ protected:
 private:
    std::unique_ptr< BfObjectBuffer > m_buffer;
    Type m_type;
+   bool m_isrender;
 };
 
 /**
@@ -343,6 +355,8 @@ public:
    }
 
    virtual std::shared_ptr< BfDrawObjectBase > clone() const override;
+   
+   
 
 protected:
    /**

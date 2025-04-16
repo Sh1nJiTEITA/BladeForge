@@ -331,8 +331,8 @@ BfMain::__loop()
       // __present_blade_base_create_window();
 
       __gui.presentInfo();
-      __gui.presentTopDock();
-      __gui.presentLeftDock();
+      // __gui.presentTopDock();
+      // __gui.presentLeftDock();
 
       __gui.presentMenuBar();
       __gui.presentCamera();
@@ -363,7 +363,12 @@ BfMain::__loop()
             test_root->make();
             test_root->control().updateBuffer();
          }
+         
       }
+      if (ImGui::Button("toggle")) { 
+         bez->toggleBoundHandles();
+      }
+
 
       ImGui::End();
 
