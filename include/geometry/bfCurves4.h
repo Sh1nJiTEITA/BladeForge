@@ -862,11 +862,9 @@ public:
    {
       _assignRoots();
 
-      
-
-         glm::vec3 handle_pos = handle()->center().pos;
-         float distance_to_center_vertex = glm::distance(handle_pos, m_center.pos());
-         float distance_to_line = curves::math::distanceToLine(handle_pos, m_begin, m_center);
+      glm::vec3 handle_pos = handle()->center().pos;
+      float distance_to_center_vertex = glm::distance(handle_pos, m_center.pos());
+      float distance_to_line = curves::math::distanceToLine(handle_pos, m_begin, m_center);
 
       if (glm::all(glm::equal(m_begin.pos(), m_oldbegin)) && 
           glm::all(glm::equal(m_center.pos(), m_oldcenter)) &&
@@ -874,16 +872,15 @@ public:
 
          m_radius.get() = (distance_to_center_vertex * distance_to_line) / (distance_to_center_vertex + distance_to_line);
       }
-
       
-         // accurate handle pos
-         float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
-         glm::vec3 alpha_dir = glm::rotate(glm::mat4(1.0f), -glm::radians(alpha * 0.5f), m_center.normals()) * 
-                               glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
+      // accurate handle pos
+      float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
+      glm::vec3 alpha_dir = glm::rotate(glm::mat4(1.0f), -glm::radians(alpha * 0.5f), m_center.normals()) * 
+                            glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
 
-         handle()->center().pos = curves::math::closestPointOnLine(handle_pos, m_center, m_center.pos() + alpha_dir);
+      handle()->center().pos = curves::math::closestPointOnLine(handle_pos, m_center, m_center.pos() + alpha_dir);
 
-
+      // FIXME Ручка создается 2 раза тут и еще ниже 
       for (auto child : m_children)
       {
          child->make();

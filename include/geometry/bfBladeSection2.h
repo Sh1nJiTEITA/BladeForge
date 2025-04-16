@@ -17,7 +17,7 @@ struct SectionCreateInfo
    float chord = 1.0f;
    float inletAngle = 30.f;
    float outletAngle = 20.f;
-   float inletRadius = 0.5f;
+   float inletRadius = 0.15f;
    float outletRadius = 0.05f;
 };
 
@@ -46,6 +46,7 @@ public:
    {
       _createChord(); 
       _createCircleEdges();
+      _createAverageInitialCurve();
    }
 
    virtual void make() override
@@ -75,6 +76,9 @@ public:
    }
 private:
    bool _isChordChanged();
+   
+   float _equivalentInletAngle();
+   float _equivalentOutletAngle();
 
 
 private:
