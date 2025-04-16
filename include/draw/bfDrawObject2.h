@@ -7,7 +7,6 @@
 #include <random>
 #include <stdexcept>
 
-#include "bfDrawObject.h"
 #include "bfDrawObjectBuffer.h"
 #include "bfObjectId.h"
 #include "bfTypeManager.h"
@@ -291,13 +290,16 @@ public:
       m_pipeline = obj.m_pipeline;
    }
 
-   bool toggleRender(int sts = -1) { 
+   bool toggleRender(int sts = -1)
+   {
       bool current = m_isrender;
-      if (sts == -1) { 
+      if (sts == -1)
+      {
          m_isrender = !m_isrender;
       }
-      else  {
-         m_isrender = sts;    
+      else
+      {
+         m_isrender = sts;
       }
       return current;
    }
@@ -355,8 +357,6 @@ public:
    }
 
    virtual std::shared_ptr< BfDrawObjectBase > clone() const override;
-   
-   
 
 protected:
    /**
@@ -390,7 +390,7 @@ public:
     * @brief Так как слой не может иметь индексы, этот метод ему не нужен
     */
    const std::vector< BfIndex >& indices() const = delete;
-   
+
    std::vector< BfObj >& children();
 };
 

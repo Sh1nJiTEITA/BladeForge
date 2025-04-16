@@ -80,16 +80,8 @@ public:
       m_indices.clear();
 
       m_vertices = {
-         { 
-            m_first.get().pos,
-            this->color(), 
-            m_first.get().normals
-         }, 
-         { 
-            m_second.get().pos,
-            this->color(), 
-            m_second.get().normals
-         }, 
+          {m_first.get().pos, this->color(), m_first.get().normals},
+          {m_second.get().pos, this->color(), m_second.get().normals},
 
       };
       _genIndicesStandart();

@@ -16,13 +16,16 @@ BfBladeSection::_isChordChanged()
           !oChord->right().get().equal(m_lastChordR);
 }
 
-float BfBladeSection::_equivalentInletAngle() { 
+float
+BfBladeSection::_equivalentInletAngle()
+{
    return 90.0f - this->m_info.inletAngle;
 }
-float BfBladeSection::_equivalentOutletAngle() { 
+float
+BfBladeSection::_equivalentOutletAngle()
+{
    return 90.0f - this->m_info.outletAngle;
 }
-
 
 void
 BfBladeSection::_createChord()
@@ -130,9 +133,9 @@ void BfBladeSection::_createAverageInitialCurve()
    auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
 
-   auto iac = _addPartForward<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
-       
-   );
+   // auto iac = _addPartForward<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
+   //     
+   // );
    
 }
 
