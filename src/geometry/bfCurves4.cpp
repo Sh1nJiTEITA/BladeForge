@@ -302,55 +302,55 @@ Bfcircle3Vertices::make()
 //    cloned->copy(*this);
 //    return cloned;
 // }
-
-glm::vec3
-BfBezier::calcNormal(float t) const
-{
-   return math::BfBezierBase::calcNormal(*this, t);
-}
-
-glm::vec3
-BfBezier::calcTangent(float t) const
-{
-   return math::BfBezierBase::calcTangent(*this, t);
-}
-
-glm::vec3
-BfBezier::calcDerivative(float t) const
-{
-   return math::BfBezierBase::calcDerivative(*this, t);
-}
-
-float
-BfBezier::length() const
-{
-   return math::BfBezierBase::length(*this);
-}
-
-BfVertex3
-BfBezier::calc(float t) const
-{
-   auto v = math::BfBezierBase::calc(*this, t);
-   v.color = m_color;
-   return v;
-}
-
-void
-BfBezier::make()
-{
-   m_vertices.clear();
-   m_indices.clear();
-
-   float t;
-   m_vertices.reserve(m_discretization);
-   for (int i = 0; i < m_discretization; i++)
-   {
-      t = static_cast< float >(i) / static_cast< float >(m_discretization - 1);
-      m_vertices.push_back(this->calc(t));
-   }
-   m_indices.reserve(m_discretization);
-   _genIndicesStandart();
-}
+//
+// glm::vec3
+// BfBezier::calcNormal(float t) const
+// {
+//    return math::BfBezierBase::calcNormal(*this, t);
+// }
+//
+// glm::vec3
+// BfBezier::calcTangent(float t) const
+// {
+//    return math::BfBezierBase::calcTangent(*this, t);
+// }
+//
+// glm::vec3
+// BfBezier::calcDerivative(float t) const
+// {
+//    return math::BfBezierBase::calcDerivative(*this, t);
+// }
+//
+// float
+// BfBezier::length() const
+// {
+//    return math::BfBezierBase::length(*this);
+// }
+//
+// BfVertex3
+// BfBezier::calc(float t) const
+// {
+//    auto v = math::BfBezierBase::calc(*this, t);
+//    v.color = m_color;
+//    return v;
+// }
+//
+// void
+// BfBezier::make()
+// {
+//    m_vertices.clear();
+//    m_indices.clear();
+//
+//    float t;
+//    m_vertices.reserve(m_discretization);
+//    for (int i = 0; i < m_discretization; i++)
+//    {
+//       t = static_cast< float >(i) / static_cast< float >(m_discretization - 1);
+//       m_vertices.push_back(this->calc(t));
+//    }
+//    m_indices.reserve(m_discretization);
+//    _genIndicesStandart();
+// }
 
 } // namespace curves
 } // namespace obj

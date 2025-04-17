@@ -38,7 +38,6 @@ processT(T&& t)
    }
 }
 
-// template <typename T, math::IsBfVertex3Variation<T> = true>
 class BfSingleLine : public obj::BfDrawObject
 {
 public:
@@ -397,11 +396,11 @@ private:
 //
 //
 
-class BfBezier2 : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
+class BfBezierN : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
 {
 public:
    template <typename... Args>
-   BfBezier2(Args&&... args)
+   BfBezierN(Args&&... args)
        : std::vector<BfVertex3Uni>{std::forward<Args>(args)...}
        , obj::BfDrawObject{
              "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
@@ -457,32 +456,32 @@ public:
    }
 };
 
-class BfBezier : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
-{
-public:
-   template <typename... Args>
-   BfBezier(Args&&... args)
-       : std::vector<BfVertex3>{args...}
-       , obj::BfDrawObject{
-             "Bezier curve", BF_PIPELINE(BfPipelineType_Lines), 400
-         }
-   {
-      if (this->size() < 3)
-      {
-         throw std::runtime_error(
-             "Bezier curve with < 3 control points is not handled"
-         );
-      }
-   }
-
-   glm::vec3 calcNormal(float t) const;
-   glm::vec3 calcTangent(float t) const;
-   glm::vec3 calcDerivative(float t) const;
-   float length() const;
-
-   BfVertex3 calc(float t) const;
-   virtual void make() override;
-};
+// class BfBezier : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
+// {
+// public:
+//    template <typename... Args>
+//    BfBezier(Args&&... args)
+//        : std::vector<BfVertex3>{args...}
+//        , obj::BfDrawObject{
+//              "Bezier curve", BF_PIPELINE(BfPipelineType_Lines), 400
+//          }
+//    {
+//       if (this->size() < 3)
+//       {
+//          throw std::runtime_error(
+//              "Bezier curve with < 3 control points is not handled"
+//          );
+//       }
+//    }
+//
+//    glm::vec3 calcNormal(float t) const;
+//    glm::vec3 calcTangent(float t) const;
+//    glm::vec3 calcDerivative(float t) const;
+//    float length() const;
+//
+//    BfVertex3 calc(float t) const;
+//    virtual void make() override;
+// };
 //
 //
 //
@@ -513,7 +512,7 @@ public:
       // внутренний вектор сделает ресайз -> все ручки, указывающие
       // на точки вектора уйдут в segmentation fault
       this->reserve(100);
-      auto curve = std::make_shared<curves::BfBezier2>(
+      auto curve = std::make_shared<curves::BfBezierN>(
           _genControlVerticesPointers()
       );
       this->add(curve);
@@ -568,7 +567,7 @@ public:
       lines_layer->add(std::make_shared< curves::BfSingleLine >(this->rbegin()->getp(), (this->rbegin() + 1)->getp()));
 
       auto curve = m_children[0];
-      auto casted_curve = std::static_pointer_cast< curves::BfBezier2 >(curve);
+      auto casted_curve = std::static_pointer_cast< curves::BfBezierN >(curve);
       auto new_pointers = this->_genControlVerticesPointers();
       casted_curve->assign(new_pointers.begin(), new_pointers.end());
       toggleBoundHandles(oldstate);
@@ -591,7 +590,7 @@ public:
          handle->resetPos();
       }
 
-      auto curve = std::static_pointer_cast< curves::BfBezier2 >(m_children[0]);
+      auto curve = std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
       auto new_pointers = this->_genControlVerticesPointers();
       curve->assign(new_pointers.begin(), new_pointers.end());
       toggleBoundHandles(oldstate);
@@ -609,8 +608,8 @@ public:
       return f && s;
    }
 
-   std::shared_ptr<curves::BfBezier2> curve() { 
-      return std::static_pointer_cast<curves::BfBezier2>(m_children[0]);
+   std::shared_ptr<curves::BfBezierN> curve() { 
+      return std::static_pointer_cast<curves::BfBezierN>(m_children[0]);
    }
    
 private:
@@ -937,6 +936,20 @@ public:
    // template< typename V1, typename V2
    // BfBezierWGL 
 
+};
+
+
+class BfBezierChain : public obj::BfDrawLayer { 
+public:
+   template< typename... Args>
+   BfBezierChain(Args&& ...args) 
+      : obj::BfDrawLayer{ "Bezier chain" }
+   { 
+      std::vector<BfObj>objs( std::forward<Args>(args)... ); 
+      for (auto&& obj : objs) { 
+         this->add(obj);
+      }
+   }
 };
 
 

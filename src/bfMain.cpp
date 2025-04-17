@@ -349,15 +349,15 @@ BfMain::__loop()
       // __gui.presentLeftDock();
 
       __gui.presentMenuBar();
-      __gui.presentCamera();
-      __gui.presentLayerHandler();
+      // __gui.presentCamera();
+      // __gui.presentLayerHandler();
       __gui.presentEventLog();
       __gui.presentToolType();
       __gui.presentSettings();
       // __gui.presentLuaInteraction();
-      __gui.presentFileDialog();
-      __gui.presentCreateWindow();
-      __gui.presentSmartLayerObserver();
+      // __gui.presentFileDialog();
+      // __gui.presentCreateWindow();
+      // __gui.presentSmartLayerObserver();
       __gui.presentCameraWindow();
       __gui.presentIds();
    
@@ -375,7 +375,8 @@ BfMain::__loop()
             tmpcol(outletRadius);
             int i = 0;
             for (auto& c : info.centerCircles) { 
-               _tmpcol((std::string("Circle_") + std::to_string(i)).c_str(), &c.relativePos);
+               _tmpcol((std::string("t_Circle_") + std::to_string(i)).c_str(), &c.relativePos);
+               _tmpcol((std::string("r_Circle_") + std::to_string(i)).c_str(), &c.radius);
                i++;
             }
 

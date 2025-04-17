@@ -20,11 +20,12 @@ struct CenterCircle {
 struct SectionCreateInfo
 {
    float chord = 1.0f;
+   float installAngle = 80.0f;
    float inletAngle = 30.f;
    float outletAngle = 20.f;
-   float inletRadius = 0.15f;
-   float outletRadius = 0.05f;
-   std::vector<CenterCircle> centerCircles = { { 0.15f, 0.2f }, { 0.8f, 0.05f } };
+   float inletRadius = 0.043f;
+   float outletRadius = 0.017f;
+   std::vector<CenterCircle> centerCircles = { { 0.214f, 0.063f }, { 0.459f, 0.082f }, { 0.853f, 0.025f }};
 };
 
 enum class BfBladeSectionEnum : uint32_t
@@ -38,6 +39,8 @@ enum class BfBladeSectionEnum : uint32_t
 
    AverageInitialCurve,
    CenterCircles,
+   CenterCirclesLines,
+   IntersectionLines,
 };
 
 class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
@@ -55,6 +58,8 @@ public:
       _createCircleEdges();
       _createAverageInitialCurve();
       _createCenterCircles();
+      _createCCLines();
+      _createFrontIntersectionLines();
    }
 
    virtual void make() override
@@ -63,8 +68,7 @@ public:
 
       premake(); 
       {
-         for (auto& child : m_children)
-         {
+         for (auto& child : m_children) {
             child->make();
          }
       }
@@ -76,6 +80,8 @@ public:
       _processCircleEdges();
       _processAverageInitialCurve();
       _processCenterCircles();
+      _processCCLines();
+      _processFrontIntersectionLines();
    }
 
    virtual void postmake() 
@@ -102,6 +108,15 @@ private:
 
    void _createCenterCircles();
    void _processCenterCircles();
+
+   void _createCCLines();
+   void _processCCLines();
+
+   void _createFrontIntersectionLines();
+   void _processFrontIntersectionLines();
+
+   void _createFrontCurves();
+   void _processFrontCurves();
 
 private:
    BfVertex3 m_lastChordL; 

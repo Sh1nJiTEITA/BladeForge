@@ -2,7 +2,9 @@
 
 #include "bfCurves4.h"
 #include "bfObjectMath.h"
+#include <glm/common.hpp>
 #include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
 #include <memory>
 
@@ -22,12 +24,14 @@ BfBladeSection::_isChordChanged()
 float
 BfBladeSection::_equivalentInletAngle()
 {
-   return 90.0f - this->m_info.get().inletAngle;
+   // return 90.0f - this->m_info.get().inletAngle;
+   return this->m_info.get().inletAngle;
 }
 float
 BfBladeSection::_equivalentOutletAngle()
 {
-   return 90.0f - this->m_info.get().outletAngle;
+   // return 90.0f - this->m_info.get().outletAngle;
+   return  this->m_info.get().outletAngle;
 }
 
 glm::vec3 BfBladeSection::_ioIntersection()
@@ -213,7 +217,147 @@ void BfBladeSection::_processCenterCircles() {
       circle->center().pos = curves::math::BfBezierBase::calc(
          *initCurve, m_info.get().centerCircles[i].relativePos
       ).pos;
+      m_info.get().centerCircles[i].radius = circle->radius();
    }
+}
+
+void BfBladeSection::_createCCLines() 
+{ 
+   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
+
+   auto CCLinesLayer = _addPartForward<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>(
+      "Center circle lines layer"
+   );
+   for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
+      float t = m_info.get().centerCircles[i].relativePos;
+      float r = m_info.get().centerCircles[i].radius;
+      auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
+      auto line = std::make_shared<curves::BfSingleLine>(
+         BfVertex3{ 
+            circle->center().pos + normal * r,
+            glm::vec3(1.0f),
+            circle->center().normals
+         },
+         BfVertex3{ 
+            circle->center().pos - normal * r,
+            glm::vec3(1.0f),
+            circle->center().normals
+         }
+      );
+      line->color() = glm::vec3(0.0f, 1.0f, .2f);
+      CCLinesLayer->add(line);
+   }
+}
+
+void BfBladeSection::_processCCLines() 
+{ 
+   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
+   const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
+
+   for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
+      float t = m_info.get().centerCircles[i].relativePos;
+      float r = m_info.get().centerCircles[i].radius;
+      auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
+      auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
+      line->first().pos = circle->center().pos + normal * r;
+      line->second().pos = circle->center().pos - normal * r;
+   }
+}
+
+void BfBladeSection::_createFrontIntersectionLines() { 
+   const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
+   auto IL = _addPartForward<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>("Intersection lines layer");
+
+   for (auto& l : CCL) { 
+      auto cline = std::static_pointer_cast<curves::BfSingleLine>(l);
+      glm::vec3 dir = cline->directionFromStart();
+      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals) *
+                         glm::vec4(dir, 1.0f);
+
+      auto line = std::make_shared<curves::BfSingleLine>(
+         BfVertex3( 
+            cline->first().pos + normal,
+            glm::vec3(1.0f),
+            cline->first().normals
+         ),
+         BfVertex3( 
+            cline->first().pos - normal,
+            glm::vec3(1.0f),
+            cline->first().normals
+         )
+      );
+      line->color() = glm::vec3(0.2f, 0.5f, 0.44f);
+      IL->add(line);
+   }
+
+   for (size_t i = 0; i < CCL.size() - 1; ++i) 
+   { 
+      std::cout << "Finding intersection for " << i << " and " << i + 1 << " ==> ";
+      auto left = std::static_pointer_cast<curves::BfSingleLine>(IL->children()[i]);
+      auto right = std::static_pointer_cast<curves::BfSingleLine>(IL->children()[i + 1]);
+      glm::vec3 intersection = curves::math::findLinesIntersection(
+         left->first(), 
+         left->second(),
+         right->first(), 
+         right->second(),
+         BF_MATH_FIND_LINES_INTERSECTION_ANY
+      );
+      if (glm::any(glm::isnan(intersection))) { 
+         std::cout << " No lines itersection... skipping\n";
+         continue; 
+      }
+      std::cout << " found " << intersection.x << ", " << intersection.y << ", " << intersection.z << "\n";
+
+      left->second().pos = intersection;
+      right->first().pos = intersection;
+   }
+}
+
+void BfBladeSection::_processFrontIntersectionLines() {  
+   const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
+   const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
+
+   for (size_t i = 0; i < CCL.size(); ++i) { 
+      auto cline = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
+      auto line = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
+      glm::vec3 dir = cline->directionFromStart();
+      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals) *
+                         glm::vec4(dir, 1.0f);
+      line->first().pos = cline->first().pos - normal;
+      line->second().pos = cline->first().pos + normal;
+   }
+   for (size_t i = 0; i < CCL.size() - 1; ++i) 
+   { 
+      std::cout << "Finding intersection for " << i << " and " << i + 1 << " ==> ";
+      auto left = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
+      auto right = std::static_pointer_cast<curves::BfSingleLine>(IL[i + 1]);
+      glm::vec3 intersection = curves::math::findLinesIntersection(
+         left->first(), 
+         left->second(),
+         right->first(), 
+         right->second(),
+         BF_MATH_FIND_LINES_INTERSECTION_ANY
+      );
+      if (glm::any(glm::isnan(intersection))) { 
+         std::cout << " No lines itersection... skipping\n";
+         continue; 
+      }
+      std::cout << " found " << intersection.x << ", " << intersection.y << ", " << intersection.z << "\n";
+
+      left->second().pos = intersection;
+      right->first().pos = intersection;
+   }
+}
+
+void _createFrontCurves() { 
+
+}
+void _processFrontCurves() { 
+
 }
 
 
