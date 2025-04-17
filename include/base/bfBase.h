@@ -22,32 +22,32 @@ static const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 struct BfImagePack
 {
-   VkImage *pImage;
-   VkImageView *pImage_view;
-   VkImage *pImage_id;
-   VkImageView *pImage_view_id;
-   VkFramebuffer *pStandart_Buffer;
-   VkFramebuffer *pGUI_buffer;
+   VkImage* pImage;
+   VkImageView* pImage_view;
+   VkImage* pImage_id;
+   VkImageView* pImage_view_id;
+   VkFramebuffer* pStandart_Buffer;
+   VkFramebuffer* pGUI_buffer;
 };
 
 struct BfFramePack
 {
    // Discriptors
-   BfAllocatedBuffer *model_matrix_buffer;  // For object model matrix
-   BfAllocatedBuffer *pos_pick_buffer;      // For picking object
+   BfAllocatedBuffer* model_matrix_buffer; // For object model matrix
+   BfAllocatedBuffer* pos_pick_buffer;     // For picking object
 
-   VkCommandBuffer *standart_command_buffer;
-   VkCommandBuffer *gui_command_buffer;
+   VkCommandBuffer* standart_command_buffer;
+   VkCommandBuffer* gui_command_buffer;
 
-   VkSemaphore *available_image_semaphore;
-   VkSemaphore *finish_render_image_semaphore;
-   VkFence *frame_in_flight_fence;
+   VkSemaphore* available_image_semaphore;
+   VkSemaphore* finish_render_image_semaphore;
+   VkFence* frame_in_flight_fence;
 };
 
 struct BfBase
 {
-   BfWindow *window;
-   BfPhysicalDevice *physical_device;
+   BfWindow* window;
+   BfPhysicalDevice* physical_device;
 
    VkInstance instance;
    VkSurfaceKHR surface;
@@ -62,8 +62,8 @@ struct BfBase
    BfAllocatedImage depth_image;
    VkFormat depth_format;
 
-   std::vector<BfImagePack> image_packs;
-   std::vector<BfFramePack> frame_pack;
+   std::vector< BfImagePack > image_packs;
+   std::vector< BfFramePack > frame_pack;
    uint32_t image_pack_count;
    uint32_t current_image;
    uint32_t current_frame;
@@ -71,109 +71,94 @@ struct BfBase
    VkRenderPass standart_render_pass;
    VkRenderPass gui_render_pass;
 
-   // FIXME: DEPRECATE
-   // VkPipeline tline_pipeline;
-   // VkPipelineLayout tline_pipeline_layout;
-   // VkPipeline triangle_pipeline;
-   // VkPipelineLayout triangle_pipeline_layout;
-   // VkPipeline line_pipeline;
-   // VkPipelineLayout line_pipeline_layout;
-   uint32_t camera_mode = 1;
-
    BfDescriptor descriptor;
 
    VkCommandPool command_pool;
 
    VkDescriptorPool gui_descriptor_pool;
    VkSampler sampler;
-   BfTextureLoader texture_loader;
 
    BfLayerHandler layer_handler;
    BfLayerKiller layer_killer;
 
-   BfDrawLayer *section_layer = nullptr;
-
-   // VmaAllocator allocator;
    bool is_resized;
    uint32_t pos_id;
-
-   BfTexture *t_texture;
 };
 
 // Main functions
-BfEvent bfCreateInstance(BfBase &base);
-BfEvent bfDestroyInstance(BfBase &base);
+BfEvent bfCreateInstance(BfBase& base);
+BfEvent bfDestroyInstance(BfBase& base);
 
-BfEvent bfCreateDebugMessenger(BfBase &base);
-BfEvent bfDestroyDebufMessenger(BfBase &base);
+BfEvent bfCreateDebugMessenger(BfBase& base);
+BfEvent bfDestroyDebufMessenger(BfBase& base);
 
-BfEvent bfCreateSurface(BfBase &base);
-BfEvent bfDestroySurface(BfBase &base);
+BfEvent bfCreateSurface(BfBase& base);
+BfEvent bfDestroySurface(BfBase& base);
 
-BfEvent bfCreatePhysicalDevice(BfBase &base);
+BfEvent bfCreatePhysicalDevice(BfBase& base);
 
-BfEvent bfCreateLogicalDevice(BfBase &base);
-BfEvent bfDestroyLogicalDevice(BfBase &base);
+BfEvent bfCreateLogicalDevice(BfBase& base);
+BfEvent bfDestroyLogicalDevice(BfBase& base);
 
-BfEvent bfCreateSwapchain(BfBase &base);
-BfEvent bfDestroySwapchain(BfBase &base);
+BfEvent bfCreateSwapchain(BfBase& base);
+BfEvent bfDestroySwapchain(BfBase& base);
 
-BfEvent bfCreateImageViews(BfBase &base);
-BfEvent bfDestroyImageViews(BfBase &base);
+BfEvent bfCreateImageViews(BfBase& base);
+BfEvent bfDestroyImageViews(BfBase& base);
 
-BfEvent bfCreateStandartRenderPass(BfBase &base);
-BfEvent bfDestroyStandartRenderPass(BfBase &base);
+BfEvent bfCreateStandartRenderPass(BfBase& base);
+BfEvent bfDestroyStandartRenderPass(BfBase& base);
 
-BfEvent bfCreateGUIRenderPass(BfBase &base);
-BfEvent bfDestroyGUIRenderPass(BfBase &base);
+BfEvent bfCreateGUIRenderPass(BfBase& base);
+BfEvent bfDestroyGUIRenderPass(BfBase& base);
 
-BfEvent bfInitOwnDescriptors(BfBase &base);
-BfEvent bfDestroyOwnDescriptors(BfBase &base);
+BfEvent bfInitOwnDescriptors(BfBase& base);
+BfEvent bfDestroyOwnDescriptors(BfBase& base);
 
 // FIXME: DEPRECATE
 // BfEvent bfCreateGraphicsPipelines(BfBase &base);
 // BfEvent bfDestroyGraphicsPipelines(BfBase &base);
 
-BfEvent bfCreateStandartFrameBuffers(BfBase &base);
-BfEvent bfDestroyStandartFrameBuffers(BfBase &base);
+BfEvent bfCreateStandartFrameBuffers(BfBase& base);
+BfEvent bfDestroyStandartFrameBuffers(BfBase& base);
 
-BfEvent bfCreateGUIFrameBuffers(BfBase &base);
-BfEvent bfDestroyGUIFrameBuffers(BfBase &base);
+BfEvent bfCreateGUIFrameBuffers(BfBase& base);
+BfEvent bfDestroyGUIFrameBuffers(BfBase& base);
 
-BfEvent bfCreateCommandPool(BfBase &base);
-BfEvent bfDestroyCommandPool(BfBase &base);
+BfEvent bfCreateCommandPool(BfBase& base);
+BfEvent bfDestroyCommandPool(BfBase& base);
 
-BfEvent bfCreateGUIDescriptorPool(BfBase &base);
-BfEvent bfDestroyGUIDescriptorPool(BfBase &base);
+BfEvent bfCreateGUIDescriptorPool(BfBase& base);
+BfEvent bfDestroyGUIDescriptorPool(BfBase& base);
 
-BfEvent bfCreateStandartCommandBuffers(BfBase &base);
-BfEvent bfDestroyStandartCommandBuffers(BfBase &base);
+BfEvent bfCreateStandartCommandBuffers(BfBase& base);
+BfEvent bfDestroyStandartCommandBuffers(BfBase& base);
 
-BfEvent bfCreateGUICommandBuffers(BfBase &base);
-BfEvent bfDestroyGUICommandBuffers(BfBase &base);
+BfEvent bfCreateGUICommandBuffers(BfBase& base);
+BfEvent bfDestroyGUICommandBuffers(BfBase& base);
 
-BfEvent bfCreateSyncObjects(BfBase &base);
-BfEvent bfDestorySyncObjects(BfBase &base);
+BfEvent bfCreateSyncObjects(BfBase& base);
+BfEvent bfDestorySyncObjects(BfBase& base);
 
-BfEvent bfInitImGUI(BfBase &base);
-BfEvent bfPostInitImGui(BfBase &base);
-BfEvent bfDestroyImGUI(BfBase &base);
+BfEvent bfInitImGUI(BfBase& base);
+BfEvent bfPostInitImGui(BfBase& base);
+BfEvent bfDestroyImGUI(BfBase& base);
 
-BfEvent bfCreateDepthBuffer(BfBase &base);
-BfEvent bfDestroyDepthBuffer(BfBase &base);
+BfEvent bfCreateDepthBuffer(BfBase& base);
+BfEvent bfDestroyDepthBuffer(BfBase& base);
 
-BfEvent bfCreateIDMapImage(BfBase &base);
-BfEvent bfDestroyIDMapImage(BfBase &base);
+BfEvent bfCreateIDMapImage(BfBase& base);
+BfEvent bfDestroyIDMapImage(BfBase& base);
 
-BfEvent bfCreateAllocator(BfBase &base);
-BfEvent bfDestroyAllocator(BfBase &base);
+BfEvent bfCreateAllocator(BfBase& base);
+BfEvent bfDestroyAllocator(BfBase& base);
 
-BfEvent bfCreateTextureLoader(BfBase &base);
-BfEvent bfDestroyTextureLoader(BfBase &base);
+BfEvent bfCreateTextureLoader(BfBase& base);
+BfEvent bfDestroyTextureLoader(BfBase& base);
 
-BfEvent bfLoadTextures(BfBase &base);
+BfEvent bfLoadTextures(BfBase& base);
 
-BfEvent bfBindAllocatorToLayerHandler(BfBase &base);
+BfEvent bfBindAllocatorToLayerHandler(BfBase& base);
 
 // FIXME: DEPRECATE
 // BfEvent bfBindTrianglePipelineToLayerHandler(BfBase &base);
@@ -183,38 +168,37 @@ BfEvent bfBindAllocatorToLayerHandler(BfBase &base);
 // void bfUploadIndices(BfBase &base, BfMesh &mesh);
 
 // Populate
-void bfPopulateMessengerCreateInfo(
-    VkDebugUtilsMessengerCreateInfoEXT &createInfo
-);
+void
+bfPopulateMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
 // Additional
-BfEvent bfaReadFile(std::vector<char> &data, const std::string &filename);
+BfEvent bfaReadFile(std::vector< char >& data, const std::string& filename);
 BfEvent bfaCreateShaderModule(
-    VkShaderModule &module, VkDevice device, const std::vector<char> &data
+    VkShaderModule& module, VkDevice device, const std::vector< char >& data
 );
 
-BfEvent bfaCreateGraphicsPipelineLayouts(BfBase &base);
-BfEvent bfDestoryGraphicsPipelineLayouts(BfBase &base);
+BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
+BfEvent bfDestoryGraphicsPipelineLayouts(BfBase& base);
 // BfEvent
-BfEvent bfaRecreateSwapchain(BfBase &base);
+BfEvent bfaRecreateSwapchain(BfBase& base);
 
 BfEvent bfaCreateShaderCreateInfos(
     VkDevice device,
     std::string path,
-    std::vector<VkShaderModule> &modules,
-    std::vector<VkPipelineShaderStageCreateInfo> &out
+    std::vector< VkShaderModule >& modules,
+    std::vector< VkPipelineShaderStageCreateInfo >& out
 );
 
-void bfBeginSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer);
-void bfEndSingleTimeCommands(BfBase &base, VkCommandBuffer &commandBuffer);
-void bfDrawFrame(BfBase &base);
-void bfMainRecordCommandBuffer(BfBase &base);
-uint32_t bfGetCurrentObjectId(BfBase &base);
+void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
+void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
+void bfDrawFrame(BfBase& base);
+void bfMainRecordCommandBuffer(BfBase& base);
+uint32_t bfGetCurrentObjectId(BfBase& base);
 void bfUpdateImGuiPlatformWindows();
 
 // Uniform buffers
 size_t bfPadUniformBufferSize(
-    const BfPhysicalDevice *physical_device, size_t original_size
+    const BfPhysicalDevice* physical_device, size_t original_size
 );
 VkDescriptorSetLayoutBinding bfGetDescriptorSetLayoutBinding(
     VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding
@@ -222,7 +206,7 @@ VkDescriptorSetLayoutBinding bfGetDescriptorSetLayoutBinding(
 VkWriteDescriptorSet bfWriteDescriptorBuffer(
     VkDescriptorType type,
     VkDescriptorSet dstSet,
-    VkDescriptorBufferInfo *bufferInfo,
+    VkDescriptorBufferInfo* bufferInfo,
     uint32_t binding
 );
 
@@ -238,19 +222,19 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 );
 
 // CleanUp's
-BfEvent bfCleanUpSwapchain(BfBase &base);
+BfEvent bfCleanUpSwapchain(BfBase& base);
 
-void bfUpdateUniformView(BfBase &base);
-void bfUpdateUniformViewNew(BfBase &base);
-void bfUpdateUniformBuffer(BfBase &base);
+void bfUpdateUniformView(BfBase& base);
+void bfUpdateUniformViewNew(BfBase& base);
+void bfUpdateUniformBuffer(BfBase& base);
 
-void bfCreateSampler(BfBase &base);
-void bfDestorySampler(BfBase &base);
+void bfCreateSampler(BfBase& base);
+void bfDestorySampler(BfBase& base);
 
 // Binding
 
-static BfBase *__pBase = nullptr;
-void bfBindBase(BfBase *);
-BfBase *bfGetBase();
+static BfBase* __pBase = nullptr;
+void bfBindBase(BfBase*);
+BfBase* bfGetBase();
 
 #endif

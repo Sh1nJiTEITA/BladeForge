@@ -2661,7 +2661,6 @@ bfCreateTextureLoader(BfBase& base)
 BfEvent
 bfDestroyTextureLoader(BfBase& base)
 {
-   base.texture_loader.kill();
    return BfSingleEvent();
 }
 
@@ -3784,23 +3783,6 @@ bfUpdateUniformViewNew(BfBase& base)
 void
 bfUpdateUniformBuffer(BfBase& base)
 {
-   if (base.camera_mode == 0)
-   {
-      bfUpdateUniformView(base);
-   }
-   else
-   {
-      bfUpdateUniformViewNew(base);
-   }
-
-   // {  // AXIS MODEL MATRIX
-   //    glm::mat4 moveMatrix = glm::mat4(1.0f);
-   //    glm::vec3 translation = glm::vec3(0.0f, 0.0f, -5.0f);
-   //    moveMatrix = glm::translate(moveMatrix, translation);
-   // }
-
-   // base.layer_handler.map_model_matrices(base.current_frame);
-
    obj::BfDrawManager::inst().mapModels(base.current_frame);
 }
 

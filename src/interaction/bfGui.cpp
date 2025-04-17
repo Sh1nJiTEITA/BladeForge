@@ -321,11 +321,6 @@ BfGui::presentMenuBar()
          {
             __is_left_dock_space_name = !__is_left_dock_space_name;
          }
-         if (ImGui::MenuItem(getMenuNewCameraStatusStr().c_str()))
-         {
-            __is_new_cam = !__is_new_cam;
-            __ptr_base->camera_mode = __is_new_cam;
-         }
 
          ImGui::EndMenu();
       }
@@ -766,7 +761,6 @@ BfGui::presentInfo()
        KEY.isPressedInitial
          auto pCam = BfCamera::instance();
 
-         ImGui::Text("CameraMode(BfBase): %d", __ptr_base->camera_mode);
          ImGui::Text("Vertical Angle %f", glm::degrees(pCam->m_vAngle));
          // ImGui::Text("Old Vertical Angle %f",
          // glm::degrees(pCam->m_vAngleOld));
@@ -801,19 +795,21 @@ BfGui::presentCameraWindow()
    __camera_window.render();
 }
 
-void BfGui::presentIds() { 
-   ImGui::Begin("Type Manager");  
+void
+BfGui::presentIds()
+{
+   ImGui::Begin("Type Manager");
    auto& inst = obj::BfTypeManager::inst();
-   
+
    if (ImGui::BeginTable("types : typename", 2))
    {
       ImGui::TableSetupColumn("type");
       ImGui::TableSetupColumn("typename");
       ImGui::TableHeadersRow();
-      for (auto& [type, typeName] : inst.types()) { 
+      for (auto& [type, typeName] : inst.types())
+      {
          ImGui::TableNextRow();
 
-         
          ImGui::TableSetColumnIndex(0);
          ImGui::Text("%i", type);
 
@@ -828,9 +824,10 @@ void BfGui::presentIds() {
       ImGui::TableSetupColumn("id");
       ImGui::TableSetupColumn("typeName");
       ImGui::TableHeadersRow();
-      for (auto& [id, type] : inst.ids()) { 
+      for (auto& [id, type] : inst.ids())
+      {
          ImGui::TableNextRow();
-         
+
          ImGui::TableSetColumnIndex(0);
          ImGui::Text("%i", id);
 
@@ -839,7 +836,6 @@ void BfGui::presentIds() {
       }
       ImGui::EndTable();
    }
-
 
    ImGui::End();
 }
