@@ -10,8 +10,6 @@
 #include <stdexcept>
 
 #include "bfAllocator.h"
-#include "bfBase.h"
-#include "bfCurves.hpp"
 #include "bfDrawObject.h"
 #include "bfDrawObjectDefineType.h"
 #include "bfPipeline.h"
