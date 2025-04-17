@@ -608,6 +608,10 @@ public:
       bool s = toggleHandle(this->size() - 1, sts);
       return f && s;
    }
+
+   std::shared_ptr<curves::BfBezier2> curve() { 
+      return std::static_pointer_cast<curves::BfBezier2>(m_children[0]);
+   }
    
 private:
    std::vector<BfVertex3Uni> _genControlVerticesPointers()
@@ -738,11 +742,15 @@ public:
    {
       _assignRoots();
 
-      if (glm::any(glm::notEqual(m_center.pos(), m_lastCenterPos)))
+      // if changed CENTER
+      if (!glm::all(glm::equal(m_center.pos(), m_lastCenterPos)))
       {
          m_other.pos() += -m_lastCenterPos + m_center.pos();
          m_lastCenterPos = m_center.pos();
-      }
+      } 
+
+      // if (glm::any(glm::notEqual(m_center.pos(), m_lastCenterPos)))
+      
 
       for (auto child : m_children)
       {
@@ -760,6 +768,7 @@ public:
 private:
    BfVertex3Uni m_other;
    BfVertex3Uni m_center;
+   // BfVar<float> m_radius;
 
    glm::vec3 m_lastCenterPos;
 };

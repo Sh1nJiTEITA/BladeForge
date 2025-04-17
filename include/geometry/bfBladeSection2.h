@@ -12,6 +12,11 @@ namespace obj
 namespace section
 {
 
+struct CenterCircle { 
+   float relativePos;
+   float radius;
+};
+
 struct SectionCreateInfo
 {
    float chord = 1.0f;
@@ -19,6 +24,7 @@ struct SectionCreateInfo
    float outletAngle = 20.f;
    float inletRadius = 0.15f;
    float outletRadius = 0.05f;
+   std::vector<CenterCircle> centerCircles = { { 0.15f, 0.2f }, { 0.8f, 0.05f } };
 };
 
 enum class BfBladeSectionEnum : uint32_t
@@ -31,6 +37,7 @@ enum class BfBladeSectionEnum : uint32_t
    OutletCircle,
 
    AverageInitialCurve,
+   CenterCircles,
 };
 
 class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
@@ -47,6 +54,7 @@ public:
       _createChord(); 
       _createCircleEdges();
       _createAverageInitialCurve();
+      _createCenterCircles();
    }
 
    virtual void make() override
@@ -66,6 +74,8 @@ public:
    virtual void premake() { 
       _processChord(); 
       _processCircleEdges();
+      _processAverageInitialCurve();
+      _processCenterCircles();
    }
 
    virtual void postmake() 
@@ -76,10 +86,9 @@ public:
    }
 private:
    bool _isChordChanged();
-   
    float _equivalentInletAngle();
    float _equivalentOutletAngle();
-
+   glm::vec3 _ioIntersection();
 
 private:
    void _createChord();
@@ -89,12 +98,16 @@ private:
    void _processCircleEdges();
 
    void _createAverageInitialCurve();
+   void _processAverageInitialCurve();
+
+   void _createCenterCircles();
+   void _processCenterCircles();
 
 private:
    BfVertex3 m_lastChordL; 
    BfVertex3 m_lastChordR; 
 
-   SectionCreateInfo m_info;
+   BfVar<SectionCreateInfo> m_info;
 };
 
 }  // namespace section

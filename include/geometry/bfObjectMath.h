@@ -546,6 +546,41 @@ public:
    
    }
 
+   static float findClosest(const std::vector< BfVertex3Uni >& data, const BfVertex3& close) { 
+       constexpr int samples = 20;
+       float bestT = 0.0f;
+       float minDist = std::numeric_limits<float>::max();
+       for (int i = 0; i <= samples; ++i) {
+           float t = static_cast<float>(i) / samples;
+           glm::vec3 pt = calc(data, t).pos;
+           float d = glm::distance(pt, close.pos);
+           if (d < minDist) {
+               minDist = d;
+               bestT = t;
+           }
+       }
+
+       // Refine with ternary search around bestT
+       float left = std::max(0.0f, bestT - 1.0f / samples);
+       float right = std::min(1.0f, bestT + 1.0f / samples);
+
+       for (int i = 0; i < 20; ++i) {
+           float t1 = left + (right - left) / 3.0f;
+           float t2 = right - (right - left) / 3.0f;
+
+           float d1 = glm::distance(calc(data, t1).pos, close.pos);
+           float d2 = glm::distance(calc(data, t2).pos, close.pos);
+
+           if (d1 < d2) {
+               right = t2;
+           } else {
+               left = t1;
+           }
+       }
+
+       return (left + right) / 2.0f;
+   }
+
    static xt::xarray< double> controlOrderMatrix(size_t n) { 
       xt::xarray< double > M = xt::zeros<double>({n + 1, n});
       M(0, 0) = 1.0;

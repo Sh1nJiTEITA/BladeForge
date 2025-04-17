@@ -306,9 +306,10 @@ BfMain::__loop()
    // auto l = std::make_shared<obj::curves::BfSingleLineWH>(&v1, &v2);
    // l->make();
    // test_root->add(l);
+   auto info =  obj::section::SectionCreateInfo{};
 
    auto bs = std::make_shared< obj::section::BfBladeSection >(
-       obj::section::SectionCreateInfo{}
+      &info
    );
    bs->make();
    test_root->add(bs);
@@ -319,6 +320,19 @@ BfMain::__loop()
    // bfSetOrthoLeft(__base.window);
 
    // int bez_order = bez->size();
+
+   auto _tmpcol = [&bs, &test_root](const char* name, float* v) { 
+         ImGui::TableNextRow();
+         ImGui::TableSetColumnIndex(0);
+         ImGui::Text("%s", name);
+
+         ImGui::TableSetColumnIndex(1);
+         if (ImGui::InputFloat((std::string("##___") + std::string(name)).c_str(), v)) { 
+            bs->make();
+            test_root->control().updateBuffer();
+         }
+   };
+   #define tmpcol(NAME) _tmpcol(#NAME, &info.NAME)
 
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -346,6 +360,29 @@ BfMain::__loop()
       __gui.presentSmartLayerObserver();
       __gui.presentCameraWindow();
       __gui.presentIds();
+   
+      ImGui::Begin("BladeSection CI");
+      {
+         if (ImGui::BeginTable("dasd12312312dsadas 12- ", 2) ) {
+            ImGui::TableSetupColumn("VarName");
+            ImGui::TableSetupColumn("VarValue");
+            ImGui::TableHeadersRow();
+            
+            tmpcol(chord);
+            tmpcol(inletAngle);
+            tmpcol(outletAngle);
+            tmpcol(inletRadius);
+            tmpcol(outletRadius);
+            int i = 0;
+            for (auto& c : info.centerCircles) { 
+               _tmpcol((std::string("Circle_") + std::to_string(i)).c_str(), &c.relativePos);
+               i++;
+            }
+
+            ImGui::EndTable();
+         }
+      }
+      ImGui::End();
 
       // ImGui::ShowDemoWindow();
 
