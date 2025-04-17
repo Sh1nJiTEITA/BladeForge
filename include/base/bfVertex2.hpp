@@ -2,65 +2,20 @@
 #define BF_VERTEX2_H
 
 // Graphics Libs
+#include "bfVariative.hpp"
+#include <array>
 #include <cmath>
 #include <glm/fwd.hpp>
 #include <glm/vector_relational.hpp>
 #include <type_traits>
 #include <utility>
 #include <variant>
-#ifdef _WIN32
+
+#if defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
-#elif __linux__
+#elif defined(__linux__)
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
-
-#include "bfVariative.hpp"
-
-// STL
-#include <array>
-#include <map>
-#include <set>
-#include <vector>
-// External
-// #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-// #include <glm/glm.hpp>
-#include "bfMath.hpp"
-
-struct bfVertex
-{
-   glm::vec3 pos;
-   glm::vec3 color;
-
-   static inline VkVertexInputBindingDescription getBindingDescription()
-   {
-      VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding = 0;
-      bindingDescription.stride = sizeof(bfVertex);
-      bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-      return bindingDescription;
-   }
-   static inline std::array< VkVertexInputAttributeDescription, 2 >
-   getAttributeDescriptions()
-   {
-      std::array< VkVertexInputAttributeDescription, 2 >
-          attributeDescriptions{};
-
-      attributeDescriptions[0].binding = 0;
-      attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[0].offset = offsetof(bfVertex, pos);
-
-      attributeDescriptions[1].binding = 0;
-      attributeDescriptions[1].location = 1;
-      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[1].offset = offsetof(bfVertex, color);
-
-      return attributeDescriptions;
-   }
-};
-
-struct BfVertex3Uni;
 
 struct BfVertex3
 {
@@ -176,16 +131,67 @@ struct BfVertex3
       return attributeDescriptions;
    }
 
-   friend std::ostream& operator<<(std::ostream& os, const BfVertex3& vert)
-   {
-      os << "BfVertex3( p(" << vert.pos.x << ", " << vert.pos.y << ", "
-         << vert.pos.z << "), c(" << vert.color.r << ", " << vert.color.g
-         << ", " << vert.color.b << "), n(" << vert.normals.x << ", "
-         << vert.normals.y << ", " << vert.normals.z << ") )";
-
-      return os;
-   }
+   // friend std::ostream& operator<<(std::ostream& os, const BfVertex3& vert)
+   // {
+   //    os << "BfVertex3( p(" << vert.pos.x << ", " << vert.pos.y << ", "
+   //       << vert.pos.z << "), c(" << vert.color.r << ", " << vert.color.g
+   //       << ", " << vert.color.b << "), n(" << vert.normals.x << ", "
+   //       << vert.normals.y << ", " << vert.normals.z << ") )";
+   //
+   //    return os;
+   // }
 };
+
+// template <>
+// struct fmt::formatter< BfVertex3 >
+// {
+//    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+//
+//    template < typename FormatContext >
+//    auto format(const BfVertex3& v, FormatContext& ctx)
+//    {
+//       return fmt::format_to(
+//           ctx.out(),
+//           "BfVertex3( p({:.3f}, {:.3f}, {:.3f}), c({:.3f}, {:.3f}, {:.3f}), "
+//           "n({:.3f}, {:.3f}, {:.3f}) )",
+//           v.pos.x,
+//           v.pos.y,
+//           v.pos.z,
+//           v.color.r,
+//           v.color.g,
+//           v.color.b,
+//           v.normals.x,
+//           v.normals.y,
+//           v.normals.z
+//       );
+//    }
+// };
+
+// template < typename b >
+// struct fmt::
+//     formatter< T, std::enable_if_t< std::is_base_of_v< BfVertex3, T >, char >
+//     > : fmt::formatter< std::string >
+// {
+//    auto format(const BfVertex3& v, format_context& ctx) const
+//    {
+//       // return formatter< std::string >::format(
+//       //     "BfVertex3( p({:.3f}, {:.3f}, {:.3f}), c({:.3f}, {:.3f},
+//       {:.3f}), "
+//       //     "n({:.3f}, {:.3f}, {:.3f}) )",
+//       //     v.pos.x,
+//       //     v.pos.y,
+//       //     v.pos.z,
+//       //     v.color.r,
+//       //     v.color.g,
+//       //     v.color.b,
+//       //     v.normals.x,
+//       //     v.normals.y,
+//       //     v.normals.z,
+//       //     ctx
+//       // );
+//       return formatter< std::string >::format("123");
+//    }
+// };
 
 template < typename T >
 struct BfVar
@@ -307,12 +313,6 @@ struct BfVertex4
 
       return os;
    }
-};
-
-enum BfePipelineType
-{
-   BF_GRAPHICS_PIPELINE_LINES = 0,
-   BF_GRAPHICS_PIPELINE_TRIANGLE = 1
 };
 
 #endif  // !BF_VERTEX_H

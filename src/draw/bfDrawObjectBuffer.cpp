@@ -10,7 +10,7 @@ BfBuffer::BfBuffer(
     VmaAllocationCreateFlags flags
 )
 {
-   std::cout << "============== CREATING BUFFER ==============\n";
+   fmt::print("============== CREATING BUFFER ==============\n");
    VkBufferCreateInfo bufferInfo{
        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
        .pNext = nullptr,
@@ -35,7 +35,6 @@ BfBuffer::BfBuffer(
    {
       m_isalloc = true;
       m_size = allocSize;
-      std::cout << "Buffer created...\n";
    }
    else
    {
@@ -50,7 +49,7 @@ BfBuffer::~BfBuffer()
 {
    vmaDestroyBuffer(BfAllocator::get(), m_buffer, m_alloc);
 
-   std::cout << "============== DESTRUCTING BUFFER ==============\n";
+   fmt::print("============== DESTRUCTING BUFFER ==============\n");
 }
 
 void*
@@ -93,7 +92,7 @@ BfObjectBuffer::BfObjectBuffer(
         VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
    }
 { 
-   std::cout << "============== CREATING OBJECT BUFFER ==============\n";
+   fmt::print("============== CREATING OBJECT BUFFER ==============\n");
 }
    
 

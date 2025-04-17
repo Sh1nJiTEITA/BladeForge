@@ -19,9 +19,8 @@ public:
       return m;
    }
 
-   static void create(
-       VkDevice device, VkInstance instance, VkPhysicalDevice pdevice
-   )
+   static void
+   create(VkDevice device, VkInstance instance, VkPhysicalDevice pdevice)
    {
       VmaAllocatorCreateInfo info{
           .physicalDevice = pdevice,
@@ -32,7 +31,10 @@ public:
       {
          throw std::runtime_error("Allocator was not created");
       }
-      std::cout << "Allocator created... " << inst().m_allocator << "\n";
+      fmt::printf(
+          "Allocator created... {}\n",
+          static_cast< void* >(inst().m_allocator)
+      );
    }
 
    static void destroy() { vmaDestroyAllocator(inst().m_allocator); }

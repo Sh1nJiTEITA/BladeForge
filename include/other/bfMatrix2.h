@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <initializer_list>
-#include <iostream>
 #include <vector>
 
 #include "bfMath.hpp"
@@ -16,19 +15,19 @@ class BfVec2;
 class BfVector
 {
 protected:
-   std::vector<float> __data;
+   std::vector< float > __data;
 
 public:
    using value_type = float;
 
    BfVector() {}
 
-   BfVector(const std::vector<float> &v)
+   BfVector(const std::vector< float >& v)
        : __data{v}
    {
    }
 
-   BfVector(std::initializer_list<float> l)
+   BfVector(std::initializer_list< float > l)
    {
       __data.reserve(l.size());
       forit(l) { __data.emplace_back(it); }
@@ -37,15 +36,15 @@ public:
    BfVector(size_t n, float v) { __data.resize(n, v); }
 
 #ifdef GLM_SETUP_INCLUDED
-   template <size_t n>
-   BfVector(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVector(glm::vec< n, float, glm::highp > v)
    {
       __data.reserve(n);
       fori(0, n) { __data.emplace_back(v[i]); }
    }
 
-   template <size_t n>
-   BfVector operator+(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVector operator+(glm::vec< n, float, glm::highp > v)
    {
       CHECK_DIMENSION_NUM(this->size(), n);
       BfVector _v{*this};
@@ -53,14 +52,14 @@ public:
       return _v;
    }
 
-   template <size_t n>
-   BfVector operator-(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVector operator-(glm::vec< n, float, glm::highp > v)
    {
       return this->operator+(-v);
    }
 
-   template <size_t n>
-   BfVector operator*(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVector operator*(glm::vec< n, float, glm::highp > v)
    {
       CHECK_DIMENSION_NUM(this->size(), n);
       BfVector _v{*this};
@@ -68,8 +67,8 @@ public:
       return _v;
    }
 
-   template <size_t n>
-   BfVector operator/(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVector operator/(glm::vec< n, float, glm::highp > v)
    {
       CHECK_DIMENSION_NUM(this->size(), n);
       BfVector _v{*this};
@@ -77,8 +76,8 @@ public:
       return _v;
    }
 
-   template <size_t n>
-   bool operator==(glm::vec<n, float, glm::highp> v) const
+   template < size_t n >
+   bool operator==(glm::vec< n, float, glm::highp > v) const
    {
       CHECK_DIMENSION_NUM(this->size(), n);
       bool is = true;
@@ -88,18 +87,19 @@ public:
             is = is && CHECK_FLOAT_EQUALITY_TO_NULL((*this)[i], v[i]);
          else
             is = is && CHECK_FLOAT_EQUALITY((*this)[i], v[i]);
-         if (!is) return false;
+         if (!is)
+            return false;
       }
       return true;
    }
 #endif
 
    // #ifdef BF_VERTEX2_H
-   BfVector(const BfVertex3 &v)
-       : BfVector{std::vector<float>({v.pos.x, v.pos.y, v.pos.z})}
+   BfVector(const BfVertex3& v)
+       : BfVector{std::vector< float >({v.pos.x, v.pos.y, v.pos.z})}
    {
    }
-   BfVector(const std::vector<BfVertex3> &v)
+   BfVector(const std::vector< BfVertex3 >& v)
    {
       __data.reserve(v.capacity());
       forit(v)
@@ -114,14 +114,14 @@ public:
       CHECK_CAPACITY_NUM_LESS(n, __data.capacity());
       fori(0, n) { (*this).emplace_back(v); }
    }
-   void fill_v(std::initializer_list<float> l)
+   void fill_v(std::initializer_list< float > l)
    {
       CLEAR_VEC;
       CHECK_CAPACITY_NUM_LESS(l.size(), __data.capacity());
       forit(l) { (*this).emplace_back(it); }
    }
 
-   void push_back(const float &v) { __data.push_back(v); }
+   void push_back(const float& v) { __data.push_back(v); }
 
    size_t size() const noexcept { return __data.size(); }
 
@@ -140,35 +140,35 @@ public:
       return _v;
    }
 
-   std::vector<float>::iterator       begin() { return __data.begin(); }
-   std::vector<float>::iterator       end() { return __data.end(); }
-   std::vector<float>::const_iterator begin() const { return __data.begin(); }
-   std::vector<float>::const_iterator end() const { return __data.end(); }
+   std::vector< float >::iterator begin() { return __data.begin(); }
+   std::vector< float >::iterator end() { return __data.end(); }
+   std::vector< float >::const_iterator begin() const { return __data.begin(); }
+   std::vector< float >::const_iterator end() const { return __data.end(); }
 
-   std::vector<float>::reverse_iterator rbegin() { return __data.rbegin(); }
-   std::vector<float>::reverse_iterator rend() { return __data.rend(); }
-   std::vector<float>::const_reverse_iterator rbegin() const
+   std::vector< float >::reverse_iterator rbegin() { return __data.rbegin(); }
+   std::vector< float >::reverse_iterator rend() { return __data.rend(); }
+   std::vector< float >::const_reverse_iterator rbegin() const
    {
       return __data.rbegin();
    }
-   std::vector<float>::const_reverse_iterator rend() const
+   std::vector< float >::const_reverse_iterator rend() const
    {
       return __data.rend();
    }
 
    // OVERLOADING
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-   float       &operator[](size_t i) { return __data[i]; }
-   const float &operator[](size_t i) const { return __data[i]; }
+   float& operator[](size_t i) { return __data[i]; }
+   const float& operator[](size_t i) const { return __data[i]; }
 
-   BfVector operator*(const BfVector &iv)
+   BfVector operator*(const BfVector& iv)
    {
       CHECK_DIMENSION(*this, iv);
       BfVector _v{*this};
       fori(0, _v.size()) { _v[i] *= iv[i]; }
       return _v;
    }
-   BfVector &operator*=(const BfVector &iv)
+   BfVector& operator*=(const BfVector& iv)
    {
       CHECK_DIMENSION(*this, iv);
       fori(0, __data.size()) { __data[i] *= iv[i]; }
@@ -181,20 +181,20 @@ public:
       forit(_v) { it *= v; }
       return _v;
    }
-   BfVector &operator*=(float v) noexcept
+   BfVector& operator*=(float v) noexcept
    {
       forit(__data) { it *= v; }
       return *this;
    }
 
-   BfVector operator/(const BfVector &iv)
+   BfVector operator/(const BfVector& iv)
    {
       CHECK_DIMENSION(*this, iv);
       BfVector _v{*this};
       fori(0, _v.size()) { _v[i] /= iv[i]; }
       return _v;
    }
-   BfVector &operator/=(const BfVector &iv)
+   BfVector& operator/=(const BfVector& iv)
    {
       CHECK_DIMENSION(*this, iv);
       fori(0, __data.size()) { __data[i] /= iv[i]; }
@@ -207,20 +207,20 @@ public:
       forit(_v) { it /= v; }
       return _v;
    }
-   BfVector &operator/=(float v) noexcept
+   BfVector& operator/=(float v) noexcept
    {
       forit(__data) { it /= v; }
       return *this;
    }
 
-   BfVector operator+(const BfVector &v) noexcept
+   BfVector operator+(const BfVector& v) noexcept
    {
       CHECK_DIMENSION(*this, v);
       BfVector _v{*this};
       fori(0, _v.size()) { _v[i] += v[i]; }
       return _v;
    }
-   BfVector &operator+=(const BfVector &v) noexcept
+   BfVector& operator+=(const BfVector& v) noexcept
    {
       CHECK_DIMENSION(*this, v);
       fori(0, this->size()) { __data[i] += v[i]; }
@@ -233,20 +233,20 @@ public:
       forit(_v) { it += v; }
       return _v;
    }
-   BfVector &operator+=(float v) noexcept
+   BfVector& operator+=(float v) noexcept
    {
       forit(__data) { it += v; }
       return *this;
    }
 
-   BfVector operator-(const BfVector &v) noexcept
+   BfVector operator-(const BfVector& v) noexcept
    {
       CHECK_DIMENSION(*this, v);
       BfVector _v{*this};
       fori(0, _v.size()) { _v[i] -= v[i]; }
       return _v;
    }
-   BfVector &operator-=(const BfVector &v) noexcept
+   BfVector& operator-=(const BfVector& v) noexcept
    {
       CHECK_DIMENSION(*this, v);
       fori(0, this->size()) { __data[i] -= v[i]; }
@@ -259,13 +259,13 @@ public:
       forit(_v) { it -= v; }
       return _v;
    }
-   BfVector &operator-=(float v) noexcept
+   BfVector& operator-=(float v) noexcept
    {
       forit(__data) { it -= v; }
       return *this;
    }
 
-   bool operator==(const BfVector &v) const
+   bool operator==(const BfVector& v) const
    {
       CHECK_DIMENSION_NUM(this->size(), v.size());
       bool is = true;
@@ -275,12 +275,13 @@ public:
             is = is && CHECK_FLOAT_EQUALITY_TO_NULL((*this)[i], v[i]);
          else
             is = is && CHECK_FLOAT_EQUALITY((*this)[i], v[i]);
-         if (!is) return false;
+         if (!is)
+            return false;
       }
       return true;
    }
 
-   friend std::ostream &operator<<(std::ostream &os, const BfVector &v)
+   friend std::ostream& operator<<(std::ostream& os, const BfVector& v)
    {
       os << "BfVector(";
       fori(0, v.size())
@@ -297,21 +298,21 @@ public:
 class BfVec2 : public BfVector
 {
 public:
-   float &x;
-   float &y;
+   float& x;
+   float& y;
 
    BfVec2(float x, float y)
        : BfVector{x, y}, x{__data[0]}, y{__data[1]}
    {
    }
 
-   BfVec2(const BfVector &v)
+   BfVec2(const BfVector& v)
        : BfVector{v.get_erased_to(2)}, x{__data[0]}, y{__data[1]}
    {
    }
 #ifdef GLM_SETUP_INCLUDED
-   template <size_t n>
-   BfVec2(glm::vec<n, float, glm::highp> v)
+   template < size_t n >
+   BfVec2(glm::vec< n, float, glm::highp > v)
        : BfVector{glm::vec2(v)}, x{__data[0]}, y{__data[1]}
    {
    }
@@ -319,7 +320,7 @@ public:
 #endif
 
 #ifdef BF_VERTEX2_H
-   BfVec2(const BfVertex3 &vert)
+   BfVec2(const BfVertex3& vert)
        : BfVector{vert.pos}, x{__data[0]}, y{__data[1]}
    {
    }
@@ -336,53 +337,55 @@ enum BfEnMatrixFillType
 
 class BfMatrix
 {
-   std::vector<BfVector> __data;
+   std::vector< BfVector > __data;
 
 public:
-   BfMatrix(size_t             n,
-            size_t             m,
-            float              v    = 0.0f,
-            BfEnMatrixFillType mode = BF_MATRIX_FILL_TYPE_WHOLE)
+   BfMatrix(
+       size_t n,
+       size_t m,
+       float v = 0.0f,
+       BfEnMatrixFillType mode = BF_MATRIX_FILL_TYPE_WHOLE
+   )
    {
       __data.reserve(n);
       switch (mode)
       {
-         case BF_MATRIX_FILL_TYPE_WHOLE:
-            fori(0, n) { __data.emplace_back(m, v); }
-            break;
+      case BF_MATRIX_FILL_TYPE_WHOLE:
+         fori(0, n) { __data.emplace_back(m, v); }
+         break;
 
-         case BF_MATRIX_FILL_TYPE_DIAGONAL_LEFT:
-            CHECK_DIMENSION_NUM(n, m);
-            fori(0, n)
+      case BF_MATRIX_FILL_TYPE_DIAGONAL_LEFT:
+         CHECK_DIMENSION_NUM(n, m);
+         fori(0, n)
+         {
+            __data.push_back(BfVector());
+            forj(0, m)
             {
-               __data.push_back(BfVector());
-               forj(0, m)
-               {
-                  if (i == j)
-                     __data[i].emplace_back(v);
-                  else
-                     __data[i].emplace_back(0.0f);
-               }
+               if (i == j)
+                  __data[i].emplace_back(v);
+               else
+                  __data[i].emplace_back(0.0f);
             }
-            break;
+         }
+         break;
 
-         case BF_MATRIX_FILL_TYPE_DIAGONAL_RIGHT:
-            CHECK_DIMENSION_NUM(n, m);
-            fori(0, n)
+      case BF_MATRIX_FILL_TYPE_DIAGONAL_RIGHT:
+         CHECK_DIMENSION_NUM(n, m);
+         fori(0, n)
+         {
+            __data.push_back(BfVector());
+            forj(0, m)
             {
-               __data.push_back(BfVector());
-               forj(0, m)
-               {
-                  if (i + j == m - 1)
-                     __data[i].emplace_back(v);
-                  else
-                     __data[i].emplace_back(0.0f);
-               }
+               if (i + j == m - 1)
+                  __data[i].emplace_back(v);
+               else
+                  __data[i].emplace_back(0.0f);
             }
-            break;
+         }
+         break;
       }
    }
-   BfMatrix(size_t n, size_t m, const std::vector<float> &v)
+   BfMatrix(size_t n, size_t m, const std::vector< float >& v)
    {
       __data.reserve(n);
       fori(0, n)
@@ -391,13 +394,13 @@ public:
          forj(0, m) { __data[i].emplace_back(v[j + i * n]); }
       }
    }
-   BfMatrix(std::initializer_list<BfVector> v)
+   BfMatrix(std::initializer_list< BfVector > v)
    {
       __data.reserve(v.size());
       forit(v) { __data.emplace_back(it); }
    }
 
-   BfMatrix add_col_to_end(const BfVector &v) const
+   BfMatrix add_col_to_end(const BfVector& v) const
    {
       BfMatrix _m{};
 
@@ -424,7 +427,7 @@ public:
    BfMatrix get_triangular_form() const
    {
       BfMatrix _m{*this};
-      float    sign = 1.0f;
+      float sign = 1.0f;
       fork_(0, this->rsize())
       {
          if (_m[k][k] == 0.0f)
@@ -438,7 +441,8 @@ public:
                   break;
                }
             }
-            if (swap_index == -1) abort();
+            if (swap_index == -1)
+               abort();
             std::swap(_m[k], _m[swap_index]);
             sign *= -1;
          }
@@ -457,7 +461,7 @@ public:
    {
       CHECK_DIMENSION_NUM(this->csize(), this->rsize());
       BfMatrix triangular_form{this->get_triangular_form()};
-      float    det = 1;
+      float det = 1;
       fori(0, this->csize()) { det *= triangular_form[i][i]; }
       return det;
    }
@@ -467,7 +471,8 @@ public:
       CHECK_DIMENSION_NUM(this->csize(), this->csize());
 
       float D = 0.0f;
-      if (this->csize() == 1) return (*this)[0][0];
+      if (this->csize() == 1)
+         return (*this)[0][0];
 
       int sign = 1;
       fori(0, this->csize())
@@ -476,7 +481,6 @@ public:
          D += sign * (*this)[0][i] * cof.det();
          sign = -sign;
       }
-      std::cout << "computing det\n";
       return D;
    }
 
@@ -485,7 +489,7 @@ public:
       CHECK_DIMENSION_NUM(this->rsize(), this->csize());
 
       BfMatrix _m{};
-      size_t   minor_size = this->rsize() - 1;
+      size_t minor_size = this->rsize() - 1;
       _m.reserve(minor_size);
 
       fori(0, this->rsize())
@@ -527,7 +531,7 @@ public:
    {
       CHECK_DIMENSION_NUM(this->rsize(), this->csize());
 
-      int sign       = ((_i + _j) % 2 == 0) ? 1 : -1;
+      int sign = ((_i + _j) % 2 == 0) ? 1 : -1;
 
       BfMatrix minor = this->get_minor(_i, _j);
       return sign * minor.det();
@@ -557,7 +561,8 @@ public:
       CHECK_DIMENSION_NUM(this->csize(), this->rsize());
 
       float det = this->det();
-      if (det == 0) throw std::runtime_error("Matrix is singular");
+      if (det == 0)
+         throw std::runtime_error("Matrix is singular");
 
       BfMatrix adj = this->get_adjugated();
       BfMatrix _m{};
@@ -572,12 +577,13 @@ public:
       return _m;
    }
 
-   BfMatrix &inverse()
+   BfMatrix& inverse()
    {
       CHECK_DIMENSION_NUM(this->csize(), this->rsize());
 
       float det = this->det();
-      if (det == 0) throw std::runtime_error("Matrix is singular");
+      if (det == 0)
+         throw std::runtime_error("Matrix is singular");
 
       BfMatrix adj = this->get_adjugated();
 
@@ -595,7 +601,7 @@ public:
 
    BfVector to_bfvec() const
    {
-      size_t   vec_size = this->rsize() * this->csize();
+      size_t vec_size = this->rsize() * this->csize();
       BfVector _v{};
       _v.reserve(vec_size);
 
@@ -610,34 +616,37 @@ public:
    size_t rsize() const noexcept { return __data.size(); }
    // col size
    size_t csize() const noexcept { return __data.begin()->size(); }
-   void   reserve(size_t n) { __data.reserve(n); }
-   void   push_back(const BfVector &v) { __data.push_back(v); }
+   void reserve(size_t n) { __data.reserve(n); }
+   void push_back(const BfVector& v) { __data.push_back(v); }
 
-   std::vector<BfVector>::iterator       begin() { return __data.begin(); }
-   std::vector<BfVector>::iterator       end() { return __data.end(); }
-   std::vector<BfVector>::const_iterator begin() const
+   std::vector< BfVector >::iterator begin() { return __data.begin(); }
+   std::vector< BfVector >::iterator end() { return __data.end(); }
+   std::vector< BfVector >::const_iterator begin() const
    {
       return __data.begin();
    }
-   std::vector<BfVector>::const_iterator end() const { return __data.end(); }
+   std::vector< BfVector >::const_iterator end() const { return __data.end(); }
 
-   std::vector<BfVector>::reverse_iterator rbegin() { return __data.rbegin(); }
-   std::vector<BfVector>::reverse_iterator rend() { return __data.rend(); }
-   std::vector<BfVector>::const_reverse_iterator rbegin() const
+   std::vector< BfVector >::reverse_iterator rbegin()
    {
       return __data.rbegin();
    }
-   std::vector<BfVector>::const_reverse_iterator rend() const
+   std::vector< BfVector >::reverse_iterator rend() { return __data.rend(); }
+   std::vector< BfVector >::const_reverse_iterator rbegin() const
+   {
+      return __data.rbegin();
+   }
+   std::vector< BfVector >::const_reverse_iterator rend() const
    {
       return __data.rend();
    }
 
    // OVERLOADING
    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-   BfVector       &operator[](size_t i) { return __data[i]; }
-   const BfVector &operator[](size_t i) const { return __data[i]; }
+   BfVector& operator[](size_t i) { return __data[i]; }
+   const BfVector& operator[](size_t i) const { return __data[i]; }
 
-   BfMatrix operator>>(const BfMatrix &v)
+   BfMatrix operator>>(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->csize(), v.rsize());
 
@@ -657,7 +666,7 @@ public:
       return _m;
    }
 
-   BfMatrix operator+(const BfMatrix &v)
+   BfMatrix operator+(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -665,7 +674,7 @@ public:
       fori(0, this->rsize()) { _v[i] += v[i]; }
       return _v;
    }
-   BfMatrix &operator+=(const BfMatrix &v)
+   BfMatrix& operator+=(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -678,13 +687,13 @@ public:
       fori(0, this->rsize()) { _v[i] += v; }
       return _v;
    }
-   BfMatrix &operator+=(float v)
+   BfMatrix& operator+=(float v)
    {
       fori(0, this->rsize()) { __data[i] += v; }
       return *this;
    }
 
-   BfMatrix operator-(const BfMatrix &v)
+   BfMatrix operator-(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -692,7 +701,7 @@ public:
       fori(0, this->rsize()) { _v[i] -= v[i]; }
       return _v;
    }
-   BfMatrix &operator-=(const BfMatrix &v)
+   BfMatrix& operator-=(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -705,13 +714,13 @@ public:
       fori(0, this->rsize()) { _v[i] -= v; }
       return _v;
    }
-   BfMatrix &operator-=(float v)
+   BfMatrix& operator-=(float v)
    {
       fori(0, this->rsize()) { __data[i] -= v; }
       return *this;
    }
 
-   BfMatrix operator*(const BfMatrix &v)
+   BfMatrix operator*(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -719,7 +728,7 @@ public:
       fori(0, this->rsize()) { _v[i] *= v[i]; }
       return _v;
    }
-   BfMatrix &operator*=(const BfMatrix &v)
+   BfMatrix& operator*=(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -732,13 +741,13 @@ public:
       fori(0, this->rsize()) { _v[i] *= v; }
       return _v;
    }
-   BfMatrix &operator*=(float v)
+   BfMatrix& operator*=(float v)
    {
       fori(0, this->rsize()) { __data[i] *= v; }
       return *this;
    }
 
-   BfMatrix operator/(const BfMatrix &v)
+   BfMatrix operator/(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -746,7 +755,7 @@ public:
       fori(0, this->rsize()) { _v[i] /= v[i]; }
       return _v;
    }
-   BfMatrix &operator/=(const BfMatrix &v)
+   BfMatrix& operator/=(const BfMatrix& v)
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -759,13 +768,13 @@ public:
       fori(0, this->rsize()) { _v[i] /= v; }
       return _v;
    }
-   BfMatrix &operator/=(float v)
+   BfMatrix& operator/=(float v)
    {
       fori(0, this->rsize()) { __data[i] /= v; }
       return *this;
    }
 
-   bool operator==(const BfMatrix &v) const
+   bool operator==(const BfMatrix& v) const
    {
       CHECK_DIMENSION_NUM(this->rsize(), v.rsize());
       CHECK_DIMENSION_NUM(this->csize(), v.csize());
@@ -773,7 +782,7 @@ public:
       fori(0, this->rsize()) { is = (*this)[i] == v[i]; }
       return is;
    }
-   friend std::ostream &operator<<(std::ostream &os, const BfMatrix &v)
+   friend std::ostream& operator<<(std::ostream& os, const BfMatrix& v)
    {
       os << "BfMatrix(";
       fori(0, v.rsize())
@@ -787,19 +796,18 @@ public:
    }
 };
 
-inline BfVector solve_linear_gauss(const BfMatrix &_A, const BfVector &B)
+inline BfVector
+solve_linear_gauss(const BfMatrix& _A, const BfVector& B)
 {
    CHECK_DIMENSION_NUM(_A.rsize(), B.size());
    BfMatrix A = _A.add_col_to_end(B);
-   A          = A.get_triangular_form();
-   std::cout << A << "\n";
+   A = A.get_triangular_form();
 
    fori(0, A.rsize())
    {
       float d = A[i][i];
       forj(0, A.csize()) { A[i][j] /= d; }
    }
-   std::cout << A << "\n";
 
    BfVector _v(A.rsize(), 0.0f);
 
@@ -815,7 +823,8 @@ inline BfVector solve_linear_gauss(const BfMatrix &_A, const BfVector &B)
    return _v;
 }
 
-inline BfVector solve_linear_mtx(const BfMatrix &A, const BfMatrix &B)
+inline BfVector
+solve_linear_mtx(const BfMatrix& A, const BfMatrix& B)
 {
    return (A.get_inversed() >> B).to_bfvec();
 }
@@ -826,7 +835,7 @@ public:
    float __k;
    float __b;
 
-   BfLineProp(const BfVec2 &P1, const BfVec2 &P2)
+   BfLineProp(const BfVec2& P1, const BfVec2& P2)
        : __k{(P2.y - P1.y) / (P2.x - P1.x)}, __b{P1.y - __k * P1.x}
    {
    }
@@ -841,7 +850,7 @@ public:
    float get_y(float x) const noexcept { return __k * x + __b; }
    float get_x(float y) const noexcept { return (y - __b) / __k; }
 
-   BfLineProp get_perpendicular(const BfVec2 &P)
+   BfLineProp get_perpendicular(const BfVec2& P)
    {
       float k = -1 / __k;
       float b = P.y - k * P.x;
@@ -854,4 +863,4 @@ class BfCircleProp
    float __radious;
 };
 
-#endif  // !BF_MATRIX2_H
+#endif // !BF_MATRIX2_H

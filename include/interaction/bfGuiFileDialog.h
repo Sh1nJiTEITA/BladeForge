@@ -4,7 +4,6 @@
 #include <imgui.h>
 
 #include <filesystem>
-#include <iostream>
 #include <list>
 #include <set>
 #include <stack>
@@ -24,17 +23,17 @@ enum BfFileDialogElementType_
    BfFileDialogElementType_LuaFile,
    BfFileDialogElementType_BackDirectory
 };
-const char*  bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e);
+const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e);
 const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e);
 
 struct BfFileDialogElement
 {
-   fs::path                 path;
-   std::time_t              date;
-   size_t                   size;
+   fs::path path;
+   std::time_t date;
+   size_t size;
    BfFileDialogElementType_ type;
-   bool                     is_selected;
-   bool                     is_extension;
+   bool is_selected;
+   bool is_extension;
 };
 
 enum BfFileDialogOpenMode_
@@ -48,24 +47,24 @@ class BfGuiFileDialog
 {
    static BfGuiFileDialog* __instance;
 
-   bool     __is_render                  = false;
-   bool     __is_warning_window          = false;
-   bool     __is_check_extension_in_dirs = true;
+   bool __is_render = false;
+   bool __is_warning_window = false;
+   bool __is_check_extension_in_dirs = true;
    fs::path __root;
 
    BfFileDialogOpenMode_ __mode;
    //
-   std::variant<fs::path*, std::vector<fs::path>*> __out;
+   std::variant< fs::path*, std::vector< fs::path >* > __out;
    //
-   std::vector<std::string> __extensions = {".*"};
+   std::vector< std::string > __extensions = {".*"};
    //
    int __chosen_ext = -1;
 
-   std::list<BfFileDialogElement> __elements;
+   std::list< BfFileDialogElement > __elements;
    //
-   std::string          __warning_msg;
-   std::stack<fs::path> __forward_stack;
-   std::stack<fs::path> __back_stack;
+   std::string __warning_msg;
+   std::stack< fs::path > __forward_stack;
+   std::stack< fs::path > __back_stack;
 
    int __hovered_item = -1;
 
@@ -91,14 +90,15 @@ public:
    BfGuiFileDialog();
 
    void setRoot(fs::path root) noexcept;
-   void setExtension(std::initializer_list<std::string> list) noexcept;
+   void setExtension(std::initializer_list< std::string > list) noexcept;
    //
-   static void             bindInstance(BfGuiFileDialog* ptr) noexcept;
+   static void bindInstance(BfGuiFileDialog* ptr) noexcept;
    static BfGuiFileDialog* instance() noexcept;
 
-   void openFile(fs::path* path, std::initializer_list<std::string> ext);
-   void openFiles(std::vector<fs::path>*             path,
-                  std::initializer_list<std::string> ext);
+   void openFile(fs::path* path, std::initializer_list< std::string > ext);
+   void openFiles(
+       std::vector< fs::path >* path, std::initializer_list< std::string > ext
+   );
    void openDir(fs::path* path);
 
    void show() noexcept;
@@ -123,16 +123,18 @@ public:
    static bool isDirectoryContainsExt(const fs::path&, std::string ext);
 };
 
-void bfGetDirectoryItemsList(fs::path               root,
-                             std::vector<fs::path>& dirs,
-                             std::vector<fs::path>& files);
+void bfGetDirectoryItemsList(
+    fs::path root, std::vector< fs::path >& dirs, std::vector< fs::path >& files
+);
 
-template <typename TP>
-std::time_t bfUtilsToTimeT(TP tp)
+template < typename TP >
+std::time_t
+bfUtilsToTimeT(TP tp)
 {
    using namespace std::chrono;
-   auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now() +
-                                                       system_clock::now());
+   auto sctp = time_point_cast< system_clock::duration >(
+       tp - TP::clock::now() + system_clock::now()
+   );
    return system_clock::to_time_t(sctp);
 }
 

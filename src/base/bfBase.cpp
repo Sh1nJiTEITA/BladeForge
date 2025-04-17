@@ -22,7 +22,7 @@ bfCreateInstance(BfBase& base)
 {
    if (enableValidationLayers)
    {
-      std::cout << "::DEBUG MODE::" << std::endl;
+      fmt::print("::DEBUG MODE::\n");
    }
 
    // Check Validation layers support
@@ -35,25 +35,20 @@ bfCreateInstance(BfBase& base)
 
    vkEnumerateInstanceLayerProperties(&layerCount, avaliableLayers.data());
 
-   // std::cout << "Checking validation layers support. " << "Available
    // Layers:\n";
    int i = 0;
    for (const auto& layer : avaliableLayers)
    {
-      std::cout << i << ". " << layer.layerName << '\n';
+      fmt::print("{}. {}\n", i, layer.layerName);
       i++;
    }
-   // std::cout << std::endl;
-
-   // std::cout << "Required layers:\n";
 
    i = 0;
    is_validation_layers_supported = true;
    for (auto& vLayer : bfvValidationLayers)
    {
       bool isLayer = false;
-      std::cout << i << ") " << vLayer << '\n';
-
+      fmt::print("{}) {}\n", i, vLayer);
       for (const auto& layerProperties : avaliableLayers)
       {
          if (strcmp(vLayer, layerProperties.layerName) == 0)
@@ -2608,7 +2603,6 @@ bfCreateAllocator(BfBase& base)
        base.physical_device->physical_device
    );
    // base.allocator = BfAllocator::get();
-   // std::cout << " base allocator: " << base.allocator << "\n";
 
    BfSingleEvent event{};
    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
@@ -2661,6 +2655,7 @@ bfCreateTextureLoader(BfBase& base)
    // event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
    // event.action = BF_ACTION_TYPE_CREATE_TEXTURE_LOADER_SUCCESS;
    // return event;
+   return BfEvent{};
 }
 
 BfEvent
@@ -3765,31 +3760,6 @@ bfUpdateUniformViewNew(BfBase& base)
 
    ubo.view = BfCamera::instance()->view();
    ubo.proj = BfCamera::instance()->projection();
-
-   // std::cout << "extent w/h: " << base.swap_chain_extent.width << " "
-   //           << base.swap_chain_extent.height << "\n";
-   //
-   // std::cout << "Matrix proj(4x4):\n";
-   // for (int row = 0; row < 4; ++row)
-   // {
-   //    std::cout << "[ ";
-   //    for (int col = 0; col < 4; ++col)
-   //    {
-   //       std::cout << std::setw(10) << ubo.proj[col][row] << " ";
-   //    }
-   //    std::cout << "]\n";
-   // }
-   //
-   // std::cout << "Matrix view(4x4):\n";
-   // for (int row = 0; row < 4; ++row)
-   // {
-   //    std::cout << "[ ";
-   //    for (int col = 0; col < 4; ++col)
-   //    {
-   //       std::cout << std::setw(10) << ubo.view[col][row] << " ";
-   //    }
-   //    std::cout << "]\n";
-   // }
 
    ubo.cursor_pos = {base.window->xpos, base.window->ypos};
    ubo.id_on_cursor = base.pos_id;

@@ -413,9 +413,14 @@ protected:
    {
       this->add(obj);
       m_idMap[part] = obj->id();
-      std::cout << "Added id=" << obj->id() << " type=" << obj->type()
-                << " typename=\"" << obj->typeName()
-                << "\" part=" << static_cast< uint32_t >(part) << "\n";
+
+      fmt::print(
+          "Added id={}, type={}, typename={}, part={}",
+          obj->id(),
+          obj->type(),
+          obj->typeName(),
+          static_cast< uint32_t >(part)
+      );
    }
 
    template < typename T, typename... Args >

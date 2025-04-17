@@ -7,7 +7,7 @@
 #include "bfEvent.h"
 #include "bfVariative.hpp"
 
-std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr = {
+std::map< BfEnDescriptorUsage, std::string > BfEnDescriptorUsageStr = {
     {BfDescriptorViewDataUsage, "Descriptor for view data usage"},
     {BfDescriptorModelMtxUsage, "Descriptor for model matrix usage"},
     {BfDescriptorPosPickUsage, "Descriptor for cursor position picking usage"}
@@ -23,7 +23,7 @@ BfDescriptor::__write_desc_buffer(
 {
    /*VkDescriptorBufferInfo bufferInfo{};*/
    bufferInfo->buffer = buffer->buffer;
-   bufferInfo->offset = 0;  // From start
+   bufferInfo->offset = 0; // From start
    // Length in bites of data
    bufferInfo->range = create_info.pBuffer_info->elements_count *
                        create_info.pBuffer_info->single_buffer_element_size;
@@ -137,9 +137,9 @@ BfDescriptor::bind_desc_sets(
        set_index,
        1,
        &__desc_layout_packs_map[type].desc_sets
-            [frame_index],  // base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
-       0,                   // 1,
-       nullptr              //&uniform_offset
+            [frame_index], // base.frame_pack[base.current_frame].global_descriptor_set,//base.frame_pack[base.current_frame].uniform_view_buffer->descriptor_set,
+       0,                  // 1,
+       nullptr             //&uniform_offset
    );
 }
 
@@ -150,14 +150,14 @@ BfDescriptor::is_usage(BfEnDescriptorUsage usage)
 }
 
 BfEvent
-BfDescriptor::create_desc_pool(std::vector<VkDescriptorPoolSize> sizes)
+BfDescriptor::create_desc_pool(std::vector< VkDescriptorPoolSize > sizes)
 {
    VkDescriptorPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.pNext = nullptr;
    poolInfo.flags = 0;
    poolInfo.maxSets = 10;
-   poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
+   poolInfo.poolSizeCount = static_cast< uint32_t >(sizes.size());
    poolInfo.pPoolSizes = sizes.data();
 
    std::stringstream ss;
@@ -193,7 +193,7 @@ BfDescriptor::create_desc_set_layouts()
    BfSingleEvent event{};
    event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
 
-   std::vector<BfEnDescriptorSetLayoutType> unique;
+   std::vector< BfEnDescriptorSetLayoutType > unique;
    // Find all used Layouts
    for (auto& it : __desc_create_info_list)
    {
@@ -217,7 +217,7 @@ BfDescriptor::create_desc_set_layouts()
       ss << " descriptor set layout for type " << unique_layout_type;
       ss << " with bindings: ";
 
-      std::vector<VkDescriptorSetLayoutBinding> bindings;
+      std::vector< VkDescriptorSetLayoutBinding > bindings;
 
       for (auto& create_info : __desc_create_info_list)
       {
@@ -240,7 +240,7 @@ BfDescriptor::create_desc_set_layouts()
       desc_set_layout_create_info.sType =
           VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
       desc_set_layout_create_info.bindingCount =
-          static_cast<uint32_t>(bindings.size());
+          static_cast< uint32_t >(bindings.size());
       desc_set_layout_create_info.pNext = nullptr;
       desc_set_layout_create_info.flags = 0;
       desc_set_layout_create_info.pBindings = bindings.data();
@@ -298,13 +298,15 @@ BfDescriptor::create_texture_desc_set_layout()
       throw std::runtime_error("failed to create descriptor set layout!");
    }
 
-   {  // TODO: ERASE THIS PART
+   { // TODO: ERASE THIS PART
       for (auto pack = __desc_layout_packs_map.begin();
            pack != __desc_layout_packs_map.end();
            ++pack)
       {
-         std::cout << "Pack for descriptor pack " << pack->first
-                   << " was created\n";
+         fmt::printf(
+             "Pack for descriptor pack {} was created\n",
+             static_cast< int >(pack->first)
+         );
       }
    }
    return BfEvent();
@@ -326,10 +328,10 @@ BfDescriptor::~BfDescriptor()
    // this->kill();
 }
 
-std::vector<VkDescriptorSetLayout>
+std::vector< VkDescriptorSetLayout >
 BfDescriptor::getAllLayouts() const
 {
-   std::vector<VkDescriptorSetLayout> layouts;
+   std::vector< VkDescriptorSetLayout > layouts;
    layouts.reserve(50);
    for (auto& pack : this->__desc_layout_packs_map)
    {
@@ -447,7 +449,7 @@ BfDescriptor::add_descriptor_create_info(BfDescriptorCreateInfo info)
 //
 BfEvent
 BfDescriptor::add_descriptor_create_info(
-    std::vector<BfDescriptorCreateInfo> info
+    std::vector< BfDescriptorCreateInfo > info
 )
 {
    BfEvent event{};
@@ -494,7 +496,7 @@ BfDescriptor::allocate_desc_sets()
              VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
          desc_set_alloc_info.pNext = nullptr;
          desc_set_alloc_info.descriptorPool = __desc_pool;
-         desc_set_alloc_info.descriptorSetCount = 1;  // 1 for each frame
+         desc_set_alloc_info.descriptorSetCount = 1; // 1 for each frame
          // 1 layout for each frame the same, but not for type
          desc_set_alloc_info.pSetLayouts =
              &__desc_layout_pack.second.desc_set_layout;
@@ -529,10 +531,10 @@ BfDescriptor::allocate_desc_sets()
    return event;
 }
 
-BfEvent
-BfDescriptor::allocate_texture_desc_sets()
-{
-}
+// BfEvent
+// BfDescriptor::allocate_texture_desc_sets()
+// {
+// }
 
 BfEvent
 BfDescriptor::destroy_desc_set_layouts()
@@ -551,6 +553,7 @@ BfDescriptor::destroy_desc_set_layouts()
 BfEvent
 destroy_texture_desc_set_layouts()
 {
+   return BfEvent{};
 }
 
 // TODO: UPDATE FUNCTION FOR IMAGE FUNCTIONALITY
@@ -559,23 +562,29 @@ BfDescriptor::update_desc_sets()
 {
    for (size_t i = 0; i < __frames_in_flight; i++)
    {
-      std::vector<VkWriteDescriptorSet> writes;
-      writes.reserve(std::distance(
-          __desc_create_info_list.begin(),
-          __desc_create_info_list.end()
-      ));
+      std::vector< VkWriteDescriptorSet > writes;
+      writes.reserve(
+          std::distance(
+              __desc_create_info_list.begin(),
+              __desc_create_info_list.end()
+          )
+      );
 
-      std::vector<VkDescriptorBufferInfo> buffer_infos;
-      buffer_infos.reserve(std::distance(
-          __desc_create_info_list.begin(),
-          __desc_create_info_list.end()
-      ));
+      std::vector< VkDescriptorBufferInfo > buffer_infos;
+      buffer_infos.reserve(
+          std::distance(
+              __desc_create_info_list.begin(),
+              __desc_create_info_list.end()
+          )
+      );
 
-      std::vector<VkDescriptorImageInfo> image_infos;
-      image_infos.reserve(std::distance(
-          __desc_create_info_list.begin(),
-          __desc_create_info_list.end()
-      ));
+      std::vector< VkDescriptorImageInfo > image_infos;
+      image_infos.reserve(
+          std::distance(
+              __desc_create_info_list.begin(),
+              __desc_create_info_list.end()
+          )
+      );
 
       size_t buffer_j = 0;
       size_t image_j = 0;
@@ -642,13 +651,12 @@ BfDescriptor::update_desc_sets()
 
          write.pImageInfo = img_info;
          writes.push_back(write);
-         std::cout << "Write for texture with id " << (*texture)->id()
-                   << " done\n";
+         fmt::printf("Write for texture with id {} done\n", (*texture)->id());
       }
 
       vkUpdateDescriptorSets(
           __device,
-          static_cast<uint32_t>(writes.size()),
+          static_cast< uint32_t >(writes.size()),
           writes.data(),
           0,
           nullptr
@@ -678,12 +686,13 @@ BfDescriptor::allocate_desc_buffers()
    // Create buffers
    for (auto& create_info : __desc_create_info_list)
    {
-      if (create_info.pBuffer_info == nullptr) continue;
+      if (create_info.pBuffer_info == nullptr)
+         continue;
 
       // Create storage for buffers
       __desc_buffers_map.emplace(
           create_info.usage,
-          std::vector<BfAllocatedBuffer>()
+          std::vector< BfAllocatedBuffer >()
       );
       // Reserve vector for buffers by number of frames in flight
       __desc_buffers_map[create_info.usage].reserve(__frames_in_flight * 2);
@@ -758,7 +767,7 @@ BfDescriptor::allocate_desc_images()
       {
          __desc_image_map.emplace(
              create_info.usage,
-             std::vector<BfAllocatedImage>()
+             std::vector< BfAllocatedImage >()
          );
          __desc_image_map[create_info.usage].reserve(1);
 
@@ -770,7 +779,7 @@ BfDescriptor::allocate_desc_images()
          // Create storage for images
          __desc_image_map.emplace(
              create_info.usage,
-             std::vector<BfAllocatedImage>()
+             std::vector< BfAllocatedImage >()
          );
          // Reserve vector for buffers by number of frames in flight
          __desc_image_map[create_info.usage].reserve(

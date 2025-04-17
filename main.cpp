@@ -1,6 +1,7 @@
 ﻿#include "main.h"
 
-#include <iostream>
+#include "fmt/format.h"
+#include "fmt/printf.h"
 
 #include "bfVariative.hpp"
 #include "include/other/bfVariative.hpp"
@@ -18,6 +19,6 @@ main()
    }
    catch (const std::exception& e)
    {
-      std::cout << e.what() << std::endl;
+      fmt::printf("=========CATCHED EXCEPTION=========\n{}", e.what());
    }
 }

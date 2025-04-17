@@ -11,74 +11,12 @@
 #include "bfDrawObject.h"
 #include "bfDrawObjectDefineType.h"
 #include "bfLayerHandler.h"
+#include "bfMath.hpp"
 #include "bfPipeline.h"
 #include "bfVertex2.hpp"
 
-bool
-bfCheckBladeSectionCreateInfoEquality(
-    const BfBladeSectionCreateInfo &i_1, const BfBladeSectionCreateInfo &i_2
-)
-{
-   /*if (i_1.width == 0 or i_2.width == 0) return true;
-   if (i_1.install_angle	== 0 or i_2.install_angle == 0) return true;
-   if (i_1.inlet_angle		== 0 or i_2.inlet_angle == 0) return true;
-   if (i_1.outlet_angle	== 0 or i_2.outlet_angle == 0) return true;
-   if (i_1.inlet_radius	== 0 or i_2.inlet_radius == 0) return true;
-   if (i_1.outlet_radius	== 0 or i_2.outlet_radius == 0) return true;
-   if (i_1.border_length	== 0 or i_2.border_length == 0) return true;
-   */
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.width, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.width, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.install_angle, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.install_angle, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.inlet_angle, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.inlet_angle, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.outlet_angle, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.outlet_angle, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.inlet_radius, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.inlet_radius, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.outlet_radius, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.outlet_radius, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.border_length, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.border_length, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.inlet_surface_angle, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.inlet_surface_angle, 0))
-      return true;
-   if (CHECK_FLOAT_EQUALITY_TO_NULL(i_1.outlet_surface_angle, 0) or
-       CHECK_FLOAT_EQUALITY_TO_NULL(i_2.outlet_surface_angle, 0))
-      return true;
-
-   return {
-       i_1.width == i_2.width && i_1.install_angle == i_2.install_angle &&
-
-       i_1.inlet_angle == i_2.inlet_angle &&
-       i_1.outlet_angle == i_2.outlet_angle &&
-
-       i_1.inlet_radius == i_2.inlet_radius &&
-       i_1.outlet_radius == i_2.outlet_radius &&
-
-       i_1.border_length == i_2.border_length &&
-
-       i_1.start_vertex == i_2.start_vertex &&
-       i_1.grow_direction == i_2.grow_direction &&
-       i_1.up_direction == i_2.up_direction &&
-
-       i_1.l_pipeline == i_2.l_pipeline && i_1.t_pipeline == i_2.t_pipeline &&
-
-       i_1.inlet_surface_angle == i_2.inlet_surface_angle &&
-       i_1.outlet_surface_angle == i_2.outlet_surface_angle
-   };
-}
-
 void
-bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
+bfFillBladeSectionStandart(BfBladeSectionCreateInfo* info)
 {
    *info = {
        .layer_create_info =
@@ -118,7 +56,7 @@ bfFillBladeSectionStandart(BfBladeSectionCreateInfo *info)
    };
 };
 
-BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo *info)
+BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo* info)
     : BfDrawLayer(info->layer_create_info), __info{info}
 {
    __generate_outer_elements();
@@ -126,14 +64,16 @@ BfBladeSection::BfBladeSection(BfBladeSectionCreateInfo *info)
    __generate_surface_elements();
    __generate_obj_frames();
 
-   if (info->is_center) __generate_center_circle();
-   if (info->is_triangulate) __generate_triangular_shape();
+   if (info->is_center)
+      __generate_center_circle();
+   if (info->is_triangulate)
+      __generate_triangular_shape();
 
    this->generate_draw_data();
 }
 
 void
-BfBladeSection::remake(BfBladeSectionCreateInfo *info)
+BfBladeSection::remake(BfBladeSectionCreateInfo* info)
 {
    __clear_draw_data();
 
@@ -144,131 +84,142 @@ BfBladeSection::remake(BfBladeSectionCreateInfo *info)
    __generate_surface_elements();
    __generate_obj_frames();
 
-   if (info->is_center) __generate_center_circle();
-   if (info->is_triangulate) __generate_triangular_shape();
+   if (info->is_center)
+      __generate_center_circle();
+   if (info->is_triangulate)
+      __generate_triangular_shape();
 
    this->generate_draw_data();
 }
 
-const BfVertex3 &
+const BfVertex3&
 BfBladeSection::get_inlet_center() const noexcept
 {
    return __chord_inlet_center;
 }
-const BfVertex3 &
+const BfVertex3&
 BfBladeSection::get_outlet_center() const noexcept
 {
    return __chord_outlet_center;
 }
 
-std::shared_ptr<BfSingleLine>
+std::shared_ptr< BfSingleLine >
 BfBladeSection::get_top_border()
 {
-   return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(0));
+   return std::dynamic_pointer_cast< BfSingleLine >(this->get_object_by_index(0)
+   );
 }
-std::shared_ptr<BfSingleLine>
+std::shared_ptr< BfSingleLine >
 BfBladeSection::get_bot_border()
 {
-   return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(1));
+   return std::dynamic_pointer_cast< BfSingleLine >(this->get_object_by_index(1)
+   );
 }
-std::shared_ptr<BfSingleLine>
+std::shared_ptr< BfSingleLine >
 BfBladeSection::get_chord()
 {
-   return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(2));
+   return std::dynamic_pointer_cast< BfSingleLine >(this->get_object_by_index(2)
+   );
 }
-std::shared_ptr<BfCircle>
+std::shared_ptr< BfCircle >
 BfBladeSection::get_inlet_edge()
 {
-   return std::dynamic_pointer_cast<BfCircle>(this->get_object_by_index(3));
+   return std::dynamic_pointer_cast< BfCircle >(this->get_object_by_index(3));
 }
-std::shared_ptr<BfCircle>
+std::shared_ptr< BfCircle >
 BfBladeSection::get_outlet_edge()
 {
-   return std::dynamic_pointer_cast<BfCircle>(this->get_object_by_index(4));
+   return std::dynamic_pointer_cast< BfCircle >(this->get_object_by_index(4));
 }
-std::shared_ptr<BfSingleLine>
+std::shared_ptr< BfSingleLine >
 BfBladeSection::get_inlet_vector()
 {
-   return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(5));
+   return std::dynamic_pointer_cast< BfSingleLine >(this->get_object_by_index(5)
+   );
 }
-std::shared_ptr<BfSingleLine>
+std::shared_ptr< BfSingleLine >
 BfBladeSection::get_outlet_vector()
 {
-   return std::dynamic_pointer_cast<BfSingleLine>(this->get_object_by_index(6));
+   return std::dynamic_pointer_cast< BfSingleLine >(this->get_object_by_index(6)
+   );
 }
-std::shared_ptr<BfBezierCurve>
+std::shared_ptr< BfBezierCurve >
 BfBladeSection::get_ave_curve()
 {
-   return std::dynamic_pointer_cast<BfBezierCurve>(this->get_object_by_index(7)
+   return std::dynamic_pointer_cast< BfBezierCurve >(
+       this->get_object_by_index(7)
    );
 }
-std::shared_ptr<BfBezierCurve>
+std::shared_ptr< BfBezierCurve >
 BfBladeSection::get_back_curve()
 {
-   return std::dynamic_pointer_cast<BfBezierCurve>(this->get_object_by_index(8)
+   return std::dynamic_pointer_cast< BfBezierCurve >(
+       this->get_object_by_index(8)
    );
 }
-std::shared_ptr<BfBezierCurve>
+std::shared_ptr< BfBezierCurve >
 BfBladeSection::get_face_curve()
 {
-   return std::dynamic_pointer_cast<BfBezierCurve>(this->get_object_by_index(9)
+   return std::dynamic_pointer_cast< BfBezierCurve >(
+       this->get_object_by_index(9)
    );
 }
-std::shared_ptr<BfArc>
+std::shared_ptr< BfArc >
 BfBladeSection::get_inlet_edge_a()
 {
-   return std::dynamic_pointer_cast<BfArc>(this->get_object_by_index(10));
+   return std::dynamic_pointer_cast< BfArc >(this->get_object_by_index(10));
 }
-std::shared_ptr<BfArc>
+std::shared_ptr< BfArc >
 BfBladeSection::get_outlet_edge_a()
 {
-   return std::dynamic_pointer_cast<BfArc>(this->get_object_by_index(11));
+   return std::dynamic_pointer_cast< BfArc >(this->get_object_by_index(11));
 }
 
-std::shared_ptr<BfBezierCurveFrame>
+std::shared_ptr< BfBezierCurveFrame >
 BfBladeSection::get_ave_curve_frame()
 {
-   return std::dynamic_pointer_cast<BfBezierCurveFrame>(
+   return std::dynamic_pointer_cast< BfBezierCurveFrame >(
        this->get_layer_by_index(0)
    );
 }
-std::shared_ptr<BfBezierCurveFrame>
+std::shared_ptr< BfBezierCurveFrame >
 BfBladeSection::get_back_curve_frame()
 {
-   return std::dynamic_pointer_cast<BfBezierCurveFrame>(
+   return std::dynamic_pointer_cast< BfBezierCurveFrame >(
        this->get_layer_by_index(1)
    );
 }
-std::shared_ptr<BfBezierCurveFrame>
+std::shared_ptr< BfBezierCurveFrame >
 BfBladeSection::get_face_curve_frame()
 {
-   return std::dynamic_pointer_cast<BfBezierCurveFrame>(
+   return std::dynamic_pointer_cast< BfBezierCurveFrame >(
        this->get_layer_by_index(2)
    );
 }
 
-std::vector<std::shared_ptr<BfTriangle>>
+std::vector< std::shared_ptr< BfTriangle > >
 BfBladeSection::get_triangulated_shape()
 {
    this->get_back_curve()->createVertices();
    this->get_face_curve()->createVertices();
    auto back = this->get_back_curve()->vertices();
    auto face = this->get_face_curve()->vertices();
-   if (back.size() != face.size()) abort();
+   if (back.size() != face.size())
+      abort();
 
-   std::vector<std::shared_ptr<BfTriangle>> triangles;
+   std::vector< std::shared_ptr< BfTriangle > > triangles;
    triangles.reserve(back.size() * 4);
 
    for (size_t i = 1; i < back.size() - 2; i++)
    {
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(back[i], face[i], face[i + 1])
+          std::make_shared< BfTriangle >(back[i], face[i], face[i + 1])
       );
    }
    for (size_t i = 2; i < back.size() - 1; i++)
    {
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(face[i], back[i], back[i - 1])
+          std::make_shared< BfTriangle >(face[i], back[i], back[i - 1])
       );
    }
 
@@ -278,7 +229,7 @@ BfBladeSection::get_triangulated_shape()
    for (size_t i = 0; i < iedge.size() - 1; i++)
    {
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(icenter, iedge[i], iedge[i + 1])
+          std::make_shared< BfTriangle >(icenter, iedge[i], iedge[i + 1])
       );
    }
 
@@ -288,38 +239,44 @@ BfBladeSection::get_triangulated_shape()
    for (size_t i = 0; i < iedge.size() - 1; i++)
    {
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(ocenter, oedge[i], oedge[i + 1])
+          std::make_shared< BfTriangle >(ocenter, oedge[i], oedge[i + 1])
       );
    }
 
-   {  // Inlet
+   { // Inlet
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(icenter, face[0], face[1])
+          std::make_shared< BfTriangle >(icenter, face[0], face[1])
       );
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(icenter, back[0], back[1])
+          std::make_shared< BfTriangle >(icenter, back[0], back[1])
       );
       triangles.emplace_back(
-          std::make_shared<BfTriangle>(icenter, back[1], face[1])
+          std::make_shared< BfTriangle >(icenter, back[1], face[1])
       );
    }
 
-   {  // Outlet
-      triangles.emplace_back(std::make_shared<BfTriangle>(
-          ocenter,
-          face[back.size() - 1],
-          face[back.size() - 2]
-      ));
-      triangles.emplace_back(std::make_shared<BfTriangle>(
-          ocenter,
-          back[back.size() - 1],
-          back[back.size() - 2]
-      ));
-      triangles.emplace_back(std::make_shared<BfTriangle>(
-          ocenter,
-          back[back.size() - 2],
-          face[back.size() - 2]
-      ));
+   { // Outlet
+      triangles.emplace_back(
+          std::make_shared< BfTriangle >(
+              ocenter,
+              face[back.size() - 1],
+              face[back.size() - 2]
+          )
+      );
+      triangles.emplace_back(
+          std::make_shared< BfTriangle >(
+              ocenter,
+              back[back.size() - 1],
+              back[back.size() - 2]
+          )
+      );
+      triangles.emplace_back(
+          std::make_shared< BfTriangle >(
+              ocenter,
+              back[back.size() - 2],
+              face[back.size() - 2]
+          )
+      );
    }
 
    return triangles;
@@ -333,7 +290,7 @@ BfBladeSection::get_center()
    float total_area = 0;
    glm::vec3 center(0.0f);
 
-   for (auto &tr : t)
+   for (auto& tr : t)
    {
       float area = tr->get_area();
       total_area += area;
@@ -350,7 +307,7 @@ BfBladeSection::get_center()
 void
 BfBladeSection::del_all()
 {
-   std::vector<uint32_t> ids;
+   std::vector< uint32_t > ids;
    ids.reserve(this->get_obj_count());
 
    for (size_t i = 0; i < this->get_obj_count(); i++)
@@ -367,25 +324,29 @@ BfBladeSection::del_all()
    this->del(ids);
 }
 
-std::vector<BfVertex3>
+std::vector< BfVertex3 >
 BfBladeSection::get_contour()
 {
-   if (!get_back_curve()->is_ok()) get_back_curve()->createVertices();
-   if (!get_inlet_edge_a()->is_ok()) get_inlet_edge_a()->createVertices();
-   if (!get_face_curve()->is_ok()) get_face_curve()->createVertices();
-   if (!get_outlet_edge_a()->is_ok()) get_outlet_edge_a()->createVertices();
+   if (!get_back_curve()->is_ok())
+      get_back_curve()->createVertices();
+   if (!get_inlet_edge_a()->is_ok())
+      get_inlet_edge_a()->createVertices();
+   if (!get_face_curve()->is_ok())
+      get_face_curve()->createVertices();
+   if (!get_outlet_edge_a()->is_ok())
+      get_outlet_edge_a()->createVertices();
 
    auto vert = bfMathStickObjVertices(
-       {std::dynamic_pointer_cast<BfDrawObj>(get_back_curve()),
-        std::dynamic_pointer_cast<BfDrawObj>(get_inlet_edge_a()),
-        std::dynamic_pointer_cast<BfDrawObj>(get_face_curve()),
-        std::dynamic_pointer_cast<BfDrawObj>(get_outlet_edge_a())}
+       {std::dynamic_pointer_cast< BfDrawObj >(get_back_curve()),
+        std::dynamic_pointer_cast< BfDrawObj >(get_inlet_edge_a()),
+        std::dynamic_pointer_cast< BfDrawObj >(get_face_curve()),
+        std::dynamic_pointer_cast< BfDrawObj >(get_outlet_edge_a())}
    );
 
    auto last = std::unique(
        vert.begin(),
        vert.end(),
-       [](const BfVertex3 &a, const BfVertex3 &b) {
+       [](const BfVertex3& a, const BfVertex3& b) {
           return CHECK_FLOAT_EQUALITY(a.pos.x, b.pos.x) &&
                  CHECK_FLOAT_EQUALITY(a.pos.y, b.pos.y) &&
                  CHECK_FLOAT_EQUALITY(a.pos.z, b.pos.z);
@@ -410,7 +371,7 @@ BfBladeSection::generate_draw_data()
    this->update_buffer();
 }
 
-std::vector<std::shared_ptr<BfDrawObj>>
+std::vector< std::shared_ptr< BfDrawObj > >
 BfBladeSection::get_shape_parts()
 {
    return {
@@ -433,18 +394,15 @@ BfBladeSection::get_shape_parts()
 void
 BfBladeSection::__generate_outer_elements()
 {
-   __chord_inlet_center = {
-       __info->start_vertex,
-       {1.0f, 1.0f, 1.0f},
-       __info->up_direction
-   };
+   __chord_inlet_center =
+       {__info->start_vertex, {1.0f, 1.0f, 1.0f}, __info->up_direction};
 
    glm::vec3 left_border_dir =
        glm::normalize(glm::cross(__info->up_direction, __info->grow_direction));
    glm::vec3 right_border_dir = -left_border_dir;
 
-   {  // TOP BORDER
-      auto top_border = std::make_shared<BfSingleLine>(
+   { // TOP BORDER
+      auto top_border = std::make_shared< BfSingleLine >(
           BfVertex3{
               __chord_inlet_center.pos +
                   left_border_dir * __info->border_length / 2.0f,
@@ -461,8 +419,8 @@ BfBladeSection::__generate_outer_elements()
       this->add_l(top_border);
    }
 
-   {  // BOT BORDER
-      auto bot_border = std::make_shared<BfSingleLine>(
+   { // BOT BORDER
+      auto bot_border = std::make_shared< BfSingleLine >(
           BfVertex3{
               __chord_inlet_center.pos +
                   __info->grow_direction * __info->width +
@@ -497,8 +455,8 @@ BfBladeSection::__generate_outer_elements()
        __info->up_direction
    };
 
-   {  // CHORD
-      auto chord = std::make_shared<BfSingleLine>(
+   { // CHORD
+      auto chord = std::make_shared< BfSingleLine >(
           __chord_inlet_center,
           __chord_outlet_center
       );
@@ -517,7 +475,7 @@ BfBladeSection::__generate_average_line_geometry()
             __info->up_direction
         ) *
         glm::vec4(__info->grow_direction, 1.0f));
-   auto _inlet_vector = std::make_shared<BfSingleLine>(
+   auto _inlet_vector = std::make_shared< BfSingleLine >(
        __chord_inlet_center,
        __chord_inlet_center.pos + _inlet_dir
    );
@@ -529,7 +487,7 @@ BfBladeSection::__generate_average_line_geometry()
             __info->up_direction
         ) *
         glm::vec4(__info->grow_direction, 1.0f));
-   auto _outlet_vector = std::make_shared<BfSingleLine>(
+   auto _outlet_vector = std::make_shared< BfSingleLine >(
        __chord_outlet_center,
        __chord_outlet_center.pos + _outlet_dir
    );
@@ -548,7 +506,7 @@ BfBladeSection::__generate_average_line_geometry()
                                            get_bot_border()->get_second().pos) /
                                           2.0f;
 
-   auto center_line = std::make_shared<BfSingleLine>(
+   auto center_line = std::make_shared< BfSingleLine >(
        BfVertex3{
            section_center_line_vert_1,
            {1.0f, 1.0f, 1.0f},
@@ -561,36 +519,38 @@ BfBladeSection::__generate_average_line_geometry()
        }
    );
 
-   {  // INLET EDGE
-      std::vector<BfCircle> c = bfMathGetInscribedCircles(
+   { // INLET EDGE
+      std::vector< BfCircle > c = bfMathGetInscribedCircles(
           BF_BEZIER_CURVE_VERT_COUNT,
           *get_top_border().get(),
           *get_chord().get(),
           __info->inlet_radius
       );
 
-      std::vector<std::pair<BfCircle *, float>> distances_to_center_line;
+      std::vector< std::pair< BfCircle*, float > > distances_to_center_line;
       for (size_t i = 0; i < c.size(); i++)
       {
-         distances_to_center_line.push_back(std::make_pair(
-             &c[i],
-             bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)
-         ));
+         distances_to_center_line.push_back(
+             std::make_pair(
+                 &c[i],
+                 bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)
+             )
+         );
       }
 
       std::sort(
           distances_to_center_line.begin(),
           distances_to_center_line.end(),
-          [](const auto &a, const auto &b) { return a.second < b.second; }
+          [](const auto& a, const auto& b) { return a.second < b.second; }
       );
 
       distances_to_center_line.pop_back();
       distances_to_center_line.pop_back();
 
       float min_distance_to_intersection = FLT_MAX;
-      BfCircle *circle = nullptr;
+      BfCircle* circle = nullptr;
 
-      for (auto &pair : distances_to_center_line)
+      for (auto& pair : distances_to_center_line)
       {
          float distance_to_intersection = glm::distance(
              potencial_io_intersection,
@@ -607,42 +567,44 @@ BfBladeSection::__generate_average_line_geometry()
       if (circle != nullptr)
       {
          circle->is_draw = false;
-         this->add_l(std::make_shared<BfCircle>(*circle));
+         this->add_l(std::make_shared< BfCircle >(*circle));
       }
       else
          abort();
    }
 
-   {  // OUTLET EDGE
-      std::vector<BfCircle> c = bfMathGetInscribedCircles(
+   { // OUTLET EDGE
+      std::vector< BfCircle > c = bfMathGetInscribedCircles(
           BF_BEZIER_CURVE_VERT_COUNT,
           *get_bot_border().get(),
           *get_chord().get(),
           __info->outlet_radius
       );
 
-      std::vector<std::pair<BfCircle *, float>> distances_to_center_line;
+      std::vector< std::pair< BfCircle*, float > > distances_to_center_line;
       for (size_t i = 0; i < c.size(); i++)
       {
-         distances_to_center_line.push_back(std::make_pair(
-             &c[i],
-             bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)
-         ));
+         distances_to_center_line.push_back(
+             std::make_pair(
+                 &c[i],
+                 bfMathGetDistanceToLine(*center_line, c[i].get_center().pos)
+             )
+         );
       }
 
       std::sort(
           distances_to_center_line.begin(),
           distances_to_center_line.end(),
-          [](const auto &a, const auto &b) { return a.second < b.second; }
+          [](const auto& a, const auto& b) { return a.second < b.second; }
       );
 
       distances_to_center_line.pop_back();
       distances_to_center_line.pop_back();
 
       float min_distance_to_intersection = FLT_MAX;
-      BfCircle *circle = nullptr;
+      BfCircle* circle = nullptr;
 
-      for (auto &pair : distances_to_center_line)
+      for (auto& pair : distances_to_center_line)
       {
          float distance_to_intersection = glm::distance(
              potencial_io_intersection,
@@ -659,13 +621,13 @@ BfBladeSection::__generate_average_line_geometry()
       if (circle != nullptr)
       {
          circle->is_draw = false;
-         this->add_l(std::make_shared<BfCircle>(*circle));
+         this->add_l(std::make_shared< BfCircle >(*circle));
       }
       else
          abort();
    }
 
-   {  // INLET VECTOR
+   { // INLET VECTOR
       glm::vec3 inlet_dir =
           (glm::rotate(
                glm::mat4(1.0f),
@@ -673,7 +635,7 @@ BfBladeSection::__generate_average_line_geometry()
                __info->up_direction
            ) *
            glm::vec4(__info->grow_direction, 1.0f));
-      auto inlet_vector = std::make_shared<BfSingleLine>(
+      auto inlet_vector = std::make_shared< BfSingleLine >(
           this->get_inlet_edge()->get_center(),
           this->get_inlet_edge()->get_center().pos + glm::normalize(inlet_dir)
       );
@@ -681,7 +643,7 @@ BfBladeSection::__generate_average_line_geometry()
       this->add_l(inlet_vector);
    }
 
-   {  // OUTLET VECTOR
+   { // OUTLET VECTOR
       glm::vec3 outlet_dir =
           (glm::rotate(
                glm::mat4(1.0f),
@@ -691,7 +653,7 @@ BfBladeSection::__generate_average_line_geometry()
            //*glm::vec4(this->get_outlet_edge()->get_center().pos +
            //__info->grow_direction, 1.0f)
            * glm::vec4(__info->grow_direction, 1.0f));
-      auto outlet_vector = std::make_shared<BfSingleLine>(
+      auto outlet_vector = std::make_shared< BfSingleLine >(
           this->get_outlet_edge()->get_center(),
           this->get_outlet_edge()->get_center().pos + glm::normalize(outlet_dir)
       );
@@ -730,11 +692,11 @@ BfBladeSection::__generate_average_line_geometry()
    //	this->add_l(outlet_io);
    //}
 
-   {  // AVE_CURVE
-      auto ave_curve = std::make_shared<BfBezierCurve>(
+   { // AVE_CURVE
+      auto ave_curve = std::make_shared< BfBezierCurve >(
           2,
           BF_BEZIER_CURVE_VERT_COUNT,
-          std::vector<BfVertex3>{
+          std::vector< BfVertex3 >{
               this->get_inlet_edge()->get_center(),
               BfVertex3(
                   io_intersection,
@@ -899,9 +861,9 @@ BfBladeSection::__generate_average_line_geometry()
 void
 BfBladeSection::__generate_surface_elements()
 {
-   std::array<BfVertex3, 2> inlet_surface_tangents;
+   std::array< BfVertex3, 2 > inlet_surface_tangents;
    glm::vec3 inlet_surface_vert;
-   {  // INLET DEFINE SURFACE VERTEX
+   { // INLET DEFINE SURFACE VERTEX
       glm::vec3 dir = get_inlet_vector()->get_direction_from_start();
       inlet_surface_vert =
           get_inlet_edge()->get_center().pos +
@@ -916,7 +878,7 @@ BfBladeSection::__generate_surface_elements()
       this->add_l(t_1);
       this->add_l(t_2);*/
    }
-   auto inlet_t_1 = std::make_shared<BfSingleLine>(
+   auto inlet_t_1 = std::make_shared< BfSingleLine >(
        BfVertex3{
            inlet_surface_vert,
            {1.0f, 0.0f, 0.2f},
@@ -928,7 +890,7 @@ BfBladeSection::__generate_surface_elements()
            get_inlet_center().normals
        }
    );
-   auto inlet_t_2 = std::make_shared<BfSingleLine>(
+   auto inlet_t_2 = std::make_shared< BfSingleLine >(
        BfVertex3{
            inlet_surface_vert,
            {1.0f, 0.0f, 0.2f},
@@ -941,9 +903,9 @@ BfBladeSection::__generate_surface_elements()
        }
    );
 
-   std::array<BfVertex3, 2> outlet_surface_tangents;
+   std::array< BfVertex3, 2 > outlet_surface_tangents;
    glm::vec3 outlet_surface_vert;
-   {  // OUTLET DEFINE SURFACE VERTEX
+   { // OUTLET DEFINE SURFACE VERTEX
       glm::vec3 dir = get_outlet_vector()->get_direction_from_start();
       outlet_surface_vert =
           get_outlet_edge()->get_center().pos +
@@ -958,7 +920,7 @@ BfBladeSection::__generate_surface_elements()
       this->add_l(t_2);*/
    }
 
-   auto outlet_t_1 = std::make_shared<BfSingleLine>(
+   auto outlet_t_1 = std::make_shared< BfSingleLine >(
        BfVertex3{
            outlet_surface_vert,
            {1.0f, 0.0f, 0.2f},
@@ -970,7 +932,7 @@ BfBladeSection::__generate_surface_elements()
            get_outlet_center().normals
        }
    );
-   auto outlet_t_2 = std::make_shared<BfSingleLine>(
+   auto outlet_t_2 = std::make_shared< BfSingleLine >(
        BfVertex3{
            outlet_surface_vert,
            {1.0f, 0.0f, 0.2f},
@@ -983,8 +945,9 @@ BfBladeSection::__generate_surface_elements()
        }
    );
 
-   std::vector<
-       std::pair<std::shared_ptr<BfSingleLine>, std::shared_ptr<BfSingleLine>>>
+   std::vector< std::pair<
+       std::shared_ptr< BfSingleLine >,
+       std::shared_ptr< BfSingleLine > > >
        line_com{
            {inlet_t_1, outlet_t_1},
            {inlet_t_1, outlet_t_2},
@@ -992,10 +955,10 @@ BfBladeSection::__generate_surface_elements()
            {inlet_t_2, outlet_t_2},
        };
 
-   std::vector<glm::vec3> intersections;
+   std::vector< glm::vec3 > intersections;
    intersections.reserve(line_com.size());
 
-   for (auto &pair : line_com)
+   for (auto& pair : line_com)
    {
       glm::vec3 inter = bfMathFindLinesIntersection(
           *pair.first,
@@ -1005,30 +968,32 @@ BfBladeSection::__generate_surface_elements()
       intersections.emplace_back(inter);
    }
 
-   std::vector<std::pair<size_t, std::pair<float, float>>> distances;
+   std::vector< std::pair< size_t, std::pair< float, float > > > distances;
    distances.reserve(line_com.size());
 
    for (size_t i = 0; i < intersections.size(); i++)
    {
-      distances.emplace_back(std::pair(
-          i,
+      distances.emplace_back(
           std::pair(
-              glm::distance(
-                  this->get_inlet_edge()->get_center().pos,
-                  intersections[i]
-              ),
-              glm::distance(
-                  this->get_outlet_edge()->get_center().pos,
-                  intersections[i]
+              i,
+              std::pair(
+                  glm::distance(
+                      this->get_inlet_edge()->get_center().pos,
+                      intersections[i]
+                  ),
+                  glm::distance(
+                      this->get_outlet_edge()->get_center().pos,
+                      intersections[i]
+                  )
               )
           )
-      ));
+      );
    }
 
    std::sort(
        distances.begin(),
        distances.end(),
-       [](const auto &a, const auto &b) {
+       [](const auto& a, const auto& b) {
           float sum_a = a.second.first + a.second.second;
           float sum_b = b.second.first + b.second.second;
           return sum_a < sum_b;
@@ -1036,10 +1001,10 @@ BfBladeSection::__generate_surface_elements()
    );
 
    size_t back_index = distances.rbegin()->first;
-   auto back_curve = std::make_shared<BfBezierCurve>(
+   auto back_curve = std::make_shared< BfBezierCurve >(
        2,
        BF_BEZIER_CURVE_VERT_COUNT,
-       std::vector<BfVertex3>{
+       std::vector< BfVertex3 >{
            line_com[back_index].first->get_second(),
            BfVertex3(
                intersections[back_index],
@@ -1053,10 +1018,10 @@ BfBladeSection::__generate_surface_elements()
    this->add_l(back_curve);
 
    size_t face_index = distances.begin()->first;
-   auto face_curve = std::make_shared<BfBezierCurve>(
+   auto face_curve = std::make_shared< BfBezierCurve >(
        2,
        BF_BEZIER_CURVE_VERT_COUNT,
-       std::vector<BfVertex3>{
+       std::vector< BfVertex3 >{
            line_com[face_index].first->get_second(),
            BfVertex3(
                intersections[face_index],
@@ -1069,8 +1034,8 @@ BfBladeSection::__generate_surface_elements()
    face_curve->set_color(BF_BLADESECTION_FACE_COLOR);
    this->add_l(face_curve);
 
-   {  // INLET_EDGE_A
-      auto edge = std::make_shared<BfArc>(
+   { // INLET_EDGE_A
+      auto edge = std::make_shared< BfArc >(
           BF_BEZIER_CURVE_VERT_COUNT,
           line_com[back_index].first->get_second(),
           BfVertex3(
@@ -1085,8 +1050,8 @@ BfBladeSection::__generate_surface_elements()
       this->add_l(edge);
    }
 
-   {  // OUTLET_EDGE_A
-      auto edge = std::make_shared<BfArc>(
+   { // OUTLET_EDGE_A
+      auto edge = std::make_shared< BfArc >(
           BF_BEZIER_CURVE_VERT_COUNT,
           line_com[back_index].second->get_second(),
           BfVertex3(
@@ -1108,7 +1073,7 @@ BfBladeSection::__generate_obj_frames()
    if (get_ave_curve_frame() == nullptr)
    {
       // AVE
-      auto ave_curve_frame = std::make_shared<BfBezierCurveFrame>(
+      auto ave_curve_frame = std::make_shared< BfBezierCurveFrame >(
           this->get_ave_curve(),
           __info->layer_create_info.allocator,
           __info->l_pipeline,
@@ -1119,7 +1084,7 @@ BfBladeSection::__generate_obj_frames()
       this->add(ave_curve_frame);
 
       // BACK
-      auto back_curve_frame = std::make_shared<BfBezierCurveFrame>(
+      auto back_curve_frame = std::make_shared< BfBezierCurveFrame >(
           this->get_back_curve(),
           __info->layer_create_info.allocator,
           __info->l_pipeline,
@@ -1130,7 +1095,7 @@ BfBladeSection::__generate_obj_frames()
       this->add(back_curve_frame);
 
       // FACe
-      auto face_curve_frame = std::make_shared<BfBezierCurveFrame>(
+      auto face_curve_frame = std::make_shared< BfBezierCurveFrame >(
           this->get_face_curve(),
           __info->layer_create_info.allocator,
           __info->l_pipeline,
@@ -1158,7 +1123,7 @@ BfBladeSection::__generate_center_circle()
 {
    BfVertex3 center = this->get_center();
 
-   auto c_circle = std::make_shared<BfCircle>(20, center, 0.02f);
+   auto c_circle = std::make_shared< BfCircle >(20, center, 0.02f);
 
    this->add_l(c_circle);
 }
@@ -1167,7 +1132,7 @@ void
 BfBladeSection::__generate_triangular_shape()
 {
    auto t = this->get_triangulated_shape();
-   for (auto &it : t)
+   for (auto& it : t)
    {
       this->add_l(it);
    }
@@ -1180,7 +1145,7 @@ BfBladeSection::__clear_draw_data()
 }
 
 void
-bfFillBladeBaseStandart(BfBladeBaseCreateInfo *info)
+bfFillBladeBaseStandart(BfBladeBaseCreateInfo* info)
 {
    *info = {
        .layer_create_info =
@@ -1202,7 +1167,7 @@ bfFillBladeBaseStandart(BfBladeBaseCreateInfo *info)
 // === === === === === === === === === === === === === === === === === === ===
 
 void
-bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
+bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2* info)
 {
    *info = {
        .layer_create_info =
@@ -1237,7 +1202,7 @@ bfFillBladeSectionStandart2(BfBladeSectionCreateInfo2 *info)
    };
 }
 
-BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2 *info)
+BfBladeSection2::BfBladeSection2(BfBladeSectionCreateInfo2* info)
     : m_info{info}
 {
    _createAverageCurve();
@@ -1275,7 +1240,7 @@ BfBladeSection2::createVertices()
 
 void
 BfBladeSection2::remake()
-{  // clang-format off
+{ // clang-format off
    { // CMAX
       auto aveCurve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
       auto cmaxs = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
@@ -1370,7 +1335,6 @@ BfBladeSection2::remake()
             auto bezier = std::dynamic_pointer_cast<BfBezierCurve>(bezier_l->get_object_by_index(i));
             if (!bfMathCreateBezier2From2Lines(*start, *stop, *bezier))
             {
-               BFBS2_LOG("Cant create back bezier part");
                abort();
             }
          }
@@ -1383,21 +1347,27 @@ BfBladeSection2::remake()
    }
 
    BfDrawLayer::remake();
-}  // clang-format on
+} // clang-format on
 
-std::vector<std::shared_ptr<BfCircle>>
+std::vector< std::shared_ptr< BfCircle > >
 BfBladeSection2::circles()
 {
-   std::vector<std::shared_ptr<BfCircle>> circles;
-   circles.push_back(_part<BfCircle, BfBladeSection2_Part_InitialInletEdge>());
-   auto cmax_layer = _part<BfDrawLayer, BfBladeSection2_Part_Cmax>();
+   std::vector< std::shared_ptr< BfCircle > > circles;
+   circles.push_back(
+       _part< BfCircle, BfBladeSection2_Part_InitialInletEdge >()
+   );
+   auto cmax_layer = _part< BfDrawLayer, BfBladeSection2_Part_Cmax >();
    for (size_t i = 0; i < cmax_layer->get_obj_count(); ++i)
    {
-      circles.push_back(std::dynamic_pointer_cast<BfCircle>(
-          cmax_layer->get_object_by_index(i)
-      ));
+      circles.push_back(
+          std::dynamic_pointer_cast< BfCircle >(
+              cmax_layer->get_object_by_index(i)
+          )
+      );
    }
-   circles.push_back(_part<BfCircle, BfBladeSection2_Part_InitialOutletEdge>());
+   circles.push_back(
+       _part< BfCircle, BfBladeSection2_Part_InitialOutletEdge >()
+   );
    return circles;
 }
 
@@ -1407,16 +1377,12 @@ BfBladeSection2::_createAverageCurve()
    glm::vec3 inletP = {0, 0, 0};
    glm::vec3 outletP = {m_info->chord, 0, 0};
 
-   BFBS2_LOG("Inlet vertex '" << BFVEC3_STR(inletP) << "'");
-   BFBS2_LOG("Outlet vertex '" << BFVEC3_STR(outletP) << "'");
-
    glm::vec4 inletDirection = glm::rotate(
                                   glm::mat4(1.0f),
                                   glm::radians(equivalentInletAngle()),
                                   glm::vec3(0.0f, 0.0, 1.0f)
                               ) *
                               glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-   BFBS2_LOG("Inlet direction '" << BFVEC3_STR(inletDirection) << "'");
 
    glm::vec4 outletDirection = glm::rotate(
                                    glm::mat4(1.0f),
@@ -1424,7 +1390,6 @@ BfBladeSection2::_createAverageCurve()
                                    glm::vec3(0.0f, 0.0, 1.0f)
                                ) *
                                glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-   BFBS2_LOG("Outlet direction '" << BFVEC3_STR(outletDirection) << "'");
 
    glm::vec3 intersectionP = bfMathFindLinesIntersection(
        BfSingleLine(inletP, inletP + glm::vec3(inletDirection)),
@@ -1432,11 +1397,9 @@ BfBladeSection2::_createAverageCurve()
        BF_MATH_FIND_LINES_INTERSECTION_ANY
    );
 
-   BFBS2_LOG("Intersection vertex '" << BFVEC3_STR(intersectionP) << "'");
-
-   _addPartForward<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>(
+   _addPartForward< BfBezierCurveWithHandles, BfBladeSection2_Part_Average >(
        BF_BEZIER_CURVE_VERT_COUNT,
-       std::vector<BfVertex3>{
+       std::vector< BfVertex3 >{
            BfVertex3{inletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
            BfVertex3{intersectionP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
            BfVertex3{outletP, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
@@ -1446,7 +1409,7 @@ BfBladeSection2::_createAverageCurve()
 
 void
 BfBladeSection2::_createCmax()
-{  // clang-format off
+{ // clang-format off
    auto aveCurve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
    auto cmaxLayer = std::make_shared<BfDrawLayer>(
       BfDrawLayerCreateInfo{.is_nested = true}
@@ -1476,11 +1439,11 @@ BfBladeSection2::_createCmax()
       cmaxLayer->add(cmax_obj);
    }
    _addPart(cmaxLayer, BfBladeSection2_Part_Cmax);
-}  // clang-format on
+} // clang-format on
 
 void
 BfBladeSection2::_createInitialEdges()
-{  // clang-format off
+{ // clang-format off
    auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()
    ->curve();
 
@@ -1535,7 +1498,7 @@ auto circles = this->circles();
 
 void
 BfBladeSection2::_createCmaxLines()
-{  // clang-format off
+{ // clang-format off
    // INLET
    auto ave_curve = _part<BfBezierCurveWithHandles, BfBladeSection2_Part_Average>()->curve();
    
@@ -1600,11 +1563,11 @@ BfBladeSection2::_createCmaxLines()
    _addPart(nlines_layer_back, BfBladeSection2_Part_CmaxLines_Normals_Back);
    _addPart(tlines_layer_front, BfBladeSection2_Part_CmaxLines_Tangets_Front);
    _addPart(tlines_layer_back, BfBladeSection2_Part_CmaxLines_Tangets_Back);
-}  // clang-format on
+} // clang-format on
 
 void
 BfBladeSection2::_createOutShape()
-{  // clang-format off
+{ // clang-format off
    auto createBezierParts = [this](std::shared_ptr<BfDrawLayer> tangent_l) { 
       auto bezier_l = std::make_shared<BfDrawLayer>(BfDrawLayerCreateInfo{.is_nested = true});
       for (size_t i = 0; i < tangent_l->get_obj_count() - 1; ++i) 
@@ -1619,7 +1582,6 @@ BfBladeSection2::_createOutShape()
             bezier->createIndices();
             bezier_l->add_l(bezier);   
          } else { 
-            BFBS2_LOG("Cant create back bezier part");
             abort();
          }
       }
@@ -1631,30 +1593,30 @@ BfBladeSection2::_createOutShape()
    _addPart(createBezierParts(_part<BfDrawLayer, BfBladeSection2_Part_CmaxLines_Tangets_Front>()), 
             BfBladeSection2_Part_Front);
 
-}  // clang-format on
+} // clang-format on
 
 // === === === === === === === === === === === === === === === === === === ===
 // === === === === === === === === === === === === === === === === === === ===
 
-BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo &info)
+BfBladeBase::BfBladeBase(const BfBladeBaseCreateInfo& info)
     : BfDrawLayer(info.layer_create_info), __info{info}
 {
-   for (auto &it : __info.section_infos)
+   for (auto& it : __info.section_infos)
    {
-      auto sec = std::make_shared<BfBladeSection>(&it);
+      auto sec = std::make_shared< BfBladeSection >(&it);
       this->add(sec);
    }
 }
 
-std::shared_ptr<BfBladeBaseSurface>
+std::shared_ptr< BfBladeBaseSurface >
 BfBladeBase::get_shape()
 {
-   return std::static_pointer_cast<BfBladeBaseSurface>(
+   return std::static_pointer_cast< BfBladeBaseSurface >(
        this->get_object_by_index(0)
    );
 }
 
-const BfBladeBaseCreateInfo &
+const BfBladeBaseCreateInfo&
 BfBladeBase::get_info()
 {
    return __info;
@@ -1692,7 +1654,7 @@ BfBladeBase::get_info()
 // }
 
 BfBladeBaseSurface::BfBladeBaseSurface(
-    const std::vector<std::shared_ptr<BfBladeSection>> &secs,
+    const std::vector< std::shared_ptr< BfBladeSection > >& secs,
     size_t inner_sections_count,
     size_t skip_vert
 )
@@ -1701,20 +1663,20 @@ BfBladeBaseSurface::BfBladeBaseSurface(
    this->createVertices();
    this->createIndices();
 
-   for (auto it = __indices.end() - 1; it != __indices.end() - 400; --it)
-      std::cout << *it << "\n";
+   // for (auto it = __indices.end() - 1; it != __indices.end() - 400; --it)
+   //    std::cout << *it << "\n";
 
-   std::cout << "Vertices count: " << __vertices.size() << "\n";
-   std::cout << "Indices count: " << __indices.size() << "\n";
+   // std::cout << "Vertices count: " << __vertices.size() << "\n";
+   // std::cout << "Indices count: " << __indices.size() << "\n";
 }
 
 void
 BfBladeBaseSurface::createVertices()
 {
-   using T_parts = std::vector<std::shared_ptr<BfDrawObj>>;
+   using T_parts = std::vector< std::shared_ptr< BfDrawObj > >;
 
-   std::vector<size_t> total_vertices;
-   std::vector<T_parts> parts;
+   std::vector< size_t > total_vertices;
+   std::vector< T_parts > parts;
 
    total_vertices.reserve(__secs.size());
    parts.reserve(__secs.size());
@@ -1744,7 +1706,7 @@ BfBladeBaseSurface::createVertices()
    {
       if (*count != *(count - 1))
       {
-         std::cout << "count are not the same" << "\n";
+         // std::cout << "count are not the same" << "\n";
       }
    }
 
@@ -1755,7 +1717,7 @@ BfBladeBaseSurface::createVertices()
       // Идем по каждой точке во всех сечениях
       size_t vert_count = parts[0][p_index]->vertices().size();
 
-      std::vector<std::vector<glm::vec3>> v_part;
+      std::vector< std::vector< glm::vec3 > > v_part;
       v_part.resize((__slices_count) * (__secs.size() - 1));
 
       for (auto it = v_part.begin(); it != v_part.end(); ++it)
@@ -1765,7 +1727,7 @@ BfBladeBaseSurface::createVertices()
 
       for (size_t v_index = 0; v_index < vert_count; ++v_index)
       {
-         std::vector<BfVertex3> spl_v;
+         std::vector< BfVertex3 > spl_v;
          spl_v.reserve(parts.size());
 
          for (auto part = parts.begin(); part != parts.end(); ++part)
@@ -1774,13 +1736,13 @@ BfBladeBaseSurface::createVertices()
             spl_v.emplace_back((*part)[p_index]->vertices()[v_index]);
          }
 
-         std::vector<SplineLib::cSpline3> spls =
+         std::vector< SplineLib::cSpline3 > spls =
              bfMathSplineFitExternal3D(spl_v);
          size_t spl_index = 0;
          for (auto spl = spls.begin(); spl != spls.end(); ++spl)
          {
             // std::cout << "Spline index:" << spl_index << "\n";
-            std::vector<BfVertex3> local_part_v;
+            std::vector< BfVertex3 > local_part_v;
             local_part_v.reserve(__slices_count);
             for (size_t i = 0; i < __slices_count; ++i)
             {
@@ -1870,19 +1832,21 @@ BfBladeBaseSurface::createVertices()
    }
 }
 
-std::shared_ptr<BfBladeBaseSurface>
+std::shared_ptr< BfBladeBaseSurface >
 BfBladeBase::create_shape()
 {
-   std::vector<std::shared_ptr<BfBladeSection>> secs;
+   std::vector< std::shared_ptr< BfBladeSection > > secs;
    secs.reserve(this->get_layer_count());
 
    for (size_t i = 0; i < this->get_layer_count(); ++i)
    {
       secs.emplace_back(
-          std::dynamic_pointer_cast<BfBladeSection>(this->get_layer_by_index(i))
+          std::dynamic_pointer_cast< BfBladeSection >(
+              this->get_layer_by_index(i)
+          )
       );
    }
 
-   auto surface = std::make_shared<BfBladeBaseSurface>(secs, 20, 10);
+   auto surface = std::make_shared< BfBladeBaseSurface >(secs, 20, 10);
    return surface;
 }

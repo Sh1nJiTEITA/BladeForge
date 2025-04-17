@@ -2,7 +2,7 @@
 #define BF_DRAW_OBJECT_2_H
 
 #include "bfTypeManager.h"
-#include <iostream>
+#include "fmt/core.h"
 
 namespace obj
 {
@@ -22,10 +22,15 @@ public:
       obj::BfTypeManager::inst().regId(m_type, m_value);
    }
 
-   ~BfObjectId() { 
+   ~BfObjectId()
+   {
       auto& inst = obj::BfTypeManager::inst();
-      std::cout << "Deleting object with id " << this->id() << " and typename " << inst.getTypeNameById(this->id()) << "\n";
-      inst.remId(id()); 
+      fmt::print(
+          "Deleting object with id {} and typename ",
+          this->id(),
+          inst.getTypeNameById(this->id())
+      );
+      inst.remId(id());
    }
 
    explicit BfObjectId(const BfObjectId& other)
@@ -47,6 +52,6 @@ public:
 };
 
 inline BfOId BfObjectId::m_counter = 0;
-};  // namespace obj
+}; // namespace obj
 
 #endif

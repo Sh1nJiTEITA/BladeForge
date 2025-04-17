@@ -15,6 +15,7 @@ find_package(implot CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(xtl CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 # Проблемы с MINGW laplas решаются так
 if(WIN32)
@@ -59,6 +60,7 @@ target_link_libraries(
             ${LUA_LIBRARIES}
             implot::implot
             imgui::imgui
+            fmt::fmt
             OpenBLAS::OpenBLAS
             glm::glm
             xtensor::optimize

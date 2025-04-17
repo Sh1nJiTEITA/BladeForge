@@ -14,45 +14,45 @@ bfToggleCamParts(BfWindow* window, uint32_t cam_index, bool decision)
 {
    switch (cam_index)
    {
-      case 0: {  // Free cam
-         if (decision)
-         {
-            window->is_free_camera_active = true;
-            window->cam_mode = 0;
-         }
-         else
-         {
-            window->is_free_camera_active = false;
-            window->first_free = true;
-         }
-         break;
+   case 0: { // Free cam
+      if (decision)
+      {
+         window->is_free_camera_active = true;
+         window->cam_mode = 0;
       }
-      case 1: {
-         if (decision)
-         {
-            window->is_rotate_camera_active = false;
-            window->cam_mode = 1;
-         }
-         else
-         {
-            window->first_free_rotate = true;
-            window->first_s_rotate = true;
-         }
-         break;
+      else
+      {
+         window->is_free_camera_active = false;
+         window->first_free = true;
       }
-      case 2: {  // S cam
-         if (decision)
-         {
-            window->is_s_camera_active = true;
-            window->cam_mode = 2;
-         }
-         else
-         {
-            window->is_s_camera_active = false;
-            window->first_s = true;
-         }
-         break;
+      break;
+   }
+   case 1: {
+      if (decision)
+      {
+         window->is_rotate_camera_active = false;
+         window->cam_mode = 1;
       }
+      else
+      {
+         window->first_free_rotate = true;
+         window->first_s_rotate = true;
+      }
+      break;
+   }
+   case 2: { // S cam
+      if (decision)
+      {
+         window->is_s_camera_active = true;
+         window->cam_mode = 2;
+      }
+      else
+      {
+         window->is_s_camera_active = false;
+         window->first_s = true;
+      }
+      break;
+   }
    }
 }
 
@@ -89,18 +89,22 @@ bfCalculateViewPartsFree(BfWindow* window)
    window->yaw += xoffset;
    window->pitch += yoffset;
 
-   if (window->pitch > 89.0f) window->pitch = 89.0f;
-   if (window->pitch < -89.0f) window->pitch = -89.0f;
+   if (window->pitch > 89.0f)
+      window->pitch = 89.0f;
+   if (window->pitch < -89.0f)
+      window->pitch = -89.0f;
 
    // std::cout << "y: " << yaw << ", p: " << pitch << "\n";
 
-   window->front = glm::normalize(glm::vec3(
-       glm::cos(glm::radians(window->yaw)) *
-           glm::cos(glm::radians(window->pitch)),
-       glm::sin(glm::radians(window->pitch)),
-       glm::sin(glm::radians(window->yaw)) *
-           glm::cos(glm::radians(window->pitch))
-   ));
+   window->front = glm::normalize(
+       glm::vec3(
+           glm::cos(glm::radians(window->yaw)) *
+               glm::cos(glm::radians(window->pitch)),
+           glm::sin(glm::radians(window->pitch)),
+           glm::sin(glm::radians(window->yaw)) *
+               glm::cos(glm::radians(window->pitch))
+       )
+   );
 
    // window->view = glm::lookAt(window->pos, window->pos + window->front,
    // window->up);
@@ -153,7 +157,8 @@ bfCalculateViewPartsS(BfWindow* window)
    {
       if (window->proj_mode == 0)
       {
-         z_dir = (window->front) * static_cast<float>(window->scroll_yoffset) *
+         z_dir = (window->front) *
+                 static_cast< float >(window->scroll_yoffset) *
                  SCROLL_SENSITIVITY;
          window->scroll_yoffset = 0;
       }
@@ -185,12 +190,11 @@ bfCalculateViewPartsS(BfWindow* window)
          }
 
          window->ortho_scale =
-             0.1 + 32.0f / (1 + glm::exp(-static_cast<float>(st)));
+             0.1 + 32.0f / (1 + glm::exp(-static_cast< float >(st)));
 
          /*if (window->ortho_scale - 0.1 < 1e-4) {
                  window->scroll_yoffset = 0;
          }*/
-         std::cout << st << "\n";
          last_yoffset = window->scroll_yoffset;
          z_dir = glm::vec3(0.0f);
       }
@@ -241,18 +245,22 @@ bfCalculateRotateView(BfWindow* window)
    window->yaw += xoffset;
    window->pitch += yoffset;
 
-   if (window->pitch > 89.0f) window->pitch = 89.0f;
-   if (window->pitch < -89.0f) window->pitch = -89.0f;
+   if (window->pitch > 89.0f)
+      window->pitch = 89.0f;
+   if (window->pitch < -89.0f)
+      window->pitch = -89.0f;
 
-   window->front = glm::normalize(glm::vec3(
-       glm::cos(glm::radians(window->yaw)) *
-           glm::cos(glm::radians(window->pitch)),
+   window->front = glm::normalize(
+       glm::vec3(
+           glm::cos(glm::radians(window->yaw)) *
+               glm::cos(glm::radians(window->pitch)),
 
-       glm::sin(glm::radians(window->pitch)),
+           glm::sin(glm::radians(window->pitch)),
 
-       glm::sin(glm::radians(window->yaw)) *
-           glm::cos(glm::radians(window->pitch))
-   ));
+           glm::sin(glm::radians(window->yaw)) *
+               glm::cos(glm::radians(window->pitch))
+       )
+   );
 
    /*window->lastRx = window->xpos;
    window->lastRy = window->ypos;*/
@@ -296,7 +304,7 @@ bfCalculateRotateView(BfWindow* window)
    if (window->is_scroll)
    {
       z_dir =
-          (window->front) * static_cast<float>(window->scroll_yoffset) * 1.1f;
+          (window->front) * static_cast< float >(window->scroll_yoffset) * 1.1f;
       window->is_scroll = false;
       window->scroll_yoffset = 0;
    }
@@ -351,7 +359,7 @@ bfCreateWindow(BfWindow* window)
        window->pWindow,
        [](GLFWwindow* window, double xoffset, double yoffset) {
           BfWindow* thisWindow =
-              static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+              static_cast< BfWindow* >(glfwGetWindowUserPointer(window));
           if (!thisWindow->is_any_window_hovered_func())
              thisWindow->scroll_yoffset += yoffset;
           // std::cout << "xoffset = " << xoffset << "; yoffset = << " <<
@@ -375,7 +383,7 @@ bfCreateWindow(BfWindow* window)
        window->pWindow,
        [](GLFWwindow* window, double xpos, double ypos) {
           BfWindow* thisWindow =
-              static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+              static_cast< BfWindow* >(glfwGetWindowUserPointer(window));
           thisWindow->xpos = xpos;
           thisWindow->ypos = ypos;
           // std::cout << "cb: " << thisWindow->xpos << ",
@@ -386,7 +394,7 @@ bfCreateWindow(BfWindow* window)
        window->pWindow,
        [](GLFWwindow* window, int width, int height) {
           BfWindow* thisWindow =
-              static_cast<BfWindow*>(glfwGetWindowUserPointer(window));
+              static_cast< BfWindow* >(glfwGetWindowUserPointer(window));
 
           thisWindow->height = height;
           thisWindow->width = width;
@@ -497,7 +505,7 @@ bfSetWindowName(BfWindow* window, std::string name)
 }
 
 BfEvent
-bfBindGuiWindowHoveringFunction(BfWindow* window, std::function<bool()> func)
+bfBindGuiWindowHoveringFunction(BfWindow* window, std::function< bool() > func)
 {
    window->is_any_window_hovered_func = func;
    return BfEvent();

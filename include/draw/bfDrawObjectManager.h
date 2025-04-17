@@ -37,7 +37,7 @@ public:
       m_rootObjects.push_back(obj);
    }
 
-   std::shared_ptr< obj::BfDrawObjectBase > find(BfOId id) {}
+   // std::shared_ptr< obj::BfDrawObjectBase > find(BfOId id) {}
 
    void mapModels(size_t frame_index)
    {

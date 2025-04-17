@@ -27,14 +27,14 @@ uint32_t bfGetBinomialCoefficient(uint32_t n, uint32_t k);
 
 class BfHandle
 {
-   std::array<BfVertex3, 4> __vertices;
+   std::array< BfVertex3, 4 > __vertices;
    BfVertex3 __center;
 
    glm::vec3 __color;
    float __len;
 
 public:
-   BfHandle(const BfVertex3 &center, const float &len, const glm::vec3 &color)
+   BfHandle(const BfVertex3& center, const float& len, const glm::vec3& color)
        : __center{center}, __color{color}, __len{len}
    {
    }
@@ -56,22 +56,22 @@ public:
       __vertices[2].pos = __center.pos - v1 * __len * 0.5f - v2 * __len * 0.5f;
       __vertices[3].pos = __center.pos + v1 * __len * 0.5f - v2 * __len * 0.5f;
 
-      for (auto &it : __vertices)
+      for (auto& it : __vertices)
       {
          it.color = __color;
          it.normals = __center.normals;
       }
    }
 
-   const std::array<BfVertex3, 4> &get_vertices() { return __vertices; }
+   const std::array< BfVertex3, 4 >& get_vertices() { return __vertices; }
 
-   const std::array<BfVertex3, 4> &update_and_get_vertices()
+   const std::array< BfVertex3, 4 >& update_and_get_vertices()
    {
       this->update_vertices();
       return this->get_vertices();
    }
 
-   std::array<uint32_t, 4> get_indices() { return {0, 1, 2, 3}; }
+   std::array< uint32_t, 4 > get_indices() { return {0, 1, 2, 3}; }
 };
 
 /*
@@ -84,13 +84,13 @@ class BfLine
    BfVertex3 finish_point;
 
 public:
-   BfLine(const glm::vec3 &sp, const glm::vec3 &fp)
+   BfLine(const glm::vec3& sp, const glm::vec3& fp)
    {
       start_point.pos = sp;
       finish_point.pos = fp;
    }
 
-   BfLine(const BfVertex3 &sp, const BfVertex3 &fp)
+   BfLine(const BfVertex3& sp, const BfVertex3& fp)
        : start_point{sp}, finish_point{fp}
    {
    }
@@ -105,8 +105,8 @@ public:
       return start_point.pos - finish_point.pos;
    }
 
-   const BfVertex3 &get_start_point() const { return start_point; }
-   const BfVertex3 &get_finish_point() const { return finish_point; }
+   const BfVertex3& get_start_point() const { return start_point; }
+   const BfVertex3& get_finish_point() const { return finish_point; }
    /*
     * Returns true if there are intersection between 2 lines else false;
     *
@@ -115,7 +115,7 @@ public:
     *work with const BfLine& line2 - const reference to 2st line to work with
     */
    static inline bool find_lines_intersection(
-       glm::vec3 &intersection, const BfLine &line1, const BfLine &line2
+       glm::vec3& intersection, const BfLine& line1, const BfLine& line2
    )
    {
       glm::mat3 plane;
@@ -170,7 +170,7 @@ public:
       }
    }
 
-   static inline float get_line_length(const BfLine &l)
+   static inline float get_line_length(const BfLine& l)
    {
       glm::vec3 delta = l.finish_point.pos - l.start_point.pos;
       return glm::sqrt(
@@ -187,8 +187,8 @@ class BfBezier
    uint32_t n;
    glm::vec3 basic_color;
 
-   std::vector<glm::vec3> vertices;
-   std::vector<BfVertex3> c_vertices;
+   std::vector< glm::vec3 > vertices;
+   std::vector< BfVertex3 > c_vertices;
 
 public:
    /*
@@ -206,12 +206,12 @@ public:
 
    BfBezier(
        uint32_t in_n,
-       std::vector<BfVertex3> &in_vertices,
+       std::vector< BfVertex3 >& in_vertices,
        glm::vec3 in_color = {1.0f, 1.0f, 1.0f}
    )
        : n{in_n}, basic_color{in_color}
    {
-      if (in_n + 1 != static_cast<uint32_t>(in_vertices.size()))
+      if (in_n + 1 != static_cast< uint32_t >(in_vertices.size()))
       {
          throw std::runtime_error(
              "Input bezier data is incorrect: vec.size() != in_n"
@@ -238,12 +238,12 @@ public:
 
    BfBezier(
        uint32_t in_n,
-       std::vector<glm::vec3> in_vertices,
+       std::vector< glm::vec3 > in_vertices,
        glm::vec3 in_color = {1.0f, 1.0f, 1.0f}
    )
        : n{in_n}, vertices{in_vertices}, basic_color{in_color}
    {
-      if (in_n + 1 != static_cast<uint32_t>(in_vertices.size()))
+      if (in_n + 1 != static_cast< uint32_t >(in_vertices.size()))
       {
          throw std::runtime_error(
              "Input bezier data is incorrect: vec.size() != in_n"
@@ -280,7 +280,7 @@ public:
       glm::vec3 _v{0.0f, 0.0f, 0.0f};
       for (int i = 0; i <= n; i++)
       {
-         _v += static_cast<float>(
+         _v += static_cast< float >(
                    bfGetBinomialCoefficient(n, i) * glm::pow(1 - t, n - i) *
                    glm::pow(t, i)
                ) *
@@ -305,7 +305,7 @@ public:
       float t;
       for (int i = 0; i < v_count; i++)
       {
-         t = static_cast<float>(i) / static_cast<float>(v_count - 1);
+         t = static_cast< float >(i) / static_cast< float >(v_count - 1);
          c_vertices[i].pos = get_single_vertex(t);
          c_vertices[i].normals = get_direction_normal(t);
          c_vertices[i].color = basic_color;
@@ -320,9 +320,9 @@ public:
     * If vertices weren't calculated before, output array will be empty.
     *
     */
-   const std::vector<BfVertex3> &get_cvertices() const { return c_vertices; }
+   const std::vector< BfVertex3 >& get_cvertices() const { return c_vertices; }
 
-   const std::vector<glm::vec3> &get_vertices() const { return vertices; }
+   const std::vector< glm::vec3 >& get_vertices() const { return vertices; }
 
    /*
     * Calculates and outputs output arrays of vertices.
@@ -330,17 +330,17 @@ public:
     * Needed: v_count - number of calculating vertices.
     *
     */
-   std::vector<BfVertex3> &update_and_get_vertices(uint32_t v_count)
+   std::vector< BfVertex3 >& update_and_get_vertices(uint32_t v_count)
    {
       update_vertices(v_count);
       return c_vertices;
    }
 
-   std::vector<glm::vec3> update_and_copy_vec3_vertices(uint32_t v_count)
+   std::vector< glm::vec3 > update_and_copy_vec3_vertices(uint32_t v_count)
    {
       update_vertices(v_count);
 
-      std::vector<glm::vec3> o(v_count + 1);
+      std::vector< glm::vec3 > o(v_count + 1);
       for (int i = 0; i < this->c_vertices.size(); i++)
       {
          o[i] = this->c_vertices[i].pos;
@@ -348,13 +348,13 @@ public:
       return o;
    }
 
-   std::vector<glm::vec3> copy_vec3_vertices(uint32_t v_count)
+   std::vector< glm::vec3 > copy_vec3_vertices(uint32_t v_count)
    {
-      std::vector<glm::vec3> o(v_count);
+      std::vector< glm::vec3 > o(v_count);
       float t;
       for (int i = 0; i < v_count; i++)
       {
-         t = static_cast<float>(i) / static_cast<float>(v_count - 1);
+         t = static_cast< float >(i) / static_cast< float >(v_count - 1);
          o[i] = get_single_vertex(t);
       }
       return o;
@@ -480,7 +480,8 @@ public:
    {
       glm::vec3 out(0.0f);
 
-      if (this->n == 1) return out;
+      if (this->n == 1)
+         return out;
 
       for (int i = 0; i <= n; i++)
       {
@@ -525,11 +526,11 @@ public:
          be < 1");*/
 
       uint32_t k = this->n - 1;
-      std::vector<glm::vec3> new_define_vertices(k + 1);
+      std::vector< glm::vec3 > new_define_vertices(k + 1);
 
       for (int i = 0; i <= k; i++)
       {
-         new_define_vertices[i] = static_cast<float>(n) *
+         new_define_vertices[i] = static_cast< float >(n) *
                                   (this->vertices[i + 1] - this->vertices[i]);
       }
 
@@ -566,7 +567,7 @@ public:
    BfBezier get_elevated_order()
    {
       uint32_t k = this->n + 1;
-      std::vector<glm::vec3> new_input_vertices(k + 1);
+      std::vector< glm::vec3 > new_input_vertices(k + 1);
 
       for (int i = 0; i <= k; i++)
       {
@@ -593,9 +594,13 @@ public:
       const size_t _k = this->n;
       const size_t _n = _k - 1;
 
-      if (_k <= 3) return *this;
+      if (_k <= 3)
+         return *this;
 
-      std::vector<std::vector<float>> mat(_k, std::vector<float>(_k - 1, 0));
+      std::vector< std::vector< float > > mat(
+          _k,
+          std::vector< float >(_k - 1, 0)
+      );
 
       for (size_t i = 0; i < _k; ++i)
       {
@@ -609,12 +614,15 @@ public:
          }
          else
          {
-            mat[i][i - 1] = i / static_cast<double>(_k);
+            mat[i][i - 1] = i / static_cast< double >(_k);
             mat[i][i] = 1 - mat[i][i - 1];
          }
       }
 
-      std::vector<std::vector<float>> mat_t(_k - 1, std::vector<float>(_k, 0));
+      std::vector< std::vector< float > > mat_t(
+          _k - 1,
+          std::vector< float >(_k, 0)
+      );
 
       for (size_t i = 0; i < _k; i++)
       {
@@ -631,7 +639,7 @@ public:
     * Needed: count = number of points for search.
     *
     */
-   std::pair<glm::vec3, glm::vec3> get_bbox_t(size_t count = 100)
+   std::pair< glm::vec3, glm::vec3 > get_bbox_t(size_t count = 100)
    {
       float max_x_less;
       float max_y_less;
@@ -742,7 +750,7 @@ public:
          }
       }
 
-      return std::pair<glm::vec3, glm::vec3>(
+      return std::pair< glm::vec3, glm::vec3 >(
           {{t_x_less, t_y_less, t_z_less}, {t_x_more, t_y_more, t_z_more}}
       );
    }
@@ -754,9 +762,9 @@ public:
     * Needed: count = number of points for search.
     *
     */
-   std::pair<glm::vec3, glm::vec3> get_bbox()
+   std::pair< glm::vec3, glm::vec3 > get_bbox()
    {
-      std::pair<glm::vec3, glm::vec3> t_s = this->get_bbox_t();
+      std::pair< glm::vec3, glm::vec3 > t_s = this->get_bbox_t();
 
       glm::vec3 min_point;
 
@@ -778,7 +786,7 @@ public:
       max_point.y = std::max({max_x.y, max_y.y, max_z.y});
       max_point.z = std::max({max_x.z, max_y.z, max_z.z});
 
-      return std::pair<glm::vec3, glm::vec3>({min_point, max_point});
+      return std::pair< glm::vec3, glm::vec3 >({min_point, max_point});
    }
 
    /*
@@ -961,11 +969,11 @@ public:
     *		  glm::vec3 color -> general color of whole handle
     *
     */
-   std::vector<BfVertex3> get_handles_vertices(
+   std::vector< BfVertex3 > get_handles_vertices(
        float length = 1.0f, glm::vec3 color = {1.0f, 0.0f, 1.0f}
    ) const
    {
-      std::vector<BfVertex3> vertices(4 * this->vertices.size());
+      std::vector< BfVertex3 > vertices(4 * this->vertices.size());
 
       size_t offset = 0;
       for (size_t i = 0; i < this->vertices.size(); i++)
@@ -995,29 +1003,28 @@ public:
     *			2. glm::vec3 color -> general color of whole handle
     *
     */
-   std::vector<uint32_t> get_handles_indices() const
+   std::vector< uint32_t > get_handles_indices() const
    {
-      std::vector<uint32_t> indices(vertices.size() * 6);
+      std::vector< uint32_t > indices(vertices.size() * 6);
 
       size_t offset = 0;
       for (size_t i = 0; i < indices.size(); i += 6)
       {
-         indices[i + 0] = static_cast<uint32_t>(offset + 0);
-         indices[i + 1] = static_cast<uint32_t>(offset + 1);
-         indices[i + 2] = static_cast<uint32_t>(offset + 2);
-         indices[i + 3] = static_cast<uint32_t>(offset + 2);
-         indices[i + 4] = static_cast<uint32_t>(offset + 3);
-         indices[i + 5] = static_cast<uint32_t>(offset + 0);
+         indices[i + 0] = static_cast< uint32_t >(offset + 0);
+         indices[i + 1] = static_cast< uint32_t >(offset + 1);
+         indices[i + 2] = static_cast< uint32_t >(offset + 2);
+         indices[i + 3] = static_cast< uint32_t >(offset + 2);
+         indices[i + 4] = static_cast< uint32_t >(offset + 3);
+         indices[i + 5] = static_cast< uint32_t >(offset + 0);
          offset += 4;
       }
       return indices;
    }
 
-   std::vector<BfVertex3> get_carcass_vertices(
-       glm::vec3 color = {1.0f, 0.0f, 1.0f}
-   ) const
+   std::vector< BfVertex3 >
+   get_carcass_vertices(glm::vec3 color = {1.0f, 0.0f, 1.0f}) const
    {
-      std::vector<BfVertex3> vertices(this->vertices.size());
+      std::vector< BfVertex3 > vertices(this->vertices.size());
 
       for (size_t i = 0; i < vertices.size(); i++)
       {
@@ -1029,25 +1036,25 @@ public:
       return vertices;
    }
 
-   std::vector<uint32_t> get_carcass_indices() const
+   std::vector< uint32_t > get_carcass_indices() const
    {
-      std::vector<uint32_t> indices(this->vertices.size());
+      std::vector< uint32_t > indices(this->vertices.size());
 
       for (size_t i = 0; i < indices.size(); i++)
       {
-         indices[i] = static_cast<uint32_t>(i);
+         indices[i] = static_cast< uint32_t >(i);
       }
       return indices;
    }
 
-   std::vector<glm::vec3> get_length_grad(std::vector<bool> is_working)
+   std::vector< glm::vec3 > get_length_grad(std::vector< bool > is_working)
    {
       if (is_working.size() != (this->n + 1))
       {
          throw std::runtime_error("!_P");
       }
 
-      std::vector<glm::vec3> grad(this->n + 1, {0.0f, 0.0f, 0.0f});
+      std::vector< glm::vec3 > grad(this->n + 1, {0.0f, 0.0f, 0.0f});
 
       // go for each defining point
       for (size_t p_index = 0; p_index < grad.size(); p_index++)
@@ -1102,14 +1109,13 @@ public:
       return grad;
    }
 
-   static inline std::pair<glm::vec3, glm::vec3> get_bbox_by_cvertices(
-       const std::vector<glm::vec3> &vert
-   )
+   static inline std::pair< glm::vec3, glm::vec3 >
+   get_bbox_by_cvertices(const std::vector< glm::vec3 >& vert)
    {
       glm::vec3 max{0.f, 0.f, 0.f};
       glm::vec3 min{0.f, 0.f, 0.f};
 
-      for (auto &it : vert)
+      for (auto& it : vert)
       {
          if (it.x > max.x)
          {
@@ -1137,12 +1143,12 @@ public:
          }
       }
 
-      return std::pair<glm::vec3, glm::vec3>(min, max);
+      return std::pair< glm::vec3, glm::vec3 >(min, max);
    }
 
-   static inline std::pair<glm::vec3, glm::vec3> get_bbox_by_iterator(
-       std::vector<glm::vec3>::const_iterator it_begin,
-       std::vector<glm::vec3>::const_iterator it_end
+   static inline std::pair< glm::vec3, glm::vec3 > get_bbox_by_iterator(
+       std::vector< glm::vec3 >::const_iterator it_begin,
+       std::vector< glm::vec3 >::const_iterator it_end
    )
    {
       glm::vec3 max{*(it_end - 1)};
@@ -1176,7 +1182,7 @@ public:
          }
       }
 
-      return std::pair<glm::vec3, glm::vec3>(min, max);
+      return std::pair< glm::vec3, glm::vec3 >(min, max);
    }
 
    /*
@@ -1189,9 +1195,9 @@ public:
     *
     */
    static inline bool get_intersections_simple(
-       std::vector<glm::vec3> &intersections,
-       const BfBezier &B1,
-       const BfBezier &B2
+       std::vector< glm::vec3 >& intersections,
+       const BfBezier& B1,
+       const BfBezier& B2
    )
    {
       if (B1.c_vertices.empty() || B2.c_vertices.empty())
@@ -1232,7 +1238,9 @@ public:
     *
     */
    static inline bool get_intersections_simple(
-       std::vector<glm::vec3> &intersections, const BfBezier &B, const BfLine &L
+       std::vector< glm::vec3 >& intersections,
+       const BfBezier& B,
+       const BfLine& L
    )
    {
       bool is_intersection = false;
@@ -1251,267 +1259,269 @@ public:
 
    // TODO: finding intesections in way of checing curve box intersections;
    static inline bool get_itersections(
-       std::vector<std::pair<glm::vec3, glm::vec3>> &inter,
-       BfBezier &b1,
-       BfBezier &b2
+       std::vector< std::pair< glm::vec3, glm::vec3 > >& inter,
+       BfBezier& b1,
+       BfBezier& b2
    )
    {
-      using it_pair = std::pair<
-          std::vector<glm::vec3>::const_iterator,
-          std::vector<glm::vec3>::const_iterator>;
-
-      struct box_pack
-      {
-         std::pair<glm::vec3, glm::vec3> box1;
-         std::pair<glm::vec3, glm::vec3> box2;
-         bool is;
-      };
-
-      std::vector<glm::vec3> vert1 = b1.copy_vec3_vertices(30);
-      std::vector<glm::vec3> vert2 = b2.copy_vec3_vertices(30);
-
-      float x_increment = 0;
-      float y_increment = 0;
-      float z_increment = 0;
-
-      for (int i = 1; i < vert1.size(); i++)
-      {
-         x_increment +=
-             (vert1[i].x - vert1[i - 1].x) + (vert2[i].x - vert2[i - 1].x);
-         y_increment +=
-             (vert1[i].y - vert1[i - 1].y) + (vert2[i].y - vert2[i - 1].y);
-         z_increment +=
-             (vert1[i].z - vert1[i - 1].z) + (vert2[i].z - vert2[i - 1].z);
-      }
-
-      x_increment /= vert1.size();
-      y_increment /= vert1.size();
-      z_increment /= vert1.size();
-
-      std::vector<box_pack> packs;
-
-      auto get_line_intesection = [](it_pair line1, it_pair line2) {
-         glm::vec3 a1 = *line1.first;
-         glm::vec3 b1 = *(line1.second - 1) - *line1.first;
-         // vec3(x,y,z)1 = a1 + t * b1;
-         //		x1 = a1.x + t1 * b1.x
-         //		y1 = a1.y + t1 * b1.y
-         //		z1 = a1.z + t1 * b1.z
-
-         glm::vec3 a2 = *line2.first;
-         glm::vec3 b2 = *(line2.second - 1) - *line2.first;
-         // vec3(x,y,z)2 = a2 + t * b2;
-         //		x2 = a2.x + t2 * b2.x
-         //		y2 = a2.y + t2 * b2.y
-         //		z2 = a2.z + t2 * b2.z
-
-         float t1 =
-             (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * a2.y * b2.x) /
-             (b1.x * b2.x - b1.y * b2.x) * -1;
-         float t2 = (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) /
-                    (b1.x * b2.y - b1.y * b2.x) * -1;
-
-         return glm::vec3(t1, t2, 0);
-      };
-
-      auto is_overlap = [&x_increment,
-                         &y_increment,
-                         &z_increment,
-                         &inter,
-                         &packs,
-                         &get_line_intesection](it_pair it1, it_pair it2) {
-         std::pair<glm::vec3, glm::vec3> box1 =
-             get_bbox_by_iterator(it1.first, it1.second);
-         std::pair<glm::vec3, glm::vec3> box2 =
-             get_bbox_by_iterator(it2.first, it2.second);
-
-         box_pack pack{};
-         pack.box1 = box1;
-         pack.box2 = box2;
-
-         bool xOverlap =
-             box1.second.x > box2.first.x && box2.second.x > box1.first.x;
-
-         bool yOverlap =
-             box1.second.y > box2.first.y && box2.second.y > box1.first.y;
-
-         bool zOverlap =
-             box1.second.z > box2.first.z && box2.second.z > box1.first.z;
-
-         if (!xOverlap || !yOverlap)
-         {
-            pack.is = false;
-            packs.push_back(pack);
-            return false;
-         }
-         pack.is = true;
-         packs.push_back(pack);
-
-         /*if (
-                 ((fabs(box1.first.x - box2.first.x) <= x_increment * 2) &&
-         (fabs(box1.second.x - box2.second.x) <= x_increment * 2)) &&
-                 ((fabs(box1.first.y - box2.first.y) <= y_increment * 2) &&
-         (fabs(box1.second.y - box2.second.y) <= y_increment * 2)) &&
-                 ((fabs(box1.first.z - box2.first.z) <= z_increment * 2) &&
-         (fabs(box1.second.z - box2.second.z) <= z_increment * 2)) ) {
-                 inter.push_back({ (box1.first.x + box2.first.x + box1.second.x
-         + box2.second.x) / 4, (box1.first.y + box2.first.y + box1.second.y +
-         box2.second.y) / 4, (box1.first.z + box2.first.z + box1.second.z +
-         box2.second.z) / 4 });
-         }*/
-         glm::vec3 f;
-         auto itd1 = (it1.second) - (it1.first);
-         /*if (itd1 == 2) {
-                 glm::vec3 line1_1 = *it1.first;
-                 glm::vec3 line1_2 = *(it1.second - 1);
-                 inter.push_back(std::make_pair(line1_1,line1_2));
-         }*/
-         auto itd2 = (it2.second) - (it2.first);
-         /*if (itd2 == 2) {
-                 glm::vec3 line2_1 = *it2.first;
-                 glm::vec3 line2_2 = *(it2.second-1);
-                 inter.push_back(std::make_pair(line2_1, line2_2));
-         }*/
-         if ((itd1 == 2) && (itd2 == 2))
-         {
-            f = get_line_intesection(it1, it2);
-            /*glm::vec3 line1_1 = *it1.first;
-            glm::vec3 line1_2 = *(it1.second - 1);
-            inter.push_back(std::make_pair(line1_1, line1_2));
-            glm::vec3 line2_1 = *it2.first;
-            glm::vec3 line2_2 = *(it2.second - 1);
-            inter.push_back(std::make_pair(line2_1, line2_2));*/
-            if (((f.x >= 0) && (f.x <= 1)) && ((f.y >= 0) && (f.y <= 1)))
-            {
-               glm::vec3 line1_1 = *it1.first;
-               glm::vec3 line1_2 = *(it1.second - 1);
-               inter.push_back(std::make_pair(line1_1, line1_2));
-               glm::vec3 line2_1 = *it2.first;
-               glm::vec3 line2_2 = *(it2.second - 1);
-               inter.push_back(std::make_pair(line2_1, line2_2));
-            }
-         }
-
-         return true;
-      };
-
-      // std::vector<std::pair<it_pair, it_pair>> curve_parts;
-      std::list<std::pair<it_pair, it_pair>> curve_parts;
-      curve_parts.push_back(std::make_pair(
-          it_pair(vert1.begin(), vert1.end()),
-          it_pair(vert2.begin(), vert2.end())
-      ));
-
-      int count = 0;
-      while (true)
-      {
-         size_t size_for_current_iteration = curve_parts.size();
-         /*if (count - size_for_current_iteration == 0) {
-
-
-
-                 return true;
-         }*/
-         if (size_for_current_iteration == count)
-         {
-            std::cout << "boxes-begin:" << std::endl;
-
-            for (int i = 0; i < packs.size(); i++)
-            {
-               std::cout << "(";
-               std::cout << "(";
-               std::cout << "(" << packs[i].box1.first.x << ", "
-                         << packs[i].box1.first.y << ", "
-                         << packs[i].box1.first.z << "), ";
-               std::cout << "(" << packs[i].box1.second.x << ", "
-                         << packs[i].box1.second.y << ", "
-                         << packs[i].box1.second.z << ")";
-               std::cout << "),";
-
-               std::cout << "(";
-               std::cout << "(" << packs[i].box2.first.x << ", "
-                         << packs[i].box2.first.y << ", "
-                         << packs[i].box2.first.z << "), ";
-               std::cout << "(" << packs[i].box2.second.x << ", "
-                         << packs[i].box2.second.y << ", "
-                         << packs[i].box2.second.z << ")";
-               std::cout << "), ";
-               std::cout << (int)packs[i].is;
-               std::cout << "),";
-               std::cout << std::endl;
-            }
-
-            std::cout << "boxes-end:" << std::endl;
-
-            break;
-         }
-
-         std::list<std::list<std::pair<it_pair, it_pair>>::iterator>
-             del_it_list;
-         for (auto it = curve_parts.begin(); it != curve_parts.end(); it++)
-         {
-            if (is_overlap(it->first, it->second))
-            {
-               it_pair p1b;
-               it_pair p2b;
-               it_pair p1e;
-               it_pair p2e;
-
-               size_t p1b_l = (it->first.second - it->first.first) / 2;
-               size_t p1e_l = it->first.second - it->first.first +
-                              (it->first.second - it->first.first) / 2;
-               size_t p2b_l = (it->second.second - it->second.first) / 2;
-               size_t p2e_l = it->second.second - it->second.first +
-                              (it->second.second - it->second.first) / 2;
-
-               if (p1b_l >= 2)
-               {
-                  p1b = it_pair(
-                      it->first.first,
-                      it->first.first + (it->first.second - it->first.first) / 2
-                  );
-               }
-               if (p1e_l >= 2)
-               {
-                  p1e = it_pair(
-                      it->first.first +
-                          (it->first.second - it->first.first) / 2,
-                      it->first.second
-                  );
-               }
-               if (p2b_l >= 2)
-               {
-                  p2b = it_pair(
-                      it->second.first,
-                      it->second.first +
-                          (it->second.second - it->second.first) / 2
-                  );
-               }
-               if (p2e_l >= 2)
-               {
-                  p2e = it_pair(
-                      it->second.first +
-                          (it->second.second - it->second.first) / 2,
-                      it->second.second
-                  );
-               }
-
-               curve_parts.push_back(std::make_pair(p1b, p2e));
-               curve_parts.push_back(std::make_pair(p1b, p2b));
-               curve_parts.push_back(std::make_pair(p1e, p2e));
-               curve_parts.push_back(std::make_pair(p1e, p2b));
-            }
-            else
-            {
-               del_it_list.push_back(it);
-            }
-            // count += 1;
-         }
-         for (auto it = del_it_list.begin(); it != del_it_list.end(); it++)
-         {
-            curve_parts.erase(*it);
-         }
-      }
+      // using it_pair = std::pair<
+      //     std::vector<glm::vec3>::const_iterator,
+      //     std::vector<glm::vec3>::const_iterator>;
+      //
+      // struct box_pack
+      // {
+      //    std::pair<glm::vec3, glm::vec3> box1;
+      //    std::pair<glm::vec3, glm::vec3> box2;
+      //    bool is;
+      // };
+      //
+      // std::vector<glm::vec3> vert1 = b1.copy_vec3_vertices(30);
+      // std::vector<glm::vec3> vert2 = b2.copy_vec3_vertices(30);
+      //
+      // float x_increment = 0;
+      // float y_increment = 0;
+      // float z_increment = 0;
+      //
+      // for (int i = 1; i < vert1.size(); i++)
+      // {
+      //    x_increment +=
+      //        (vert1[i].x - vert1[i - 1].x) + (vert2[i].x - vert2[i - 1].x);
+      //    y_increment +=
+      //        (vert1[i].y - vert1[i - 1].y) + (vert2[i].y - vert2[i - 1].y);
+      //    z_increment +=
+      //        (vert1[i].z - vert1[i - 1].z) + (vert2[i].z - vert2[i - 1].z);
+      // }
+      //
+      // x_increment /= vert1.size();
+      // y_increment /= vert1.size();
+      // z_increment /= vert1.size();
+      //
+      // std::vector<box_pack> packs;
+      //
+      // auto get_line_intesection = [](it_pair line1, it_pair line2) {
+      //    glm::vec3 a1 = *line1.first;
+      //    glm::vec3 b1 = *(line1.second - 1) - *line1.first;
+      //    // vec3(x,y,z)1 = a1 + t * b1;
+      //    //		x1 = a1.x + t1 * b1.x
+      //    //		y1 = a1.y + t1 * b1.y
+      //    //		z1 = a1.z + t1 * b1.z
+      //
+      //    glm::vec3 a2 = *line2.first;
+      //    glm::vec3 b2 = *(line2.second - 1) - *line2.first;
+      //    // vec3(x,y,z)2 = a2 + t * b2;
+      //    //		x2 = a2.x + t2 * b2.x
+      //    //		y2 = a2.y + t2 * b2.y
+      //    //		z2 = a2.z + t2 * b2.z
+      //
+      //    float t1 =
+      //        (a1.x * b2.y - a1.y * b2.x - a2.x * b2.y + a2.y * a2.y * b2.x) /
+      //        (b1.x * b2.x - b1.y * b2.x) * -1;
+      //    float t2 = (a1.x * b1.y - a1.y * b1.x - a2.x * b1.y + a2.y * b1.x) /
+      //               (b1.x * b2.y - b1.y * b2.x) * -1;
+      //
+      //    return glm::vec3(t1, t2, 0);
+      // };
+      //
+      // auto is_overlap = [&x_increment,
+      //                    &y_increment,
+      //                    &z_increment,
+      //                    &inter,
+      //                    &packs,
+      //                    &get_line_intesection](it_pair it1, it_pair it2) {
+      //    std::pair<glm::vec3, glm::vec3> box1 =
+      //        get_bbox_by_iterator(it1.first, it1.second);
+      //    std::pair<glm::vec3, glm::vec3> box2 =
+      //        get_bbox_by_iterator(it2.first, it2.second);
+      //
+      //    box_pack pack{};
+      //    pack.box1 = box1;
+      //    pack.box2 = box2;
+      //
+      //    bool xOverlap =
+      //        box1.second.x > box2.first.x && box2.second.x > box1.first.x;
+      //
+      //    bool yOverlap =
+      //        box1.second.y > box2.first.y && box2.second.y > box1.first.y;
+      //
+      //    bool zOverlap =
+      //        box1.second.z > box2.first.z && box2.second.z > box1.first.z;
+      //
+      //    if (!xOverlap || !yOverlap)
+      //    {
+      //       pack.is = false;
+      //       packs.push_back(pack);
+      //       return false;
+      //    }
+      //    pack.is = true;
+      //    packs.push_back(pack);
+      //
+      //    /*if (
+      //            ((fabs(box1.first.x - box2.first.x) <= x_increment * 2) &&
+      //    (fabs(box1.second.x - box2.second.x) <= x_increment * 2)) &&
+      //            ((fabs(box1.first.y - box2.first.y) <= y_increment * 2) &&
+      //    (fabs(box1.second.y - box2.second.y) <= y_increment * 2)) &&
+      //            ((fabs(box1.first.z - box2.first.z) <= z_increment * 2) &&
+      //    (fabs(box1.second.z - box2.second.z) <= z_increment * 2)) ) {
+      //            inter.push_back({ (box1.first.x + box2.first.x +
+      //            box1.second.x
+      //    + box2.second.x) / 4, (box1.first.y + box2.first.y + box1.second.y +
+      //    box2.second.y) / 4, (box1.first.z + box2.first.z + box1.second.z +
+      //    box2.second.z) / 4 });
+      //    }*/
+      //    glm::vec3 f;
+      //    auto itd1 = (it1.second) - (it1.first);
+      //    /*if (itd1 == 2) {
+      //            glm::vec3 line1_1 = *it1.first;
+      //            glm::vec3 line1_2 = *(it1.second - 1);
+      //            inter.push_back(std::make_pair(line1_1,line1_2));
+      //    }*/
+      //    auto itd2 = (it2.second) - (it2.first);
+      //    /*if (itd2 == 2) {
+      //            glm::vec3 line2_1 = *it2.first;
+      //            glm::vec3 line2_2 = *(it2.second-1);
+      //            inter.push_back(std::make_pair(line2_1, line2_2));
+      //    }*/
+      //    if ((itd1 == 2) && (itd2 == 2))
+      //    {
+      //       f = get_line_intesection(it1, it2);
+      //       /*glm::vec3 line1_1 = *it1.first;
+      //       glm::vec3 line1_2 = *(it1.second - 1);
+      //       inter.push_back(std::make_pair(line1_1, line1_2));
+      //       glm::vec3 line2_1 = *it2.first;
+      //       glm::vec3 line2_2 = *(it2.second - 1);
+      //       inter.push_back(std::make_pair(line2_1, line2_2));*/
+      //       if (((f.x >= 0) && (f.x <= 1)) && ((f.y >= 0) && (f.y <= 1)))
+      //       {
+      //          glm::vec3 line1_1 = *it1.first;
+      //          glm::vec3 line1_2 = *(it1.second - 1);
+      //          inter.push_back(std::make_pair(line1_1, line1_2));
+      //          glm::vec3 line2_1 = *it2.first;
+      //          glm::vec3 line2_2 = *(it2.second - 1);
+      //          inter.push_back(std::make_pair(line2_1, line2_2));
+      //       }
+      //    }
+      //
+      //    return true;
+      // };
+      //
+      // // std::vector<std::pair<it_pair, it_pair>> curve_parts;
+      // std::list<std::pair<it_pair, it_pair>> curve_parts;
+      // curve_parts.push_back(std::make_pair(
+      //     it_pair(vert1.begin(), vert1.end()),
+      //     it_pair(vert2.begin(), vert2.end())
+      // ));
+      //
+      // int count = 0;
+      // while (true)
+      // {
+      //    size_t size_for_current_iteration = curve_parts.size();
+      //    /*if (count - size_for_current_iteration == 0) {
+      //
+      //
+      //
+      //            return true;
+      //    }*/
+      //    if (size_for_current_iteration == count)
+      //    {
+      //       std::cout << "boxes-begin:" << std::endl;
+      //
+      //       for (int i = 0; i < packs.size(); i++)
+      //       {
+      //          std::cout << "(";
+      //          std::cout << "(";
+      //          std::cout << "(" << packs[i].box1.first.x << ", "
+      //                    << packs[i].box1.first.y << ", "
+      //                    << packs[i].box1.first.z << "), ";
+      //          std::cout << "(" << packs[i].box1.second.x << ", "
+      //                    << packs[i].box1.second.y << ", "
+      //                    << packs[i].box1.second.z << ")";
+      //          std::cout << "),";
+      //
+      //          std::cout << "(";
+      //          std::cout << "(" << packs[i].box2.first.x << ", "
+      //                    << packs[i].box2.first.y << ", "
+      //                    << packs[i].box2.first.z << "), ";
+      //          std::cout << "(" << packs[i].box2.second.x << ", "
+      //                    << packs[i].box2.second.y << ", "
+      //                    << packs[i].box2.second.z << ")";
+      //          std::cout << "), ";
+      //          std::cout << (int)packs[i].is;
+      //          std::cout << "),";
+      //          std::cout << std::endl;
+      //       }
+      //
+      //       std::cout << "boxes-end:" << std::endl;
+      //
+      //       break;
+      //    }
+      //
+      //    std::list<std::list<std::pair<it_pair, it_pair>>::iterator>
+      //        del_it_list;
+      //    for (auto it = curve_parts.begin(); it != curve_parts.end(); it++)
+      //    {
+      //       if (is_overlap(it->first, it->second))
+      //       {
+      //          it_pair p1b;
+      //          it_pair p2b;
+      //          it_pair p1e;
+      //          it_pair p2e;
+      //
+      //          size_t p1b_l = (it->first.second - it->first.first) / 2;
+      //          size_t p1e_l = it->first.second - it->first.first +
+      //                         (it->first.second - it->first.first) / 2;
+      //          size_t p2b_l = (it->second.second - it->second.first) / 2;
+      //          size_t p2e_l = it->second.second - it->second.first +
+      //                         (it->second.second - it->second.first) / 2;
+      //
+      //          if (p1b_l >= 2)
+      //          {
+      //             p1b = it_pair(
+      //                 it->first.first,
+      //                 it->first.first + (it->first.second - it->first.first)
+      //                 / 2
+      //             );
+      //          }
+      //          if (p1e_l >= 2)
+      //          {
+      //             p1e = it_pair(
+      //                 it->first.first +
+      //                     (it->first.second - it->first.first) / 2,
+      //                 it->first.second
+      //             );
+      //          }
+      //          if (p2b_l >= 2)
+      //          {
+      //             p2b = it_pair(
+      //                 it->second.first,
+      //                 it->second.first +
+      //                     (it->second.second - it->second.first) / 2
+      //             );
+      //          }
+      //          if (p2e_l >= 2)
+      //          {
+      //             p2e = it_pair(
+      //                 it->second.first +
+      //                     (it->second.second - it->second.first) / 2,
+      //                 it->second.second
+      //             );
+      //          }
+      //
+      //          curve_parts.push_back(std::make_pair(p1b, p2e));
+      //          curve_parts.push_back(std::make_pair(p1b, p2b));
+      //          curve_parts.push_back(std::make_pair(p1e, p2e));
+      //          curve_parts.push_back(std::make_pair(p1e, p2b));
+      //       }
+      //       else
+      //       {
+      //          del_it_list.push_back(it);
+      //       }
+      //       // count += 1;
+      //    }
+      //    for (auto it = del_it_list.begin(); it != del_it_list.end(); it++)
+      //    {
+      //       curve_parts.erase(*it);
+      //    }
+      // }
       return true;
    }
 
@@ -1521,7 +1531,7 @@ public:
     * Needed:	B - BfBezier curve to work with;
     *
     */
-   static inline float get_approx_length(const BfBezier &B)
+   static inline float get_approx_length(const BfBezier& B)
    {
       float len = 0;
       for (size_t i = 0; i < B.c_vertices.size() - 1; i++)
@@ -1563,7 +1573,7 @@ private:
 inline int32_t
 bfGetFactorial(int32_t n)
 {
-   const static std::map<uint32_t, uint32_t> __factorial{
+   const static std::map< uint32_t, uint32_t > __factorial{
        {1, 1},
        {2, 2},
        {3, 6},

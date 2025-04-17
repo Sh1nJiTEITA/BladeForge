@@ -23,7 +23,7 @@ enum BfEnDescriptorUsage
    BfDescriptorPosPickUsage,
 };
 
-extern std::map<BfEnDescriptorUsage, std::string> BfEnDescriptorUsageStr;
+extern std::map< BfEnDescriptorUsage, std::string > BfEnDescriptorUsageStr;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -58,16 +58,16 @@ struct BfDescriptorCreateInfo
    BfEnDescriptorUsage usage;
    VmaAllocator vma_allocator;
 
-   BfAllocatedImage *pImage = nullptr;
-   BfAllocatedBuffer *pBuffer = nullptr;
+   BfAllocatedImage* pImage = nullptr;
+   BfAllocatedBuffer* pBuffer = nullptr;
 
-   BfDescriptorImageCreateInfo *pImage_info = nullptr;
-   BfDescriptorBufferCreateInfo *pBuffer_info = nullptr;
+   BfDescriptorImageCreateInfo* pImage_info = nullptr;
+   BfDescriptorBufferCreateInfo* pBuffer_info = nullptr;
    // Binding
    // VkDescriptorType : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER...
    VkDescriptorType type;
-   VkShaderStageFlags shader_stages;  // VK_SHADER_STAGE_VERTEX_BIT
-   uint32_t binding;                  // Binding in shader: 0, 1, 2 ...
+   VkShaderStageFlags shader_stages; // VK_SHADER_STAGE_VERTEX_BIT
+   uint32_t binding;                 // Binding in shader: 0, 1, 2 ...
 
    // DescriptorSetLayout
    BfEnDescriptorSetLayoutType layout_binding;
@@ -75,7 +75,7 @@ struct BfDescriptorCreateInfo
 
 struct BfDescriptorLayoutPack
 {
-   std::vector<VkDescriptorSet> desc_sets;
+   std::vector< VkDescriptorSet > desc_sets;
    VkDescriptorSetLayout desc_set_layout;
 };
 
@@ -85,16 +85,16 @@ class BfDescriptor
 
    //
    bool __is_descriptor_mutable = true;
-   std::forward_list<BfDescriptorCreateInfo> __desc_create_info_list;
+   std::forward_list< BfDescriptorCreateInfo > __desc_create_info_list;
 
-   std::map<BfEnDescriptorUsage, std::vector<BfAllocatedBuffer>>
+   std::map< BfEnDescriptorUsage, std::vector< BfAllocatedBuffer > >
        __desc_buffers_map;
-   std::map<BfEnDescriptorUsage, std::vector<BfAllocatedImage>>
+   std::map< BfEnDescriptorUsage, std::vector< BfAllocatedImage > >
        __desc_image_map;
-   std::map<BfEnDescriptorSetLayoutType, BfDescriptorLayoutPack>
+   std::map< BfEnDescriptorSetLayoutType, BfDescriptorLayoutPack >
        __desc_layout_packs_map;
 
-   std::vector<BfTexture *> __textures;
+   std::vector< BfTexture* > __textures;
 
    VkDescriptorPool __desc_pool;
    VkDevice __device;
@@ -106,20 +106,21 @@ public:
    void set_frames_in_flight(unsigned int in);
    void bind_device(VkDevice device);
 
-   std::vector<VkDescriptorSetLayout> getAllLayouts() const;
+   std::vector< VkDescriptorSetLayout > getAllLayouts() const;
 
    BfEvent add_descriptor_create_info(BfDescriptorCreateInfo info);
-   BfEvent add_descriptor_create_info(std::vector<BfDescriptorCreateInfo> info);
+   BfEvent
+   add_descriptor_create_info(std::vector< BfDescriptorCreateInfo > info);
 
    // BfEvent add_texture(std::vector<std::shared_ptr<BfTexture>> textures);
-   BfEvent add_texture(BfTexture *texture);
+   BfEvent add_texture(BfTexture* texture);
 
    BfEvent allocate_desc_buffers();
    BfEvent deallocate_desc_buffers();
    BfEvent allocate_desc_images();
    BfEvent deallocate_desc_images();
 
-   BfEvent create_desc_pool(std::vector<VkDescriptorPoolSize> sizes);
+   BfEvent create_desc_pool(std::vector< VkDescriptorPoolSize > sizes);
    BfEvent destroy_desc_pool();
 
    BfEvent create_desc_set_layouts();
@@ -127,13 +128,13 @@ public:
    BfEvent create_texture_desc_set_layout();
 
    BfEvent allocate_desc_sets();
-   BfEvent allocate_texture_desc_sets();
+   // BfEvent allocate_texture_desc_sets();
 
    BfEvent update_desc_sets();
 
    // void map_textures();
    void map_descriptor(
-       BfEnDescriptorUsage usage, unsigned int frame_index, void **data
+       BfEnDescriptorUsage usage, unsigned int frame_index, void** data
    );
    void unmap_descriptor(BfEnDescriptorUsage usage, unsigned int frame_index);
 
@@ -147,31 +148,30 @@ public:
 
    bool is_usage(BfEnDescriptorUsage usage);
 
-   BfAllocatedBuffer *get_buffer(
-       BfEnDescriptorUsage usage, uint32_t frame_index
-   );
+   BfAllocatedBuffer*
+   get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index);
 
-   BfAllocatedImage *get_image(BfEnDescriptorUsage usage, uint32_t index);
+   BfAllocatedImage* get_image(BfEnDescriptorUsage usage, uint32_t index);
 
 private:
    VkWriteDescriptorSet __write_desc_buffer(
-       BfDescriptorCreateInfo &create_info,
+       BfDescriptorCreateInfo& create_info,
        VkDescriptorSet set,
-       BfAllocatedBuffer *buffer,
-       VkDescriptorBufferInfo *bufferInfo
+       BfAllocatedBuffer* buffer,
+       VkDescriptorBufferInfo* bufferInfo
    );
 
    VkWriteDescriptorSet __write_desc_image(
-       BfDescriptorCreateInfo &create_info,
+       BfDescriptorCreateInfo& create_info,
        VkDescriptorSet set,
-       BfAllocatedImage *image,
-       VkDescriptorImageInfo *imageInfo
+       BfAllocatedImage* image,
+       VkDescriptorImageInfo* imageInfo
    );
 
    VkDescriptorSetLayoutBinding __get_desc_set_layout_binding(
        VkDescriptorType type, VkShaderStageFlags stage_flags, uint32_t binding
    );
-   friend BfEvent bfaCreateGraphicsPipelineLayouts(BfBase &base);
+   friend BfEvent bfaCreateGraphicsPipelineLayouts(BfBase& base);
 };
 
 #endif

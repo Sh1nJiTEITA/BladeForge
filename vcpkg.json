@@ -18,7 +18,8 @@
     "vulkan-memory-allocator",
     "xtensor",
     "xtensor-blas",
-    "xtl"
+    "xtl",
+    "fmt"
   ],
   "overrides": [
     {

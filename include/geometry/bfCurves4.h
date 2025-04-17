@@ -208,36 +208,37 @@ private:
    BfVertex3Uni m_center;
 };
 
-class Bfcircle3Vertices : public obj::BfDrawObject
-{
-public:
-   template < typename T, typename U, typename B >
-   Bfcircle3Vertices(T&& P_1, U&& P_2, B&& P_3)
-       : obj::
-             BfDrawObject{"Circle 3 vertices", BF_PIPELINE(BfPipelineType_Lines), 200}
-       , m_first{std::forward< T >(P_1)}
-       , m_second{std::forward< U >(P_2)}
-       , m_third{std::forward< B >(P_3)}
-       , m_radius{std::nanf("")}
-       , m_center{BfVertex3::nan()}
-   {
-   }
-
-   const BfVertex3& first() const;
-   const BfVertex3& second() const;
-   const BfVertex3& third() const;
-   const float radius() const;
-   const BfVertex3& center() const;
-
-   void make() override;
-
-private:
-   float m_radius;
-   BfVertex3 m_center;
-   BfVertex3 m_first;
-   BfVertex3 m_second;
-   BfVertex3 m_third;
-};
+// class Bfcircle3Vertices : public obj::BfDrawObject
+// {
+// public:
+//    template < typename T, typename U, typename B >
+//    Bfcircle3Vertices(T&& P_1, U&& P_2, B&& P_3)
+//        : obj::
+//              BfDrawObject{"Circle 3 vertices",
+//              BF_PIPELINE(BfPipelineType_Lines), 200}
+//        , m_first{std::forward< T >(P_1)}
+//        , m_second{std::forward< U >(P_2)}
+//        , m_third{std::forward< B >(P_3)}
+//        , m_radius{std::nanf("")}
+//        , m_center{BfVertex3::nan()}
+//    {
+//    }
+//
+//    const BfVertex3& first() const;
+//    const BfVertex3& second() const;
+//    const BfVertex3& third() const;
+//    const float radius() const;
+//    const BfVertex3& center() const;
+//
+//    void make() override;
+//
+// private:
+//    float m_radius;
+//    BfVertex3 m_center;
+//    BfVertex3 m_first;
+//    BfVertex3 m_second;
+//    BfVertex3 m_third;
+// };
 
 class BfCircleCenterFilled : public obj::BfDrawObject
 {
@@ -746,10 +747,9 @@ public:
       {
          m_other.pos() += -m_lastCenterPos + m_center.pos();
          m_lastCenterPos = m_center.pos();
-      } 
+      }
 
       // if (glm::any(glm::notEqual(m_center.pos(), m_lastCenterPos)))
-      
 
       for (auto child : m_children)
       {

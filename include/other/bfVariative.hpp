@@ -24,12 +24,13 @@
 // #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_SWIZZLE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <fstream>  // Read shaderfiles
+#include <fmt/core.h>
+#include <fmt/printf.h>
+
+#include <fstream> // Read shaderfiles
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <set>
-#include <sstream>
 #include <vector>
 
 // #include "vma/vk_mem_alloc.h"
@@ -54,13 +55,13 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 // Store device extensions
-const std::vector<const char *> bfvDeviceExtensions = {
+const std::vector< const char* > bfvDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 
     // GL_KHR_vulkan_glsl
 };
 
-const std::vector<VkValidationFeatureEnableEXT> bfvValidationFeatures = {
+const std::vector< VkValidationFeatureEnableEXT > bfvValidationFeatures = {
     VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT
 };
 
@@ -76,7 +77,7 @@ const bool enableValidationLayers = true;
 #endif
 
 // Store validation layers here:
-const std::vector<const char *> bfvValidationLayers = {
+const std::vector< const char* > bfvValidationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
@@ -84,29 +85,33 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL
 bfvDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-    void *pUserData
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData
 )
 {
-   char *severity_type{};
-   switch (messageSeverity)
+   char* severity_type{};
+   switch (static_cast< int >(messageSeverity))
    {
-      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-         severity_type = const_cast<char *>("[INFO]");
-         break;
-      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-         severity_type = const_cast<char *>("[VERB]");
-         break;
-      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-         severity_type = const_cast<char *>("[WARN]");
-         break;
-      case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-         severity_type = const_cast<char *>("[ERR]");
-         break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      severity_type = const_cast< char* >("[INFO]");
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+      severity_type = const_cast< char* >("[VERB]");
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      severity_type = const_cast< char* >("[WARN]");
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+      severity_type = const_cast< char* >("[ERR]");
+      break;
    }
 
-   std::cerr << severity_type
-             << " Validation layer: " << pCallbackData->pMessage << std::endl;
+   fmt::print(
+       stderr,
+       "{} Validation layer: {}\n",
+       severity_type,
+       pCallbackData->pMessage
+   );
 
    return VK_FALSE;
 }
@@ -123,7 +128,7 @@ bfvSetGLFWProperties()
    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
    glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
-   // glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+   glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Window
@@ -140,7 +145,7 @@ enum BfvEnQueueType
    BF_QUEUE_TRANSFER_TYPE
 };
 
-const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
+const std::set< BfvEnQueueType > bfvEnabledQueueTypes{
     BF_QUEUE_GRAPHICS_TYPE,
     // BF_QUEUE_COMPUTE_TYPE,
     BF_QUEUE_PRESENT_TYPE,
@@ -152,9 +157,11 @@ const std::set<BfvEnQueueType> bfvEnabledQueueTypes{
 static void
 check_vk_result(VkResult err)
 {
-   if (err == 0) return;
+   if (err == 0)
+      return;
    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-   if (err < 0) abort();
+   if (err < 0)
+      abort();
 };
 
 #endif

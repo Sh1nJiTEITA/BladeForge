@@ -31,31 +31,42 @@ float
 BfBladeSection::_equivalentOutletAngle()
 {
    // return 90.0f - this->m_info.get().outletAngle;
-   return  this->m_info.get().outletAngle;
+   return this->m_info.get().outletAngle;
 }
 
-glm::vec3 BfBladeSection::_ioIntersection()
-{ 
-   auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
-   auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();   
-   auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
-   
+glm::vec3
+BfBladeSection::_ioIntersection()
+{
+   auto inletCircle =
+       _part< BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH >();
+   auto outletCircle =
+       _part< BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH >();
+   auto oChord = _part< BfBladeSectionEnum::Chord, curves::BfSingleLineWH >();
+
    auto iCenter = inletCircle->circle()->center();
    auto oCenter = outletCircle->circle()->center();
 
    glm::vec3 angle_dir = oChord->line()->directionFromStart();
-   glm::vec3 inlet_dir = glm::rotate(glm::mat4(1.0f), glm::radians(_equivalentInletAngle()), iCenter.normals) * 
+   glm::vec3 inlet_dir = glm::rotate(
+                             glm::mat4(1.0f),
+                             glm::radians(_equivalentInletAngle()),
+                             iCenter.normals
+                         ) *
                          glm::vec4(angle_dir, 1.0f);
 
-   glm::vec3 outlet_dir = glm::rotate(glm::mat4(1.0f), -glm::radians(_equivalentOutletAngle()), oCenter.normals) * 
+   glm::vec3 outlet_dir = glm::rotate(
+                              glm::mat4(1.0f),
+                              -glm::radians(_equivalentOutletAngle()),
+                              oCenter.normals
+                          ) *
                           glm::vec4(angle_dir, 1.0f);
-   
+
    return curves::math::findLinesIntersection(
-      iCenter,
-      iCenter.pos + inlet_dir,
-      oCenter,
-      oCenter.pos + outlet_dir,
-      BF_MATH_FIND_LINES_INTERSECTION_ANY 
+       iCenter,
+       iCenter.pos + inlet_dir,
+       oCenter,
+       oCenter.pos + outlet_dir,
+       BF_MATH_FIND_LINES_INTERSECTION_ANY
    );
 }
 
@@ -296,7 +307,6 @@ void BfBladeSection::_createFrontIntersectionLines() {
 
    for (size_t i = 0; i < CCL.size() - 1; ++i) 
    { 
-      std::cout << "Finding intersection for " << i << " and " << i + 1 << " ==> ";
       auto left = std::static_pointer_cast<curves::BfSingleLine>(IL->children()[i]);
       auto right = std::static_pointer_cast<curves::BfSingleLine>(IL->children()[i + 1]);
       glm::vec3 intersection = curves::math::findLinesIntersection(
@@ -307,10 +317,8 @@ void BfBladeSection::_createFrontIntersectionLines() {
          BF_MATH_FIND_LINES_INTERSECTION_ANY
       );
       if (glm::any(glm::isnan(intersection))) { 
-         std::cout << " No lines itersection... skipping\n";
          continue; 
       }
-      std::cout << " found " << intersection.x << ", " << intersection.y << ", " << intersection.z << "\n";
 
       left->second().pos = intersection;
       right->first().pos = intersection;
@@ -332,7 +340,6 @@ void BfBladeSection::_processFrontIntersectionLines() {
    }
    for (size_t i = 0; i < CCL.size() - 1; ++i) 
    { 
-      std::cout << "Finding intersection for " << i << " and " << i + 1 << " ==> ";
       auto left = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
       auto right = std::static_pointer_cast<curves::BfSingleLine>(IL[i + 1]);
       glm::vec3 intersection = curves::math::findLinesIntersection(
@@ -343,10 +350,8 @@ void BfBladeSection::_processFrontIntersectionLines() {
          BF_MATH_FIND_LINES_INTERSECTION_ANY
       );
       if (glm::any(glm::isnan(intersection))) { 
-         std::cout << " No lines itersection... skipping\n";
          continue; 
       }
-      std::cout << " found " << intersection.x << ", " << intersection.y << ", " << intersection.z << "\n";
 
       left->second().pos = intersection;
       right->first().pos = intersection;

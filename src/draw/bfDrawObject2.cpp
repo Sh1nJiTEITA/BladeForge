@@ -13,7 +13,7 @@ BfDrawControlProxy::BfDrawControlProxy(BfDrawObjectBase& obj)
 {
 }
 
-std::vector<int32_t>
+std::vector< int32_t >
 BfDrawControlProxy::vertexOffset(size_t last) const
 {
    // Check not to calc offsets for OBJECT
@@ -22,7 +22,7 @@ BfDrawControlProxy::vertexOffset(size_t last) const
       throw std::runtime_error("OBJECT cant have vertex layer offsets");
    }
 
-   std::vector<int32_t> offset;
+   std::vector< int32_t > offset;
    offset.reserve(m_obj.m_children.size());
    size_t growing_offset = last;
 
@@ -51,7 +51,7 @@ BfDrawControlProxy::vertexOffset(size_t last) const
    return offset;
 }
 
-std::vector<int32_t>
+std::vector< int32_t >
 BfDrawControlProxy::indexOffset(size_t last) const
 {
    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
@@ -59,7 +59,7 @@ BfDrawControlProxy::indexOffset(size_t last) const
       throw std::runtime_error("OBJECT cant have index layer offsets");
    }
 
-   std::vector<int32_t> offset;
+   std::vector< int32_t > offset;
    offset.reserve(m_obj.m_children.size());
    size_t growing_offset = last;
 
@@ -172,8 +172,9 @@ BfDrawControlProxy::isBuffer() const
 }
 
 void
-BfDrawControlProxy::mapModel(size_t frame_index, size_t& offset, void* data)
-    const
+BfDrawControlProxy::mapModel(
+    size_t frame_index, size_t& offset, void* data
+) const
 {
    auto& g = m_obj;
 
@@ -183,7 +184,7 @@ BfDrawControlProxy::mapModel(size_t frame_index, size_t& offset, void* data)
    {
       BfObjectData obj_data = g._objectData();
       memcpy(
-          reinterpret_cast<char*>(data) + offset,
+          reinterpret_cast< char* >(data) + offset,
           &obj_data,
           sizeof(BfObjectData)
       );
@@ -252,11 +253,19 @@ BfDrawControlProxy::updateBuffer(
       if (g.m_type == BfDrawObjectBase::OBJECT)
       {
          size_t size = sizeof(BfVertex3) * g.vertices().size();
-         memcpy(reinterpret_cast<char*>(v) + *off_v, g.vertices().data(), size);
+         memcpy(
+             reinterpret_cast< char* >(v) + *off_v,
+             g.vertices().data(),
+             size
+         );
          *off_v += size;
 
          size = sizeof(uint32_t) * g.indices().size();
-         memcpy(reinterpret_cast<char*>(i) + *off_i, g.indices().data(), size);
+         memcpy(
+             reinterpret_cast< char* >(i) + *off_i,
+             g.indices().data(),
+             size
+         );
          *off_i += size;
 
          // innerMap(g.vertices(), sizeof(BfVertex3), v, off_v);
@@ -293,7 +302,8 @@ BfDrawControlProxy::draw(
    if (g.m_type == BfDrawObjectBase::OBJECT)
    {
       // DRAW SINGLE OBJECT
-      if (g.m_isrender) { 
+      if (g.m_isrender)
+      {
          vkCmdBindPipeline(
              combuffer,
              VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -316,11 +326,11 @@ BfDrawControlProxy::draw(
       g.isHovered = g.id() == hovered_id;
       m_obj.processDragging();
    }
-   else  // IF LAYER
+   else // IF LAYER
    {
       if (isBuffer())
       {
-         std::vector<VkDeviceSize> vert_offset = {0};
+         std::vector< VkDeviceSize > vert_offset = {0};
          // Local elements
          vkCmdBindVertexBuffers(
              combuffer,
@@ -375,7 +385,7 @@ BfDrawDebugProxy::printVertices()
 {
    for (auto v : m_obj.m_vertices)
    {
-      std::cout << v << "\n";
+        // fmt::print("{}\n", v);
    }
 }
 void
@@ -383,7 +393,7 @@ BfDrawDebugProxy::printIndices()
 {
    for (auto i : m_obj.m_indices)
    {
-      std::cout << i << "\n";
+      fmt::print("{}", i);
    }
 }
 

@@ -45,9 +45,6 @@ struct BfBladeSectionCreateInfo
    VkPipeline t_pipeline = nullptr;
 };
 
-bool bfCheckBladeSectionCreateInfoEquality(
-    const BfBladeSectionCreateInfo& i_1, const BfBladeSectionCreateInfo& i_2
-);
 void bfFillBladeSectionStandart(BfBladeSectionCreateInfo* info);
 
 #define BF_BLADESECTION_AVE_COLOR glm::vec3(1.0, 0.5, 0.0)
@@ -82,32 +79,32 @@ public:
    const BfVertex3& get_outlet_center() const noexcept;
 
    //
-   std::shared_ptr<BfSingleLine> get_top_border();
-   std::shared_ptr<BfSingleLine> get_bot_border();
-   std::shared_ptr<BfSingleLine> get_chord();
-   std::shared_ptr<BfCircle> get_inlet_edge();
-   std::shared_ptr<BfCircle> get_outlet_edge();
-   std::shared_ptr<BfSingleLine> get_inlet_vector();
-   std::shared_ptr<BfSingleLine> get_outlet_vector();
+   std::shared_ptr< BfSingleLine > get_top_border();
+   std::shared_ptr< BfSingleLine > get_bot_border();
+   std::shared_ptr< BfSingleLine > get_chord();
+   std::shared_ptr< BfCircle > get_inlet_edge();
+   std::shared_ptr< BfCircle > get_outlet_edge();
+   std::shared_ptr< BfSingleLine > get_inlet_vector();
+   std::shared_ptr< BfSingleLine > get_outlet_vector();
 
-   std::shared_ptr<BfBezierCurve> get_ave_curve();
-   std::shared_ptr<BfBezierCurve> get_back_curve();
-   std::shared_ptr<BfBezierCurve> get_face_curve();
+   std::shared_ptr< BfBezierCurve > get_ave_curve();
+   std::shared_ptr< BfBezierCurve > get_back_curve();
+   std::shared_ptr< BfBezierCurve > get_face_curve();
 
-   std::shared_ptr<BfArc> get_inlet_edge_a();
-   std::shared_ptr<BfArc> get_outlet_edge_a();
+   std::shared_ptr< BfArc > get_inlet_edge_a();
+   std::shared_ptr< BfArc > get_outlet_edge_a();
 
-   std::shared_ptr<BfBezierCurveFrame> get_ave_curve_frame();
-   std::shared_ptr<BfBezierCurveFrame> get_back_curve_frame();
-   std::shared_ptr<BfBezierCurveFrame> get_face_curve_frame();
+   std::shared_ptr< BfBezierCurveFrame > get_ave_curve_frame();
+   std::shared_ptr< BfBezierCurveFrame > get_back_curve_frame();
+   std::shared_ptr< BfBezierCurveFrame > get_face_curve_frame();
 
-   std::vector<std::shared_ptr<BfTriangle>> get_triangulated_shape();
+   std::vector< std::shared_ptr< BfTriangle > > get_triangulated_shape();
    BfVertex3 get_center();
 
    virtual void remake(BfBladeSectionCreateInfo* info);
    virtual void del_all() override;
 
-   std::vector<BfVertex3> get_contour();
+   std::vector< BfVertex3 > get_contour();
 
    void generate_draw_data() override;
 
@@ -119,7 +116,7 @@ public:
     * 4) Корыто
     *
     */
-   std::vector<std::shared_ptr<BfDrawObj>> get_shape_parts();
+   std::vector< std::shared_ptr< BfDrawObj > > get_shape_parts();
    /*const BfBladeSectionCreateInfo& get_info();
    BfBladeSectionCreateInfo* get_pInfo();*/
 
@@ -179,7 +176,7 @@ struct BfBladeSectionCreateInfo2
    float inletEdgeAngle;
    float outletEdgeAngle;
 
-   std::vector<BfBladeSectionCmax> cmax; /*! Все окружности */
+   std::vector< BfBladeSectionCmax > cmax; /*! Все окружности */
 
    VkPipeline l_pipeline = nullptr;
    VkPipeline t_pipeline = nullptr;
@@ -267,15 +264,15 @@ enum BfBladeSection2_Part_ : BfBladeSection2_Part
  * @brief Слой для создания сечения лопатки 2.0
  *
  */
-class BfBladeSection2 : public BfDrawLayerAccessed<BfBladeSection2_Part>
+class BfBladeSection2 : public BfDrawLayerAccessed< BfBladeSection2_Part >
 {
    /*! Входное инфо для создания */
    BfBladeSectionCreateInfo2* m_info;
 
    /*! Хранение `id` элементов для их поиска */
-   std::unordered_map<BfBladeSection2_Part, uint32_t> m_idMap;
+   std::unordered_map< BfBladeSection2_Part, uint32_t > m_idMap;
 
-   std::vector<BfVertex3> m_cmaxCenterVertices;
+   std::vector< BfVertex3 > m_cmaxCenterVertices;
 
 public:
    /**
@@ -310,7 +307,7 @@ public:
    //
    //
    //
-   std::vector<std::shared_ptr<BfCircle>> circles();
+   std::vector< std::shared_ptr< BfCircle > > circles();
 
 private:
    void _createAverageCurve();
@@ -344,7 +341,7 @@ struct BfBladeBaseCreateInfo
        .id_type = BF_DRAW_LAYER_TYPE_BLADE_BASE
    };
 
-   std::vector<BfBladeSectionCreateInfo> section_infos;
+   std::vector< BfBladeSectionCreateInfo > section_infos;
 };
 
 void bfFillBladeBaseStandart(BfBladeBaseCreateInfo* info);
@@ -363,21 +360,21 @@ public:
 
    // std::vector<BfBladeSectionCreateInfo*> get_pInfos();
    const BfBladeBaseCreateInfo& get_info();
-   std::shared_ptr<BfBladeBaseSurface> get_shape();
-   std::shared_ptr<BfBladeBaseSurface> create_shape();
+   std::shared_ptr< BfBladeBaseSurface > get_shape();
+   std::shared_ptr< BfBladeBaseSurface > create_shape();
 
 private:
 };
 
 class BfBladeBaseSurface : public BfDrawObj
 {
-   std::vector<std::shared_ptr<BfBladeSection>> __secs;
+   std::vector< std::shared_ptr< BfBladeSection > > __secs;
    size_t __slices_count;
    size_t __skip_vert;
 
 public:
    BfBladeBaseSurface(
-       const std::vector<std::shared_ptr<BfBladeSection>>& secs,
+       const std::vector< std::shared_ptr< BfBladeSection > >& secs,
        size_t inner_sections_count,
        size_t skip_vert = 0
    );
