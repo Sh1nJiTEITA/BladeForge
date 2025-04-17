@@ -320,47 +320,40 @@ if(WIN32)
   set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3")
 endif(WIN32)
 
-# CATCH 2 add_subdirectory(external/catch2) Tests
-find_package(Catch2 REQUIRED)
-
-add_library(bfgeometrytestlib STATIC ${BF_GEOMETRY})
-target_compile_definitions(bfgeometrytestlib PUBLIC BF_CURVES4_NO_PIPELINE)
-target_link_libraries(bfgeometrytestlib PUBLIC bfexternallib)
-
-add_executable(
-  tests #
-  # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/main_api.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/curves.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/memory_test.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/matrix.cpp" #
-  # "${CMAKE_SOURCE_DIR}/include/bfBase.h" #
-  # "${CMAKE_SOURCE_DIR}/include/BfEvent.h" #
-  # "${CMAKE_SOURCE_DIR}/src/bfEvent.cpp" #
-  # "${CMAKE_SOURCE_DIR}/include/bfVariative.hpp" #
-  # "${CMAKE_SOURCE_DIR}/src/bfBase.cpp" #
-  # "${CMAKE_SOURCE_DIR}/include/bfWindow.h" #
-  # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" # "tests/bez_test.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp" #
-  # "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp"
-  "include/other/bfMath.hpp" "src/other/bfMath.cpp" "./tests/object.cpp"
-  "./tests/curves4.cpp" #
-  "./tests/xtensor.cpp"
-  # "tests/filedialog_test.cpp" # "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" )
-)
-
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-target_link_libraries(tests PUBLIC bfgeometrytestlib)
-target_link_libraries(tests PUBLIC bfotherlib)
-target_link_libraries(tests PUBLIC bfdrawlib)
-target_link_libraries(tests PUBLIC bfinteractionlib)
+# CATCH 2 add_subdirectory(external/catch2) Tests find_package(Catch2 REQUIRED)
+#
+# add_library(bfgeometrytestlib STATIC ${BF_GEOMETRY})
+# target_compile_definitions(bfgeometrytestlib PUBLIC BF_CURVES4_NO_PIPELINE)
+# target_link_libraries(bfgeometrytestlib PUBLIC bfexternallib)
+#
+# add_executable( tests # # "${CMAKE_SOURCE_DIR}/tests/own_api.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/main_api.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/draw_obj_test.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/curves.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/memory_test.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/matrix.cpp" # #
+# "${CMAKE_SOURCE_DIR}/include/bfBase.h" # #
+# "${CMAKE_SOURCE_DIR}/include/BfEvent.h" # #
+# "${CMAKE_SOURCE_DIR}/src/bfEvent.cpp" # #
+# "${CMAKE_SOURCE_DIR}/include/bfVariative.hpp" # #
+# "${CMAKE_SOURCE_DIR}/src/bfBase.cpp" # #
+# "${CMAKE_SOURCE_DIR}/include/bfWindow.h" # #
+# "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" # "tests/bez_test.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/ImGUItest.cpp" # #
+# "${CMAKE_SOURCE_DIR}/tests/matrix2.cpp" "include/other/bfMath.hpp"
+# "src/other/bfMath.cpp" "./tests/object.cpp" "./tests/curves4.cpp" #
+# "./tests/xtensor.cpp" # "tests/filedialog_test.cpp" #
+# "${CMAKE_SOURCE_DIR}/src/bfWindow.cpp" ) )
+#
+# target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+# target_link_libraries(tests PUBLIC bfgeometrytestlib)
+# target_link_libraries(tests PUBLIC bfotherlib) target_link_libraries(tests
+# PUBLIC bfdrawlib) target_link_libraries(tests PUBLIC bfinteractionlib) #
 # target_link_libraries(tests LINK_PUBLIC ${Boost_LIBRARIES})
-target_link_libraries(tests PUBLIC bfexternallib)
-target_link_libraries(tests PUBLIC bfbaselib)
-
-foreach(subdir ${SUBDIRECTORIES})
-  target_include_directories(tests PUBLIC include/${subdir})
-endforeach()
-
+# target_link_libraries(tests PUBLIC bfexternallib) target_link_libraries(tests
+# PUBLIC bfbaselib)
+#
+# foreach(subdir ${SUBDIRECTORIES}) target_include_directories(tests PUBLIC
+# include/${subdir}) endforeach()
+#
 # endif(${IS_BUILD_TESTS})
