@@ -1,4 +1,5 @@
 #include "bfConsole.h"
+#include <fmt/color.h>
 
 // std::string BfConsole::make_str(VkExtent2D extent2d)
 //{
@@ -168,26 +169,26 @@ BfConsole::print_all_single_events(int types)
 void
 BfConsole::print_single_single_event(BfSingleEvent event)
 {
-   auto getTimeStr = [](const time_t& timeValue) {
-      struct tm* timeInfo = std::localtime(&timeValue);
-      int hours = timeInfo->tm_hour;
-      int minutes = timeInfo->tm_min;
-      int seconds = timeInfo->tm_sec;
-
-      std::stringstream ss;
-      ss << "[" << hours << ":" << minutes << ":" << seconds << "]";
-      return ss.str();
-   };
+   // auto getTimeStr = [](const time_t& timeValue) {
+   //    struct tm* timeInfo = std::localtime(&timeValue);
+   //    int hours = timeInfo->tm_hour;
+   //    int minutes = timeInfo->tm_min;
+   //    int seconds = timeInfo->tm_sec;
+   //
+   //    std::stringstream ss;
+   //    ss << "[" << hours << ":" << minutes << ":" << seconds << "]";
+   //    return ss.str();
+   // };
 
    auto it_standart_messege = bfSetActionsStr.find((int)event.action);
    if (it_standart_messege != bfSetActionsStr.end())
    {
       fmt::print(
-          "{} {} {}\n",
-          getTimeStr(event.time),
-          it_standart_messege->second,
-          event.info
+          fmt::emphasis::bold | fmt::fg(fmt::color::medium_orchid),
+          "[{:%H:%M:%S}] ",
+          fmt::localtime(std::time(nullptr))
       );
+      fmt::print("{} {}\n", it_standart_messege->second, event.info);
    }
    else
    {

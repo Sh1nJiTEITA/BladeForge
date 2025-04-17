@@ -278,13 +278,8 @@ target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
 target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
 
 set(BF_OTHER
-    # "include/other/BfExecutionTime.hpp"
-    "include/other/bfMatrix.hpp"
-    "include/other/bfVariative.hpp"
-    "src/other/bfMatrix2.cpp"
-    "include/other/bfMath.hpp"
-    "src/other/bfMath.cpp"
-    "src/other/bfTextureLoad.cpp"
+    "include/other/bfVariative.hpp" "include/other/bfMath.hpp"
+    "src/other/bfMath.cpp" "src/other/bfTextureLoad.cpp"
     "src/other/bfConfigManager.cpp")
 
 add_library(bfotherlib STATIC ${BF_OTHER})
@@ -299,8 +294,7 @@ add_library(bfdrawlib STATIC ${BF_DRAW})
 target_link_libraries(bfdrawlib PUBLIC bfexternallib)
 
 # Add source to this project's executable.
-add_executable(${PROJECT_NAME} "main.h" "main.cpp" "src/bfMain.cpp"
-                               "include/BfMain.h")
+add_executable(${PROJECT_NAME} "main.cpp" "src/bfMain.cpp")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC bfbaselib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)

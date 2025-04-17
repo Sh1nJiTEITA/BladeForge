@@ -14,10 +14,9 @@
 #include "bfCurves.hpp"
 #include "bfDrawObject.h"
 #include "bfDrawObjectDefineType.h"
-#include "bfMatrix2.h"
 #include "bfPipeline.h"
 
-BfPlane::BfPlane(std::vector<BfVertex3> d_vertices)
+BfPlane::BfPlane(std::vector< BfVertex3 > d_vertices)
     : BfDrawObj(BF_DRAW_OBJ_TYPE_PLANE)
 {
    __dvertices = d_vertices;
@@ -27,7 +26,7 @@ void
 BfPlane::createVertices()
 {
    switch (__depMode)
-   {  // clang-format off
+   { // clang-format off
       case BfDrawObjDependencies_Mode_Ptr: {
          __vertices.reserve(__pdvertices.size());
          for (const auto& dvert : __pdvertices)
@@ -44,7 +43,7 @@ BfPlane::createVertices()
       }
       default:
          throw std::runtime_error("Unexpected dependency mode in BfPlane");
-   }  // clang-format on
+   } // clang-format on
 }
 
 void
@@ -100,20 +99,20 @@ BfSingleLine::get_k(int proj)
 
    switch (proj)
    {
-      case BF_SINGLE_LINE_PROJ_XY:
-         return (s.y - f.y) / (s.x - f.x);
-      case BF_SINGLE_LINE_PROJ_XZ:
-         return (s.z - f.z) / (s.x - f.x);
-      case BF_SINGLE_LINE_PROJ_YX:
-         return (s.x - f.x) / (s.y - f.y);
-      case BF_SINGLE_LINE_PROJ_YZ:
-         return (s.z - f.z) / (s.y - f.y);
-      case BF_SINGLE_LINE_PROJ_ZX:
-         return (s.x - f.x) / (s.z - f.z);
-      case BF_SINGLE_LINE_PROJ_ZY:
-         return (s.y - f.y) / (s.z - f.z);
-      default:
-         throw std::runtime_error("BfSingleLine::get_k - invalid proj");
+   case BF_SINGLE_LINE_PROJ_XY:
+      return (s.y - f.y) / (s.x - f.x);
+   case BF_SINGLE_LINE_PROJ_XZ:
+      return (s.z - f.z) / (s.x - f.x);
+   case BF_SINGLE_LINE_PROJ_YX:
+      return (s.x - f.x) / (s.y - f.y);
+   case BF_SINGLE_LINE_PROJ_YZ:
+      return (s.z - f.z) / (s.y - f.y);
+   case BF_SINGLE_LINE_PROJ_ZX:
+      return (s.x - f.x) / (s.z - f.z);
+   case BF_SINGLE_LINE_PROJ_ZY:
+      return (s.y - f.y) / (s.z - f.z);
+   default:
+      throw std::runtime_error("BfSingleLine::get_k - invalid proj");
    }
 }
 
@@ -131,20 +130,20 @@ BfSingleLine::get_b(int proj)
 
    switch (proj)
    {
-      case BF_SINGLE_LINE_PROJ_XY:
-         return f.y - this->get_k(proj) * f.x;
-      case BF_SINGLE_LINE_PROJ_XZ:
-         return f.z - this->get_k(proj) * f.x;
-      case BF_SINGLE_LINE_PROJ_YX:
-         return f.x - this->get_k(proj) * f.y;
-      case BF_SINGLE_LINE_PROJ_YZ:
-         return f.z - this->get_k(proj) * f.y;
-      case BF_SINGLE_LINE_PROJ_ZX:
-         return f.x - this->get_k(proj) * f.z;
-      case BF_SINGLE_LINE_PROJ_ZY:
-         return f.y - this->get_k(proj) * f.z;
-      default:
-         throw std::runtime_error("BfSingleLine::get_b - invalid proj");
+   case BF_SINGLE_LINE_PROJ_XY:
+      return f.y - this->get_k(proj) * f.x;
+   case BF_SINGLE_LINE_PROJ_XZ:
+      return f.z - this->get_k(proj) * f.x;
+   case BF_SINGLE_LINE_PROJ_YX:
+      return f.x - this->get_k(proj) * f.y;
+   case BF_SINGLE_LINE_PROJ_YZ:
+      return f.z - this->get_k(proj) * f.y;
+   case BF_SINGLE_LINE_PROJ_ZX:
+      return f.x - this->get_k(proj) * f.z;
+   case BF_SINGLE_LINE_PROJ_ZY:
+      return f.y - this->get_k(proj) * f.z;
+   default:
+      throw std::runtime_error("BfSingleLine::get_b - invalid proj");
    }
 }
 
@@ -155,22 +154,22 @@ BfSingleLine::get_b_perpendicular(glm::vec3 f, int proj)
 
    switch (proj)
    {
-      case BF_SINGLE_LINE_PROJ_XY:
-         return f.y - k_per * f.x;
-      case BF_SINGLE_LINE_PROJ_XZ:
-         return f.z - k_per * f.x;
-      case BF_SINGLE_LINE_PROJ_YX:
-         return f.x - k_per * f.y;
-      case BF_SINGLE_LINE_PROJ_YZ:
-         return f.z - k_per * f.y;
-      case BF_SINGLE_LINE_PROJ_ZX:
-         return f.x - k_per * f.z;
-      case BF_SINGLE_LINE_PROJ_ZY:
-         return f.y - k_per * f.z;
-      default:
-         throw std::runtime_error(
-             "BfSingleLine::get_b_perpenduclar - invalid proj"
-         );
+   case BF_SINGLE_LINE_PROJ_XY:
+      return f.y - k_per * f.x;
+   case BF_SINGLE_LINE_PROJ_XZ:
+      return f.z - k_per * f.x;
+   case BF_SINGLE_LINE_PROJ_YX:
+      return f.x - k_per * f.y;
+   case BF_SINGLE_LINE_PROJ_YZ:
+      return f.z - k_per * f.y;
+   case BF_SINGLE_LINE_PROJ_ZX:
+      return f.x - k_per * f.z;
+   case BF_SINGLE_LINE_PROJ_ZY:
+      return f.y - k_per * f.z;
+   default:
+      throw std::runtime_error(
+          "BfSingleLine::get_b_perpenduclar - invalid proj"
+      );
    }
 }
 
@@ -190,22 +189,22 @@ const BfVertex3&
 BfSingleLine::get_first() const
 {
    switch (__depMode)
-   {  // clang-format off
+   { // clang-format off
       case BfDrawObjDependencies_Mode_Ptr: return *__pdvertices[0];
       case BfDrawObjDependencies_Mode_No: return __dvertices[0];
       default: throw std::runtime_error("Unexpected dependency mode in BfSingleLine");
-   }  // clang-format on
+   } // clang-format on
 }
 
 const BfVertex3&
 BfSingleLine::get_second() const
 {
    switch (__depMode)
-   {  // clang-format off
+   { // clang-format off
       case BfDrawObjDependencies_Mode_Ptr: return *__pdvertices[1];
       case BfDrawObjDependencies_Mode_No: return __dvertices[1];
       default: throw std::runtime_error("Unexpected dependency mode in BfSingleLine");
-   }  // clang-format on
+   } // clang-format on
 }
 
 glm::vec3
@@ -348,7 +347,7 @@ bfMathFindLinesIntersection(
 size_t
 bfMathGetFactorial(size_t n)
 {
-   const static std::map<uint32_t, uint32_t> __factorial{
+   const static std::map< uint32_t, uint32_t > __factorial{
        {1, 1},
        {2, 2},
        {3, 6},
@@ -411,21 +410,21 @@ bfMathGetPlaneCoeffs(const glm::vec3& f, const glm::vec3& s, const glm::vec3& t)
    return {direction, -glm::determinant(D)};
 }
 
-std::array<glm::vec3, 3>
+std::array< glm::vec3, 3 >
 bfMathGetPlaneOrths(glm::vec4 plane)
 {
-   std::array<glm::vec3, 3> orths;
-   orths[0] = {plane.x, plane.y, plane.z};  // normal
+   std::array< glm::vec3, 3 > orths;
+   orths[0] = {plane.x, plane.y, plane.z}; // normal
    orths[1] = glm::normalize(glm::cross(orths[0], glm::vec3(0.0f, 0.0f, 1.0f)));
    orths[2] =
        glm::normalize(glm::cross(glm::cross(orths[0], orths[1]), orths[1]));
    return orths;
 }
 
-std::array<glm::vec3, 2>
+std::array< glm::vec3, 2 >
 bfMathGetOrthsByNormal(glm::vec3 normal)
 {
-   std::array<glm::vec3, 2> orths;
+   std::array< glm::vec3, 2 > orths;
    orths[0] = glm::normalize(glm::cross(normal, glm::vec3(0.0f, 1.0f, 0.0f)));
    orths[1] =
        glm::normalize(glm::cross(glm::cross(orths[0], normal), orths[0]));
@@ -464,7 +463,7 @@ bfMathIsVertexInPlain(
 
 bool
 bfMathIsVerticesInPlain(
-    const std::vector<BfVertex3>& np,
+    const std::vector< BfVertex3 >& np,
     const glm::vec3& f,
     const glm::vec3& s,
     const glm::vec3& t
@@ -543,9 +542,10 @@ bfMathFindLinesIntersection(cVec3& P0, cVec3& P1, cVec3 Q0, cVec3 Q1)
 }
 
 bool
-bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
+bfMathIsVerticesInPlain(const std::vector< BfVertex3 >& np)
 {
-   if (np.size() <= 3) return true;
+   if (np.size() <= 3)
+      return true;
 
    bool decision = true;
    for (size_t i = 3; i < np.size(); ++i)
@@ -558,9 +558,9 @@ bfMathIsVerticesInPlain(const std::vector<BfVertex3>& np)
 }
 
 bool
-bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np)
+bfMathIsVerticesInPlain(const std::vector< glm::vec3 >& np)
 {
-   std::vector<BfVertex3> _np;
+   std::vector< BfVertex3 > _np;
    _np.reserve(np.size());
    for (const auto& it : np)
    {
@@ -570,9 +570,9 @@ bfMathIsVerticesInPlain(const std::vector<glm::vec3>& np)
 }
 
 bool
-bfMathIsVerticesInPlain(std::initializer_list<glm::vec3> np)
+bfMathIsVerticesInPlain(std::initializer_list< glm::vec3 > np)
 {
-   std::vector<glm::vec3> _np;
+   std::vector< glm::vec3 > _np;
    _np.reserve(np.size());
    for (const auto& it : np)
    {
@@ -610,10 +610,10 @@ bfMathGetBezierCurveLength(BfBezierCurve* curve)
    return len;
 }
 
-std::vector<glm::vec3>
+std::vector< glm::vec3 >
 bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
 {
-   std::vector<glm::vec3> d;
+   std::vector< glm::vec3 > d;
    d.reserve(curve->dVertices().size());
 
    for (size_t i = 0; i < curve->dVertices().size(); ++i)
@@ -621,7 +621,7 @@ bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
       glm::vec3 axe_derivative{0.0f};
       for (size_t j = 0; j < 2; ++j)
       {
-         std::vector<BfVertex3> right_dvert = curve->dVertices();
+         std::vector< BfVertex3 > right_dvert = curve->dVertices();
          right_dvert[i].pos[j] += BF_MATH_ABS_ACCURACY;
          BfBezierCurve right_curve{
              curve->n(),
@@ -631,7 +631,7 @@ bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
          right_curve.createVertices();
          float right = bfMathGetBezierCurveLength(&right_curve);
 
-         std::vector<BfVertex3> left_dvert = curve->dVertices();
+         std::vector< BfVertex3 > left_dvert = curve->dVertices();
          left_dvert[i].pos[j] -= BF_MATH_ABS_ACCURACY;
          BfBezierCurve left_curve{
              curve->n(),
@@ -648,7 +648,7 @@ bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve)
    return d;
 }
 
-std::vector<BfCircle>
+std::vector< BfCircle >
 bfMathGetInscribedCircles(
     size_t m, const BfSingleLine& L1, const BfSingleLine& L2, float radius
 )
@@ -743,16 +743,19 @@ bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P)
    return glm::distance(intersection, P.pos);
 }
 
-std::vector<BfVertex3>
-bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs)
+std::vector< BfVertex3 >
+bfMathStickObjVertices(
+    std::initializer_list< std::shared_ptr< BfDrawObj > > objs
+)
 {
    size_t total_size = 0;
    for (auto& obj : objs)
    {
-      if (obj->vertices().size() == 0) abort();
+      if (obj->vertices().size() == 0)
+         abort();
       total_size += obj->vertices().size();
    }
-   std::vector<BfVertex3> out;
+   std::vector< BfVertex3 > out;
    out.reserve(total_size);
 
    for (auto& obj : objs)
@@ -763,8 +766,8 @@ bfMathStickObjVertices(std::initializer_list<std::shared_ptr<BfDrawObj>> objs)
    return out;
 }
 
-std::vector<std::shared_ptr<BfTriangle>>
-bfMathGenerateTriangleField(std::vector<BfVertex3> v)
+std::vector< std::shared_ptr< BfTriangle > >
+bfMathGenerateTriangleField(std::vector< BfVertex3 > v)
 {
    // auto get_triangle_count = [](size_t current) {
    //	/*if (current <= 5)
@@ -841,21 +844,21 @@ bfMathGenerateTriangleField(std::vector<BfVertex3> v)
    // free(out.pointlist);
    // free(out.trianglelist);
 
-   return std::vector<std::shared_ptr<BfTriangle>>();
+   return std::vector< std::shared_ptr< BfTriangle > >();
 }
 
 glm::vec3
-bfMathFindMassCenter(std::vector<BfVertex3> v)
+bfMathFindMassCenter(std::vector< BfVertex3 > v)
 {
    return glm::vec3(0.0f);
 }
 
-std::vector<float>
-bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v)
+std::vector< float >
+bfMathGetRelativeSplineArgument(const std::vector< glm::vec3 >& v)
 {
    size_t n = v.size() - 1;
 
-   std::vector<float> t;
+   std::vector< float > t;
    t.reserve(v.size());
    t.emplace_back(0.0f);
 
@@ -877,12 +880,13 @@ bfMathGetRelativeSplineArgument(const std::vector<glm::vec3>& v)
    return t;
 }
 
-std::vector<glm::vec2>
-bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y)
+std::vector< glm::vec2 >
+bfMathSplineFit(const std::vector< float >& x, const std::vector< float >& y)
 {
-   if (x.size() != y.size()) abort();
-   std::vector<SplineLib::Vec2f> p;
-   std::vector<glm::vec2> p2;
+   if (x.size() != y.size())
+      abort();
+   std::vector< SplineLib::Vec2f > p;
+   std::vector< glm::vec2 > p2;
    p.reserve(x.size());
    p2.reserve(x.size());
    for (size_t i = 0; i < x.size(); i++)
@@ -899,7 +903,7 @@ bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y)
    int numSplines =
        SplineLib::SplinesFromPoints(p.size(), p.data(), p.size() + 1, splines);
 
-   std::vector<glm::vec2> out;
+   std::vector< glm::vec2 > out;
 
    for (int i = 0; i < numSplines; i++)
    {
@@ -912,10 +916,10 @@ bfMathSplineFit(const std::vector<float>& x, const std::vector<float>& y)
    return out;
 }
 
-std::vector<SplineLib::cSpline3>
-bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
+std::vector< SplineLib::cSpline3 >
+bfMathSplineFitExternal3D(const std::vector< BfVertex3 >& v)
 {
-   std::vector<SplineLib::Vec3f> spl_df_v;
+   std::vector< SplineLib::Vec3f > spl_df_v;
    spl_df_v.reserve(v.size());
 
    for (auto vert = v.begin(); vert != v.end(); ++vert)
@@ -934,7 +938,7 @@ bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
        splines
    );
 
-   std::vector<SplineLib::cSpline3> o;
+   std::vector< SplineLib::cSpline3 > o;
    o.reserve(splines_count);
 
    for (size_t i = 0; i < splines_count; ++i)
@@ -944,7 +948,7 @@ bfMathSplineFitExternal3D(const std::vector<BfVertex3>& v)
    return o;
 }
 
-std::array<glm::vec3, 4>
+std::array< glm::vec3, 4 >
 bfMathFindTangentLines(const BfCircle& _c1, const BfCircle& _c2)
 {
    glm::vec3 c1 = _c1.get_center().pos;
@@ -968,11 +972,11 @@ bfMathFindTangentLines(const BfCircle& _c1, const BfCircle& _c2)
    };
 }
 
-std::array<glm::vec3, 4>
+std::array< glm::vec3, 4 >
 bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2)
 {
-   std::array<glm::vec3, 4> vert{bfMathFindTangentLines(c1, c2)};
-   std::array<glm::vec3, 4> out{
+   std::array< glm::vec3, 4 > vert{bfMathFindTangentLines(c1, c2)};
+   std::array< glm::vec3, 4 > out{
        glm::vec3{FLT_MAX},
        glm::vec3{FLT_MAX},
        glm::vec3{FLT_MAX},
@@ -1009,16 +1013,16 @@ bfMathFindTangentLinesDiscrete(const BfCircle& c1, const BfCircle& c2)
 
 bool
 bfMathFindBezierNormals(
-    BfBezierCurve* curve, float t, float r, std::array<BfVertex3, 2>& vert
+    BfBezierCurve* curve, float t, float r, std::array< BfVertex3, 2 >& vert
 )
 {
    try
-   {  // clang-format off
+   { // clang-format off
       auto v = curve->calcBfV3(t);
       auto norm = curve->calcNormal(t);
       vert[0] = {v.pos + r * norm.pos, v.color, v.normals};
       vert[1] = {v.pos - r * norm.pos, v.color, v.normals};
-   }  // clang-format on
+   } // clang-format on
    catch (...)
    {
       return false;
@@ -1030,7 +1034,7 @@ bool
 bfMathCreateBezier2From2Lines(
     const BfSingleLine& l1, const BfSingleLine& l2, BfBezierCurve& c
 )
-{  // clang-format off
+{ // clang-format off
    //
    if (!bfMathIsSingleLinesInPlain(l1, l2)) { 
       return false;
@@ -1067,7 +1071,7 @@ bfMathCreateBezier2From2Lines(
 
    return true;
 
-}  // clang-format on
+} // clang-format on
 
 glm::mat4
 bfOrtho(float right, float left, float bot, float top, float far, float near)
@@ -1117,7 +1121,7 @@ BfBezierCurve::BfBezierCurve(size_t in_n, size_t in_m)
 }
 
 BfBezierCurve::BfBezierCurve(
-    size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert
+    size_t in_n, size_t in_m, std::vector< BfVertex3 >&& dvert
 )
     : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
     , __n{in_n}
@@ -1132,7 +1136,7 @@ BfBezierCurve::BfBezierCurve(
 }
 
 BfBezierCurve::BfBezierCurve(
-    size_t in_n, size_t in_m, const std::vector<BfVertex3>& dvert
+    size_t in_n, size_t in_m, const std::vector< BfVertex3 >& dvert
 )
     : BfDrawObj(BF_DRAW_OBJ_TYPE_BEZIER_CURVE)
     , __n{in_n}
@@ -1178,7 +1182,7 @@ BfBezierCurve::calcV3(float t) const
    glm::vec3 _v{0.0f, 0.0f, 0.0f};
    for (size_t i = 0; i <= __n; i++)
    {
-      _v += static_cast<float>(
+      _v += static_cast< float >(
                 bfMathGetBinomialCoefficient(__n, i) *
                 std::pow(1 - t, __n - i) * std::pow(t, i)
             ) *
@@ -1206,13 +1210,13 @@ BfBezierCurve
 BfBezierCurve::get_derivative()
 {
    uint32_t k = __n - 1;
-   std::vector<BfVertex3> new_define_vertices;
+   std::vector< BfVertex3 > new_define_vertices;
    new_define_vertices.reserve(k + 1);
 
    for (int i = 0; i <= k; i++)
    {
       new_define_vertices.emplace_back(
-          static_cast<float>(__n) *
+          static_cast< float >(__n) *
               (__dvertices[i + 1].pos - __dvertices[i].pos),
           this->__main_color,
           __dvertices[0].normals
@@ -1332,7 +1336,8 @@ BfBezierCurve::createVertices()
    float t;
    for (int i = 0; i < __out_vertices_count; i++)
    {
-      t = static_cast<float>(i) / static_cast<float>(__out_vertices_count - 1);
+      t = static_cast< float >(i) /
+          static_cast< float >(__out_vertices_count - 1);
       __vertices.emplace_back(this->calcBfV3(t));
    }
 }
@@ -1444,12 +1449,12 @@ BfCircle::BfCircle(
    float rad_2 = glm::distance(center.pos, P_1.pos);
    float rad_3 = glm::distance(center.pos, P_1.pos);
 
-   if (!CHECK_FLOAT_EQUALITY(rad_1, rad_2) ||
-       !CHECK_FLOAT_EQUALITY(rad_2, rad_3) ||
-       !CHECK_FLOAT_EQUALITY(rad_3, rad_1))
-   {
-      throw std::runtime_error("Circle was'n made -> different radious");
-   }
+   // if (!CHECK_FLOAT_EQUALITY(rad_1, rad_2) ||
+   //     !CHECK_FLOAT_EQUALITY(rad_2, rad_3) ||
+   //     !CHECK_FLOAT_EQUALITY(rad_3, rad_1))
+   // {
+   //    throw std::runtime_error("Circle was'n made -> different radious");
+   // }
 
    center.normals = bfMathGetPlaneCoeffs(P_1.pos, P_2.pos, P_3.pos);
 
@@ -1462,18 +1467,16 @@ BfCircle::get_center() const
 {
    switch (__depMode)
    {
-      case BfDrawObjDependencies_Mode_No: {
-         if (!__dvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return __dvertices[0];
-      }
-      case BfDrawObjDependencies_Mode_Ptr: {
-         if (!__pdvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return *__pdvertices[0];
-      }
+   case BfDrawObjDependencies_Mode_No: {
+      if (!__dvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return __dvertices[0];
+   }
+   case BfDrawObjDependencies_Mode_Ptr: {
+      if (!__pdvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return *__pdvertices[0];
+   }
    }
 
    return __dvertices[0];
@@ -1484,18 +1487,16 @@ BfCircle::get_center()
 {
    switch (__depMode)
    {
-      case BfDrawObjDependencies_Mode_No: {
-         if (!__dvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return __dvertices[0];
-      }
-      case BfDrawObjDependencies_Mode_Ptr: {
-         if (!__pdvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return *__pdvertices[0];
-      }
+   case BfDrawObjDependencies_Mode_No: {
+      if (!__dvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return __dvertices[0];
+   }
+   case BfDrawObjDependencies_Mode_Ptr: {
+      if (!__pdvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return *__pdvertices[0];
+   }
    }
 
    return __dvertices[0];
@@ -1523,7 +1524,7 @@ BfCircle::get_radius() const noexcept
    return __radius;
 }
 
-std::array<BfVertex3, 2>
+std::array< BfVertex3, 2 >
 BfCircle::get_tangent_vert(const BfVertex3& P) const
 {
    glm::vec4 plane{
@@ -1577,7 +1578,8 @@ BfCircle::get_tangent_vert(const BfVertex3& P) const
 void
 BfCircle::createVertices()
 {
-   if (!__vertices.empty()) __vertices.clear();
+   if (!__vertices.empty())
+      __vertices.clear();
 
    glm::vec3 orth_1;
    glm::vec3 orth_2;
@@ -1657,7 +1659,8 @@ BfCircleFilled::tangent() const noexcept
 void
 BfCircleFilled::createVertices()
 {
-   if (!__vertices.empty()) __vertices.clear();
+   if (!__vertices.empty())
+      __vertices.clear();
 
    glm::vec3 orth_1;
    glm::vec3 orth_2;
@@ -1676,7 +1679,7 @@ BfCircleFilled::createVertices()
    float theta;
    glm::vec3 center = _center().pos;
    for (size_t i = 0; i < m_outVerticesCount + 1; ++i)
-   {  // clang-format off
+   { // clang-format off
       theta = 2 * BF_PI * i / m_outVerticesCount;
       __vertices.emplace_back(
           center + m_radius * cosf(theta) * orth_1
@@ -1684,13 +1687,14 @@ BfCircleFilled::createVertices()
           this->__main_color,
           normal
       );
-   }  // clang-format on
+   } // clang-format on
 }
 
 void
 BfCircleFilled::createIndices()
 {
-   if (!__indices.empty()) __indices.clear();
+   if (!__indices.empty())
+      __indices.clear();
    for (size_t i = 1; i < __vertices.size() - 2; ++i)
    {
       __indices.emplace_back(0);
@@ -1704,18 +1708,16 @@ BfCircleFilled::_center() const
 {
    switch (__depMode)
    {
-      case BfDrawObjDependencies_Mode_No: {
-         if (!__dvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return __dvertices[0];
-      }
-      case BfDrawObjDependencies_Mode_Ptr: {
-         if (!__pdvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return *__pdvertices[0];
-      }
+   case BfDrawObjDependencies_Mode_No: {
+      if (!__dvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return __dvertices[0];
+   }
+   case BfDrawObjDependencies_Mode_Ptr: {
+      if (!__pdvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return *__pdvertices[0];
+   }
    }
 
    return __dvertices[0];
@@ -1726,18 +1728,16 @@ BfCircleFilled::_center()
 {
    switch (__depMode)
    {
-      case BfDrawObjDependencies_Mode_No: {
-         if (!__dvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return __dvertices[0];
-      }
-      case BfDrawObjDependencies_Mode_Ptr: {
-         if (!__pdvertices.size())
-            throw std::runtime_error("No addded center vertex inside dvertices"
-            );
-         return *__pdvertices[0];
-      }
+   case BfDrawObjDependencies_Mode_No: {
+      if (!__dvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return __dvertices[0];
+   }
+   case BfDrawObjDependencies_Mode_Ptr: {
+      if (!__pdvertices.size())
+         throw std::runtime_error("No addded center vertex inside dvertices");
+      return *__pdvertices[0];
+   }
    }
 
    return __dvertices[0];
@@ -1747,7 +1747,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
     size_t m, const BfVertex3& center, float radius
 )
 {
-   auto circle = std::make_shared<BfCircle>(m, center, radius);
+   auto circle = std::make_shared< BfCircle >(m, center, radius);
    circle->createVertices();
    circle->createIndices();
    add_l(circle);
@@ -1755,7 +1755,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
    );
 
-   auto center_handle = std::make_shared<BfCircleFilled>(
+   auto center_handle = std::make_shared< BfCircleFilled >(
        m,
        &circle->dVertices().at(0),
        BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -1768,7 +1768,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
    add_l(center_handle);
 
    m_rHandleVert = circle->vertices().at(0);
-   auto r_handle = std::make_shared<BfCircleFilled>(
+   auto r_handle = std::make_shared< BfCircleFilled >(
        m,
        &m_rHandleVert,
        BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -1786,7 +1786,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
     size_t m, BfVertex3* center, float radius
 )
 {
-   auto circle = std::make_shared<BfCircle>(m, center, radius);
+   auto circle = std::make_shared< BfCircle >(m, center, radius);
    circle->createVertices();
    circle->createIndices();
    add_l(circle);
@@ -1794,7 +1794,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
        BfPipelineHandler::instance()->getPipeline(BfPipelineType_Lines)
    );
 
-   auto center_handle = std::make_shared<BfCircleFilled>(
+   auto center_handle = std::make_shared< BfCircleFilled >(
        m,
        center,
        BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -1807,7 +1807,7 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
    add_l(center_handle);
 
    m_rHandleVert = circle->vertices().at(0);
-   auto r_handle = std::make_shared<BfCircleFilled>(
+   auto r_handle = std::make_shared< BfCircleFilled >(
        m,
        &m_rHandleVert,
        BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -1822,23 +1822,25 @@ BfCircleFilledWithHandles::BfCircleFilledWithHandles(
    createVertices();
 }
 
-std::shared_ptr<BfCircle>
+std::shared_ptr< BfCircle >
 BfCircleFilledWithHandles::circle() noexcept
 {
-   return std::dynamic_pointer_cast<BfCircle>(this->get_object_by_index(0));
+   return std::dynamic_pointer_cast< BfCircle >(this->get_object_by_index(0));
 }
 
-std::shared_ptr<BfCircleFilled>
+std::shared_ptr< BfCircleFilled >
 BfCircleFilledWithHandles::centerHandle() noexcept
 {
-   return std::dynamic_pointer_cast<BfCircleFilled>(this->get_object_by_index(1)
+   return std::dynamic_pointer_cast< BfCircleFilled >(
+       this->get_object_by_index(1)
    );
 }
 
-std::shared_ptr<BfCircleFilled>
+std::shared_ptr< BfCircleFilled >
 BfCircleFilledWithHandles::radiusHandle() noexcept
 {
-   return std::dynamic_pointer_cast<BfCircleFilled>(this->get_object_by_index(2)
+   return std::dynamic_pointer_cast< BfCircleFilled >(
+       this->get_object_by_index(2)
    );
 }
 
@@ -1880,11 +1882,11 @@ BfArc::BfArc(
 {
 }
 
-
 void
 BfArc::createVertices()
 {
-   if (!__vertices.empty()) __vertices.clear();
+   if (!__vertices.empty())
+      __vertices.clear();
 
    glm::vec3 center = this->get_center().pos;
    glm::vec3 firstPoint = this->get_first().pos;
@@ -1972,9 +1974,10 @@ BfCone::tipVertex()
 void
 BfCone::createVertices()
 {
-   if (!__vertices.empty()) __vertices.clear();
+   if (!__vertices.empty())
+      __vertices.clear();
 
-   auto baseCircle = std::make_shared<BfCircle>(
+   auto baseCircle = std::make_shared< BfCircle >(
        __out_vertices_count - 1,
        this->centerVertex(),
        __base_radius
@@ -2060,7 +2063,8 @@ BfTube::createVertices()
 void
 BfTube::createIndices()
 {
-   if (!__indices.empty()) __indices.clear();
+   if (!__indices.empty())
+      __indices.clear();
    for (int i = 0; i < __out_m * 4 - 3; ++i)
    {
       __indices.emplace_back(i + 0);
@@ -2116,7 +2120,7 @@ void
 BfDoubleTube::createVertices()
 {
    static auto mksc = [](auto m, auto v, auto r) {
-      auto tmp = std::make_shared<BfCircle>(m, v, r);
+      auto tmp = std::make_shared< BfCircle >(m, v, r);
       tmp->createVertices();
       return tmp;
    };
@@ -2181,14 +2185,15 @@ BfDoubleTube::createVertices()
       __vertices.emplace_back(BfVertex3{p3_, __main_color, towardsCenterNormal});      // 2_'| 13
       __vertices.emplace_back(BfVertex3{p4_, __main_color, fromCenterNormal});         // 3_ | 14
       __vertices.emplace_back(BfVertex3{p4_, __main_color, towardsCenterNormal});      // 3_'| 15
-          // clang-format on
+         // clang-format on
    }
 }
 
 void
 BfDoubleTube::createIndices()
 {
-   if (!__indices.empty()) __indices.clear();
+   if (!__indices.empty())
+      __indices.clear();
    for (size_t i = 0; i < __vertices.size() - 8; i += 8)
    {
       // backwords
@@ -2244,7 +2249,7 @@ BfDoubleTube::createIndices()
 //
 
 BfBezierCurveWithHandles::BfBezierCurveWithHandles(
-    size_t in_m, std::vector<BfVertex3>&& dvert
+    size_t in_m, std::vector< BfVertex3 >&& dvert
 )
     : BfDrawLayer(
           BfAllocator::get(),
@@ -2256,7 +2261,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
       )
 {
    bfAssert(dvert.size() > 1);
-   auto curve = std::make_shared<BfBezierCurve>(
+   auto curve = std::make_shared< BfBezierCurve >(
        dvert.size() - 1,
        in_m,
        std::move(dvert)
@@ -2268,7 +2273,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
 
    for (size_t i = 0; i < curve->dVertices().size(); i++)
    {
-      auto handle = std::make_shared<BfCircleFilled>(
+      auto handle = std::make_shared< BfCircleFilled >(
           20,
           &curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -2282,7 +2287,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
    //
    for (size_t i = 1; i < curve->dVertices().size(); i++)
    {
-      auto line = std::make_shared<BfSingleLine>(
+      auto line = std::make_shared< BfSingleLine >(
           &curve->dVertices()[i],
           &curve->dVertices()[i - 1]
       );
@@ -2298,16 +2303,17 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
 }
 
 BfBezierCurveWithHandles::BfBezierCurveWithHandles(
-    size_t in_m, const std::vector<BfVertex3>& dvert
+    size_t in_m, const std::vector< BfVertex3 >& dvert
 )
 {
    bfAssert(dvert.size() > 1);
-   auto curve = std::make_shared<BfBezierCurve>(dvert.size() - 1, in_m, dvert);
+   auto curve =
+       std::make_shared< BfBezierCurve >(dvert.size() - 1, in_m, dvert);
    this->add_l(curve);
 
    for (size_t i = 0; i < dvert.size(); i++)
    {
-      auto handle = std::make_shared<BfCircleFilled>(
+      auto handle = std::make_shared< BfCircleFilled >(
           20,
           curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -2320,7 +2326,7 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
 
    for (size_t i = 1; i < curve->dVertices().size(); i++)
    {
-      auto line = std::make_shared<BfSingleLine>(
+      auto line = std::make_shared< BfSingleLine >(
           curve->dVertices()[i],
           curve->dVertices()[i - 1]
       );
@@ -2333,10 +2339,10 @@ BfBezierCurveWithHandles::BfBezierCurveWithHandles(
    update_buffer();
 }
 
-std::shared_ptr<BfBezierCurve>
+std::shared_ptr< BfBezierCurve >
 BfBezierCurveWithHandles::curve()
 {
-   return std::dynamic_pointer_cast<BfBezierCurve>(get_object_by_index(0));
+   return std::dynamic_pointer_cast< BfBezierCurve >(get_object_by_index(0));
 }
 
 //
@@ -2358,7 +2364,7 @@ BfBezierCurveWithHandles::curve()
 //
 
 BfBezierCurveFrame::BfBezierCurveFrame(
-    std::shared_ptr<BfBezierCurve> curve,
+    std::shared_ptr< BfBezierCurve > curve,
     VmaAllocator allocator,
     VkPipeline lines_pipeline,
     VkPipeline triangle_pipeline
@@ -2378,7 +2384,7 @@ BfBezierCurveFrame::BfBezierCurveFrame(
 {
    for (size_t i = 0; i < curve->dVertices().size(); i++)
    {
-      auto handle = std::make_shared<BfCircleFilled>(
+      auto handle = std::make_shared< BfCircleFilled >(
           20,
           curve->dVertices()[i],
           BF_BEZIER_CURVE_FRAME_HANDLE_RADIOUS
@@ -2389,7 +2395,7 @@ BfBezierCurveFrame::BfBezierCurveFrame(
 
    for (size_t i = 1; i < curve->dVertices().size(); i++)
    {
-      auto line = std::make_shared<BfSingleLine>(
+      auto line = std::make_shared< BfSingleLine >(
           curve->dVertices()[i],
           curve->dVertices()[i - 1]
       );
@@ -2401,7 +2407,7 @@ BfBezierCurveFrame::BfBezierCurveFrame(
    this->update_buffer();
 }
 
-std::shared_ptr<BfBezierCurve>
+std::shared_ptr< BfBezierCurve >
 BfBezierCurveFrame::attachedCurve() noexcept
 {
    return __curve;
@@ -2418,7 +2424,9 @@ BfBezierCurveFrame::remake()
 }
 
 void
-BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 col)
+BfBezierCurveFrame::remake(
+    std::shared_ptr< BfBezierCurve > curve, glm::vec3 col
+)
 {
    // this->del_all();
    // TODO: Add check for existing objects (if bezier changed its order)
@@ -2435,7 +2443,7 @@ BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 col)
 
    for (size_t i = 1; i < __curve->dVertices().size(); i++)
    {
-      auto line = std::make_shared<BfSingleLine>(
+      auto line = std::make_shared< BfSingleLine >(
           __curve->dVertices()[i],
           __curve->dVertices()[i - 1]
       );
@@ -2448,14 +2456,14 @@ BfBezierCurveFrame::remake(std::shared_ptr<BfBezierCurve> curve, glm::vec3 col)
 }
 
 BfCubicSplineCurve::BfCubicSplineCurve(
-    size_t out_vertices_count, std::vector<BfVertex3>& dp
+    size_t out_vertices_count, std::vector< BfVertex3 >& dp
 )
     : BfDrawObj{dp}, __out_vertices_count{out_vertices_count}
 {
 }
 
 BfCubicSplineCurve::BfCubicSplineCurve(
-    size_t out_vertices_count, std::vector<glm::vec3>& dp
+    size_t out_vertices_count, std::vector< glm::vec3 >& dp
 )
     : __out_vertices_count{out_vertices_count}
 {
@@ -2471,17 +2479,17 @@ BfCubicSplineCurve::BfCubicSplineCurve(
 void
 BfCubicSplineCurve::createVertices()
 {
-   auto calculateSplinePoint = [](const std::vector<glm::vec3>& a,
-                                  const std::vector<glm::vec3>& b,
-                                  const std::vector<glm::vec3>& c,
-                                  const std::vector<glm::vec3>& d,
+   auto calculateSplinePoint = [](const std::vector< glm::vec3 >& a,
+                                  const std::vector< glm::vec3 >& b,
+                                  const std::vector< glm::vec3 >& c,
+                                  const std::vector< glm::vec3 >& d,
                                   float t) {
       size_t n = a.size();
       size_t segment = 0;
 
       for (size_t i = 1; i < n; ++i)
       {
-         if (t < static_cast<float>(i) / static_cast<float>(n - 1))
+         if (t < static_cast< float >(i) / static_cast< float >(n - 1))
          {
             segment = i - 1;
             break;
@@ -2489,7 +2497,7 @@ BfCubicSplineCurve::createVertices()
       }
 
       float tSegment =
-          (t - static_cast<float>(segment) / static_cast<float>(n - 1)) *
+          (t - static_cast< float >(segment) / static_cast< float >(n - 1)) *
           (n - 1);
 
       glm::vec3 splinePoint = a[segment] + b[segment] * tSegment +
@@ -2514,9 +2522,9 @@ BfCubicSplineCurve::createVertices()
    1].pos); acc_len += chord; t.emplace_back(acc_len / total);
    }*/
 
-   std::vector<glm::vec3> a;
+   std::vector< glm::vec3 > a;
    a.reserve(n + 1);
-   std::vector<glm::vec3> t;
+   std::vector< glm::vec3 > t;
    t.reserve(n + 1);
 
    for (auto& it : __dvertices)
@@ -2525,26 +2533,26 @@ BfCubicSplineCurve::createVertices()
       t.emplace_back(it.pos);
    }
 
-   std::vector<glm::vec3> b(n);
-   std::vector<glm::vec3> d(n);
-   std::vector<glm::vec3> h(n);
+   std::vector< glm::vec3 > b(n);
+   std::vector< glm::vec3 > d(n);
+   std::vector< glm::vec3 > h(n);
 
    for (size_t i = 0; i <= n - 1; i++)
    {
       h[i] = t[i + 1] - t[i];
    }
 
-   std::vector<glm::vec3> alpha(n);
+   std::vector< glm::vec3 > alpha(n);
    for (size_t i = 1; i <= n - 1; i++)
    {
       alpha[i] =
           3.0f / h[i] * (a[i + 1] - a[i]) - 3.0f / h[i - 1] * (a[i] - a[i - 1]);
    }
 
-   std::vector<glm::vec3> c(n + 1);
-   std::vector<glm::vec3> l(n + 1);
-   std::vector<glm::vec3> mu(n + 1);
-   std::vector<glm::vec3> z(n + 1);
+   std::vector< glm::vec3 > c(n + 1);
+   std::vector< glm::vec3 > l(n + 1);
+   std::vector< glm::vec3 > mu(n + 1);
+   std::vector< glm::vec3 > z(n + 1);
 
    l[0] = glm::vec3(1.0f);
 
@@ -2573,8 +2581,8 @@ BfCubicSplineCurve::createVertices()
 
    for (size_t i = 0; i < __out_vertices_count - 1; i++)
    {
-      float t =
-          static_cast<float>(i) / static_cast<float>(__out_vertices_count - 1);
+      float t = static_cast< float >(i) /
+                static_cast< float >(__out_vertices_count - 1);
       glm::vec3 splinePoint = calculateSplinePoint(a, b, c, d, t);
       __vertices.emplace_back(
           BfVertex3{splinePoint, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}}

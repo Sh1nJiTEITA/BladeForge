@@ -1,10 +1,12 @@
-﻿#include "main.h"
+﻿#pragma warning(disable : 4244 4305 4267)
+
+#include "BfMain.h"
+#include "bfConsole.h"
 
 #include "fmt/format.h"
 #include "fmt/printf.h"
 
 #include "bfVariative.hpp"
-#include "include/other/bfVariative.hpp"
 
 int
 main()

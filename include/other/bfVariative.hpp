@@ -24,6 +24,8 @@
 // #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_SWIZZLE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <fmt/chrono.h>
+#include <fmt/color.h>
 #include <fmt/core.h>
 #include <fmt/printf.h>
 
@@ -90,28 +92,43 @@ bfvDebugCallback(
 )
 {
    char* severity_type{};
+   fmt::color color;
+
    switch (static_cast< int >(messageSeverity))
    {
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      severity_type = const_cast< char* >("[INFO]");
+      severity_type = const_cast< char* >("VKINFO");
+      color = fmt::color::green;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-      severity_type = const_cast< char* >("[VERB]");
+      severity_type = const_cast< char* >("VKVERB");
+      color = fmt::color::blue_violet;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      severity_type = const_cast< char* >("[WARN]");
+      severity_type = const_cast< char* >("VKWARN");
+      color = fmt::color::yellow;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      severity_type = const_cast< char* >("[ERR]");
+      severity_type = const_cast< char* >("VKERR");
+      color = fmt::color::indian_red;
       break;
    }
 
    fmt::print(
        stderr,
-       "{} Validation layer: {}\n",
-       severity_type,
-       pCallbackData->pMessage
+       fmt::emphasis::bold | fmt::fg(fmt::color::medium_orchid),
+       "[{:%H:%M:%S}]=>[{}] ",
+       fmt::localtime(std::time(nullptr)),
+       severity_type
    );
+   fmt::print(stderr, "{}\n", pCallbackData->pMessage);
+
+   // fmt::print(
+   //     stderr,
+   //     "{} Validation layer: {}\n",
+   //     severity_type,
+   //     pCallbackData->pMessage
+   // );
 
    return VK_FALSE;
 }
