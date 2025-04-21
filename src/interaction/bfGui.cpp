@@ -1,10 +1,15 @@
 #include "bfGui.h"
 
+#include <fmt/base.h>
+#include <fmt/format.h>
 #include <glm/trigonometric.hpp>
 #include <imgui_internal.h>
+#include <utility>
 
+#include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfDrawObjectManager.h"
+#include "bfIconsFontAwesome6.h"
 #include "bfTypeManager.h"
 #include "imgui.h"
 
@@ -844,6 +849,154 @@ void
 BfGui::toggleRenderCreateWindow()
 {
    __create_window.toggleRender();
+}
+
+bool
+presentBladeSectionTable(
+    const char* label, float* values[], const char* names[], int count
+)
+{
+   bool should_change = false;
+   constexpr auto table_flags =
+       ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_BordersInnerV;
+   if (ImGui::BeginTable(label, 2, table_flags))
+   {
+      for (int i = 0; i < count; ++i)
+      {
+         ImGui::TableNextRow();
+         ImGui::PushStyleColor(
+             ImGuiCol_FrameBg,
+             ImVec4{0.0f, 0.0f, 0.0f, 0.0f}
+         );
+         ImGui::TableSetColumnIndex(0);
+         ImGui::Text("%s", names[i]);
+         ImGui::TableSetColumnIndex(1);
+         float cell_size = ImGui::GetColumnWidth();
+         ImGui::SetNextItemWidth(cell_size);
+         std::string field_name =
+             fmt::format("##bf-section-main-parameters-{}", names[i]);
+         if (ImGui::InputFloat(field_name.c_str(), values[i]))
+         {
+            should_change = true;
+         }
+         ImGui::PopStyleColor();
+      }
+      ImGui::EndTable();
+   }
+   return should_change;
+}
+
+bool
+presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
+{
+   bool should_remake = false;
+   // clang-format off
+   ImGui::SeparatorText("Center Circles");
+   constexpr float child_y = 38.0f;
+   float child_x = ImGui::GetContentRegionAvail().x;
+   for (size_t i = 0; i < circles.size(); ++i)
+   {
+      std::string child_title = fmt::format("##center-circle-input-data-child-name-{}", i);
+      ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
+      {
+         std::string title = fmt::format(ICON_FA_LIST " {}", i);
+         ImGui::Button(title.c_str());
+         if (ImGui::BeginDragDropSource())  {
+            ImGui::SetDragDropPayload("center-circle-drag-drop", &i, sizeof(size_t));
+            ImGui::EndDragDropSource();
+         }
+         if (ImGui::BeginDragDropTarget()) { 
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("center-circle-drag-drop")) {
+               IM_ASSERT(payload->DataSize == sizeof(size_t));
+               auto n = *static_cast<size_t*>(payload->Data);
+               fmt::println("Accepted t={}, R={}", circles[i].relativePos, circles[i].radius);
+               std::swap(circles[i], circles[n]);
+               should_remake = true;
+            }
+            ImGui::EndDragDropTarget();
+         }
+         ImGui::SameLine();
+         ImVec2 region = ImGui::GetContentRegionAvail();
+         std::string input_title = fmt::format("##center-circle-input-data{}", i);
+         float values[2]{circles[i].relativePos, circles[i].radius};
+         ImGui::SetNextItemWidth(region.x);
+         if (ImGui::InputFloat2(input_title.c_str(), values))
+         {
+            circles[i].relativePos = values[0];
+            circles[i].radius = values[1];
+            should_remake = true;
+         }
+      }
+      ImGui::EndChild();
+   }
+   // clang-format on
+   return should_remake;
+}
+
+bool
+BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
+{
+   static ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_NoUndocking;
+   ImGuiWindowFlags window_flags =
+       ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar;
+
+   ImGui::Begin("MainDockSpaceHost", nullptr, window_flags);
+   ImGuiID dockspace_id = ImGui::GetID("BladeSectionDockspace");
+   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
+   static bool built = false;
+   if (!built)
+   {
+      built = true;
+      ImGui::DockBuilderRemoveNode(dockspace_id);
+      ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetWindowSize());
+
+      ImGuiID left_id = ImGui::DockBuilderSplitNode(
+          dockspace_id,
+          ImGuiDir_Left,
+          0.35f,
+          nullptr,
+          &dockspace_id
+      );
+      ImGuiID right_id = dockspace_id;
+
+      ImGui::DockBuilderDockWindow("Parameters", left_id);
+      ImGui::DockBuilderDockWindow("Preview", right_id);
+      ImGui::DockBuilderFinish(dockspace_id);
+   }
+
+   ImGui::End();
+
+   bool no_remake = true;
+   // Left panel
+   if (ImGui::Begin("Parameters"))
+   {
+      // clang-format off
+      float* outer_values[] = {&info->chord, &info->installAngle};
+      const char* outer_names[] = {"Chord", "Install Angle"};
+      no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
+
+      ImGui::SeparatorText("Inlet");
+      float* inlet_values[] = {&info->inletAngle, &info->inletRadius};
+      const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
+      no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
+
+      ImGui::SeparatorText("Outlet");
+      float* outlet_values[] = {&info->outletAngle, &info->outletRadius};
+      const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
+      no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
+      no_remake *= !presentCenterCirclesEditor(info->centerCircles);
+      // clang-format on
+   }
+   ImGui::End();
+
+   // Right panel
+   if (ImGui::Begin("Preview"))
+   {
+      ImGui::Text("Preview area for geometry, debug, logs, etc.");
+   }
+   ImGui::End();
+   return no_remake;
 }
 
 void

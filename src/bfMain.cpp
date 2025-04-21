@@ -358,11 +358,17 @@ BfMain::__loop()
       __gui.presentToolType();
       __gui.presentSettings();
       // __gui.presentLuaInteraction();
-      // __gui.presentFileDialog();
-      // __gui.presentCreateWindow();
+      __gui.presentFileDialog();
+      __gui.presentCreateWindow();
       // __gui.presentSmartLayerObserver();
       __gui.presentCameraWindow();
       __gui.presentIds();
+
+      if (__gui.presentBladeSectionCreateWindow(&info))
+      {
+         bs->make();
+         test_root->control().updateBuffer();
+      }
 
       ImGui::Begin("BladeSection CI");
       {
@@ -399,6 +405,7 @@ BfMain::__loop()
          }
       }
       ImGui::End();
+      ImGui::ShowDemoWindow();
 
       // ImGui::ShowDemoWindow();
 

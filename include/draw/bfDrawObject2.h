@@ -414,7 +414,7 @@ protected:
       this->add(obj);
       m_idMap[part] = obj->id();
 
-      fmt::print(
+      fmt::println(
           "Added id={}, type={}, typename={}, part={}",
           obj->id(),
           obj->type(),

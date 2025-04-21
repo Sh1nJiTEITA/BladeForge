@@ -12,6 +12,7 @@
 #include <string>
 
 #include "bfBase.h"
+#include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
@@ -59,7 +60,7 @@ class BfGui
 
    BfFormFontSettings __settings_form;
 
-   std::queue<std::function<void()>> __queue_after_render;
+   std::queue< std::function< void() > > __queue_after_render;
 
 public:
    BfGui();
@@ -82,7 +83,7 @@ public:
    std::string getMenuIsLeftDockTitleInfoStr();
    std::string getMenuNewCameraStatusStr();
 
-   void presentLayerHandler();  // FIXME: deprecate
+   void presentLayerHandler(); // FIXME: deprecate
    void presentMenuBar();
    void presentCamera();
    void presentEventLog();
@@ -97,6 +98,8 @@ public:
    void presentInfo();
    void presentCameraWindow();
    void presentIds();
+
+   bool presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info);
 
    void toggleRenderCreateWindow();
 
@@ -124,7 +127,7 @@ enum BfEnMenuStatus
    BF_MENU_STATUS_NEW_CAM_DISABLED = -0x6,
 };
 
-const std::map<int, std::string> bfSetMenuStr{
+const std::map< int, std::string > bfSetMenuStr{
     {0x1, "Hide perfomance/view pannel"},
     {-0x1, "Show perfomance/view pannel"},
 
@@ -144,7 +147,7 @@ const std::map<int, std::string> bfSetMenuStr{
     {-0x6, "Enable new camera"},
 };
 
-void bfPresentLayerHandler(BfLayerHandler&);  // FIXME: deprecate
+void bfPresentLayerHandler(BfLayerHandler&); // FIXME: deprecate
 void bfPresentBladeSectionInside(
     BfBladeBase* layer,
     BfBladeSectionCreateInfo* info,
@@ -153,4 +156,4 @@ void bfPresentBladeSectionInside(
 
 void ShowTestPlot();
 
-#endif  // BF_GUI_H
+#endif // BF_GUI_H

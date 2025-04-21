@@ -29,6 +29,7 @@ struct SectionCreateInfo
 
    float inletRadius = 0.043f;
    float outletRadius = 0.017f;
+
    std::vector< CenterCircle > centerCircles = {
        {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
    };
@@ -73,7 +74,7 @@ public:
       _createCenterCircles();
       _createCCLines();
       _createFrontIntersectionLines();
-      _createFrontCurves();
+      // _createFrontCurves();
    }
 
    virtual void make() override
