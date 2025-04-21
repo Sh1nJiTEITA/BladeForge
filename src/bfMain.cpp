@@ -306,11 +306,9 @@ BfMain::__loop()
    // auto l = std::make_shared<obj::curves::BfSingleLineWH>(&v1, &v2);
    // l->make();
    // test_root->add(l);
-   auto info =  obj::section::SectionCreateInfo{};
+   auto info = obj::section::SectionCreateInfo{};
 
-   auto bs = std::make_shared< obj::section::BfBladeSection >(
-      &info
-   );
+   auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
    bs->make();
    test_root->add(bs);
 
@@ -321,18 +319,23 @@ BfMain::__loop()
 
    // int bez_order = bez->size();
 
-   auto _tmpcol = [&bs, &test_root](const char* name, float* v) { 
-         ImGui::TableNextRow();
-         ImGui::TableSetColumnIndex(0);
-         ImGui::Text("%s", name);
+   auto _tmpcol = [&bs, &test_root](const char* name, float* v) {
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::Text("%s", name);
 
-         ImGui::TableSetColumnIndex(1);
-         if (ImGui::InputFloat((std::string("##___") + std::string(name)).c_str(), v)) { 
-            bs->make();
-            test_root->control().updateBuffer();
-         }
+      ImGui::TableSetColumnIndex(1);
+      if (ImGui::InputFloat(
+              (std::string("##___") + std::string(name)).c_str(),
+              v
+          ))
+      {
+         bs->make();
+         test_root->control().updateBuffer();
+      }
    };
-   #define tmpcol(NAME) _tmpcol(#NAME, &info.NAME)
+#define tmpcol(NAME) _tmpcol(#NAME, &info.NAME)
+   bool renderInter = true;
 
    while (!glfwWindowShouldClose(__base.window->pWindow))
    {
@@ -360,23 +363,35 @@ BfMain::__loop()
       // __gui.presentSmartLayerObserver();
       __gui.presentCameraWindow();
       __gui.presentIds();
-   
+
       ImGui::Begin("BladeSection CI");
       {
-         if (ImGui::BeginTable("dasd12312312dsadas 12- ", 2) ) {
+         if (ImGui::Button("Render intersection lines"))
+         {
+            bs->toggleBack();
+         }
+         if (ImGui::BeginTable("dasd12312312dsadas 12- ", 2))
+         {
             ImGui::TableSetupColumn("VarName");
             ImGui::TableSetupColumn("VarValue");
             ImGui::TableHeadersRow();
-            
+
             tmpcol(chord);
             tmpcol(inletAngle);
             tmpcol(outletAngle);
             tmpcol(inletRadius);
             tmpcol(outletRadius);
             int i = 0;
-            for (auto& c : info.centerCircles) { 
-               _tmpcol((std::string("t_Circle_") + std::to_string(i)).c_str(), &c.relativePos);
-               _tmpcol((std::string("r_Circle_") + std::to_string(i)).c_str(), &c.radius);
+            for (auto& c : info.centerCircles)
+            {
+               _tmpcol(
+                   (std::string("t_Circle_") + std::to_string(i)).c_str(),
+                   &c.relativePos
+               );
+               _tmpcol(
+                   (std::string("r_Circle_") + std::to_string(i)).c_str(),
+                   &c.radius
+               );
                i++;
             }
 
@@ -391,19 +406,19 @@ BfMain::__loop()
       //
       // if (ImGui::InputInt("Order of bezier", &bez_order))
       // {
-      //    if (bez_order > bez->size()) { 
+      //    if (bez_order > bez->size()) {
       //       bez->elevateOrder();
       //       test_root->make();
       //       test_root->control().updateBuffer();
       //    }
-      //    else { 
+      //    else {
       //       bez->lowerateOrder();
       //       test_root->make();
       //       test_root->control().updateBuffer();
       //    }
-      //    
+      //
       // }
-      // if (ImGui::Button("toggle")) { 
+      // if (ImGui::Button("toggle")) {
       //    bez->toggleBoundHandles();
       // }
 

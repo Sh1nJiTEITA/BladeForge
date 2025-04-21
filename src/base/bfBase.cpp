@@ -3783,6 +3783,7 @@ bfUpdateUniformViewNew(BfBase& base)
 void
 bfUpdateUniformBuffer(BfBase& base)
 {
+   bfUpdateUniformViewNew(base);
    obj::BfDrawManager::inst().mapModels(base.current_frame);
 }
 

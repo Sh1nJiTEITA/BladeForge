@@ -12,7 +12,8 @@ namespace obj
 namespace section
 {
 
-struct CenterCircle { 
+struct CenterCircle
+{
    float relativePos;
    float radius;
 };
@@ -21,11 +22,17 @@ struct SectionCreateInfo
 {
    float chord = 1.0f;
    float installAngle = 80.0f;
-   float inletAngle = 30.f;
-   float outletAngle = 20.f;
+
+   bool isEqMode = false;
+   float inletAngle = 180.0f - 66.0f - 30.f;
+   float outletAngle = 66.0f - 20.f;
+
    float inletRadius = 0.043f;
    float outletRadius = 0.017f;
-   std::vector<CenterCircle> centerCircles = { { 0.214f, 0.063f }, { 0.459f, 0.082f }, { 0.853f, 0.025f }};
+   std::vector< CenterCircle > centerCircles = {
+       {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
+   };
+   size_t initialBezierCurveOrder = 5;
 };
 
 enum class BfBladeSectionEnum : uint32_t
@@ -37,10 +44,15 @@ enum class BfBladeSectionEnum : uint32_t
    InletCircle,
    OutletCircle,
 
+   InletDirection,
+   OutletDirection,
+
    AverageInitialCurve,
    CenterCircles,
    CenterCirclesLines,
    IntersectionLines,
+
+   Back,
 };
 
 class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
@@ -56,17 +68,19 @@ public:
    {
       _createChord(); 
       _createCircleEdges();
-      _createAverageInitialCurve();
-      _createCenterCircles();
-      _createCCLines();
-      _createFrontIntersectionLines();
+      _createIOAngles();
+      // _createAverageInitialCurve();
+      // _createCenterCircles();
+      // _createCCLines();
+      // _createFrontIntersectionLines();
+      // _createFrontCurves();
    }
 
    virtual void make() override
    {
       _assignRoots();
-
-      premake(); 
+      
+      if (!m_children.empty()) premake(); 
       {
          for (auto& child : m_children) {
             child->make();
@@ -78,10 +92,11 @@ public:
    virtual void premake() { 
       _processChord(); 
       _processCircleEdges();
-      _processAverageInitialCurve();
-      _processCenterCircles();
-      _processCCLines();
-      _processFrontIntersectionLines();
+      _processIOAngles();
+      // _processAverageInitialCurve();
+      // _processCenterCircles();
+      // _processCCLines();
+      // _processFrontIntersectionLines();
    }
 
    virtual void postmake() 
@@ -90,10 +105,21 @@ public:
       m_lastChordL = oChord->left().get();
       m_lastChordR = oChord->right().get();
    }
+   
+   void toggleBack(int sts = -1) { 
+      const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
+      for (auto& child : IL ) { 
+         child->toggleRender(sts);
+      }
+   }
+
 private:
    bool _isChordChanged();
-   float _equivalentInletAngle();
-   float _equivalentOutletAngle();
+   float _eqInletAngle();
+   float _eqOutletAngle();
+   glm::vec3 _eqInletDirection(); 
+   glm::vec3 _eqOutletDirection(); 
+
    glm::vec3 _ioIntersection();
 
 private:
@@ -102,6 +128,9 @@ private:
 
    void _createCircleEdges();
    void _processCircleEdges();
+
+   void _createIOAngles();
+   void _processIOAngles();
 
    void _createAverageInitialCurve();
    void _processAverageInitialCurve();

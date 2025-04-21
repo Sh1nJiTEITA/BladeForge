@@ -3,6 +3,7 @@
 #include "bfCurves4.h"
 #include "bfObjectMath.h"
 #include <glm/common.hpp>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
@@ -22,16 +23,42 @@ BfBladeSection::_isChordChanged()
 }
 
 float
-BfBladeSection::_equivalentInletAngle()
+BfBladeSection::_eqInletAngle()
 {
-   // return 90.0f - this->m_info.get().inletAngle;
-   return this->m_info.get().inletAngle;
+   auto& g = this->m_info.get();
+   return g.isEqMode ? 180 - g.inletAngle - g.installAngle : g.inletAngle;
 }
 float
-BfBladeSection::_equivalentOutletAngle()
+BfBladeSection::_eqOutletAngle()
 {
-   // return 90.0f - this->m_info.get().outletAngle;
-   return this->m_info.get().outletAngle;
+   auto& g = this->m_info.get();
+   return g.isEqMode ? g.installAngle - g.outletAngle : g.outletAngle;
+}
+
+glm::vec3
+BfBladeSection::_eqInletDirection()
+{
+   auto chord = _part< BfBladeSectionEnum::Chord, curves::BfSingleLineWH >();
+   glm::vec3 direction = chord->line()->directionFromStart();
+   return glm::rotate(
+              glm::mat4(1.0f),
+              glm::radians(this->_eqInletAngle()),
+              chord->line()->first().normals()
+          ) *
+          glm::vec4(direction, 1.0f);
+}
+
+glm::vec3
+BfBladeSection::_eqOutletDirection()
+{
+   auto chord = _part< BfBladeSectionEnum::Chord, curves::BfSingleLineWH >();
+   glm::vec3 direction = chord->line()->directionFromStart();
+   return glm::rotate(
+              glm::mat4(1.0f),
+              glm::radians(180.0f - this->_eqOutletAngle()),
+              chord->line()->first().normals()
+          ) *
+          glm::vec4(direction, 1.0f);
 }
 
 glm::vec3
@@ -49,14 +76,14 @@ BfBladeSection::_ioIntersection()
    glm::vec3 angle_dir = oChord->line()->directionFromStart();
    glm::vec3 inlet_dir = glm::rotate(
                              glm::mat4(1.0f),
-                             glm::radians(_equivalentInletAngle()),
+                             glm::radians(_eqInletAngle()),
                              iCenter.normals
                          ) *
                          glm::vec4(angle_dir, 1.0f);
 
    glm::vec3 outlet_dir = glm::rotate(
                               glm::mat4(1.0f),
-                              -glm::radians(_equivalentOutletAngle()),
+                              -glm::radians(_eqOutletAngle()),
                               oCenter.normals
                           ) *
                           glm::vec4(angle_dir, 1.0f);
@@ -124,7 +151,7 @@ BfBladeSection::_processChord()
    { 
       auto line = oChord->line();
       auto up = glm::normalize(-glm::cross(line->directionFromStart(),
-                                           line->first().normals));
+                                           line->first().normals()));
 
       oChordL->right().pos() = oChord->left().pos() + up * m_info.get().chord;
       oChordR->right().pos() = oChord->right().pos() + up * m_info.get().chord;
@@ -170,6 +197,70 @@ BfBladeSection::_processCircleEdges()
 }
 
 
+void BfBladeSection::_createIOAngles() { 
+   auto IC = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
+   auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
+
+   auto iFree = IC->centerVertex();
+   auto iLine = _addPartForward<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>( 
+      iFree,
+      BfVertex3{  
+         iFree.pos - _eqInletDirection() * m_info.get().chord * 0.2f,
+         iFree.color, 
+         iFree.normals
+      }
+   );
+
+   auto oFree = OC->centerVertex();
+   auto oLine = _addPartForward<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>( 
+      oFree,
+      BfVertex3{  
+         oFree.pos - _eqOutletDirection() * m_info.get().chord * 0.2f,
+         oFree.color, 
+         oFree.normals
+      }
+   );
+}
+
+void BfBladeSection::_processIOAngles() 
+{ 
+   auto chord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
+
+   auto iLine = _part<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>();
+   auto IC = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
+   if (iLine->rightHandle()->isChanged()) { 
+      glm::vec3 cDir = chord->line()->directionFromStart();
+      glm::vec3 iDir = iLine->line()->directionFromEnd();
+      m_info.get().inletAngle = glm::degrees(curves::math::angle(
+         std::move(cDir), 
+         std::move(iDir)
+      ));
+   }
+   iLine->line()->first().pos() = IC->centerVertex().pos;
+   iLine->line()->second().pos() = IC->centerVertex().pos - _eqInletDirection() * m_info.get().chord * 0.2f;
+
+
+   auto oLine = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
+   auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
+   if (oLine->rightHandle()->isChanged()) { 
+      glm::vec3 cDir = chord->line()->directionFromStart();
+      glm::vec3 oDir = oLine->line()->directionFromEnd();
+      float angle = glm::degrees(curves::math::angle(
+         std::move(cDir), 
+         std::move(oDir)
+      ));
+      fmt::println(stdout, "oAngle = {}, 180 - oAngle = {}", angle, 180.f - angle);
+      m_info.get().outletAngle = 180 - angle;
+   }
+   oLine->line()->first().pos() = OC->centerVertex().pos;
+   oLine->line()->second().pos() = OC->centerVertex().pos - _eqOutletDirection() * m_info.get().chord * 0.2f;
+
+
+   // auto oLine = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
+   // auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
+   // oLine->line()->first().pos() = OC->centerVertex().pos;
+}
+
 
 void BfBladeSection::_createAverageInitialCurve() 
 { 
@@ -177,7 +268,7 @@ void BfBladeSection::_createAverageInitialCurve()
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();   
    auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
    
-   _addPartForward<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
+   auto curve = _addPartForward<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
       BfVertex3Uni(inletCircle->circle()->center()),
       BfVertex3Uni(BfVertex3(
          _ioIntersection(),
@@ -186,15 +277,51 @@ void BfBladeSection::_createAverageInitialCurve()
       )),
       BfVertex3Uni(outletCircle->circle()->center())
    );
+   for (size_t i = 2; i < m_info.get().initialBezierCurveOrder; ++i) { 
+      curve->elevateOrder();
+   }
+   auto& inlet_vert = *(curve->begin() + 1);
+   auto& outlet_vert = *(curve->rbegin() + 1);
+   
+   auto chord_line = oChord->line();
+
+   glm::vec3 inlet_dir = glm::rotate(glm::mat4(1.0f), glm::radians(this->_eqInletAngle()),
+                                     chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
+
+   glm::vec3 outlet_dir = -glm::rotate(glm::mat4(1.0f), -glm::radians(this->_eqOutletAngle()),
+                                       chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
+
+   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, chord_line->first().pos() + inletCircle->centerVertex().pos, inlet_dir);
+   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, chord_line->second().pos() + outletCircle->centerVertex().pos , outlet_dir);
+
 }
 
 void BfBladeSection::_processAverageInitialCurve() { 
+   auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
    auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
-   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   initCurve->at(0).pos() = inletCircle->centerVertex().pos;
-   initCurve->at(1).pos() = _ioIntersection();
-   initCurve->at(2).pos() = outletCircle->centerVertex().pos;
+   auto curve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   if (curve->curve()->vertices().empty()) return;
+   // initCurve->at(1).pos() = _ioIntersection();
+   // initCurve->at(2).pos() = outletCircle->centerVertex().pos;
+
+   auto& inlet_vert = *(curve->begin() + 1);
+   auto& outlet_vert = *(curve->rbegin() + 1);
+   
+   auto chord_line = oChord->line();
+
+   glm::vec3 inlet_dir = glm::rotate(glm::mat4(1.0f), glm::radians(this->_eqInletAngle()),
+                                     chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
+
+   glm::vec3 outlet_dir = -glm::rotate(glm::mat4(1.0f), -glm::radians(this->_eqOutletAngle()),
+                                      chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
+
+   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, inletCircle->centerVertex().pos, inlet_dir);
+   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, outletCircle->centerVertex().pos, outlet_dir);
+
+
+   curve->begin()->pos() = inletCircle->centerVertex().pos;
+   curve->rbegin()->pos() = outletCircle->centerVertex().pos;
 }
 
 void BfBladeSection::_createCenterCircles() {
@@ -274,8 +401,8 @@ void BfBladeSection::_processCCLines()
       auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
       auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
       auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
-      line->first().pos = circle->center().pos + normal * r;
-      line->second().pos = circle->center().pos - normal * r;
+      line->first().pos() = circle->center().pos + normal * r;
+      line->second().pos() = circle->center().pos - normal * r;
    }
 }
 
@@ -286,19 +413,19 @@ void BfBladeSection::_createFrontIntersectionLines() {
    for (auto& l : CCL) { 
       auto cline = std::static_pointer_cast<curves::BfSingleLine>(l);
       glm::vec3 dir = cline->directionFromStart();
-      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals) *
+      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals()) *
                          glm::vec4(dir, 1.0f);
 
       auto line = std::make_shared<curves::BfSingleLine>(
          BfVertex3( 
-            cline->first().pos + normal,
+            cline->first().pos() + normal,
             glm::vec3(1.0f),
-            cline->first().normals
+            cline->first().normals()
          ),
          BfVertex3( 
-            cline->first().pos - normal,
+            cline->first().pos() - normal,
             glm::vec3(1.0f),
-            cline->first().normals
+            cline->first().normals()
          )
       );
       line->color() = glm::vec3(0.2f, 0.5f, 0.44f);
@@ -320,8 +447,8 @@ void BfBladeSection::_createFrontIntersectionLines() {
          continue; 
       }
 
-      left->second().pos = intersection;
-      right->first().pos = intersection;
+      left->second().pos() = intersection;
+      right->first().pos() = intersection;
    }
 }
 
@@ -333,10 +460,10 @@ void BfBladeSection::_processFrontIntersectionLines() {
       auto cline = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
       auto line = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
       glm::vec3 dir = cline->directionFromStart();
-      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals) *
+      glm::vec3 normal = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), cline->first().normals()) *
                          glm::vec4(dir, 1.0f);
-      line->first().pos = cline->first().pos - normal;
-      line->second().pos = cline->first().pos + normal;
+      line->first().pos() = cline->first().pos() - normal;
+      line->second().pos() = cline->first().pos() + normal;
    }
    for (size_t i = 0; i < CCL.size() - 1; ++i) 
    { 
@@ -353,15 +480,34 @@ void BfBladeSection::_processFrontIntersectionLines() {
          continue; 
       }
 
-      left->second().pos = intersection;
-      right->first().pos = intersection;
+      left->second().pos() = intersection;
+      right->first().pos() = intersection;
    }
 }
 
-void _createFrontCurves() { 
+void BfBladeSection::_createFrontCurves() { 
+   const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
+   const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
+   const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
+   // assert( CC.size() == CCL.size() == IL.size() );   
 
+   auto back_layer = _addPartForward<BfBladeSectionEnum::Back, obj::BfDrawLayer>("Back layer");
+
+   for (size_t i = 0; i < CC.size() - 1; ++i) { 
+      auto normal_left = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
+      auto normal_right = std::static_pointer_cast<curves::BfSingleLine>(CCL[i + 1]);
+      auto tangent = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
+      auto bezier = std::make_shared<curves::BfBezierN>(
+         BfVertex3Uni(normal_left->first().getp()),
+         BfVertex3Uni(tangent->second().getp()),
+         BfVertex3Uni(normal_right->first().getp())
+      );
+      bezier->color() = glm::vec3(1.0f, 0.1f, 0.1f);
+      this->add(bezier);
+   }
 }
-void _processFrontCurves() { 
+
+void BfBladeSection::_processFrontCurves() { 
 
 }
 

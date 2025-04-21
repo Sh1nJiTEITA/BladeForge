@@ -56,10 +56,10 @@ public:
    // {
    // }
 
-   BfVertex3& first() { return m_first.get(); }
-   BfVertex3& second() { return m_second.get(); }
-   const BfVertex3& first() const { return m_first.get(); }
-   const BfVertex3& second() const { return m_second.get(); }
+   BfVertex3Uni& first() { return m_first; }
+   BfVertex3Uni& second() { return m_second; }
+   // const BfVertex3& first() const { return m_first.get(); }
+   // const BfVertex3& second() const { return m_second.get(); }
 
    const float length() const
    {
@@ -658,6 +658,16 @@ public:
    const BfVertex3Uni& left() const { return m_left; }
    BfVertex3Uni& right() { return m_right; }
    const BfVertex3Uni& right() const { return m_right; }
+
+   std::shared_ptr< curves::BfHandle > leftHandle()
+   {
+      return std::static_pointer_cast< curves::BfHandle >(m_children[0]);
+   }
+
+   std::shared_ptr< curves::BfHandle > rightHandle()
+   {
+      return std::static_pointer_cast< curves::BfHandle >(m_children[1]);
+   }
 
    std::shared_ptr< curves::BfSingleLine > line()
    {
