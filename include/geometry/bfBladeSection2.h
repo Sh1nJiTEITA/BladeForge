@@ -69,8 +69,8 @@ public:
       _createChord(); 
       _createCircleEdges();
       _createIOAngles();
-      // _createAverageInitialCurve();
-      // _createCenterCircles();
+      _createAverageInitialCurve();
+      _createCenterCircles();
       // _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
@@ -93,8 +93,8 @@ public:
       _processChord(); 
       _processCircleEdges();
       _processIOAngles();
-      // _processAverageInitialCurve();
-      // _processCenterCircles();
+      _processAverageInitialCurve();
+      _processCenterCircles();
       // _processCCLines();
       // _processFrontIntersectionLines();
    }

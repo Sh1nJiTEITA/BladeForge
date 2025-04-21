@@ -147,6 +147,13 @@ BfBladeSection::_processChord()
 
    m_info.get().chord = oChord->line()->length();
 
+   if (oChord->leftHandle()->isChanged()) { 
+      oChord->left().pos() = { 0.0f, 0.0f, 0.0f };
+   }
+   if (oChord->rightHandle()->isChanged()) { 
+      oChord->right().pos().y = oChord->left().pos().y;
+   }
+
    if (_isChordChanged()) 
    { 
       auto line = oChord->line();
@@ -239,7 +246,6 @@ void BfBladeSection::_processIOAngles()
    iLine->line()->first().pos() = IC->centerVertex().pos;
    iLine->line()->second().pos() = IC->centerVertex().pos - _eqInletDirection() * m_info.get().chord * 0.2f;
 
-
    auto oLine = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
    auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
    if (oLine->rightHandle()->isChanged()) { 
@@ -249,16 +255,10 @@ void BfBladeSection::_processIOAngles()
          std::move(cDir), 
          std::move(oDir)
       ));
-      fmt::println(stdout, "oAngle = {}, 180 - oAngle = {}", angle, 180.f - angle);
       m_info.get().outletAngle = 180 - angle;
    }
    oLine->line()->first().pos() = OC->centerVertex().pos;
    oLine->line()->second().pos() = OC->centerVertex().pos - _eqOutletDirection() * m_info.get().chord * 0.2f;
-
-
-   // auto oLine = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
-   // auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
-   // oLine->line()->first().pos() = OC->centerVertex().pos;
 }
 
 
@@ -285,43 +285,33 @@ void BfBladeSection::_createAverageInitialCurve()
    
    auto chord_line = oChord->line();
 
-   glm::vec3 inlet_dir = glm::rotate(glm::mat4(1.0f), glm::radians(this->_eqInletAngle()),
-                                     chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
-
-   glm::vec3 outlet_dir = -glm::rotate(glm::mat4(1.0f), -glm::radians(this->_eqOutletAngle()),
-                                       chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
-
-   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, chord_line->first().pos() + inletCircle->centerVertex().pos, inlet_dir);
-   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, chord_line->second().pos() + outletCircle->centerVertex().pos , outlet_dir);
-
+   inlet_vert.pos() = curves::math::closestPointOnLine(
+      inlet_vert, 
+      chord_line->first().pos() + inletCircle->centerVertex().pos,
+      _eqInletDirection()
+   );
+   outlet_vert.pos() = curves::math::closestPointOnLine(
+      outlet_vert, 
+      chord_line->second().pos() + outletCircle->centerVertex().pos, 
+      _eqOutletDirection()
+   );
 }
 
-void BfBladeSection::_processAverageInitialCurve() { 
-   auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
+void BfBladeSection::_processAverageInitialCurve() 
+{ 
    auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
    auto curve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   if (curve->curve()->vertices().empty()) return;
-   // initCurve->at(1).pos() = _ioIntersection();
-   // initCurve->at(2).pos() = outletCircle->centerVertex().pos;
-
    auto& inlet_vert = *(curve->begin() + 1);
    auto& outlet_vert = *(curve->rbegin() + 1);
-   
-   auto chord_line = oChord->line();
 
-   glm::vec3 inlet_dir = glm::rotate(glm::mat4(1.0f), glm::radians(this->_eqInletAngle()),
-                                     chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
+   glm::vec3 iCenter = inletCircle->centerVertex().pos;
+   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, iCenter, iCenter + _eqInletDirection());
+   curve->begin()->pos() = iCenter;
 
-   glm::vec3 outlet_dir = -glm::rotate(glm::mat4(1.0f), -glm::radians(this->_eqOutletAngle()),
-                                      chord_line->first().normals()) * glm::vec4(chord_line->directionFromStart(), 1.0f);
-
-   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, inletCircle->centerVertex().pos, inlet_dir);
-   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, outletCircle->centerVertex().pos, outlet_dir);
-
-
-   curve->begin()->pos() = inletCircle->centerVertex().pos;
-   curve->rbegin()->pos() = outletCircle->centerVertex().pos;
+   glm::vec3 oCenter = outletCircle->centerVertex().pos;
+   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, oCenter, oCenter + _eqOutletDirection());
+   curve->rbegin()->pos() = oCenter;
 }
 
 void BfBladeSection::_createCenterCircles() {
