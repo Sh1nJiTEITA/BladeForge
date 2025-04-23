@@ -4,7 +4,9 @@
 #include <fmt/format.h>
 #include <glm/trigonometric.hpp>
 #include <imgui_internal.h>
+#include <type_traits>
 #include <utility>
+#include <variant>
 
 #include "bfBladeSection2.h"
 #include "bfCamera.h"
@@ -851,9 +853,10 @@ BfGui::toggleRenderCreateWindow()
    __create_window.toggleRender();
 }
 
+using inputTableField = std::variant< int*, float* >;
 bool
 presentBladeSectionTable(
-    const char* label, float* values[], const char* names[], int count
+    const char* label, inputTableField values[], const char* names[], int count
 )
 {
    bool should_change = false;
@@ -875,7 +878,26 @@ presentBladeSectionTable(
          ImGui::SetNextItemWidth(cell_size);
          std::string field_name =
              fmt::format("##bf-section-main-parameters-{}", names[i]);
-         if (ImGui::InputFloat(field_name.c_str(), values[i]))
+
+         bool sts = std::visit(
+             [&field_name](auto&& arg) {
+                using T = std::remove_reference_t< decltype(arg) >;
+                if constexpr (std::is_same_v< T, int* >)
+                {
+                   return ImGui::InputInt(field_name.c_str(), arg);
+                }
+                else if constexpr (std::is_same_v< T, float* >)
+                {
+                   return ImGui::InputFloat(field_name.c_str(), arg);
+                }
+                else
+                {
+                   return false;
+                }
+             },
+             values[i]
+         );
+         if (sts)
          {
             should_change = true;
          }
@@ -916,6 +938,7 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
             ImGui::EndDragDropTarget();
          }
          ImGui::SameLine();
+
          ImVec2 region = ImGui::GetContentRegionAvail();
          std::string input_title = fmt::format("##center-circle-input-data{}", i);
          float values[2]{circles[i].relativePos, circles[i].radius};
@@ -972,19 +995,26 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
    if (ImGui::Begin("Parameters"))
    {
       // clang-format off
-      float* outer_values[] = {&info->chord, &info->installAngle};
+      inputTableField outer_values[] = { &info->chord, &info->installAngle };
       const char* outer_names[] = {"Chord", "Install Angle"};
       no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
 
+      ImGui::SeparatorText("Average curve");
+      inputTableField ave_values[] = {&info->initialBezierCurveOrder};
+      const char* ave_names[] = {"Average curve order" };
+      no_remake *= !presentBladeSectionTable("Ave", ave_values, ave_names, 1);
+
       ImGui::SeparatorText("Inlet");
-      float* inlet_values[] = {&info->inletAngle, &info->inletRadius};
+      inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
       const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
       no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
 
       ImGui::SeparatorText("Outlet");
-      float* outlet_values[] = {&info->outletAngle, &info->outletRadius};
+      inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
       no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
+      
+
       no_remake *= !presentCenterCirclesEditor(info->centerCircles);
       // clang-format on
    }

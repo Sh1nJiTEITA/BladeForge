@@ -302,6 +302,21 @@ void BfBladeSection::_processAverageInitialCurve()
    auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
    auto curve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   
+   const int current_curve_order = curve->size() - 1;
+   const int needed_curve_order = m_info.get().initialBezierCurveOrder;
+   if (current_curve_order < needed_curve_order) { 
+      for (int i = current_curve_order; i < needed_curve_order; ++i) { 
+         curve->elevateOrder();
+      }
+   }
+   else if (current_curve_order > needed_curve_order) { 
+      for (int i = current_curve_order; i >= needed_curve_order; --i) { 
+         fmt::println("Lowering initial curve order {} -> {}", i, needed_curve_order);
+         curve->lowerateOrder();
+      }
+   }
+
    auto& inlet_vert = *(curve->begin() + 1);
    auto& outlet_vert = *(curve->rbegin() + 1);
 

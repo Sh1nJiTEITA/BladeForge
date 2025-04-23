@@ -33,7 +33,7 @@ struct SectionCreateInfo
    std::vector< CenterCircle > centerCircles = {
        {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
    };
-   size_t initialBezierCurveOrder = 5;
+   int initialBezierCurveOrder = 5;
 };
 
 enum class BfBladeSectionEnum : uint32_t
