@@ -72,8 +72,8 @@ public:
       _createIOAngles();
       _createAverageInitialCurve();
       _createCenterCircles();
-      _createCCLines();
-      _createFrontIntersectionLines();
+      // _createCCLines();
+      // _createFrontIntersectionLines();
       // _createFrontCurves();
    }
 
@@ -96,8 +96,8 @@ public:
       _processIOAngles();
       _processAverageInitialCurve();
       _processCenterCircles();
-      _processCCLines();
-      _processFrontIntersectionLines();
+      // _processCCLines();
+      // _processFrontIntersectionLines();
    }
 
    virtual void postmake() 

@@ -908,12 +908,55 @@ presentBladeSectionTable(
    return should_change;
 }
 
+enum class CenterCirclePopupReturnStatus
+{
+   OK,
+   CANCEL,
+   IDLE,
+};
+
+CenterCirclePopupReturnStatus
+centerCirclesPopup(obj::section::CenterCircle& new_circle)
+{
+   if (ImGui::BeginPopup("New control circle"))
+   {
+      ImGui::InputFloat("t", &new_circle.relativePos);
+      ImGui::InputFloat("R", &new_circle.radius);
+
+      if (ImGui::Button("OK"))
+      {
+         ImGui::CloseCurrentPopup();
+         ImGui::EndPopup();
+         return CenterCirclePopupReturnStatus::OK;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel"))
+      {
+         ImGui::CloseCurrentPopup();
+         ImGui::EndPopup();
+         return CenterCirclePopupReturnStatus::CANCEL;
+      }
+      ImGui::EndPopup();
+   }
+   return CenterCirclePopupReturnStatus::IDLE;
+};
+
 bool
 presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
 {
    bool should_remake = false;
    // clang-format off
    ImGui::SeparatorText("Center Circles");
+   if (ImGui::Button("New", {ImGui::GetContentRegionAvail().x, 0})) { 
+      ImGui::OpenPopup("New control circle");
+   }
+
+   static obj::section::CenterCircle new_circle {0, 0};
+   auto sts = centerCirclesPopup(new_circle);
+   if (sts == CenterCirclePopupReturnStatus::OK) { 
+      circles.push_back(new_circle);
+   };
+
    constexpr float child_y = 38.0f;
    float child_x = ImGui::GetContentRegionAvail().x;
    for (size_t i = 0; i < circles.size(); ++i)
@@ -939,16 +982,30 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
          }
          ImGui::SameLine();
 
-         ImVec2 region = ImGui::GetContentRegionAvail();
-         std::string input_title = fmt::format("##center-circle-input-data{}", i);
-         float values[2]{circles[i].relativePos, circles[i].radius};
-         ImGui::SetNextItemWidth(region.x);
-         if (ImGui::InputFloat2(input_title.c_str(), values))
-         {
-            circles[i].relativePos = values[0];
-            circles[i].radius = values[1];
-            should_remake = true;
-         }
+         float region_x = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+
+         ImGui::SetNextItemWidth(region_x);
+         std::string input_title_t = fmt::format("##center-circle-input-data-t{}", i);
+
+         if (ImGui::DragFloat(input_title_t.c_str(),
+                              &circles[i].relativePos,
+                              0.001f,
+                              0,
+                              1,
+                              "%.3f")) should_remake = true;
+
+
+         ImGui::SameLine();
+
+         ImGui::SetNextItemWidth(region_x);
+         std::string input_title_r = fmt::format("##center-circle-input-data-r{}", i);
+
+         if (ImGui::DragFloat(input_title_r.c_str(),
+                              &circles[i].radius,
+                              0.001f,
+                              0,
+                              +FLT_MAX,
+                              "%.3f")) should_remake = true;
       }
       ImGui::EndChild();
    }
@@ -1013,8 +1070,6 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
       inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
       no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
-      
-
       no_remake *= !presentCenterCirclesEditor(info->centerCircles);
       // clang-format on
    }
@@ -1026,7 +1081,7 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
       ImGui::Text("Preview area for geometry, debug, logs, etc.");
    }
    ImGui::End();
-   return no_remake;
+   return !no_remake;
 }
 
 void

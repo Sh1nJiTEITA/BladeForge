@@ -2,6 +2,7 @@
 
 #include "bfCurves4.h"
 #include "bfObjectMath.h"
+#include <fmt/base.h>
 #include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
@@ -307,6 +308,7 @@ void BfBladeSection::_processAverageInitialCurve()
    const int needed_curve_order = m_info.get().initialBezierCurveOrder;
    if (current_curve_order < needed_curve_order) { 
       for (int i = current_curve_order; i < needed_curve_order; ++i) { 
+         fmt::println("Elevating initial curve order {} -> {}", i, needed_curve_order);
          curve->elevateOrder();
       }
    }
@@ -345,8 +347,22 @@ void BfBladeSection::_createCenterCircles() {
 
 void BfBladeSection::_processCenterCircles() { 
    auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   if (initCurve->curve()->vertices().empty()) return;
    auto circleLayer = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
+
+   const size_t current_circles_count = circleLayer->children().size();
+   const size_t needed_circles_count = m_info.get().centerCircles.size();
+
+   if (current_circles_count < needed_circles_count) { 
+      for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
+         auto info = m_info.get().centerCircles.at(i);
+         auto circle = std::make_shared<curves::BfCircleCenterWH>(
+            initCurve->curve()->calc(info.relativePos),
+            info.radius
+         );
+         circleLayer->add(circle);   
+      }
+   }
+
    for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
       auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(circleLayer->children()[i]);
       if (circle->isChanged()) { 
@@ -360,8 +376,14 @@ void BfBladeSection::_processCenterCircles() {
       circle->center().pos = curves::math::BfBezierBase::calc(
          *initCurve, m_info.get().centerCircles[i].relativePos
       ).pos;
-      m_info.get().centerCircles[i].radius = circle->radius();
+      if (circle->otherHandle()->isChanged()) {
+         m_info.get().centerCircles[i].radius = circle->radius();
+      }
+      else { 
+         circle->setRadius(m_info.get().centerCircles[i].radius);
+      }
    }
+
 }
 
 void BfBladeSection::_createCCLines() 

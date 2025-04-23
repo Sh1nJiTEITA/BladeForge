@@ -662,14 +662,12 @@ public:
          i++;
       }
 
-      std::cout << "old " << old << "\n";
       auto M = BfBezierBase::controlOrderMatrix(n);
       auto M_transposed = xt::transpose(M);
       auto I = xt::linalg::dot(M_transposed, M);
       auto I_inveresed = xt::linalg::inv(I);
       auto M_res = xt::linalg::dot(I_inveresed, M_transposed);
       xt::xarray<double> result = xt::linalg::dot(M_res, old);
-      std::cout << "res " << result << "\n";
 
       std::vector< BfVertex3Uni > output;
       output.resize(data.size() - 1);

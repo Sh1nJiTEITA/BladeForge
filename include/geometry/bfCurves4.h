@@ -2,8 +2,11 @@
 #define BF_CURVES4_H
 
 #include <cmath>
+#include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_common.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
 #include <memory>
@@ -736,11 +739,29 @@ public:
 
    float radius() const { return glm::distance(m_other.pos(), m_center.pos()); }
 
+   void setRadius(float r)
+   {
+      auto dir = glm::normalize(other().pos - center().pos);
+      if (glm::all(
+              glm::epsilonEqual(dir, glm::vec3{0.0f, 0.0f, 0.0f}, 0.001f)
+          ) ||
+          glm::any(glm::isnan(dir)) || glm::any(glm::isinf(dir)))
+      {
+         dir = glm::vec3{0.0001f, 0.0f, 0.0f};
+      }
+      other().pos = center().pos + dir * r;
+   };
+
    BfVertex3& center() { return m_center.get(); }
    const BfVertex3& center() const { return m_center.get(); }
 
    BfVertex3& other() { return m_other.get(); }
    const BfVertex3& other() const { return m_other.get(); }
+
+   std::shared_ptr< BfHandle > otherHandle()
+   {
+      return std::static_pointer_cast< BfHandle >(m_children[2]);
+   }
 
    void setCenter(const BfVertex3& v)
    {
@@ -777,7 +798,6 @@ public:
 private:
    BfVertex3Uni m_other;
    BfVertex3Uni m_center;
-   // BfVar<float> m_radius;
 
    glm::vec3 m_lastCenterPos;
 };
