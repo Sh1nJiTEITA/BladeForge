@@ -1,6 +1,7 @@
 #ifndef BF_NEW_BLADESECTION2_H
 #define BF_NEW_BLADESECTION2_H
 
+#include <fmt/base.h>
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 

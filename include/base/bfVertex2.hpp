@@ -142,6 +142,46 @@ struct BfVertex3
    // }
 };
 
+template <>
+struct fmt::formatter< glm::vec3 >
+{
+   constexpr auto parse(format_parse_context& ctx)
+   {
+      return ctx.begin(); // no format spec
+   }
+
+   template < typename FormatContext >
+   auto format(const glm::vec3& v, FormatContext& ctx) const
+   {
+      return fmt::format_to(
+          ctx.out(),
+          "({:.2f}, {:.2f}, {:.2f})",
+          v.x,
+          v.y,
+          v.z
+      );
+   }
+};
+
+// Formatter for BfVertex3
+template <>
+struct fmt::formatter< BfVertex3 >
+{
+   constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+
+   template < typename FormatContext >
+   auto format(const BfVertex3& v, FormatContext& ctx) const
+   {
+      return fmt::format_to(
+          ctx.out(),
+          "BfVertex3(pos={}, color={}, normals={})",
+          v.pos,
+          v.color,
+          v.normals
+      );
+   }
+};
+
 // template <>
 // struct fmt::formatter< BfVertex3 >
 // {

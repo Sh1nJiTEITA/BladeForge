@@ -337,6 +337,9 @@ void BfBladeSection::_createCenterCircles() {
       "Center circles layer"
    );
    for (auto&& circleInfo : m_info.get().centerCircles) { 
+      auto v =  initCurve->curve()->calc(circleInfo.relativePos);
+      fmt::print("circle vert {} {} {} ", v.x(), v.y(), v.z());
+      fmt::println("normals {} {} {}", v.normals.x, v.normals.y, v.normals.z);
       auto circle = std::make_shared<curves::BfCircleCenterWH>(
          initCurve->curve()->calc(circleInfo.relativePos),
          circleInfo.radius
@@ -365,7 +368,7 @@ void BfBladeSection::_processCenterCircles() {
 
    for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
       auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(circleLayer->children()[i]);
-      if (circle->isChanged()) { 
+      if (circle->centerHandle()->isChanged()) { 
          auto info_pos = initCurve->curve()->calc(m_info.get().centerCircles[i].relativePos).pos;
          auto actual_pos = circle->center().pos;
          if (glm::any(glm::notEqual(info_pos, actual_pos))) { 
@@ -376,6 +379,7 @@ void BfBladeSection::_processCenterCircles() {
       circle->center().pos = curves::math::BfBezierBase::calc(
          *initCurve, m_info.get().centerCircles[i].relativePos
       ).pos;
+
       if (circle->otherHandle()->isChanged()) {
          m_info.get().centerCircles[i].radius = circle->radius();
       }

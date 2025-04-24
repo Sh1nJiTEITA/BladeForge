@@ -383,10 +383,12 @@ BfDrawDebugProxy::BfDrawDebugProxy(BfDrawObjectBase& obj)
 void
 BfDrawDebugProxy::printVertices()
 {
+   fmt::println("[DEBUG] PRINTING VERTICES BEGIN");
    for (auto v : m_obj.m_vertices)
    {
-        // fmt::print("{}\n", v);
+        fmt::println("{}", v);
    }
+   fmt::println("[DEBUG] PRINTING VERTICES END");
 }
 void
 BfDrawDebugProxy::printIndices()

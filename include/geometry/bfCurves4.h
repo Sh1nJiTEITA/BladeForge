@@ -734,6 +734,7 @@ public:
       );
       this->add(r_handle);
 
+      m_previusOtherHandleDirection = glm::normalize(other().pos - center().pos);
       // clang-format on
    }
 
@@ -741,7 +742,7 @@ public:
 
    void setRadius(float r)
    {
-      auto dir = glm::normalize(other().pos - center().pos);
+      auto& dir = m_previusOtherHandleDirection;
       if (glm::all(
               glm::epsilonEqual(dir, glm::vec3{0.0f, 0.0f, 0.0f}, 0.001f)
           ) ||
@@ -758,11 +759,6 @@ public:
    BfVertex3& other() { return m_other.get(); }
    const BfVertex3& other() const { return m_other.get(); }
 
-   std::shared_ptr< BfHandle > otherHandle()
-   {
-      return std::static_pointer_cast< BfHandle >(m_children[2]);
-   }
-
    void setCenter(const BfVertex3& v)
    {
       m_lastCenterPos = v.pos;
@@ -773,12 +769,15 @@ public:
    {
       _assignRoots();
 
+      // TODO: Вообще, строго говоря эта часть нужна, если окружность
+      // используется вне blade-section
+      //
       // if changed CENTER
-      if (!glm::all(glm::equal(m_center.pos(), m_lastCenterPos)))
-      {
-         m_other.pos() += -m_lastCenterPos + m_center.pos();
-         m_lastCenterPos = m_center.pos();
-      }
+      // if (!glm::all(glm::equal(m_center.pos(), m_lastCenterPos)))
+      // {
+      //    m_other.pos() += -m_lastCenterPos + m_center.pos();
+      //    m_lastCenterPos = m_center.pos();
+      // }
 
       // if (glm::any(glm::notEqual(m_center.pos(), m_lastCenterPos)))
 
@@ -786,9 +785,28 @@ public:
       {
          child->make();
       }
+      // clang-format off
+      m_previusOtherHandleDirection = glm::normalize(other().pos - center().pos);
+      // clang-format on
+      // otherHandle()->debug().printVertices();
+   }
+
+   const glm::vec3& previousDirection() const noexcept
+   {
+      return m_previusOtherHandleDirection;
    }
 
    // clang-format off
+   std::shared_ptr< BfHandle > centerHandle() {
+      return std::static_pointer_cast< BfHandle >(m_children[1]);
+   }
+
+   std::shared_ptr< BfHandle > otherHandle() {
+      return std::static_pointer_cast< BfHandle >(m_children[2]);
+   }
+
+   
+
    virtual bool isChanged() const noexcept { 
       return std::static_pointer_cast<curves::BfHandle>(m_children[1])->isChanged() ||
              std::static_pointer_cast<curves::BfHandle>(m_children[2])->isChanged();
@@ -798,6 +816,7 @@ public:
 private:
    BfVertex3Uni m_other;
    BfVertex3Uni m_center;
+   glm::vec3 m_previusOtherHandleDirection;
 
    glm::vec3 m_lastCenterPos;
 };
