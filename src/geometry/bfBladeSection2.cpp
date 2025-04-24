@@ -2,6 +2,7 @@
 
 #include "bfCurves4.h"
 #include "bfObjectMath.h"
+#include <algorithm>
 #include <fmt/base.h>
 #include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -14,7 +15,6 @@ namespace obj
 {
 namespace section
 {
-
 bool
 BfBladeSection::_isChordChanged()
 {
@@ -423,15 +423,41 @@ void BfBladeSection::_createCCLines()
 void BfBladeSection::_processCCLines() 
 { 
    auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
-   const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
+   auto CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
+   auto CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>();
+
+   const size_t current_lines_count = CCL->children().size();
+   const size_t needed_lines_count = CC->children().size();
+
+   if (current_lines_count < needed_lines_count) { 
+      for (size_t i = current_lines_count; i < needed_lines_count; ++i) { 
+         auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
+         float t = m_info.get().centerCircles[i].relativePos;
+         float r = m_info.get().centerCircles[i].radius;
+         auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+         auto line = std::make_shared<curves::BfSingleLine>(
+            BfVertex3{ 
+               circle->center().pos + normal * r,
+               glm::vec3(1.0f),
+               circle->center().normals
+            },
+            BfVertex3{ 
+               circle->center().pos - normal * r,
+               glm::vec3(1.0f),
+               circle->center().normals
+            }
+         );
+         line->color() = glm::vec3(0.0f, 1.0f, .2f);
+      }
+   }
+
 
    for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
       float t = m_info.get().centerCircles[i].relativePos;
       float r = m_info.get().centerCircles[i].radius;
       auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
-      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
-      auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
+      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
+      auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL->children()[i]);
       line->first().pos() = circle->center().pos + normal * r;
       line->second().pos() = circle->center().pos - normal * r;
    }

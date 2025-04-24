@@ -2,6 +2,7 @@
 #define BF_NEW_BLADESECTION2_H
 
 #include <fmt/base.h>
+#include <functional>
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 
@@ -73,7 +74,7 @@ public:
       _createIOAngles();
       _createAverageInitialCurve();
       _createCenterCircles();
-      // _createCCLines();
+      _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
    }
@@ -97,7 +98,7 @@ public:
       _processIOAngles();
       _processAverageInitialCurve();
       _processCenterCircles();
-      // _processCCLines();
+      _processCCLines();
       // _processFrontIntersectionLines();
    }
 
@@ -116,11 +117,13 @@ public:
    }
 
 private:
+
    bool _isChordChanged();
    float _eqInletAngle();
    float _eqOutletAngle();
    glm::vec3 _eqInletDirection(); 
    glm::vec3 _eqOutletDirection(); 
+
 
    glm::vec3 _ioIntersection();
 
