@@ -559,6 +559,7 @@ public:
       auto handles_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
       auto lines_layer = std::static_pointer_cast<obj::BfDrawLayer>(m_children[2]);
       auto new_vertices = math::BfBezierBase::elevateOrder(*this);
+
       for (size_t i = 0; i < new_vertices.size() - 1; ++i) 
       { 
          (*this)[i].pos() = new_vertices[i].pos();
@@ -570,8 +571,7 @@ public:
       handles_layer->add(std::make_shared< curves::BfHandle >(this->rbegin()->getp(), 0.01f));
       lines_layer->add(std::make_shared< curves::BfSingleLine >(this->rbegin()->getp(), (this->rbegin() + 1)->getp()));
 
-      auto curve = m_children[0];
-      auto casted_curve = std::static_pointer_cast< curves::BfBezierN >(curve);
+      auto casted_curve = std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
       auto new_pointers = this->_genControlVerticesPointers();
       casted_curve->assign(new_pointers.begin(), new_pointers.end());
       toggleBoundHandles(oldstate);
