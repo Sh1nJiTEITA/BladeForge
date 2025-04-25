@@ -2,6 +2,7 @@
 #define BF_CURVES4_H
 
 #include <cmath>
+#include <fmt/base.h>
 #include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
@@ -1019,6 +1020,38 @@ public:
          );
          line->color() = glm::vec3(0.0f, 1.0f, .2f);
          this->add(line);
+         
+         glm::vec3 perpDirFirst = _findPerpDirectionFirst();
+         auto perpLineFirst = std::make_shared<curves::BfSingleLine>(
+            BfVertex3{
+               line->first().pos() + perpDirFirst * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            },
+            BfVertex3{
+               line->first().pos() - perpDirFirst * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            }
+         );
+         perpLineFirst->color() = glm::vec3{ 0.23, 0.45, 0.1 };
+         this->add(perpLineFirst);
+
+         glm::vec3 perpDirSecond = _findPerpDirectionSecond();
+         auto perpLineSecond = std::make_shared<curves::BfSingleLine>(
+            BfVertex3{
+               line->second().pos() + perpDirSecond * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            },
+            BfVertex3{
+               line->second().pos() - perpDirSecond * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            }
+         );
+         perpLineSecond->color() = glm::vec3{ 0.23, 0.45, 0.1 };
+         this->add(perpLineSecond);
       }
       else { 
          throw std::runtime_error("Can't lock BfBezierN ...");
@@ -1031,6 +1064,14 @@ public:
    
    std::shared_ptr< BfSingleLine > normalLine() { 
       return std::static_pointer_cast<BfSingleLine>(m_children[1]);
+   }
+
+   std::shared_ptr< BfSingleLine > perpLineFirst() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[2]);
+   }
+
+   std::shared_ptr< BfSingleLine > perpLineSecond() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[3]);
    }
 
    std::shared_ptr< BfBezierN > boundCurve() { 
@@ -1047,8 +1088,8 @@ public:
       m_previous = pre;
    }
 
-   bool isLeft() { return m_previous.expired(); }
-   bool isRight() { return m_next.expired(); }
+   bool hasLeft() { return !m_previous.expired(); }
+   bool hasRight() { return !m_next.expired(); }
 
    std::shared_ptr< BfCirclePack > next() { 
       auto snext = m_next.lock();
@@ -1065,10 +1106,125 @@ public:
    virtual void make() override { 
       _premakeCircle();
       _premakeNormalLine();
+      _premakeIntersection();
       obj::BfDrawLayer::make();
    }
    
 private:
+   glm::vec3 _findPerpDirectionFirst()  {
+      const auto current_normal_line = normalLine();
+      const glm::vec3 from_start = current_normal_line->directionFromStart();
+      const glm::vec3 normal_start = current_normal_line->first().normals();
+      return glm::normalize(glm::cross(from_start, normal_start)) ;
+   }
+   glm::vec3 _findPerpDirectionSecond()  {
+      const auto current_normal_line = normalLine();
+      const glm::vec3 from_end = current_normal_line->directionFromEnd();
+      const glm::vec3 normal_end = current_normal_line->first().normals();
+      return glm::normalize(glm::cross(from_end, normal_end)) ;
+   }
+
+
+   void _premakeIntersectionSecond() { 
+      const auto current_normal_line = normalLine();
+      auto current_perp_line = perpLineSecond();
+      glm::vec3 current_perp_dir = _findPerpDirectionSecond();
+      if (hasRight()) { 
+         auto right = next();
+         auto next_normal_line = right->normalLine();
+         auto next_perp_dir = right->_findPerpDirectionSecond();
+         glm::vec3 intersection = curves::math::findLinesIntersection(
+            current_normal_line->second().pos() + current_perp_dir,
+            current_normal_line->second().pos() - current_perp_dir,
+            next_normal_line->second().pos() + next_perp_dir,
+            next_normal_line->second().pos() - next_perp_dir,
+            BF_MATH_FIND_LINES_INTERSECTION_ANY
+         );   
+         current_perp_line->second().pos() = intersection;
+         right->perpLineSecond()->first().pos() = intersection;
+      }
+      if (!hasLeft()) { 
+         current_perp_line->first().pos() = current_normal_line->second().pos();  
+      }
+      if (hasLeft() && !hasRight()) { 
+         current_perp_line->second().pos() = current_normal_line->second().pos();  
+      }
+   }
+
+   void _premakeIntersectionFirst() { 
+      const auto current_normal_line = normalLine();
+      auto current_perp_line = perpLineFirst();
+      glm::vec3 current_perp_dir = _findPerpDirectionFirst();
+      if (hasRight()) { 
+         auto right = next();
+         auto next_normal_line = right->normalLine();
+         auto next_perp_dir = right->_findPerpDirectionFirst();
+         glm::vec3 intersection = curves::math::findLinesIntersection(
+            current_normal_line->first().pos() + current_perp_dir,
+            current_normal_line->first().pos() - current_perp_dir,
+            next_normal_line->first().pos() + next_perp_dir,
+            next_normal_line->first().pos() - next_perp_dir,
+            BF_MATH_FIND_LINES_INTERSECTION_ANY
+         );   
+         current_perp_line->second().pos() = intersection;
+         right->perpLineFirst()->first().pos() = intersection;
+      }
+      if (!hasLeft()) { 
+         current_perp_line->first().pos() = current_normal_line->first().pos();  
+      }
+      if (hasLeft() && !hasRight()) { 
+         current_perp_line->second().pos() = current_normal_line->first().pos();  
+      }
+   }
+
+   void _premakeIntersection() { 
+      fmt::println("\nFinding intersection for circle with t={}, hasLeft={}, hasRight={}", m_relativePos.get(), hasLeft(), hasRight());
+      _premakeIntersectionFirst();
+      _premakeIntersectionSecond();
+      // if (hasRight()) { 
+      //    auto right = next();
+      //    const auto current_normal_line = normalLine();
+      //
+      //    auto first_perp_line = perpLineFirst();
+      //    glm::vec3 current_first_dir = _findPerpDirectionFirst();
+      //    first_perp_line->first().pos() = current_normal_line->first().pos() + current_first_dir * m_radius.get();
+      //    first_perp_line->second().pos() = current_normal_line->first().pos() - current_first_dir * m_radius.get();
+      //
+      //    auto second_perp_line = perpLineSecond();
+      //    glm::vec3 current_second_dir = _findPerpDirectionSecond();
+      //    second_perp_line->first().pos() = current_normal_line->second().pos() + current_second_dir * m_radius.get();
+      //    second_perp_line->second().pos() = current_normal_line->second().pos() - current_second_dir * m_radius.get();
+      //    
+      //    glm::vec3 next_first_dir = next()->_findPerpDirectionFirst();
+      //    glm::vec3 next_second_dir = next()->_findPerpDirectionSecond();
+      //
+      //    glm::vec3 intersection_first = curves::math::findLinesIntersection(
+      //       first_perp_line->first(),
+      //       first_perp_line->second(),
+      //       right->perpLineFirst()->first(),
+      //       right->perpLineFirst()->second(),
+      //       BF_MATH_FIND_LINES_INTERSECTION_ANY
+      //    );
+      //    first_perp_line->first().pos() = intersection_first;
+      //    right->perpLineFirst()->first().pos() = intersection_first;
+      //    fmt::println("inter={}", intersection_first);
+      //
+      //    // glm::vec3 intersection_second = curves::math::findLinesIntersection(
+      //    //    current_normal_line->second().pos() + current_second_dir,
+      //    //    current_normal_line->second().pos() - current_second_dir,
+      //    //    right->normalLine()->second().pos() + next_second_dir,
+      //    //    right->normalLine()->second().pos() - next_second_dir,
+      //    //    BF_MATH_FIND_LINES_INTERSECTION_ANY
+      //    // );
+      //    // second_perp_line->second().pos() = intersection_second;
+      //    // right->perpLineSecond()->second().pos() = intersection_second;
+      //
+      //
+      //
+      //      
+      //
+      // }
+   }
 
    void _premakeNormalLine() { 
       auto curve = boundCurve(); 
