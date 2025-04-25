@@ -68,6 +68,7 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section")
        , m_info{std::forward<T>(info)}
    {
+      m_info.get().centerCircles.reserve(100);
       _createChord(); 
       _createCircleEdges();
       _createIOAngles();

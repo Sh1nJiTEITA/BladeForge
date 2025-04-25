@@ -4,6 +4,7 @@
 #include "bfObjectMath.h"
 #include <algorithm>
 #include <fmt/base.h>
+#include <fmt/ranges.h>
 #include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
@@ -319,7 +320,6 @@ void BfBladeSection::_processAverageInitialCurve() {
          curve->lowerateOrder();
       }
    }
-
    auto& inlet_vert = *(curve->begin() + 1);
    auto& outlet_vert = *(curve->rbegin() + 1);
 
@@ -338,7 +338,7 @@ void BfBladeSection::_createCenterCircles() {
       "Center circles layer"
    );
    std::shared_ptr< curves::BfCirclePack > last { nullptr };
-   for (auto&& circleInfo : m_info.get().centerCircles) { 
+   for (auto& circleInfo : m_info.get().centerCircles) { 
       auto circle_pack = std::make_shared<curves::BfCirclePack>(
          BfVar<float>(&circleInfo.relativePos),
          BfVar<float>(&circleInfo.radius), 
@@ -356,35 +356,35 @@ void BfBladeSection::_createCenterCircles() {
 void BfBladeSection::_processCenterCircles() { 
    auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
    auto circleLayer = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
-
-   // const size_t current_circles_count = circleLayer->children().size();
-   // const size_t needed_circles_count = m_info.get().centerCircles.size();
-   //
-   // if (current_circles_count < needed_circles_count) { 
-   //    for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
-   //       auto info = m_info.get().centerCircles.at(i);
-   //       auto circle = std::make_shared<curves::BfCircleCenterWH>(
-   //          initCurve->curve()->calc(info.relativePos),
-   //          info.radius
-   //       );
-   //       circleLayer->add(circle);   
-   //    }
-   // }
    using pack_t = std::shared_ptr< curves::BfCirclePack >;
-   std::vector<pack_t> packs ;
 
+   const size_t current_circles_count = circleLayer->children().size();
+   const size_t needed_circles_count = m_info.get().centerCircles.size();
+   
+   if (current_circles_count < needed_circles_count) { 
+      for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
+         auto& info = m_info.get().centerCircles.at(i); 
+         auto circle_pack = std::make_shared<curves::BfCirclePack>(
+            BfVar<float>(&info.relativePos),
+            BfVar<float>(&info.radius), 
+            initCurve->curve()->weak_from_this()
+         );
+         circle_pack->make();
+         circleLayer->add(circle_pack);   
+      }
+   }
+
+   std::vector<pack_t> packs ;
    std::transform(circleLayer->children().begin(), 
                   circleLayer->children().end(), 
                   std::back_inserter(packs),
                   [](std::shared_ptr< obj::BfDrawObjectBase >& o) { 
-                     return std::static_pointer_cast<curves::BfCirclePack>(o);
+                     return std::static_pointer_cast<curves::BfCirclePack>(o);                  
                   });
-   fmt::println("Found {} Circle packs", packs.size());
    
    std::sort(packs.begin(), packs.end(), [](const pack_t& lhs, const pack_t& rhs) { 
       return lhs->relativePos().get() < rhs->relativePos().get();
    });
-
    
    packs.front()->bindPrevious(std::weak_ptr<obj::BfDrawObjectBase>{});
    packs.back()->bindNext(std::weak_ptr<obj::BfDrawObjectBase>{});
