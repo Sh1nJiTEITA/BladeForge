@@ -337,14 +337,21 @@ void BfBladeSection::_createCenterCircles() {
       "Center circles layer"
    );
    for (auto&& circleInfo : m_info.get().centerCircles) { 
-      auto v =  initCurve->curve()->calc(circleInfo.relativePos);
-      fmt::print("circle vert {} {} {} ", v.x(), v.y(), v.z());
-      fmt::println("normals {} {} {}", v.normals.x, v.normals.y, v.normals.z);
-      auto circle = std::make_shared<curves::BfCircleCenterWH>(
-         initCurve->curve()->calc(circleInfo.relativePos),
-         circleInfo.radius
+      auto circle_pack = std::make_shared<curves::BfCirclePack>(
+         BfVar<float>(&circleInfo.relativePos),
+         BfVar<float>(&circleInfo.radius), 
+         initCurve->curve()->weak_from_this()
       );
-      circleLayer->add(circle);
+      circleLayer->add(circle_pack);
+
+      // auto v =  initCurve->curve()->calc(circleInfo.relativePos);
+      // fmt::print("circle vert {} {} {} ", v.x(), v.y(), v.z());
+      // fmt::println("normals {} {} {}", v.normals.x, v.normals.y, v.normals.z);
+      // auto circle = std::make_shared<curves::BfCircleCenterWH>(
+      //    initCurve->curve()->calc(circleInfo.relativePos),
+      //    circleInfo.radius
+      // );
+      // circleLayer->add(circle);
    }
 }
 

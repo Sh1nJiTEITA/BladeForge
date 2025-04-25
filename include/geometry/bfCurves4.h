@@ -988,6 +988,69 @@ public:
 };
 
 
+class BfCirclePack : public obj::BfDrawLayer { 
+public:
+   template < typename T >
+   BfCirclePack(T&& t, T&& R, std::weak_ptr<BfDrawObjectBase> curve)  
+      : obj::BfDrawLayer("Circle pack")
+      , m_relativePos{ std::forward<T>(t) }
+      , m_radius{ std::forward<T>(R) }
+      , m_curve{ curve } 
+   { 
+      if (auto locked = m_curve.lock()) { 
+         // TODO: ADD CHECK
+         auto curve = std::static_pointer_cast<BfBezierN>(locked);
+         auto center = curve->calc(m_relativePos.get());
+         auto circle = std::make_shared<BfCircleCenterWH>(
+            center, m_radius.get()
+         );
+         this->add(circle);
+      }
+      else { 
+         throw std::runtime_error("Can't lock BfBezierN ...");
+      }
+   }
+
+   std::shared_ptr< BfCircleCenterWH > circle() { 
+      return std::static_pointer_cast<BfCircleCenterWH>(m_children[0]);
+   }
+
+   virtual void make() override { 
+      auto c = circle();    
+      auto initCurve = m_curve.lock();
+      if (!initCurve) { throw std::runtime_error("Can't lock BfBezierN ..."); }
+      auto casted = std::static_pointer_cast<BfBezierN>(initCurve);
+
+      if (c->centerHandle()->isChanged()) { 
+         auto info_pos = casted->calc(m_relativePos.get()).pos;
+         auto actual_pos = c->center().pos;
+
+         if (glm::any(glm::notEqual(info_pos, actual_pos))) { 
+            float close_t = curves::math::BfBezierBase::findClosest(*casted, c->center());
+            m_relativePos.get() = close_t;
+         }
+      }
+      c->center().pos = casted->calc(m_relativePos.get()).pos;
+
+      if (c->otherHandle()->isChanged()) {
+         m_radius.get() = c->radius();
+      }
+      else { 
+         c->setRadius(m_radius.get());
+      }
+
+      obj::BfDrawLayer::make();
+   }
+
+private:
+   std::weak_ptr<BfDrawObjectBase> m_curve;
+
+   BfVar<float> m_relativePos;
+   BfVar<float> m_radius;
+};
+
+
+
 class BfBezierChain : public obj::BfDrawLayer { 
 public:
    template< typename... Args>

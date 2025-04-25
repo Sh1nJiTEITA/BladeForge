@@ -2,7 +2,6 @@
 #define BF_NEW_BLADESECTION2_H
 
 #include <fmt/base.h>
-#include <functional>
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 
@@ -74,7 +73,7 @@ public:
       _createIOAngles();
       _createAverageInitialCurve();
       _createCenterCircles();
-      _createCCLines();
+      // _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
    }
@@ -97,8 +96,8 @@ public:
       _processCircleEdges();
       _processIOAngles();
       _processAverageInitialCurve();
-      _processCenterCircles();
-      _processCCLines();
+      // _processCenterCircles();
+      // _processCCLines();
       // _processFrontIntersectionLines();
    }
 
