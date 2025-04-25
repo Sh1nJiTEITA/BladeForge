@@ -96,7 +96,7 @@ public:
       _processCircleEdges();
       _processIOAngles();
       _processAverageInitialCurve();
-      // _processCenterCircles();
+      _processCenterCircles();
       // _processCCLines();
       // _processFrontIntersectionLines();
    }

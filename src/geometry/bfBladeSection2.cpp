@@ -9,6 +9,7 @@
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
+#include <iterator>
 #include <memory>
 
 namespace obj
@@ -349,15 +350,6 @@ void BfBladeSection::_createCenterCircles() {
          circle_pack->bindPrevious(last);
       }
       last = circle_pack;
-
-      // auto v =  initCurve->curve()->calc(circleInfo.relativePos);
-      // fmt::print("circle vert {} {} {} ", v.x(), v.y(), v.z());
-      // fmt::println("normals {} {} {}", v.normals.x, v.normals.y, v.normals.z);
-      // auto circle = std::make_shared<curves::BfCircleCenterWH>(
-      //    initCurve->curve()->calc(circleInfo.relativePos),
-      //    circleInfo.radius
-      // );
-      // circleLayer->add(circle);
    }
 }
 
@@ -365,40 +357,45 @@ void BfBladeSection::_processCenterCircles() {
    auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
    auto circleLayer = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
 
-   const size_t current_circles_count = circleLayer->children().size();
-   const size_t needed_circles_count = m_info.get().centerCircles.size();
+   // const size_t current_circles_count = circleLayer->children().size();
+   // const size_t needed_circles_count = m_info.get().centerCircles.size();
+   //
+   // if (current_circles_count < needed_circles_count) { 
+   //    for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
+   //       auto info = m_info.get().centerCircles.at(i);
+   //       auto circle = std::make_shared<curves::BfCircleCenterWH>(
+   //          initCurve->curve()->calc(info.relativePos),
+   //          info.radius
+   //       );
+   //       circleLayer->add(circle);   
+   //    }
+   // }
+   using pack_t = std::shared_ptr< curves::BfCirclePack >;
+   std::vector<pack_t> packs ;
 
-   if (current_circles_count < needed_circles_count) { 
-      for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
-         auto info = m_info.get().centerCircles.at(i);
-         auto circle = std::make_shared<curves::BfCircleCenterWH>(
-            initCurve->curve()->calc(info.relativePos),
-            info.radius
-         );
-         circleLayer->add(circle);   
-      }
-   }
+   std::transform(circleLayer->children().begin(), 
+                  circleLayer->children().end(), 
+                  std::back_inserter(packs),
+                  [](std::shared_ptr< obj::BfDrawObjectBase >& o) { 
+                     return std::static_pointer_cast<curves::BfCirclePack>(o);
+                  });
+   fmt::println("Found {} Circle packs", packs.size());
+   
+   std::sort(packs.begin(), packs.end(), [](const pack_t& lhs, const pack_t& rhs) { 
+      return lhs->relativePos().get() < rhs->relativePos().get();
+   });
 
-   for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
-      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(circleLayer->children()[i]);
-      if (circle->centerHandle()->isChanged()) { 
-         auto info_pos = initCurve->curve()->calc(m_info.get().centerCircles[i].relativePos).pos;
-         auto actual_pos = circle->center().pos;
-         if (glm::any(glm::notEqual(info_pos, actual_pos))) { 
-            float close_t = curves::math::BfBezierBase::findClosest(*initCurve, circle->center());
-            m_info.get().centerCircles[i].relativePos = close_t;
-         }
+   
+   packs.front()->bindPrevious(std::weak_ptr<obj::BfDrawObjectBase>{});
+   packs.back()->bindNext(std::weak_ptr<obj::BfDrawObjectBase>{});
+   
+   pack_t prev{};
+   for (auto& pack : packs) { 
+      if (prev) { 
+         pack->bindPrevious(prev);
+         prev->bindNext(pack);
       }
-      circle->center().pos = curves::math::BfBezierBase::calc(
-         *initCurve, m_info.get().centerCircles[i].relativePos
-      ).pos;
-
-      if (circle->otherHandle()->isChanged()) {
-         m_info.get().centerCircles[i].radius = circle->radius();
-      }
-      else { 
-         circle->setRadius(m_info.get().centerCircles[i].radius);
-      }
+      prev = pack;
    }
 
 }

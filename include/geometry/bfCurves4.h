@@ -1109,6 +1109,14 @@ public:
       _premakeIntersection();
       obj::BfDrawLayer::make();
    }
+
+   BfVar<float>& relativePos() noexcept { 
+      return m_relativePos;
+   }
+   
+   BfVar<float>& radius() noexcept { 
+      return m_radius;
+   }
    
 private:
    glm::vec3 _findPerpDirectionFirst()  {
@@ -1178,52 +1186,8 @@ private:
    }
 
    void _premakeIntersection() { 
-      fmt::println("\nFinding intersection for circle with t={}, hasLeft={}, hasRight={}", m_relativePos.get(), hasLeft(), hasRight());
       _premakeIntersectionFirst();
       _premakeIntersectionSecond();
-      // if (hasRight()) { 
-      //    auto right = next();
-      //    const auto current_normal_line = normalLine();
-      //
-      //    auto first_perp_line = perpLineFirst();
-      //    glm::vec3 current_first_dir = _findPerpDirectionFirst();
-      //    first_perp_line->first().pos() = current_normal_line->first().pos() + current_first_dir * m_radius.get();
-      //    first_perp_line->second().pos() = current_normal_line->first().pos() - current_first_dir * m_radius.get();
-      //
-      //    auto second_perp_line = perpLineSecond();
-      //    glm::vec3 current_second_dir = _findPerpDirectionSecond();
-      //    second_perp_line->first().pos() = current_normal_line->second().pos() + current_second_dir * m_radius.get();
-      //    second_perp_line->second().pos() = current_normal_line->second().pos() - current_second_dir * m_radius.get();
-      //    
-      //    glm::vec3 next_first_dir = next()->_findPerpDirectionFirst();
-      //    glm::vec3 next_second_dir = next()->_findPerpDirectionSecond();
-      //
-      //    glm::vec3 intersection_first = curves::math::findLinesIntersection(
-      //       first_perp_line->first(),
-      //       first_perp_line->second(),
-      //       right->perpLineFirst()->first(),
-      //       right->perpLineFirst()->second(),
-      //       BF_MATH_FIND_LINES_INTERSECTION_ANY
-      //    );
-      //    first_perp_line->first().pos() = intersection_first;
-      //    right->perpLineFirst()->first().pos() = intersection_first;
-      //    fmt::println("inter={}", intersection_first);
-      //
-      //    // glm::vec3 intersection_second = curves::math::findLinesIntersection(
-      //    //    current_normal_line->second().pos() + current_second_dir,
-      //    //    current_normal_line->second().pos() - current_second_dir,
-      //    //    right->normalLine()->second().pos() + next_second_dir,
-      //    //    right->normalLine()->second().pos() - next_second_dir,
-      //    //    BF_MATH_FIND_LINES_INTERSECTION_ANY
-      //    // );
-      //    // second_perp_line->second().pos() = intersection_second;
-      //    // right->perpLineSecond()->second().pos() = intersection_second;
-      //
-      //
-      //
-      //      
-      //
-      // }
    }
 
    void _premakeNormalLine() { 
