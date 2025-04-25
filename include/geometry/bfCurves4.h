@@ -1005,6 +1005,22 @@ public:
             center, m_radius.get()
          );
          this->add(circle);
+
+         auto normal = curves::math::BfBezierBase::calcNormal(*curve, m_relativePos.get());
+         auto line = std::make_shared<curves::BfSingleLine>(
+            BfVertex3{ 
+               circle->center().pos + normal * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            },
+            BfVertex3{ 
+               circle->center().pos - normal * m_radius.get(),
+               glm::vec3(1.0f),
+               circle->center().normals
+            }
+         );
+         line->color() = glm::vec3(0.0f, 1.0f, .2f);
+         this->add(line);
       }
       else { 
          throw std::runtime_error("Can't lock BfBezierN ...");
@@ -1014,12 +1030,37 @@ public:
    std::shared_ptr< BfCircleCenterWH > circle() { 
       return std::static_pointer_cast<BfCircleCenterWH>(m_children[0]);
    }
+   
+   std::shared_ptr< BfSingleLine > normalLine() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[1]);
+   }
 
-   virtual void make() override { 
-      auto c = circle();    
+   std::shared_ptr< BfBezierN > boundCurve() { 
       auto initCurve = m_curve.lock();
       if (!initCurve) { throw std::runtime_error("Can't lock BfBezierN ..."); }
-      auto casted = std::static_pointer_cast<BfBezierN>(initCurve);
+      return std::static_pointer_cast<BfBezierN>(initCurve);
+   }
+
+   virtual void make() override { 
+      _premakeCircle();
+      _premakeNormalLine();
+      obj::BfDrawLayer::make();
+   }
+
+private:
+
+   void _premakeNormalLine() { 
+      auto curve = boundCurve(); 
+      auto c = circle();
+      auto line = normalLine();
+      auto normal = curves::math::BfBezierBase::calcNormal(*curve, m_relativePos.get());
+      line->first().pos() = c->center().pos + normal * m_radius.get();
+      line->second().pos() = c->center().pos - normal * m_radius.get();
+   };
+
+   void _premakeCircle() { 
+      auto c = circle();    
+      auto casted = boundCurve();
 
       if (c->centerHandle()->isChanged()) { 
          auto info_pos = casted->calc(m_relativePos.get()).pos;
@@ -1031,16 +1072,14 @@ public:
          }
       }
       c->center().pos = casted->calc(m_relativePos.get()).pos;
-
       if (c->otherHandle()->isChanged()) {
          m_radius.get() = c->radius();
       }
       else { 
          c->setRadius(m_radius.get());
       }
-
-      obj::BfDrawLayer::make();
    }
+
 
 private:
    std::weak_ptr<BfDrawObjectBase> m_curve;
