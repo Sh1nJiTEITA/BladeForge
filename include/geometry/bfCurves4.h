@@ -1,6 +1,7 @@
 #ifndef BF_CURVES4_H
 #define BF_CURVES4_H
 
+#include <algorithm>
 #include <cmath>
 #include <fmt/base.h>
 #include <glm/common.hpp>
@@ -963,6 +964,9 @@ public:
       return std::static_pointer_cast<curves::BfHandle>(m_children[1]);
    }
    
+   BfVar<float>& radius() noexcept { 
+      return m_radius;
+   }
 
 private:
    glm::vec3 m_lastHandlePos;
@@ -1230,6 +1234,184 @@ private:
 
    BfVar<float> m_relativePos;
    BfVar<float> m_radius;
+};
+
+class BfIOCirclePack : public obj::BfDrawLayer { 
+public: 
+   enum Type { 
+      Inlet,
+      Outlet
+   };
+
+   BfIOCirclePack(std::weak_ptr<BfCircle2LinesWH> circle,
+                  std::weak_ptr<BfSingleLineWH> ioline,
+                  std::weak_ptr<obj::BfDrawLayer> center_circles,
+                  Type type) 
+      : obj::BfDrawLayer("IO circle")
+      , m_circle{ circle }
+      , m_line { ioline }
+      , m_centerCircles { center_circles }
+      , m_type { type } 
+   {
+      auto c = circle.lock();
+      auto line = ioline.lock();
+      auto cc = center_circles.lock();
+      if (!c || !line || !cc) { throw std::runtime_error("Cant lock circle or line or center circles"); }
+
+      glm::vec3 normal_direction = glm::normalize(glm::cross(
+         line->line()->directionFromStart(), 
+         line->left().normals()
+      ));
+
+      auto nLine = std::make_shared<BfSingleLine>(
+         BfVertex3( 
+            c->centerVertex().pos - normal_direction * c->radius().get(),
+            glm::vec3(1.0f),
+            c->centerVertex().normals
+         ),
+         BfVertex3( 
+            c->centerVertex().pos + normal_direction * c->radius().get(),
+            glm::vec3(1.0f),
+            c->centerVertex().normals
+         )
+      );
+      nLine->color() = glm::vec3( 0.6f, 0.5f, 0.32f ); 
+      this->add(nLine);
+      if (m_type == Inlet) {
+         auto next = std::static_pointer_cast<BfCirclePack>(cc->children().front());
+         auto first = next->perpLineFirst();
+         auto second = next->perpLineSecond();
+         glm::vec3 fintr, sintr;
+         // this->_findIntersection(fintr, sintr);
+
+         auto first_line = std::make_shared<BfSingleLine>(
+            BfVertex3Uni(nLine->first().getp()),
+            BfVertex3( 
+               nLine->first().pos() + line->line()->directionFromEnd() * c->radius().get(),
+               glm::vec3{1.0f},
+               nLine->first().normals()
+            )
+         );
+         first->first().pos() = first_line->second().pos();
+         this->add(first_line);
+
+         auto second_line = std::make_shared<BfSingleLine>(
+            BfVertex3Uni(nLine->second().getp()),
+            BfVertex3( 
+               nLine->second().pos() + line->line()->directionFromEnd() * c->radius().get(),
+               glm::vec3{1.0f},
+               nLine->second().normals()
+            )
+         );
+         second->first().pos() = second_line->second().pos();
+         this->add(second_line);
+
+      } else if (m_type == Outlet) { 
+         // auto prev = std::static_pointer_cast<BfCirclePack>(cc->children().back());
+         // auto first = prev->perpLineFirst();
+         // auto second = prev->perpLineSecond();
+
+      }
+   }
+
+   std::shared_ptr< BfSingleLine > normalLine() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[0]);
+   }
+
+   std::shared_ptr< BfSingleLine > firstLine() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[1]);
+   }
+
+   std::shared_ptr< BfSingleLine > secondLine() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[2]);
+   }
+
+   virtual void make() override { 
+      auto c = m_circle.lock();
+      auto line = m_line.lock();
+      if (!c && !line) { throw std::runtime_error("Cant lock circle or line"); }
+      glm::vec3 normal_direction = glm::normalize(glm::cross(
+         line->line()->directionFromStart(), 
+         line->left().normals()
+      ));
+      auto nLine = normalLine();
+      nLine->first().pos() = c->centerVertex().pos + normal_direction * c->radius().get();
+      nLine->second().pos() = c->centerVertex().pos - normal_direction * c->radius().get();
+      
+      glm::vec3 fintr, sintr; 
+      _findIntersection(fintr, sintr);
+      firstLine()->second().pos() = fintr;
+      secondLine()->second().pos() = sintr;
+      auto near = _nearCircle();
+      if (m_type == Inlet) { 
+         near->perpLineFirst()->first().pos() = fintr;
+         near->perpLineSecond()->first().pos() = sintr;
+      }
+      else if (m_type == Outlet) { 
+         
+      }
+      
+
+      obj::BfDrawLayer::make();
+   }
+private:
+   std::shared_ptr<BfCirclePack> _nearCircle() { 
+      auto nLine = normalLine();
+      auto cc = m_centerCircles.lock();
+      auto line = m_line.lock();
+      if (!cc || !line) { throw std::runtime_error("Cant lock cc or line"); }
+      if (m_type == Inlet) { 
+         auto it_next = std::min_element(cc->children().begin(),
+                                         cc->children().end(),
+                                         [](const auto& lhs, const auto& rhs) { 
+                                             auto l = std::static_pointer_cast<BfCirclePack>(lhs);
+                                             auto r = std::static_pointer_cast<BfCirclePack>(rhs);
+                                             return l->relativePos().get() < r->relativePos().get();
+                                         });
+         if (it_next == cc->children().end()) { throw std::runtime_error("Cant find most left circle pack"); }
+         return std::static_pointer_cast<BfCirclePack>(*it_next);
+      }
+      else if (m_type == Outlet) { 
+
+      }
+   }
+
+   void _findIntersection(glm::vec3& fintr, glm::vec3& sintr) { 
+      auto nLine = normalLine();
+      auto cc = m_centerCircles.lock();
+      auto line = m_line.lock();
+      if (!cc || !line) { throw std::runtime_error("Cant lock cc or line"); }
+      if (m_type == Inlet) { 
+         // auto next = std::static_pointer_cast<BfCirclePack>(cc->children().front());
+         auto next = _nearCircle();
+         fmt::println("Most left t={}", next->relativePos().get());
+         auto first = next->perpLineSecond();
+         fintr = curves::math::findLinesIntersection(
+            first->first(),
+            first->second(),
+            nLine->first(),
+            nLine->first().pos() + line->line()->directionFromStart(),
+            BF_MATH_FIND_LINES_INTERSECTION_ANY
+         );
+
+         auto second = next->perpLineFirst();
+         sintr = curves::math::findLinesIntersection(
+            second->first(),
+            second->second(),
+            nLine->second(),
+            nLine->second().pos() + line->line()->directionFromStart(),
+            BF_MATH_FIND_LINES_INTERSECTION_ANY
+         );
+      } else if (m_type == Outlet) { 
+
+      }
+   }
+
+private:
+   Type m_type;
+   std::weak_ptr<BfCircle2LinesWH> m_circle;
+   std::weak_ptr<BfSingleLineWH> m_line;
+   std::weak_ptr<obj::BfDrawLayer> m_centerCircles;
 };
 
 

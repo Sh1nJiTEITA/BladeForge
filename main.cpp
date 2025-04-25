@@ -21,6 +21,6 @@ main()
    }
    catch (const std::exception& e)
    {
-      fmt::printf("=========CATCHED EXCEPTION=========\n{}", e.what());
+      fmt::println("=========CATCHED EXCEPTION=========\n{}", e.what());
    }
 }

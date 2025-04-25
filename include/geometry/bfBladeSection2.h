@@ -51,8 +51,10 @@ enum class BfBladeSectionEnum : uint32_t
 
    AverageInitialCurve,
    CenterCircles,
-   CenterCirclesLines,
    IntersectionLines,
+
+   InletPack,
+   OutletPack,
 
    Back,
 };
@@ -73,6 +75,7 @@ public:
       _createIOAngles();
       _createAverageInitialCurve();
       _createCenterCircles();
+      _createIOCircles();
       // _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
@@ -123,7 +126,6 @@ private:
    glm::vec3 _eqInletDirection(); 
    glm::vec3 _eqOutletDirection(); 
 
-
    glm::vec3 _ioIntersection();
 
 private:
@@ -142,11 +144,9 @@ private:
    void _createCenterCircles();
    void _processCenterCircles();
 
-   void _createCCLines();
-   void _processCCLines();
+   void _createIOCircles();
+   void _processIOCircles();
 
-   void _createFrontIntersectionLines();
-   void _processFrontIntersectionLines();
 
    void _createFrontCurves();
    void _processFrontCurves();
