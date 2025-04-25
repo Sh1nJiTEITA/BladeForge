@@ -944,7 +944,7 @@ centerCirclesPopup(obj::section::CenterCircle& new_circle)
 };
 
 bool
-presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
+presentCenterCirclesEditor(std::list< obj::section::CenterCircle >& circles)
 {
    bool should_remake = false;
    // clang-format off
@@ -962,68 +962,73 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
 
    constexpr float child_y = 38.0f;
    float child_x = ImGui::GetContentRegionAvail().x;
-   for (size_t i = 0; i < circles.size(); ++i)
+   // clang-format on
+   int i = 0;
+   for (auto it = circles.begin(); it != circles.end(); ++it, ++i) {
+   std::string child_title = fmt::format("##center-circle-input-data-child-name-{}", i);
+   ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
    {
-      std::string child_title = fmt::format("##center-circle-input-data-child-name-{}", i);
-      ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
-      {
-         std::string title = fmt::format(ICON_FA_LIST " {}", i);
-         ImGui::Button(title.c_str());
-         if (ImGui::BeginDragDropSource())  {
-            ImGui::SetDragDropPayload("center-circle-drag-drop", &i, sizeof(size_t));
+        std::string title = fmt::format(ICON_FA_LIST " {}", i);
+        ImGui::Button(title.c_str());
+
+        if (ImGui::BeginDragDropSource()) {
+            ImGui::SetDragDropPayload("center-circle-drag-drop", &i, sizeof(int));
             ImGui::EndDragDropSource();
-         }
-         if (ImGui::BeginDragDropTarget()) { 
+        }
+
+        if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("center-circle-drag-drop")) {
-               IM_ASSERT(payload->DataSize == sizeof(size_t));
-               auto n = *static_cast<size_t*>(payload->Data);
-               fmt::println("Accepted t={}, R={}", circles[i].relativePos, circles[i].radius);
-               std::swap(circles[i], circles[n]);
-               should_remake = true;
+                IM_ASSERT(payload->DataSize == sizeof(int));
+                int n = *static_cast<const int*>(payload->Data);
+
+                // Swap elements via iterators
+                auto it_n = circles.begin();
+                std::advance(it_n, n);
+                std::swap(*it, *it_n);
+
+                should_remake = true;
             }
             ImGui::EndDragDropTarget();
-         }
-         if (ImGui::BeginPopupContextItem()) { 
+        }
+
+        if (ImGui::BeginPopupContextItem()) {
             ImGui::SetNextItemWidth(300.0f);
             if (ImGui::MenuItem("\xef\x80\x8d  Delete")) {
-               circles[i].relativePos = std::numeric_limits<float>::quiet_NaN();
-               circles[i].radius  = std::numeric_limits<float>::quiet_NaN();            
-               should_remake = true;
+                it->relativePos = std::numeric_limits<float>::quiet_NaN();
+                it->radius = std::numeric_limits<float>::quiet_NaN();
+                should_remake = true;
             }
             ImGui::EndPopup();
-         }
-         ImGui::SameLine();
+        }
 
-         float region_x = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+        ImGui::SameLine();
+        float region_x = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
 
-         ImGui::SetNextItemWidth(region_x);
-         std::string input_title_t = fmt::format("##center-circle-input-data-t{}", i);
+        ImGui::SetNextItemWidth(region_x);
+        std::string input_title_t = fmt::format("##center-circle-input-data-t{}", i);
+        if (ImGui::DragFloat(input_title_t.c_str(),
+                             &it->relativePos,
+                             0.001f,
+                             0,
+                             1,
+                             "%.3f")) {
+            should_remake = true;
+        }
 
-         if (ImGui::DragFloat(input_title_t.c_str(),
-                              &circles[i].relativePos,
-                              0.001f,
-                              0,
-                              1,
-                              "%.3f")) should_remake = true;
-
-
-         ImGui::SameLine();
-
-         ImGui::SetNextItemWidth(region_x);
-         std::string input_title_r = fmt::format("##center-circle-input-data-r{}", i);
-
-         if (ImGui::DragFloat(input_title_r.c_str(),
-                              &circles[i].radius,
-                              0.001f,
-                              0,
-                              +FLT_MAX,
-                              "%.3f")) should_remake = true;
-        // if (ImGui::Button("\xef\x80\x8d")) { 
-        //
-        // }
-      }
-      ImGui::EndChild();
-   }
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(region_x);
+        std::string input_title_r = fmt::format("##center-circle-input-data-r{}", i);
+        if (ImGui::DragFloat(input_title_r.c_str(),
+                             &it->radius,
+                             0.001f,
+                             0,
+                             +FLT_MAX,
+                             "%.3f")) {
+            should_remake = true;
+        }
+    }
+    ImGui::EndChild();
+}
    // clang-format on
    return should_remake;
 }

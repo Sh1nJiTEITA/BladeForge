@@ -363,8 +363,11 @@ void BfBladeSection::_processCenterCircles() {
    const size_t needed_circles_count = m_info.get().centerCircles.size();
    
    if (current_circles_count < needed_circles_count) { 
-      for (size_t i = current_circles_count; i < needed_circles_count; ++i) { 
-         auto& info = m_info.get().centerCircles.at(i); 
+      auto it = m_info.get().centerCircles.begin();
+      std::advance(it, current_circles_count);
+
+      for (size_t i = current_circles_count; i < needed_circles_count; ++i, ++it) { 
+         auto& info = *it;
          auto circle_pack = std::make_shared<curves::BfCirclePack>(
             BfVar<float>(&info.relativePos),
             BfVar<float>(&info.radius), 
@@ -383,14 +386,9 @@ void BfBladeSection::_processCenterCircles() {
                         }), 
          circleLayer->children().end()
       );
-      m_info.get().centerCircles.erase(
-         std::remove_if(m_info.get().centerCircles.begin(),
-                        m_info.get().centerCircles.end(),
-                        [](const section::CenterCircle& circle) { 
-                           return std::isnan(circle.radius) && std::isnan(circle.relativePos);
-                        }), 
-         m_info.get().centerCircles.end()
-      );
+      m_info.get().centerCircles.remove_if([](const section::CenterCircle& circle) { 
+         return std::isnan(circle.radius) && std::isnan(circle.relativePos);
+      });
    }
 
    std::vector<pack_t> packs ;
@@ -421,75 +419,75 @@ void BfBladeSection::_processCenterCircles() {
 
 void BfBladeSection::_createCCLines() 
 { 
-   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
-
-   auto CCLinesLayer = _addPartForward<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>(
-      "Center circle lines layer"
-   );
-   for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
-      float t = m_info.get().centerCircles[i].relativePos;
-      float r = m_info.get().centerCircles[i].radius;
-      auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
-      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
-      auto line = std::make_shared<curves::BfSingleLine>(
-         BfVertex3{ 
-            circle->center().pos + normal * r,
-            glm::vec3(1.0f),
-            circle->center().normals
-         },
-         BfVertex3{ 
-            circle->center().pos - normal * r,
-            glm::vec3(1.0f),
-            circle->center().normals
-         }
-      );
-      line->color() = glm::vec3(0.0f, 1.0f, .2f);
-      CCLinesLayer->add(line);
-   }
+   // auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   // const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
+   //
+   // auto CCLinesLayer = _addPartForward<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>(
+   //    "Center circle lines layer"
+   // );
+   // for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
+   //    float t = m_info.get().centerCircles[i].relativePos;
+   //    float r = m_info.get().centerCircles[i].radius;
+   //    auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+   //    auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC[i]);
+   //    auto line = std::make_shared<curves::BfSingleLine>(
+   //       BfVertex3{ 
+   //          circle->center().pos + normal * r,
+   //          glm::vec3(1.0f),
+   //          circle->center().normals
+   //       },
+   //       BfVertex3{ 
+   //          circle->center().pos - normal * r,
+   //          glm::vec3(1.0f),
+   //          circle->center().normals
+   //       }
+   //    );
+   //    line->color() = glm::vec3(0.0f, 1.0f, .2f);
+   //    CCLinesLayer->add(line);
+   // }
 }
 
 void BfBladeSection::_processCCLines() 
 { 
-   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   auto CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
-   auto CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>();
+   // auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+   // auto CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
+   // auto CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>();
+   //
+   // const size_t current_lines_count = CCL->children().size();
+   // const size_t needed_lines_count = CC->children().size();
+   //
+   // if (current_lines_count < needed_lines_count) { 
+   //    for (size_t i = current_lines_count; i < needed_lines_count; ++i) { 
+   //       auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
+   //       float t = m_info.get().centerCircles[i].relativePos;
+   //       float r = m_info.get().centerCircles[i].radius;
+   //       auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+   //       auto line = std::make_shared<curves::BfSingleLine>(
+   //          BfVertex3{ 
+   //             circle->center().pos + normal * r,
+   //             glm::vec3(1.0f),
+   //             circle->center().normals
+   //          },
+   //          BfVertex3{ 
+   //             circle->center().pos - normal * r,
+   //             glm::vec3(1.0f),
+   //             circle->center().normals
+   //          }
+   //       );
+   //       line->color() = glm::vec3(0.0f, 1.0f, .2f);
+   //    }
+   // }
 
-   const size_t current_lines_count = CCL->children().size();
-   const size_t needed_lines_count = CC->children().size();
 
-   if (current_lines_count < needed_lines_count) { 
-      for (size_t i = current_lines_count; i < needed_lines_count; ++i) { 
-         auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
-         float t = m_info.get().centerCircles[i].relativePos;
-         float r = m_info.get().centerCircles[i].radius;
-         auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
-         auto line = std::make_shared<curves::BfSingleLine>(
-            BfVertex3{ 
-               circle->center().pos + normal * r,
-               glm::vec3(1.0f),
-               circle->center().normals
-            },
-            BfVertex3{ 
-               circle->center().pos - normal * r,
-               glm::vec3(1.0f),
-               circle->center().normals
-            }
-         );
-         line->color() = glm::vec3(0.0f, 1.0f, .2f);
-      }
-   }
-
-
-   for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
-      float t = m_info.get().centerCircles[i].relativePos;
-      float r = m_info.get().centerCircles[i].radius;
-      auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
-      auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
-      auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL->children()[i]);
-      line->first().pos() = circle->center().pos + normal * r;
-      line->second().pos() = circle->center().pos - normal * r;
-   }
+   // for (size_t i = 0; i < m_info.get().centerCircles.size(); ++i) { 
+   //    float t = m_info.get().centerCircles[i].relativePos;
+   //    float r = m_info.get().centerCircles[i].radius;
+   //    auto normal = curves::math::BfBezierBase::calcNormal(*initCurve, t);
+   //    auto circle = std::static_pointer_cast<curves::BfCircleCenterWH>(CC->children()[i]);
+   //    auto line = std::static_pointer_cast<curves::BfSingleLine>(CCL->children()[i]);
+   //    line->first().pos() = circle->center().pos + normal * r;
+   //    line->second().pos() = circle->center().pos - normal * r;
+   // }
 }
 
 void BfBladeSection::_createFrontIntersectionLines() { 

@@ -31,7 +31,7 @@ struct SectionCreateInfo
    float inletRadius = 0.043f;
    float outletRadius = 0.017f;
 
-   std::vector< CenterCircle > centerCircles = {
+   std::list< CenterCircle > centerCircles = {
        {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
    };
    int initialBezierCurveOrder = 5;
@@ -68,7 +68,6 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section")
        , m_info{std::forward<T>(info)}
    {
-      m_info.get().centerCircles.reserve(100);
       _createChord(); 
       _createCircleEdges();
       _createIOAngles();
