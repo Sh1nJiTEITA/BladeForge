@@ -1,9 +1,11 @@
 #include "bfGui.h"
 
+#include <cmath>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <glm/trigonometric.hpp>
 #include <imgui_internal.h>
+#include <limits>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -955,6 +957,7 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
    auto sts = centerCirclesPopup(new_circle);
    if (sts == CenterCirclePopupReturnStatus::OK) { 
       circles.push_back(new_circle);
+      should_remake = true;
    };
 
    constexpr float child_y = 38.0f;
@@ -979,6 +982,15 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
                should_remake = true;
             }
             ImGui::EndDragDropTarget();
+         }
+         if (ImGui::BeginPopupContextItem()) { 
+            ImGui::SetNextItemWidth(300.0f);
+            if (ImGui::MenuItem("\xef\x80\x8d  Delete")) {
+               circles[i].relativePos = std::numeric_limits<float>::quiet_NaN();
+               circles[i].radius  = std::numeric_limits<float>::quiet_NaN();            
+               should_remake = true;
+            }
+            ImGui::EndPopup();
          }
          ImGui::SameLine();
 
@@ -1006,6 +1018,9 @@ presentCenterCirclesEditor(std::vector< obj::section::CenterCircle >& circles)
                               0,
                               +FLT_MAX,
                               "%.3f")) should_remake = true;
+        // if (ImGui::Button("\xef\x80\x8d")) { 
+        //
+        // }
       }
       ImGui::EndChild();
    }

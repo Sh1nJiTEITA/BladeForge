@@ -3,6 +3,7 @@
 #include "bfCurves4.h"
 #include "bfObjectMath.h"
 #include <algorithm>
+#include <cmath>
 #include <fmt/base.h>
 #include <fmt/ranges.h>
 #include <glm/common.hpp>
@@ -372,6 +373,24 @@ void BfBladeSection::_processCenterCircles() {
          circle_pack->make();
          circleLayer->add(circle_pack);   
       }
+   } else { 
+      circleLayer->children().erase(
+         std::remove_if(circleLayer->children().begin(),
+                        circleLayer->children().end(),
+                        [](const std::shared_ptr<obj::BfDrawObjectBase>& p) { 
+                           auto casted = std::static_pointer_cast<curves::BfCirclePack>(p);
+                           return std::isnan(casted->radius().get()) && std::isnan(casted->relativePos().get());
+                        }), 
+         circleLayer->children().end()
+      );
+      m_info.get().centerCircles.erase(
+         std::remove_if(m_info.get().centerCircles.begin(),
+                        m_info.get().centerCircles.end(),
+                        [](const section::CenterCircle& circle) { 
+                           return std::isnan(circle.radius) && std::isnan(circle.relativePos);
+                        }), 
+         m_info.get().centerCircles.end()
+      );
    }
 
    std::vector<pack_t> packs ;
