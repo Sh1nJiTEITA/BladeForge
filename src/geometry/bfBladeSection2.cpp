@@ -336,6 +336,7 @@ void BfBladeSection::_createCenterCircles() {
    auto circleLayer = _addPartForward<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>(
       "Center circles layer"
    );
+   std::shared_ptr< curves::BfCirclePack > last { nullptr };
    for (auto&& circleInfo : m_info.get().centerCircles) { 
       auto circle_pack = std::make_shared<curves::BfCirclePack>(
          BfVar<float>(&circleInfo.relativePos),
@@ -343,6 +344,11 @@ void BfBladeSection::_createCenterCircles() {
          initCurve->curve()->weak_from_this()
       );
       circleLayer->add(circle_pack);
+      if (last.get()) { 
+         last->bindNext(circle_pack);
+         circle_pack->bindPrevious(last);
+      }
+      last = circle_pack;
 
       // auto v =  initCurve->curve()->calc(circleInfo.relativePos);
       // fmt::print("circle vert {} {} {} ", v.x(), v.y(), v.z());

@@ -1001,9 +1001,7 @@ public:
          // TODO: ADD CHECK
          auto curve = std::static_pointer_cast<BfBezierN>(locked);
          auto center = curve->calc(m_relativePos.get());
-         auto circle = std::make_shared<BfCircleCenterWH>(
-            center, m_radius.get()
-         );
+         auto circle = std::make_shared<BfCircleCenterWH>(center, m_radius.get());
          this->add(circle);
 
          auto normal = curves::math::BfBezierBase::calcNormal(*curve, m_relativePos.get());
@@ -1041,12 +1039,35 @@ public:
       return std::static_pointer_cast<BfBezierN>(initCurve);
    }
 
+   void bindNext(std::weak_ptr<obj::BfDrawObjectBase> next) noexcept { 
+      m_next = next;
+   }
+
+   void bindPrevious(std::weak_ptr<obj::BfDrawObjectBase> pre) noexcept { 
+      m_previous = pre;
+   }
+
+   bool isLeft() { return m_previous.expired(); }
+   bool isRight() { return m_next.expired(); }
+
+   std::shared_ptr< BfCirclePack > next() { 
+      auto snext = m_next.lock();
+      if (!snext) { throw std::runtime_error("Cant lock next circle pack"); }
+      return std::static_pointer_cast< BfCirclePack >(snext);
+   }
+
+   std::shared_ptr< BfCirclePack > previous() { 
+      auto snext = m_next.lock();
+      if (!snext) { throw std::runtime_error("Cant lock next circle pack"); }
+      return std::static_pointer_cast< BfCirclePack >(snext);
+   }
+
    virtual void make() override { 
       _premakeCircle();
       _premakeNormalLine();
       obj::BfDrawLayer::make();
    }
-
+   
 private:
 
    void _premakeNormalLine() { 
@@ -1082,6 +1103,9 @@ private:
 
 
 private:
+   std::weak_ptr<BfDrawObjectBase> m_previous;
+   std::weak_ptr<BfDrawObjectBase> m_next;
+
    std::weak_ptr<BfDrawObjectBase> m_curve;
 
    BfVar<float> m_relativePos;
