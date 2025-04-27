@@ -14,6 +14,7 @@
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
 #include "bfPipeline.h"
+#include "bfSingle.h"
 #include "bfTexture.h"
 #include "bfWindow.h"
 #include "imgui.h"
@@ -123,6 +124,14 @@ BfMain::__init()
    bfCreateLogicalDevice(__base);
    bfCreateAllocator(__base);
 
+   base::g::create(
+       &__base.instance,
+       __base.physical_device,
+       &__base.device,
+       &__base.command_pool
+       // &__base.sampler->handle()
+   );
+
    bfCreateSwapchain(__base);
 
    // Setup camera
@@ -212,7 +221,8 @@ BfMain::__kill()
    bfDestroyStandartRenderPass(__base);
    bfDestroyImageViews(__base);
    bfDestroySwapchain(__base);
-   bfDestorySampler(__base);
+   __base.sampler.reset();
+   // bfDestorySampler(__base);
    // BUG: Not destorying vulkan objects inside
    // bfDestroyTextureLoader(__base);
    // id buffer

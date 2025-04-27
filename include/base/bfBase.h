@@ -10,6 +10,7 @@
 #include "bfLayerHandler.h"
 #include "bfLayerKiller.h"
 #include "bfPhysicalDevice.h"
+#include "bfTexture.h"
 #include "bfTextureLoad.h"
 #include "bfUniforms.h"
 #include "bfVariative.hpp"
@@ -76,7 +77,9 @@ struct BfBase
    VkCommandPool command_pool;
 
    VkDescriptorPool gui_descriptor_pool;
-   VkSampler sampler;
+
+   // VkSampler sampler;
+   std::unique_ptr< base::texture::BfSampler > sampler;
 
    BfLayerHandler layer_handler;
    BfLayerKiller layer_killer;
@@ -229,7 +232,7 @@ void bfUpdateUniformViewNew(BfBase& base);
 void bfUpdateUniformBuffer(BfBase& base);
 
 void bfCreateSampler(BfBase& base);
-void bfDestorySampler(BfBase& base);
+// void bfDestorySampler(BfBase& base);
 
 // Binding
 

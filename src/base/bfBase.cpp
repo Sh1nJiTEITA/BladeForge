@@ -1,6 +1,9 @@
 #include "bfBase.h"
 
+#include <fmt/base.h>
+#include <fmt/color.h>
 #include <imgui_impl_vulkan.h>
+#include <memory>
 #include <vulkan/vulkan_core.h>
 
 #include <stdexcept>
@@ -12,6 +15,7 @@
 #include "bfEvent.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
+#include "bfTexture.h"
 #include "implot.h"
 
 #define IMGUI_ENABLE_DOCKING
@@ -303,12 +307,20 @@ bfCreatePhysicalDevice(BfBase& base)
 
       if (is_suitable)
       {
+         fmt::println(
+             "<================== PHYSICAL DEVICE IS SUITABLE "
+             "====================>"
+         );
          base.physical_device = pPhysicalDevice;
 
          // Get chosen physical device properties
          vkGetPhysicalDeviceProperties(
              base.physical_device->physical_device,
              &base.physical_device->properties
+         );
+         fmt::println(
+             "Anisotropy max={}",
+             base.physical_device->properties.limits.maxSamplerAnisotropy
          );
 
          break;
@@ -361,11 +373,11 @@ bfCreateLogicalDevice(BfBase& base)
    }
 
    VkPhysicalDeviceFeatures deviceFeatures{};
-   deviceFeatures.vertexPipelineStoresAndAtomics = true;
-   deviceFeatures.fragmentStoresAndAtomics = true;
-   deviceFeatures.independentBlend = true;
-   deviceFeatures.geometryShader = true;
-   deviceFeatures.samplerAnisotropy = true;
+   deviceFeatures.vertexPipelineStoresAndAtomics = VK_TRUE;
+   deviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
+   deviceFeatures.independentBlend = VK_TRUE;
+   deviceFeatures.geometryShader = VK_TRUE;
+   deviceFeatures.samplerAnisotropy = VK_TRUE;
 
    VkDeviceCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -3789,38 +3801,40 @@ bfUpdateUniformBuffer(BfBase& base)
 void
 bfCreateSampler(BfBase& base)
 {
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = VK_FILTER_LINEAR;
-   samplerInfo.minFilter = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable = VK_FALSE;
-   samplerInfo.maxAnisotropy = 16;
-   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = VK_FALSE;
-   samplerInfo.compareEnable = VK_FALSE;
-   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.mipLodBias = 0.0f;
-   samplerInfo.minLod = 0.0f;
-   samplerInfo.maxLod = 0.0f;
-
-   VkSampler textureSampler;
-   if (vkCreateSampler(base.device, &samplerInfo, nullptr, &base.sampler) !=
-       VK_SUCCESS)
-   {
-      throw std::runtime_error("Failed to create texture sampler!");
-   }
+   // VkSamplerCreateInfo samplerInfo{};
+   // samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   // samplerInfo.magFilter = VK_FILTER_LINEAR;
+   // samplerInfo.minFilter = VK_FILTER_LINEAR;
+   // samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   // samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   // samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   // samplerInfo.anisotropyEnable = VK_FALSE;
+   // samplerInfo.maxAnisotropy = 16;
+   // samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   // samplerInfo.unnormalizedCoordinates = VK_FALSE;
+   // samplerInfo.compareEnable = VK_FALSE;
+   // samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+   // samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   // samplerInfo.mipLodBias = 0.0f;
+   // samplerInfo.minLod = 0.0f;
+   // samplerInfo.maxLod = 0.0f;
+   //
+   // VkSampler textureSampler;
+   // if (vkCreateSampler(base.device, &samplerInfo, nullptr, &base.sampler) !=
+   //     VK_SUCCESS)
+   // {
+   //    throw std::runtime_error("Failed to create texture sampler!");
+   // }
+   base.sampler = std::make_unique< base::texture::BfSampler >();
+   base::g::bindSampler(&base.sampler->handle());
 }
 
-void
-bfDestorySampler(BfBase& base)
-{
-   vkDestroySampler(base.device, base.sampler, nullptr);
-}
-
+// void
+// bfDestorySampler(BfBase& base)
+// {
+//    vkDestroySampler(base.device, base.sampler, nullptr);
+// }
+//
 void
 bfBindBase(BfBase* new_base)
 {

@@ -6,7 +6,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "bfAllocator.h"
-#include "bfBase.h"
+#include "bfSingle.h"
 #include "bfVariative.hpp"
 
 namespace obj
@@ -116,17 +116,13 @@ class BfImageView
 public:
    BfImageView(const VkImageViewCreateInfo& ci)
    {
-      auto& base = *bfGetBase();
-      if (vkCreateImageView(base.device, &ci, nullptr, &m_view) != VK_SUCCESS)
+      if (vkCreateImageView(base::g::device(), &ci, nullptr, &m_view) !=
+          VK_SUCCESS)
       {
          throw std::runtime_error("Cant create VkImageView");
       }
    }
-   ~BfImageView()
-   {
-      auto& base = *bfGetBase();
-      vkDestroyImageView(base.device, m_view, nullptr);
-   }
+   ~BfImageView() { vkDestroyImageView(base::g::device(), m_view, nullptr); }
    VkImageView& handle() noexcept { return m_view; }
 
 private:

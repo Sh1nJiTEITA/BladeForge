@@ -1,9 +1,10 @@
 #pragma once
+#include <vulkan/vulkan_core.h>
 #ifndef BF_TEXTURE_LOAD_NEW_H
 #define BF_TEXTURE_LOAD_NEW_H
 
-#include "bfBase.h"
 #include "bfDrawObjectBuffer.h"
+#include "bfSingle.h"
 #include "bfVariative.hpp"
 #include "stb_image.h"
 #include <filesystem>
@@ -11,7 +12,6 @@
 #include <fmt/color.h>
 #include <memory>
 #include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace fs = std::filesystem;
 namespace base
@@ -98,8 +98,7 @@ public:
 
    void transitionImageLayout(VkImageLayout oldl, VkImageLayout newl) {
       // clang-format on
-      VkCommandBuffer cb;
-      bfBeginSingleTimeCommands(*bfGetBase(), cb);
+      VkCommandBuffer cb = base::g::beginSingleTimeCommands();
 
       VkImageMemoryBarrier barrier{};
       barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -156,14 +155,13 @@ public:
           1,
           &barrier
       );
-      bfEndSingleTimeCommands(*bfGetBase(), cb);
+      base::g::endSingleTimeCommands(cb);
    };
 
    // clang-format on
    void copyBufferToImage()
    {
-      VkCommandBuffer cb;
-      bfBeginSingleTimeCommands(*bfGetBase(), cb);
+      VkCommandBuffer cb = base::g::beginSingleTimeCommands();
       {
 
          VkBufferImageCopy region{};
@@ -190,7 +188,7 @@ public:
              &region
          );
       }
-      bfEndSingleTimeCommands(*bfGetBase(), cb);
+      base::g::endSingleTimeCommands(cb);
    }
 
    ~BfTexture()
@@ -213,8 +211,6 @@ class BfSampler
 public:
    BfSampler()
    {
-      auto& base = *bfGetBase();
-
       VkSamplerCreateInfo samplerInfo{};
       samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
       samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -226,7 +222,8 @@ public:
 
       samplerInfo.anisotropyEnable = VK_TRUE;
       samplerInfo.maxAnisotropy =
-          base.physical_device->properties.limits.maxSamplerAnisotropy;
+          base::g::phdeviceprop().limits.maxSamplerAnisotropy;
+
       samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
       samplerInfo.unnormalizedCoordinates = VK_FALSE;
 
@@ -238,18 +235,18 @@ public:
       samplerInfo.minLod = 0.0f;
       samplerInfo.maxLod = 0.0f;
 
-      if (vkCreateSampler(base.device, &samplerInfo, nullptr, &m_sampler) !=
-          VK_SUCCESS)
+      if (vkCreateSampler(
+              base::g::device(),
+              &samplerInfo,
+              nullptr,
+              &m_sampler
+          ) != VK_SUCCESS)
       {
          throw std::runtime_error("failed to create texture sampler!");
       }
    }
 
-   ~BfSampler()
-   {
-      auto& base = *bfGetBase();
-      vkDestroySampler(base.device, m_sampler, nullptr);
-   }
+   ~BfSampler() { vkDestroySampler(base::g::device(), m_sampler, nullptr); }
 
    VkSampler& handle() { return m_sampler; }
 
