@@ -22,7 +22,7 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
 
-layout(set = 2, binding = 0) uniform sampler2D texSampler;
+layout(set = 2, binding = 0) uniform sampler2D texSampler[1];
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTex;
@@ -34,5 +34,5 @@ layout(location = 4) flat in uint obj_index;
 
 void main() {
     outColor = vec4(fragColor, 1.0);
-    outColor = texture(texSampler, fragTex);
+    outColor = texture(texSampler[0], fragTex);
 }

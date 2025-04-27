@@ -278,7 +278,7 @@ BfDescriptor::create_texture_desc_set_layout()
    // Номер привязки в шейдере
    textureLayoutBinding.binding = 0;
    // Количество дескрипторов (текстур)
-   textureLayoutBinding.descriptorCount = 10;
+   textureLayoutBinding.descriptorCount = 1;
    textureLayoutBinding.descriptorType =
        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    textureLayoutBinding.pImmutableSamplers = nullptr;
@@ -586,7 +586,8 @@ BfDescriptor::update_desc_sets()
           std::distance(
               __desc_create_info_list.begin(),
               __desc_create_info_list.end()
-          )
+          ) +
+          __textures.size()
       );
 
       size_t buffer_j = 0;
@@ -634,28 +635,48 @@ BfDescriptor::update_desc_sets()
          }
       }
 
-      for (auto& texture : __textures)
+      // for (auto& texture : __textures)
+      // {
+      //    VkWriteDescriptorSet write{};
+      //    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      //    write.pNext = nullptr;
+      //    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      //    write.dstSet =
+      //        __desc_layout_packs_map[BfDescriptorSetTexture].desc_sets[i];
+      //    write.dstBinding = 0;
+      //    write.descriptorCount = 1;
+      //
+      //    image_infos.emplace_back();
+      //    auto img_info = &(*image_infos.rbegin());
+      //    img_info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      //    img_info->sampler = base::g::sampler();
+      //    img_info->imageView = texture->view();
+      //    write.pImageInfo = img_info;
+      //    writes.push_back(write);
+      // }
+      if (!__textures.empty())
       {
-         VkWriteDescriptorSet write{};
-         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-         write.pNext = nullptr;
-         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-         write.dstSet =
+         VkDescriptorImageInfo img_info{};
+         img_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+         img_info.sampler = base::g::sampler();
+         img_info.imageView = __textures[0]->view(); // <-- only 0-th texture
+
+         image_infos.push_back(img_info);
+
+         VkWriteDescriptorSet twrite{};
+         twrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+         twrite.pNext = nullptr;
+         twrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+         twrite.dstSet =
              __desc_layout_packs_map[BfDescriptorSetTexture].desc_sets[i];
-         write.dstBinding = 0;
-         write.descriptorCount = 1;
+         twrite.dstBinding = 0;
+         twrite.descriptorCount = 1; // only 1
+         twrite.pImageInfo =
+             &image_infos.back(); // <-- pointer to only one img_info
 
-         image_infos.emplace_back();
-         auto img_info = &(*image_infos.rbegin());
-         img_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-         img_info->sampler = base::g::sampler();
-         img_info->imageView = texture->view();
-
-         write.pImageInfo = img_info;
-         writes.push_back(write);
-         // fmt::printf("Write for texture with id {} done\n",
-         // (*texture)->id());
+         writes.push_back(twrite);
       }
+
       vkUpdateDescriptorSets(
           __device,
           static_cast< uint32_t >(writes.size()),
