@@ -338,8 +338,6 @@ bfCreatePhysicalDevice(BfBase& base)
 BfEvent
 bfCreateLogicalDevice(BfBase& base)
 {
-   base.physical_device->queue_family_indices;
-
    std::set< uint32_t > uniqueQueueFamilies;
    std::transform(
        base.physical_device->queue_family_indices.cbegin(),
@@ -367,6 +365,7 @@ bfCreateLogicalDevice(BfBase& base)
    deviceFeatures.fragmentStoresAndAtomics = true;
    deviceFeatures.independentBlend = true;
    deviceFeatures.geometryShader = true;
+   deviceFeatures.samplerAnisotropy = true;
 
    VkDeviceCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1429,7 +1428,7 @@ bfInitOwnDescriptors(BfBase& base)
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
    base.descriptor.create_desc_set_layouts();
-   // base.descriptor.create_texture_desc_set_layout();
+   base.descriptor.create_texture_desc_set_layout();
    base.descriptor.allocate_desc_sets();
    base.descriptor.update_desc_sets();
    // base.descriptor.map_textures();

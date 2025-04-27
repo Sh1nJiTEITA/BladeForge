@@ -14,6 +14,7 @@
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
 #include "bfPipeline.h"
+#include "bfTexture.h"
 #include "bfWindow.h"
 #include "imgui.h"
 
@@ -230,6 +231,8 @@ BfMain::__loop()
 {
    __base.current_frame = 0;
    __base.is_resized = true;
+
+   base::texture::BfTexture texture("./resources/test.jpg");
 
    // auto xAxis = std::make_shared<BfSingleLine>(
    //     glm::vec3{0.0f, 0.0f, 0.0},

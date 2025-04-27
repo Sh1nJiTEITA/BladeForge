@@ -19,8 +19,9 @@ bfIsQueueFamilyIndicesCorrect(
    std::for_each(
        bf_physical_device->queue_family_indices.begin(),
        bf_physical_device->queue_family_indices.end(),
-       [&](const std::pair<BfvEnQueueType, std::optional<uint32_t>>& pair) {
-          if (!pair.second.has_value()) decision = false;
+       [&](const std::pair< BfvEnQueueType, std::optional< uint32_t > >& pair) {
+          if (!pair.second.has_value())
+             decision = false;
        }
    );
 
@@ -54,7 +55,7 @@ bfCheckDeviceExtensionSupport(
        nullptr
    );
 
-   std::vector<VkExtensionProperties> availableExtensions(extensionsCount);
+   std::vector< VkExtensionProperties > availableExtensions(extensionsCount);
    vkEnumerateDeviceExtensionProperties(
        physical_device->physical_device,
        nullptr,
@@ -62,7 +63,7 @@ bfCheckDeviceExtensionSupport(
        availableExtensions.data()
    );
 
-   std::set<std::string> requiredExtensions(
+   std::set< std::string > requiredExtensions(
        bfvDeviceExtensions.begin(),
        bfvDeviceExtensions.end()
    );
@@ -101,7 +102,7 @@ bfFindQueueFamilyIndices(
        nullptr
    );
 
-   std::vector<VkQueueFamilyProperties> queueFamilies(queueFamiliesCount);
+   std::vector< VkQueueFamilyProperties > queueFamilies(queueFamiliesCount);
    vkGetPhysicalDeviceQueueFamilyProperties(
        bf_physical_device->physical_device,
        &queueFamiliesCount,
@@ -160,8 +161,9 @@ bfFindQueueFamilyIndices(
    std::for_each(
        bf_physical_device->queue_family_indices.begin(),
        bf_physical_device->queue_family_indices.end(),
-       [&](const std::pair<BfvEnQueueType, std::optional<uint32_t>>& pair) {
-          if (!pair.second.has_value()) decision = false;
+       [&](const std::pair< BfvEnQueueType, std::optional< uint32_t > >& pair) {
+          if (!pair.second.has_value())
+             decision = false;
        }
    );
 
@@ -207,8 +209,15 @@ bfIsDeviceSuitable(
    bool isQueuesCorrect;
    bfIsQueueFamilyIndicesCorrect(bf_physical_device, isQueuesCorrect);
 
+   VkPhysicalDeviceFeatures supportedFeatures;
+   vkGetPhysicalDeviceFeatures(
+       bf_physical_device->physical_device,
+       &supportedFeatures
+   );
+
    BfSingleEvent event{};
-   if (isQueuesCorrect && extensionsSupport && swapChainAdequate)
+   if (supportedFeatures.samplerAnisotropy && isQueuesCorrect &&
+       extensionsSupport && swapChainAdequate)
    {
       is_suitable = true;
       event.type = BfEnSingleEventType::BF_SINGLE_EVENT_TYPE_CHECK_EVENT;
