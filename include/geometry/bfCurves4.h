@@ -83,11 +83,17 @@ public:
       m_vertices.clear();
       m_indices.clear();
 
-      m_vertices = {
-          {m_first.get().pos, this->color(), m_first.get().normals},
-          {m_second.get().pos, this->color(), m_second.get().normals},
-
-      };
+      if (glm::any(glm::isnan(this->color())))
+      {
+         m_vertices = {m_first.get(), m_second.get()};
+      }
+      else
+      {
+         m_vertices = {
+             {m_first.get().pos, this->color(), m_first.get().normals},
+             {m_second.get().pos, this->color(), m_second.get().normals},
+         };
+      }
       _genIndicesStandart();
    };
 
@@ -1013,16 +1019,16 @@ public:
          auto line = std::make_shared<curves::BfSingleLine>(
             BfVertex3{ 
                circle->center().pos + normal * m_radius.get(),
-               glm::vec3(1.0f),
+               glm::vec3(1.0f, 0.0f, 0.0f),
                circle->center().normals
             },
             BfVertex3{ 
                circle->center().pos - normal * m_radius.get(),
-               glm::vec3(1.0f),
+               glm::vec3(0.0f, 1.0f, 0.0f),
                circle->center().normals
             }
          );
-         line->color() = glm::vec3(0.0f, 1.0f, .2f);
+         line->color() = glm::vec3( std::nanf("") );
          this->add(line);
          
          glm::vec3 perpDirFirst = _findPerpDirectionFirst();
@@ -1262,27 +1268,26 @@ public:
          line->line()->directionFromStart(), 
          line->left().normals()
       ));
+   
+      // First 
+      BfVertex3 nV1 = c->centerVertex();
+      nV1.pos =  c->centerVertex().pos - normal_direction * c->radius().get();
+      nV1.color = glm::vec3(1.0f, 0.0f, 0.0f);
 
-      auto nLine = std::make_shared<BfSingleLine>(
-         BfVertex3( 
-            c->centerVertex().pos - normal_direction * c->radius().get(),
-            glm::vec3(1.0f),
-            c->centerVertex().normals
-         ),
-         BfVertex3( 
-            c->centerVertex().pos + normal_direction * c->radius().get(),
-            glm::vec3(1.0f),
-            c->centerVertex().normals
-         )
-      );
-      nLine->color() = glm::vec3( 0.6f, 0.5f, 0.32f ); 
+      // Second
+      BfVertex3 nV2 = c->centerVertex();
+      nV2.pos =  c->centerVertex().pos + normal_direction * c->radius().get();
+      nV2.color = glm::vec3(0.0f, 1.0f, 0.0f);
+
+      auto nLine = std::make_shared<BfSingleLine>(std::move(nV1), std::move(nV2));
+      nLine->color() = glm::vec3( std::nanf("") ); 
+      //
       this->add(nLine);
+
       if (m_type == Inlet) {
          auto next = std::static_pointer_cast<BfCirclePack>(cc->children().front());
          auto first = next->perpLineFirst();
          auto second = next->perpLineSecond();
-         glm::vec3 fintr, sintr;
-         // this->_findIntersection(fintr, sintr);
 
          auto first_line = std::make_shared<BfSingleLine>(
             BfVertex3Uni(nLine->first().getp()),
@@ -1314,16 +1319,71 @@ public:
       }
    }
 
+   
+   /**
+    * @brief Returns IO line, specified by inlet/outlet angle
+    *
+    * @return line object
+    */
+   std::shared_ptr< obj::BfDrawLayer > centerCircles() { 
+      auto locked = m_centerCircles.lock();
+      if (!locked) throw std::runtime_error("Cant lock central circles");
+      return std::static_pointer_cast< obj::BfDrawLayer >(locked); 
+   }
+
+   /**
+    * @brief Returns IO line, specified by inlet/outlet angle
+    *
+    * @return line object
+    */
+   std::shared_ptr< BfSingleLineWH > line() { 
+      auto locked = m_line.lock();
+      if (!locked) throw std::runtime_error("Cant lock IO line");
+      return std::static_pointer_cast<BfSingleLineWH>(locked); 
+   }
+
+   /**
+    * @brief Returns IO circle (circular edge)
+    *
+    * @return object 2 lines object 
+    */
+   std::shared_ptr< BfCircle2LinesWH > circle() { 
+      auto locked = m_circle.lock();
+      if (!locked) throw std::runtime_error("Cant lock IO circle");
+      return std::static_pointer_cast< BfCircle2LinesWH >(locked); 
+   }
+
+   /**
+    * @brief Returns normal line, perpendicular to IO line
+    *
+    * @return line object
+    */
    std::shared_ptr< BfSingleLine > normalLine() { 
-      return std::static_pointer_cast<BfSingleLine>(m_children[0]);
+      return std::static_pointer_cast<BfSingleLine>(m_children[0]); 
    }
 
+   /**
+    * @brief Returns parallel to normal line first line 
+    * (relative to first/second vertex of normal line)
+    * 
+    * This line::first() -> is same is normalLine()::first()
+    *
+    * @return line object
+    */
    std::shared_ptr< BfSingleLine > firstLine() { 
-      return std::static_pointer_cast<BfSingleLine>(m_children[1]);
+      return std::static_pointer_cast<BfSingleLine>(m_children[1]); 
    }
 
+   /**
+    * @brief Returns parallel to nornal line second line 
+    * (relative to first/second vertex of normal line) 
+    *
+    * This line::first() -> is same is normalLine()::second()
+    *
+    * @return 
+    */
    std::shared_ptr< BfSingleLine > secondLine() { 
-      return std::static_pointer_cast<BfSingleLine>(m_children[2]);
+      return std::static_pointer_cast<BfSingleLine>(m_children[2]); 
    }
 
    virtual void make() override { 
@@ -1335,31 +1395,38 @@ public:
          line->left().normals()
       ));
       auto nLine = normalLine();
-      nLine->first().pos() = c->centerVertex().pos + normal_direction * c->radius().get();
-      nLine->second().pos() = c->centerVertex().pos - normal_direction * c->radius().get();
+      nLine->first().pos() = c->centerVertex().pos - normal_direction * c->radius().get();
+      nLine->second().pos() = c->centerVertex().pos + normal_direction * c->radius().get();
       
-      glm::vec3 fintr, sintr; 
-      _findIntersection(fintr, sintr);
+      glm::vec3 fintr, sintr; _findIntersection(fintr, sintr);
+
       firstLine()->second().pos() = fintr;
       secondLine()->second().pos() = sintr;
-      auto near = _nearCircle();
-      if (m_type == Inlet) { 
-         near->perpLineFirst()->first().pos() = fintr;
-         near->perpLineSecond()->first().pos() = sintr;
-      }
-      else if (m_type == Outlet) { 
-         
-      }
-      
 
+      // auto near = _nearCircle();
+      // if (m_type == Inlet) { 
+      //    near->perpLineFirst()->first().pos() = fintr;
+      //    near->perpLineSecond()->first().pos() = sintr;
+      // }
+      // else if (m_type == Outlet) { 
+      //    
+      // }
+      
       obj::BfDrawLayer::make();
    }
+
 private:
+   /**
+    * @brief Finds near circle from center circles by this object type.
+    * If type is INLET -> returns first central circle or circle with lowest 
+    * relative pos (t) -> 0.0f
+    * If typy is OUTLET -> returns last central circle or circle with highest 
+    * relative pos (t) -> 1.0f
+    */
    std::shared_ptr<BfCirclePack> _nearCircle() { 
-      auto nLine = normalLine();
-      auto cc = m_centerCircles.lock();
-      auto line = m_line.lock();
-      if (!cc || !line) { throw std::runtime_error("Cant lock cc or line"); }
+      auto nLine = this->normalLine();
+      auto cc = this->centerCircles();
+      auto line = this->line();
       if (m_type == Inlet) { 
          auto it_next = std::min_element(cc->children().begin(),
                                          cc->children().end(),
@@ -1372,20 +1439,29 @@ private:
          return std::static_pointer_cast<BfCirclePack>(*it_next);
       }
       else if (m_type == Outlet) { 
-
+         auto it_next = std::max_element(cc->children().begin(),
+                                         cc->children().end(),
+                                         [](const auto& lhs, const auto& rhs) { 
+                                             auto l = std::static_pointer_cast<BfCirclePack>(lhs);
+                                             auto r = std::static_pointer_cast<BfCirclePack>(rhs);
+                                             return l->relativePos().get() < r->relativePos().get();
+                                         });
+         if (it_next == cc->children().end()) { throw std::runtime_error("Cant find right left circle pack"); }
+         return std::static_pointer_cast<BfCirclePack>(*it_next);
+      }
+      else { 
+         throw std::runtime_error("Unhandled BfIOcirclePack");
       }
    }
 
    void _findIntersection(glm::vec3& fintr, glm::vec3& sintr) { 
-      auto nLine = normalLine();
-      auto cc = m_centerCircles.lock();
-      auto line = m_line.lock();
-      if (!cc || !line) { throw std::runtime_error("Cant lock cc or line"); }
+      auto nLine = this->normalLine();
+      auto cc = this->centerCircles();
+      auto line = this->line();
+
       if (m_type == Inlet) { 
-         // auto next = std::static_pointer_cast<BfCirclePack>(cc->children().front());
          auto next = _nearCircle();
-         fmt::println("Most left t={}", next->relativePos().get());
-         auto first = next->perpLineSecond();
+         auto first = next->perpLineFirst();
          fintr = curves::math::findLinesIntersection(
             first->first(),
             first->second(),
@@ -1394,7 +1470,7 @@ private:
             BF_MATH_FIND_LINES_INTERSECTION_ANY
          );
 
-         auto second = next->perpLineFirst();
+         auto second = next->perpLineSecond();
          sintr = curves::math::findLinesIntersection(
             second->first(),
             second->second(),
@@ -1402,8 +1478,26 @@ private:
             nLine->second().pos() + line->line()->directionFromStart(),
             BF_MATH_FIND_LINES_INTERSECTION_ANY
          );
-      } else if (m_type == Outlet) { 
 
+      } else if (m_type == Outlet) { 
+         // auto prev = _nearCircle();
+         // auto first = prev->perpLineSecond();
+         // fintr = curves::math::findLinesIntersection(
+         //    first->first(),
+         //    first->second(),
+         //    nLine->first(),
+         //    nLine->first().pos() + line->line()->directionFromStart(),
+         //    BF_MATH_FIND_LINES_INTERSECTION_ANY
+         // );
+         //
+         // auto second = next->perpLineFirst();
+         // sintr = curves::math::findLinesIntersection(
+         //    second->first(),
+         //    second->second(),
+         //    nLine->second(),
+         //    nLine->second().pos() + line->line()->directionFromStart(),
+         //    BF_MATH_FIND_LINES_INTERSECTION_ANY
+         // );
       }
    }
 
