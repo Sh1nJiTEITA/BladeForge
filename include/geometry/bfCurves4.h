@@ -7,6 +7,7 @@
 #include <glm/common.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/epsilon.hpp>
 #include <glm/trigonometric.hpp>
@@ -1583,14 +1584,6 @@ public:
       , m_opack{ outlet_pack }
    { 
       auto v = _controlPoints();
-
-      // auto line_chain = std::make_shared<BfDrawLayer>("Line chain");
-      // for (size_t i = 0; i < v.size() - 1; ++i) { 
-      //    auto line = std::make_shared<BfSingleLine>( v[i], v[i + 1]);
-      //    line->color() = glm::vec3(0.5, 0.5, 0.2);
-      //    line_chain->add(line);
-      // }
-      // this->add(line_chain);
       
       auto bezier_chain = std::make_shared<BfDrawLayer>("Bezier chain");
       for (size_t i = 0; i < v.size() - 2; i += 2) { 
@@ -1601,12 +1594,14 @@ public:
                v[i + 2]
             }
          );
-         // bez->color() = glm::
+         if (m_type == Front) { 
+               bez->color() = glm::vec3(1.0f, 0.0f, 0.0f);   
+         } else if (m_type == Back) { 
+               bez->color() = glm::vec3(0.0f, 1.0f, 0.0f);   
+         }
          bezier_chain->add(bez);
       }
-
       this->add(bezier_chain);
-
    }
 
    std::shared_ptr< BfIOCirclePack > inletPack() { 
@@ -1626,34 +1621,96 @@ public:
       if (!locked) throw std::runtime_error("Cant lock outlet pack");
       return locked;
    }
+
+   std::shared_ptr< obj::BfDrawLayer  > chain() { 
+      return std::static_pointer_cast< obj::BfDrawLayer >(m_children[0]);
+   }
+   
+   void make() override {
+      auto v = _controlPoints();
+
+      // Check if we have enough points to form bezier segments.
+      if (v.size() < 2)
+      {
+         return; // or handle the case where there aren't enough points.
+      }
+
+      auto bezier_chain = this->chain()->children().begin();
+
+      // Loop through the control points in pairs.
+      for (size_t i = 0; i < v.size() - 1; i += 2)
+      {
+         if (bezier_chain == this->chain()->children().end())
+         {
+            break; // Prevent accessing past the end of the collection.
+         }
+
+         // Ensure we are dereferencing a valid shared pointer.
+         auto bez = std::static_pointer_cast< BfBezierN >(*bezier_chain);
+         bez->at(0) = v[i]; 
+         bez->at(1) = v[i + 1]; 
+         bez->at(2) = v[i + 2]; 
+
+         // Move to the next bezier in the chain.
+         ++bezier_chain;
+      }
+      BfDrawLayer::make();
+   };
+
 private:
-   std::vector< BfVertex3Uni > _controlPoints() { 
-      auto ipack = inletPack(); 
+   std::vector< BfVertex3Uni > _controlPoints()
+   {
+      auto ipack = inletPack();
       auto opack = outletPack();
       auto cpacks = centerPacks();
 
+      using pack_t = std::shared_ptr< curves::BfCirclePack >;
+      std::vector<pack_t> packs;
+      std::transform(cpacks->children().begin(), 
+                     cpacks->children().end(), 
+                     std::back_inserter(packs),
+                     [](std::shared_ptr< obj::BfDrawObjectBase >& o) { 
+                        return std::static_pointer_cast<curves::BfCirclePack>(o);                  
+                     });
+   
+      std::sort(packs.begin(), 
+                packs.end(), 
+                [](const pack_t& lhs, const pack_t& rhs) { 
+                   return lhs->relativePos().get() < rhs->relativePos().get();
+                });
+
       std::vector< BfVertex3Uni > vertices;
       vertices.reserve(2 + opack->children().size());
-     
-      if (m_type == Front) { 
+
+      if (m_type == Front)
+      {
          vertices.push_back(BfVertex3Uni(ipack->firstLine()->first().getp()));
          vertices.push_back(BfVertex3Uni(ipack->firstLine()->second().getp()));
-         for (auto& cp : cpacks->children()) {
-            auto pack = std::static_pointer_cast<BfCirclePack>(cp);
-            vertices.push_back(BfVertex3Uni(pack->normalLine()->first().getp()));
-            vertices.push_back(BfVertex3Uni(pack->perpLineFirst()->second().getp()));
+         for (auto& cp : packs)
+         {
+            auto pack = std::static_pointer_cast< BfCirclePack >(cp);
+            vertices.push_back(BfVertex3Uni(pack->normalLine()->first().getp())
+            );
+            vertices.push_back(
+                BfVertex3Uni(pack->perpLineFirst()->second().getp())
+            );
          }
          vertices.pop_back();
          vertices.push_back(BfVertex3Uni(opack->secondLine()->second().getp()));
          vertices.push_back(BfVertex3Uni(opack->secondLine()->first().getp()));
-
-      } else if (m_type == Back) { 
+      }
+      else if (m_type == Back)
+      {
          vertices.push_back(BfVertex3Uni(ipack->secondLine()->first().getp()));
          vertices.push_back(BfVertex3Uni(ipack->secondLine()->second().getp()));
-         for (auto& cp : cpacks->children()) {
-            auto pack = std::static_pointer_cast<BfCirclePack>(cp);
-            vertices.push_back(BfVertex3Uni(pack->normalLine()->second().getp()));
-            vertices.push_back(BfVertex3Uni(pack->perpLineSecond()->second().getp()));
+         for (auto& cp : packs)
+         {
+            auto pack = std::static_pointer_cast< BfCirclePack >(cp);
+            vertices.push_back(BfVertex3Uni(pack->normalLine()->second().getp())
+            );
+            vertices.push_back(
+                BfVertex3Uni(pack->perpLineSecond()->second().getp())
+            );
          }
          vertices.pop_back();
          vertices.push_back(BfVertex3Uni(opack->firstLine()->second().getp()));
@@ -1668,16 +1725,6 @@ private:
    std::weak_ptr< obj::BfDrawLayer > m_centerPacks;
    std::weak_ptr< BfIOCirclePack > m_opack;
 };
-
-
-
-
-
-
-
-
-
-
 
 }; // namespace curves
 
