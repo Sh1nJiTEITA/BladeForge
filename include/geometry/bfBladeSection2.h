@@ -35,29 +35,29 @@ struct SectionCreateInfo
        {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
    };
    int initialBezierCurveOrder = 5;
+
+   uint32_t renderBitSet = INT32_MAX;
 };
 
+// clang-format off
 enum class BfBladeSectionEnum : uint32_t
 {
-   Chord = 0,
-   _ChordLeftBorder,
-   _ChordRightBorder,
-
-   InletCircle,
-   OutletCircle,
-
-   InletDirection,
-   OutletDirection,
-
-   AverageInitialCurve,
-   CenterCircles,
-
-   InletPack,
-   OutletPack,
-
-   FrontCurveChain,
-   BackCurveChain,
+   Chord                = 1 << 1,
+   _ChordLeftBorder     = 1 << 2,
+   _ChordRightBorder    = 1 << 3,
+   InletCircle          = 1 << 4,
+   OutletCircle         = 1 << 5,
+   InletDirection	= 1 << 6,
+   OutletDirection	= 1 << 7,
+   AverageInitialCurve	= 1 << 8,
+   CenterCircles	= 1 << 9,
+   InletPack	        = 1 << 10,
+   OutletPack	        = 1 << 11,
+   FrontCurveChain	= 1 << 12,
+   BackCurveChain	= 1 << 13,
+   End                  = 1 << 14
 };
+// clang-format on
 
 class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
 {
@@ -91,11 +91,13 @@ public:
          for (auto& child : m_children) {
             child->make();
          }
+         // applyRenderToggle();
       }
       postmake();    
    }
 
    virtual void premake() { 
+      applyRenderToggle();
       _processChord(); 
       _processCircleEdges();
       _processIOAngles();
@@ -111,13 +113,20 @@ public:
       m_lastChordL = oChord->left().get();
       m_lastChordR = oChord->right().get();
    }
+
    
-   void toggleBack(int sts = -1) { 
-      // const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
-      // for (auto& child : IL ) { 
-      //    child->toggleRender(sts);
-      // }
-   }
+
+   // struct ToggleProxy { 
+   //    ToggleProxy(BfBladeSection& bs) : m_bs{ bs } {}
+   //    
+   //    bool toggleBack(int sts = -1) { return m_bs._toggleRender<BfBladeSectionEnum::BackCurveChain>(); }
+   //    bool toggleFront(int sts = -1) { return m_bs._toggleRender<BfBladeSectionEnum::FrontCurveChain>(); }
+   //
+   // private:
+   //    BfBladeSection& m_bs;
+   // };
+   //
+   // ToggleProxy toggle() { return ToggleProxy(*this); };
 
 private:
 
@@ -129,6 +138,17 @@ private:
    glm::vec3 _ioIntersection();
 
 private:
+
+   void applyRenderToggle() { 
+      for (uint32_t v = static_cast<uint32_t>(BfBladeSectionEnum::Chord);
+           v < static_cast<uint32_t>(BfBladeSectionEnum::End);
+           v <<= 1) 
+      {
+          auto section = static_cast<BfBladeSectionEnum>(v);
+          _toggleRender(section, m_info.get().renderBitSet & static_cast<uint32_t>(section));
+      }
+   };
+
    /** 
     * @defgroup Группа построения и конроля частей 2Д сечения
     * @{

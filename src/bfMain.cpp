@@ -369,42 +369,6 @@ BfMain::__loop()
          bs->make();
          test_root->control().updateBuffer();
       }
-
-      ImGui::Begin("BladeSection CI");
-      {
-         if (ImGui::Button("Render intersection lines"))
-         {
-            bs->toggleBack();
-         }
-         if (ImGui::BeginTable("dasd12312312dsadas 12- ", 2))
-         {
-            ImGui::TableSetupColumn("VarName");
-            ImGui::TableSetupColumn("VarValue");
-            ImGui::TableHeadersRow();
-
-            tmpcol(chord);
-            tmpcol(inletAngle);
-            tmpcol(outletAngle);
-            tmpcol(inletRadius);
-            tmpcol(outletRadius);
-            int i = 0;
-            for (auto& c : info.centerCircles)
-            {
-               _tmpcol(
-                   (std::string("t_Circle_") + std::to_string(i)).c_str(),
-                   &c.relativePos
-               );
-               _tmpcol(
-                   (std::string("r_Circle_") + std::to_string(i)).c_str(),
-                   &c.radius
-               );
-               i++;
-            }
-
-            ImGui::EndTable();
-         }
-      }
-      ImGui::End();
       ImGui::ShowDemoWindow();
 
       // ImGui::ShowDemoWindow();

@@ -477,6 +477,13 @@ protected:
       auto obj = _findObjectById(id);
       return obj->toggleRender(sts);
    }
+
+   bool _toggleRender(PartEnum part, int sts = -1)
+   {
+      auto id = m_idMap[part];
+      auto obj = _findObjectById(id);
+      return obj->toggleRender(sts);
+   }
 };
 
 /**

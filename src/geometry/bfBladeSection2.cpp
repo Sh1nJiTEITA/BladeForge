@@ -414,7 +414,6 @@ void BfBladeSection::_processCenterCircles() {
       }
       prev = pack;
    }
-
 }
 
 void BfBladeSection::_createIOCircles() { 

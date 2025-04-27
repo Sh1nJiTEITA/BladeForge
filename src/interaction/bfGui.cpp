@@ -964,73 +964,110 @@ presentCenterCirclesEditor(std::list< obj::section::CenterCircle >& circles)
    float child_x = ImGui::GetContentRegionAvail().x;
    // clang-format on
    int i = 0;
-   for (auto it = circles.begin(); it != circles.end(); ++it, ++i) {
-   std::string child_title = fmt::format("##center-circle-input-data-child-name-{}", i);
-   ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
+   for (auto it = circles.begin(); it != circles.end(); ++it, ++i)
    {
-        std::string title = fmt::format(ICON_FA_LIST " {}", i);
-        ImGui::Button(title.c_str());
+      std::string child_title =
+          fmt::format("##center-circle-input-data-child-name-{}", i);
+      ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
+      {
+         std::string title = fmt::format(ICON_FA_LIST " {}", i);
+         ImGui::Button(title.c_str());
 
-        if (ImGui::BeginDragDropSource()) {
-            ImGui::SetDragDropPayload("center-circle-drag-drop", &i, sizeof(int));
+         if (ImGui::BeginDragDropSource())
+         {
+            ImGui::SetDragDropPayload(
+                "center-circle-drag-drop",
+                &i,
+                sizeof(int)
+            );
             ImGui::EndDragDropSource();
-        }
+         }
 
-        if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("center-circle-drag-drop")) {
-                IM_ASSERT(payload->DataSize == sizeof(int));
-                int n = *static_cast<const int*>(payload->Data);
+         if (ImGui::BeginDragDropTarget())
+         {
+            if (const ImGuiPayload* payload =
+                    ImGui::AcceptDragDropPayload("center-circle-drag-drop"))
+            {
+               IM_ASSERT(payload->DataSize == sizeof(int));
+               int n = *static_cast< const int* >(payload->Data);
 
-                // Swap elements via iterators
-                auto it_n = circles.begin();
-                std::advance(it_n, n);
-                std::swap(*it, *it_n);
+               // Swap elements via iterators
+               auto it_n = circles.begin();
+               std::advance(it_n, n);
+               std::swap(*it, *it_n);
 
-                should_remake = true;
+               should_remake = true;
             }
             ImGui::EndDragDropTarget();
-        }
+         }
 
-        if (ImGui::BeginPopupContextItem()) {
+         if (ImGui::BeginPopupContextItem())
+         {
             ImGui::SetNextItemWidth(300.0f);
-            if (ImGui::MenuItem("\xef\x80\x8d  Delete")) {
-                it->relativePos = std::numeric_limits<float>::quiet_NaN();
-                it->radius = std::numeric_limits<float>::quiet_NaN();
-                should_remake = true;
+            if (ImGui::MenuItem("\xef\x80\x8d  Delete"))
+            {
+               it->relativePos = std::numeric_limits< float >::quiet_NaN();
+               it->radius = std::numeric_limits< float >::quiet_NaN();
+               should_remake = true;
             }
             ImGui::EndPopup();
-        }
+         }
 
-        ImGui::SameLine();
-        float region_x = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+         ImGui::SameLine();
+         float region_x = (ImGui::GetContentRegionAvail().x -
+                           ImGui::GetStyle().ItemSpacing.x) *
+                          0.5f;
 
-        ImGui::SetNextItemWidth(region_x);
-        std::string input_title_t = fmt::format("##center-circle-input-data-t{}", i);
-        if (ImGui::DragFloat(input_title_t.c_str(),
-                             &it->relativePos,
-                             0.001f,
-                             0,
-                             1,
-                             "%.3f")) {
+         ImGui::SetNextItemWidth(region_x);
+         std::string input_title_t =
+             fmt::format("##center-circle-input-data-t{}", i);
+         if (ImGui::DragFloat(
+                 input_title_t.c_str(),
+                 &it->relativePos,
+                 0.001f,
+                 0,
+                 1,
+                 "%.3f"
+             ))
+         {
             should_remake = true;
-        }
+         }
 
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(region_x);
-        std::string input_title_r = fmt::format("##center-circle-input-data-r{}", i);
-        if (ImGui::DragFloat(input_title_r.c_str(),
-                             &it->radius,
-                             0.001f,
-                             0,
-                             +FLT_MAX,
-                             "%.3f")) {
+         ImGui::SameLine();
+         ImGui::SetNextItemWidth(region_x);
+         std::string input_title_r =
+             fmt::format("##center-circle-input-data-r{}", i);
+         if (ImGui::DragFloat(
+                 input_title_r.c_str(),
+                 &it->radius,
+                 0.001f,
+                 0,
+                 +FLT_MAX,
+                 "%.3f"
+             ))
+         {
             should_remake = true;
-        }
-    }
-    ImGui::EndChild();
-}
+         }
+      }
+      ImGui::EndChild();
+   }
    // clang-format on
    return should_remake;
+}
+
+bool
+renderBitCheckbox(const char* label, uint32_t bit, uint32_t* bitfield)
+{
+   bool checked = (*bitfield & bit) != 0;
+   if (ImGui::Checkbox(label, &checked))
+   {
+      if (checked)
+         *bitfield |= bit; // set the bit
+      else
+         *bitfield &= ~bit; // clear the bit
+      return true;
+   }
+   return false;
 }
 
 bool
@@ -1098,7 +1135,21 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
    // Right panel
    if (ImGui::Begin("Preview"))
    {
-      ImGui::Text("Preview area for geometry, debug, logs, etc.");
+      // clang-format off
+      no_remake *= renderBitCheckbox("Chord",             static_cast<uint32_t>(obj::section::BfBladeSectionEnum::Chord), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("_ChordLeftBorder",  static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordLeftBorder), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("_ChordRightBorder", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordRightBorder), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("InletCircle",       static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletCircle), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("OutletCircle",      static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletCircle), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("InletDirection",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletDirection), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("OutletDirection",   static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletDirection), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("CenterCircles",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::CenterCircles), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("InletPack",          static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletPack), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("OutletPack",         static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletPack), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("FrontCurveChain",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::FrontCurveChain), &info->renderBitSet);
+      no_remake *= renderBitCheckbox("BackCurveChain",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::BackCurveChain), &info->renderBitSet);
+      // clang-format on
    }
    ImGui::End();
    return !no_remake;
