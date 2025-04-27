@@ -198,6 +198,8 @@ public:
    }
 
    const fs::path& path() noexcept { return m_path; }
+   const VkImageView& view() noexcept { return m_view->handle(); }
+   const VkImage& image() noexcept { return m_image->handle(); }
 
 private:
    const fs::path m_path;

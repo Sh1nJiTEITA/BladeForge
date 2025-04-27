@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "bfEvent.h"
+#include "bfSingle.h"
 #include "bfVariative.hpp"
 
 std::map< BfEnDescriptorUsage, std::string > BfEnDescriptorUsageStr = {
@@ -318,6 +319,7 @@ BfDescriptor::BfDescriptor() {}
 void
 BfDescriptor::kill()
 {
+   this->__textures.clear();
    this->destroy_desc_set_layouts();
    this->destroy_desc_pool();
    this->deallocate_desc_images();
@@ -632,30 +634,28 @@ BfDescriptor::update_desc_sets()
          }
       }
 
-      // for (auto texture = __textures.begin(); texture != __textures.end();
-      //      ++texture)
-      // {
-      //    VkWriteDescriptorSet write{};
-      //    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      //    write.pNext = nullptr;
-      //    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-      //    write.dstSet =
-      //        __desc_layout_packs_map[BfDescriptorSetTexture].desc_sets[i];
-      //    write.dstBinding = 0;
-      //    write.descriptorCount = 1;
-      //
-      //    image_infos.emplace_back();
-      //    auto img_info = &(*image_infos.rbegin());
-      //    img_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-      //    img_info->sampler = *(*texture)->sampler();
-      //    img_info->imageView = (*texture)->image()->view;
-      //
-      //    write.pImageInfo = img_info;
-      //    writes.push_back(write);
-      //    fmt::printf("Write for texture with id {} done\n",
-      //    (*texture)->id());
-      // }
+      for (auto& texture : __textures)
+      {
+         VkWriteDescriptorSet write{};
+         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+         write.pNext = nullptr;
+         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+         write.dstSet =
+             __desc_layout_packs_map[BfDescriptorSetTexture].desc_sets[i];
+         write.dstBinding = 0;
+         write.descriptorCount = 1;
 
+         image_infos.emplace_back();
+         auto img_info = &(*image_infos.rbegin());
+         img_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+         img_info->sampler = base::g::sampler();
+         img_info->imageView = texture->view();
+
+         write.pImageInfo = img_info;
+         writes.push_back(write);
+         // fmt::printf("Write for texture with id {} done\n",
+         // (*texture)->id());
+      }
       vkUpdateDescriptorSets(
           __device,
           static_cast< uint32_t >(writes.size()),
@@ -670,16 +670,16 @@ BfDescriptor::update_desc_sets()
    return event;
 }
 
-// BfEvent
-// BfDescriptor::add_texture(pTexture texture)
-// {
-//    __textures.push_back(texture);
-//    fmt::println(
-//        "Adding texture with path={} to BfDescriptor",
-//        texture->path().string()
-//    );
-//    return BfEvent();
-// }
+BfEvent
+BfDescriptor::add_texture(pTexture texture)
+{
+   __textures.push_back(texture);
+   fmt::println(
+       "Adding texture with path={} to BfDescriptor",
+       texture->path().string()
+   );
+   return BfEvent();
+}
 
 BfEvent
 BfDescriptor::allocate_desc_buffers()
@@ -875,13 +875,6 @@ BfDescriptor::bind_device(VkDevice device)
 {
    __device = device;
 }
-
-void
-BfDescriptor::createSampler()
-{
-   // __sampler = std::make_unique< base::texture::BfSampler() >();
-}
-
 BfAllocatedBuffer*
 BfDescriptor::get_buffer(BfEnDescriptorUsage usage, uint32_t frame_index)
 {

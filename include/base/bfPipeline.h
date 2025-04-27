@@ -28,7 +28,8 @@ enum BfPipelineType_ : BfPipelineType
 {
    BfPipelineType_Lines,
    BfPipelineType_Triangles,
-   BfPipelineType_Axis
+   BfPipelineType_Axis,
+   BfPipelineType_LoadedImage,
 };
 
 typedef uint32_t BfPipelineLayoutType;
@@ -52,7 +53,7 @@ struct BfPipelineData
 
 class BfPipelineHandler
 {
-   static std::unique_ptr<BfPipelineHandler> __instance;
+   static std::unique_ptr< BfPipelineHandler > __instance;
 
    // clang-format off
    std::unordered_map<BfPipelineType, BfPipelineData> __pipelines;
@@ -77,7 +78,7 @@ public:
     */
    void createLayout(
        BfPipelineLayoutType type,
-       const std::vector<VkDescriptorSetLayout>& descSetLayouts
+       const std::vector< VkDescriptorSetLayout >& descSetLayouts
    );
 
    /**
@@ -98,8 +99,9 @@ public:
     * @param render_pass => VkRenderPass handle
     * @return void
     */
-   template <class T>
-   typename std::enable_if<std::is_base_of<BfPipelineInterface, T>::value>::type
+   template < class T >
+   typename std::enable_if<
+       std::is_base_of< BfPipelineInterface, T >::value >::type
    create(
        BfPipelineType type,
        BfPipelineLayoutType layout_type,
@@ -123,8 +125,9 @@ public:
     * @param shaders_path
     * @return void
     */
-   template <class T>
-   typename std::enable_if<std::is_base_of<BfPipelineInterface, T>::value>::type
+   template < class T >
+   typename std::enable_if<
+       std::is_base_of< BfPipelineInterface, T >::value >::type
    create(
        BfPipelineType type,
        BfPipelineLayoutType layout_type,
@@ -314,10 +317,10 @@ struct BfPipelineInterface
 class BfPipelineInterfaceStd : public BfPipelineInterface
 {
    VkVertexInputBindingDescription __bindingDescription;
-   std::array<VkVertexInputAttributeDescription, 3> __attributeDescriptions;
-   std::vector<VkDynamicState> __dynamicStates;
-   std::vector<VkPipelineColorBlendAttachmentState> __colorBlendAttachments;
-   std::vector<VkDescriptorSetLayout> __descriptorSetLayouts;
+   std::array< VkVertexInputAttributeDescription, 3 > __attributeDescriptions;
+   std::vector< VkDynamicState > __dynamicStates;
+   std::vector< VkPipelineColorBlendAttachmentState > __colorBlendAttachments;
+   std::vector< VkDescriptorSetLayout > __descriptorSetLayouts;
 
 public:
    // clang-format off

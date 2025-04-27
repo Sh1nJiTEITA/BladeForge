@@ -26,6 +26,7 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
 layout(location = 0) in vec3 fragColor;
 layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 fragPos;
+
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out uint outId;
 

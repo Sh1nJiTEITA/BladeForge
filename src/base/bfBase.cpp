@@ -1437,6 +1437,11 @@ bfInitOwnDescriptors(BfBase& base)
    };
 
    base.descriptor.add_descriptor_create_info(infos);
+
+   auto test_texture =
+       std::make_shared< base::texture::BfTexture >("./resources/test.jpg");
+   base.descriptor.add_texture(test_texture);
+
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
    base.descriptor.create_desc_set_layouts();
@@ -3422,6 +3427,13 @@ bfMainRecordCommandBuffer(BfBase& base)
           local_buffer,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           1
+      );
+      base.descriptor.bind_desc_sets(  // MAIN
+          BfEnDescriptorSetLayoutType::BfDescriptorSetTexture,
+          base.current_frame,
+          local_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+          2
       );
 
       // base.layer_handler.draw(local_buffer);

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "bfBuffer.h"
-// #include "bfTexture.h"
+#include "bfTexture.h"
 #include "bfTextureLoad.h"
 #include "bfVariative.hpp"
 
@@ -22,7 +22,7 @@ enum BfEnDescriptorUsage
    BfDescriptorViewDataUsage,
    BfDescriptorModelMtxUsage,
    BfDescriptorPosPickUsage,
-   BfDescriptorLoadedImage,
+   // BfDescriptorLoadedImage,
 };
 
 extern std::map< BfEnDescriptorUsage, std::string > BfEnDescriptorUsageStr;
@@ -83,7 +83,7 @@ struct BfDescriptorLayoutPack
 
 class BfDescriptor
 {
-   // using pTexture = std::shared_ptr< base::texture::BfTexture >;
+   using pTexture = std::shared_ptr< base::texture::BfTexture >;
    unsigned int __frames_in_flight;
 
    //
@@ -98,12 +98,10 @@ class BfDescriptor
        __desc_layout_packs_map;
 
    // std::vector< BfTexture* > __textures;
-   // std::vector< pTexture > __textures;
+   std::vector< pTexture > __textures;
 
    VkDescriptorPool __desc_pool;
    VkDevice __device;
-
-   // std::unique_ptr< base::texture::BfSampler > __sampler;
 
 public:
    BfDescriptor();
@@ -118,7 +116,6 @@ public:
    void kill();
    void set_frames_in_flight(unsigned int in);
    void bind_device(VkDevice device);
-   void createSampler();
 
    std::vector< VkDescriptorSetLayout > getAllLayouts() const;
 
@@ -127,7 +124,7 @@ public:
    add_descriptor_create_info(std::vector< BfDescriptorCreateInfo > info);
 
    // BfEvent add_texture(std::vector<std::shared_ptr<BfTexture>> textures);
-   // BfEvent add_texture(pTexture texture);
+   BfEvent add_texture(pTexture texture);
 
    BfEvent allocate_desc_buffers();
    BfEvent deallocate_desc_buffers();

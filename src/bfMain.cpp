@@ -132,6 +132,8 @@ BfMain::__init()
        // &__base.sampler->handle()
    );
 
+   bfCreateSampler(__base);
+
    bfCreateSwapchain(__base);
 
    // Setup camera
@@ -152,6 +154,7 @@ BfMain::__init()
 
    // bfCreateTextureLoader(__base);
    bfCreateCommandPool(__base);
+
    bfInitOwnDescriptors(__base);
 
    BfPipelineHandler::instance()->createLayout(
@@ -172,6 +175,12 @@ BfMain::__init()
        BfPipelineType_Axis,
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/axis"
+   );
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTriangle >(
+       BfPipelineType_LoadedImage,
+       BfPipelineLayoutType_Main,
+       fs::path(BfConfigManager::getInstance()->exePath()) /
+           "shaders/loaded_image"
    );
 
    bfCreateStandartFrameBuffers(__base);
@@ -194,8 +203,6 @@ BfMain::__init()
       __gui.bindGreekFont();
    }
    bfPostInitImGui(__base);
-
-   bfCreateSampler(__base);
 
    __gui.bindBase(&__base);
    __gui.bindHolder(&__holder);
@@ -241,8 +248,6 @@ BfMain::__loop()
 {
    __base.current_frame = 0;
    __base.is_resized = true;
-
-   base::texture::BfTexture texture("./resources/test.jpg");
 
    // auto xAxis = std::make_shared<BfSingleLine>(
    //     glm::vec3{0.0f, 0.0f, 0.0},
@@ -324,6 +329,9 @@ BfMain::__loop()
    auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
    bs->make();
    test_root->add(bs);
+   auto tp = std::make_shared< obj::curves::BfTexturePlane >();
+   tp->make();
+   test_root->add(tp);
 
    test_root->control().updateBuffer();
    obj::BfDrawManager::inst().add(test_root);

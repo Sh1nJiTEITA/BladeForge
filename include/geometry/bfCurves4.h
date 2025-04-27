@@ -1726,6 +1726,33 @@ private:
    std::weak_ptr< BfIOCirclePack > m_opack;
 };
 
+
+
+class BfTexturePlane : public obj::BfDrawObject { 
+public:
+   // BfPipelineType_LoadedImage
+   BfTexturePlane() 
+      : obj::BfDrawObject("Texture plane", BF_PIPELINE(BfPipelineType_LoadedImage), 10)
+      // : obj::BfDrawObject("Texture plane", BF_PIPELINE(BfPipelineType_Triangles), 10)
+   { 
+   }
+   
+   void make() override { 
+      m_vertices = {
+           {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+          {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+          {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+          {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.0f}}
+      };
+      m_indices = { 
+         0, 1, 2,
+         2, 0, 3
+      };
+   }
+};
+
+
+
 }; // namespace curves
 
 } // namespace obj
