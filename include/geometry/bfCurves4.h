@@ -415,7 +415,7 @@ public:
    BfBezierN(Args&&... args)
        : std::vector<BfVertex3Uni>{std::forward<Args>(args)...}
        , obj::BfDrawObject{
-             "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 400
+             "Bezier curve 2", BF_PIPELINE(BfPipelineType_Lines), 100
          }
    {
       if (this->size() < 3)
@@ -1568,15 +1568,105 @@ private:
 
 class BfBezierChain : public obj::BfDrawLayer { 
 public:
-   template< typename... Args>
-   BfBezierChain(Args&& ...args) 
+   enum Type { Front, Back };
+
+   BfBezierChain(
+      Type type,
+      std::weak_ptr< BfIOCirclePack > inlet_pack,
+      std::weak_ptr< obj::BfDrawLayer > center_packs,
+      std::weak_ptr< BfIOCirclePack > outlet_pack
+   ) 
       : obj::BfDrawLayer{ "Bezier chain" }
+      , m_type{ type }
+      , m_ipack{ inlet_pack }
+      , m_centerPacks { center_packs }
+      , m_opack{ outlet_pack }
    { 
-      std::vector<BfObj>objs( std::forward<Args>(args)... ); 
-      for (auto&& obj : objs) { 
-         this->add(obj);
+      auto v = _controlPoints();
+
+      // auto line_chain = std::make_shared<BfDrawLayer>("Line chain");
+      // for (size_t i = 0; i < v.size() - 1; ++i) { 
+      //    auto line = std::make_shared<BfSingleLine>( v[i], v[i + 1]);
+      //    line->color() = glm::vec3(0.5, 0.5, 0.2);
+      //    line_chain->add(line);
+      // }
+      // this->add(line_chain);
+      
+      auto bezier_chain = std::make_shared<BfDrawLayer>("Bezier chain");
+      for (size_t i = 0; i < v.size() - 2; i += 2) { 
+         auto bez = std::make_shared<BfBezierN>(
+            std::vector< BfVertex3Uni > { 
+               v[i],
+               v[i + 1],
+               v[i + 2]
+            }
+         );
+         // bez->color() = glm::
+         bezier_chain->add(bez);
       }
+
+      this->add(bezier_chain);
+
    }
+
+   std::shared_ptr< BfIOCirclePack > inletPack() { 
+      auto locked = m_ipack.lock();
+      if (!locked) throw std::runtime_error("Cant lock inlet pack");
+      return locked;
+   }
+
+   std::shared_ptr< obj::BfDrawLayer > centerPacks() { 
+      auto locked = m_centerPacks.lock();
+      if (!locked) throw std::runtime_error("Cant lock center packs");
+      return locked;
+   }
+ 
+   std::shared_ptr< BfIOCirclePack > outletPack() { 
+      auto locked = m_opack.lock();
+      if (!locked) throw std::runtime_error("Cant lock outlet pack");
+      return locked;
+   }
+private:
+   std::vector< BfVertex3Uni > _controlPoints() { 
+      auto ipack = inletPack(); 
+      auto opack = outletPack();
+      auto cpacks = centerPacks();
+
+      std::vector< BfVertex3Uni > vertices;
+      vertices.reserve(2 + opack->children().size());
+     
+      if (m_type == Front) { 
+         vertices.push_back(BfVertex3Uni(ipack->firstLine()->first().getp()));
+         vertices.push_back(BfVertex3Uni(ipack->firstLine()->second().getp()));
+         for (auto& cp : cpacks->children()) {
+            auto pack = std::static_pointer_cast<BfCirclePack>(cp);
+            vertices.push_back(BfVertex3Uni(pack->normalLine()->first().getp()));
+            vertices.push_back(BfVertex3Uni(pack->perpLineFirst()->second().getp()));
+         }
+         vertices.pop_back();
+         vertices.push_back(BfVertex3Uni(opack->secondLine()->second().getp()));
+         vertices.push_back(BfVertex3Uni(opack->secondLine()->first().getp()));
+
+      } else if (m_type == Back) { 
+         vertices.push_back(BfVertex3Uni(ipack->secondLine()->first().getp()));
+         vertices.push_back(BfVertex3Uni(ipack->secondLine()->second().getp()));
+         for (auto& cp : cpacks->children()) {
+            auto pack = std::static_pointer_cast<BfCirclePack>(cp);
+            vertices.push_back(BfVertex3Uni(pack->normalLine()->second().getp()));
+            vertices.push_back(BfVertex3Uni(pack->perpLineSecond()->second().getp()));
+         }
+         vertices.pop_back();
+         vertices.push_back(BfVertex3Uni(opack->firstLine()->second().getp()));
+         vertices.push_back(BfVertex3Uni(opack->firstLine()->first().getp()));
+      }
+      return vertices;
+   }
+
+private:
+   Type m_type;
+   std::weak_ptr< BfIOCirclePack > m_ipack;
+   std::weak_ptr< obj::BfDrawLayer > m_centerPacks;
+   std::weak_ptr< BfIOCirclePack > m_opack;
 };
 
 

@@ -290,7 +290,7 @@ public:
       m_pipeline = obj.m_pipeline;
    }
 
-   bool toggleRender(int sts = -1)
+   virtual bool toggleRender(int sts = -1)
    {
       bool current = m_isrender;
       if (sts == -1)
@@ -392,6 +392,8 @@ public:
    const std::vector< BfIndex >& indices() const = delete;
 
    std::vector< BfObj >& children();
+
+   virtual bool toggleRender(int sts = -1) override;
 };
 
 template < class PartEnum >
@@ -466,6 +468,14 @@ protected:
    {
       auto id = m_idMap[part];
       return std::static_pointer_cast< Cast >(_findObjectById(id));
+   }
+
+   template < PartEnum part >
+   bool _toggleRender(int sts = -1)
+   {
+      auto id = m_idMap[part];
+      auto obj = _findObjectById(id);
+      return obj->toggleRender(sts);
    }
 };
 

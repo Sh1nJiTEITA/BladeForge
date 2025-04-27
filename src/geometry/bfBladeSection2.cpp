@@ -445,29 +445,27 @@ void BfBladeSection::_processIOCircles() {
 
 
 void BfBladeSection::_createFrontCurves() { 
-   // const auto& CC = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>()->children();
-   // const auto& CCL = _part<BfBladeSectionEnum::CenterCirclesLines, obj::BfDrawLayer>()->children();
-   // const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
-   // // assert( CC.size() == CCL.size() == IL.size() );   
-   //
-   // auto back_layer = _addPartForward<BfBladeSectionEnum::Back, obj::BfDrawLayer>("Back layer");
-   //
-   // for (size_t i = 0; i < CC.size() - 1; ++i) { 
-   //    auto normal_left = std::static_pointer_cast<curves::BfSingleLine>(CCL[i]);
-   //    auto normal_right = std::static_pointer_cast<curves::BfSingleLine>(CCL[i + 1]);
-   //    auto tangent = std::static_pointer_cast<curves::BfSingleLine>(IL[i]);
-   //    auto bezier = std::make_shared<curves::BfBezierN>(
-   //       BfVertex3Uni(normal_left->first().getp()),
-   //       BfVertex3Uni(tangent->second().getp()),
-   //       BfVertex3Uni(normal_right->first().getp())
-   //    );
-   //    bezier->color() = glm::vec3(1.0f, 0.1f, 0.1f);
-   //    this->add(bezier);
-   // }
+   // _toggleRender<BfBladeSectionEnum::CenterCircles>();
+   // _toggleRender<BfBladeSectionEnum::InletPack>();
+   // _toggleRender<BfBladeSectionEnum::OutletPack>();
+
+   _addPartForward<BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain>(
+      curves::BfBezierChain::Type::Front,
+      _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
+      _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
+      _part<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>()
+   );
+
+   _addPartForward<BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain>(
+      curves::BfBezierChain::Type::Back,
+      _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
+      _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
+      _part<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>()
+   );
 }
 
 void BfBladeSection::_processFrontCurves() { 
-
+   
 }
 
 

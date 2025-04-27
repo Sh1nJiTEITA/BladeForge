@@ -51,12 +51,12 @@ enum class BfBladeSectionEnum : uint32_t
 
    AverageInitialCurve,
    CenterCircles,
-   IntersectionLines,
 
    InletPack,
    OutletPack,
 
-   Back,
+   FrontCurveChain,
+   BackCurveChain,
 };
 
 class BfBladeSection : public obj::BfDrawLayerWithAccess< BfBladeSectionEnum >
@@ -76,6 +76,7 @@ public:
       _createAverageInitialCurve();
       _createCenterCircles();
       _createIOCircles();
+      _createFrontCurves();
       // _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
@@ -112,10 +113,10 @@ public:
    }
    
    void toggleBack(int sts = -1) { 
-      const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
-      for (auto& child : IL ) { 
-         child->toggleRender(sts);
-      }
+      // const auto& IL = _part<BfBladeSectionEnum::IntersectionLines, obj::BfDrawLayer>()->children();
+      // for (auto& child : IL ) { 
+      //    child->toggleRender(sts);
+      // }
    }
 
 private:
@@ -125,31 +126,55 @@ private:
    float _eqOutletAngle();
    glm::vec3 _eqInletDirection(); 
    glm::vec3 _eqOutletDirection(); 
-
    glm::vec3 _ioIntersection();
 
 private:
+   /** 
+    * @defgroup Группа построения и конроля частей 2Д сечения
+    * @{
+    * 
+    */
+
+   /**
+    * @brief Создание хорды
+    */
    void _createChord();
    void _processChord();
 
+   /**
+    * @brief Создание входных и выходных окружностей (кромок)
+    */
    void _createCircleEdges();
    void _processCircleEdges();
 
+   /**
+    * @brief Создание направляющих входных и выходных углов
+    */
    void _createIOAngles();
    void _processIOAngles();
 
+   /**
+    * @brief Создание средней линии
+    */
    void _createAverageInitialCurve();
    void _processAverageInitialCurve();
 
+   /**
+    * @brief Создание пакетов направляющих окружностей
+    */
    void _createCenterCircles();
    void _processCenterCircles();
 
+   /**
+    * @brief Создание пакетов входных и выходных кромок
+    */
    void _createIOCircles();
    void _processIOCircles();
 
-
    void _createFrontCurves();
    void _processFrontCurves();
+   
+   /** @} */ // End of MathFunctions group
 
 private:
    BfVertex3 m_lastChordL; 

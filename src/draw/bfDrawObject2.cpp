@@ -588,6 +588,22 @@ std::vector< BfObj >& BfDrawLayer::children() {
    return m_children;
 }
 
+
+// FIXME: No idea how this should be implemented
+// For now it tries to toggle each individual nested element
+// recursivly. If some object has been already toggled -> 
+// last call will switch render for it, but not for other objects
+// in single layout.
+bool BfDrawLayer::toggleRender(int sts) { 
+   // BUG: segmentation fault (no idea why)
+   // bool current = toggleRender(sts);
+   bool current;
+   for (auto& child : m_children) { 
+      current = child->toggleRender(sts);
+   }
+   return current;
+}
+
 /* BfDrawRootLayer */
 BfDrawRootLayer::BfDrawRootLayer(size_t max_vertex, size_t max_obj)
     : BfDrawObjectBase("Root Layer", nullptr, ROOT_LAYER, max_vertex, max_obj)
