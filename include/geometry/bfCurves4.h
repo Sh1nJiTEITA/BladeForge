@@ -1242,6 +1242,12 @@ private:
    BfVar<float> m_radius;
 };
 
+/**
+ * @class BfIOCirclePack
+ * @brief NOT CLEAN IMPLEMENTATION
+ * TODO: REFRACTOR ALL
+ *
+ */
 class BfIOCirclePack : public obj::BfDrawLayer { 
 public: 
    enum Type { 
@@ -1279,66 +1285,17 @@ public:
       nV2.pos =  c->centerVertex().pos + normal_direction * c->radius().get();
       nV2.color = glm::vec3(0.0f, 1.0f, 0.0f);
 
-      
-
       if (m_type == Inlet) {
          auto nLine = std::make_shared<BfSingleLine>(std::move(nV1), std::move(nV2));
          nLine->color() = glm::vec3( std::nanf("") ); 
          this->add(nLine);
-
-         auto next = this->_nearCircle();
-         auto first = next->perpLineFirst();
-         auto second = next->perpLineSecond();
-
-         BfVertex3 first_inter = nLine->first();
-         first_inter.pos = nLine->first().pos() + 
-                           line->line()->directionFromEnd() * c->radius().get();
-
-         auto first_line = std::make_shared<BfSingleLine>(
-            BfVertex3Uni(nLine->first().getp()),
-            std::move(first_inter)
-         );
-         this->add(first_line);
-
-         BfVertex3 second_inter = nLine->first();
-         second_inter.pos = nLine->second().pos() + 
-                            line->line()->directionFromEnd() * c->radius().get();
-;
-         auto second_line = std::make_shared<BfSingleLine>(
-            BfVertex3Uni(nLine->second().getp()),
-            std::move(second_inter)
-         );
-         this->add(second_line);
-
       } else if (m_type == Outlet) { 
          auto nLine = std::make_shared<BfSingleLine>(std::move(nV2), std::move(nV1));
          nLine->color() = glm::vec3( std::nanf("") ); 
          this->add(nLine);
-
-         auto prev = this->_nearCircle();
-         auto first = prev->perpLineFirst();
-         auto second = prev->perpLineSecond();
-         
-         BfVertex3 first_inter = nLine->first();
-         first_inter.pos = nLine->first().pos() + 
-                           line->line()->directionFromEnd() * c->radius().get();
-
-         auto first_line = std::make_shared<BfSingleLine>(
-            BfVertex3Uni(nLine->first().getp()),
-            std::move(first_inter)
-         );
-         this->add(first_line);
-
-         BfVertex3 second_inter = nLine->first();
-         second_inter.pos = nLine->second().pos() + 
-                            line->line()->directionFromEnd() * c->radius().get();
-;
-         auto second_line = std::make_shared<BfSingleLine>(
-            BfVertex3Uni(nLine->second().getp()),
-            std::move(second_inter)
-         );
-         this->add(second_line);
       }
+      _addPerpLines();
+      _addInterLines(); 
    }
 
    
@@ -1408,37 +1365,113 @@ public:
       return std::static_pointer_cast<BfSingleLine>(m_children[2]); 
    }
 
+   /**
+    * @brief Returns parallel to normal line first line 
+    * (relative to first/second vertex of normal line)
+    * 
+    * This line::first() -> is same is normalLine()::first()
+    *
+    * @return line object
+    */
+   std::shared_ptr< BfSingleLine > firstLineIntr() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[3]); 
+   }
+
+   /**
+    * @brief Returns parallel to nornal line second line 
+    * (relative to first/second vertex of normal line) 
+    *
+    * This line::first() -> is same is normalLine()::second()
+    *
+    * @return 
+    */
+   std::shared_ptr< BfSingleLine > secondLineIntr() { 
+      return std::static_pointer_cast<BfSingleLine>(m_children[4]); 
+   }
+
    virtual void make() override { 
-      auto c = m_circle.lock();
-      auto line = m_line.lock();
-      if (!c && !line) { throw std::runtime_error("Cant lock circle or line"); }
+      auto c = circle();
+      auto line = this->line();
+
       glm::vec3 normal_direction = glm::normalize(glm::cross(
          line->line()->directionFromStart(), 
          line->left().normals()
       ));
+
       auto nLine = normalLine();
       nLine->first().pos() = c->centerVertex().pos - normal_direction * c->radius().get();
       nLine->second().pos() = c->centerVertex().pos + normal_direction * c->radius().get();
-      
-      glm::vec3 fintr, sintr; _findIntersection(fintr, sintr);
 
+      glm::vec3 fintr, sintr; _findIntersection(fintr, sintr);
       firstLine()->second().pos() = fintr;
       secondLine()->second().pos() = sintr;
-
-      // if (m_type == Inlet) { 
-      //    // near->perpLineFirst()->first().pos() = fintr;
-      //    // near->perpLineSecond()->first().pos() = sintr;
-      //    
-      // }
-      // else if (m_type == Outlet) { 
-      //    firstLine()->second().pos() = sintr;
-      //    secondLine()->second().pos() = fintr;
-      // }
       
+      if (m_type == Inlet) { 
+         auto next = _nearCircle();
+         firstLineIntr()->second() = BfVertex3Uni(next->perpLineFirst()->first().getp());
+         secondLineIntr()->second() = BfVertex3Uni(next->perpLineSecond()->first().getp());
+      } else if (m_type == Outlet) { 
+         auto prev = _nearCircle();
+         firstLineIntr()->second() = BfVertex3Uni(prev->perpLineSecond()->second().getp());
+         secondLineIntr()->second() = BfVertex3Uni(prev->perpLineFirst()->second().getp());
+      }
       obj::BfDrawLayer::make();
    }
 
 private:
+   inline void _addInterLines() { 
+      auto first = this->firstLine();
+      auto second = this->secondLine();
+   
+      BfVertex3 fintrv = first->second();
+      fintrv.pos = first->second().pos() + 
+                   first->directionFromStart() * first->length();
+      auto first_inter = std::make_shared<BfSingleLine>(
+         BfVertex3Uni(first->second().getp()),
+         std::move(fintrv)
+      );
+      this->add(first_inter);
+
+
+      BfVertex3 sintrv = second->second();
+      sintrv.pos = second->second().pos() + 
+                   second->directionFromStart() * second->length();
+      auto second_intr = std::make_shared<BfSingleLine>(
+         BfVertex3Uni(second->second().getp()),
+         std::move(sintrv)
+      );
+      this->add(second_intr);
+   }
+
+   inline void _addPerpLines() { 
+      auto nLine = this->normalLine();
+      auto line = this->line();
+      auto next = this->_nearCircle();
+      auto c = this->circle();
+      auto first = next->perpLineFirst();
+      auto second = next->perpLineSecond();
+
+      BfVertex3 first_inter = nLine->first();
+      first_inter.pos = nLine->first().pos() + 
+                        line->line()->directionFromEnd() * c->radius().get();
+
+      auto first_line = std::make_shared<BfSingleLine>(
+         BfVertex3Uni(nLine->first().getp()),
+         std::move(first_inter)
+      );
+      this->add(first_line);
+
+      BfVertex3 second_inter = nLine->first();
+      second_inter.pos = nLine->second().pos() + 
+                         line->line()->directionFromEnd() * c->radius().get();
+
+      auto second_line = std::make_shared<BfSingleLine>(
+         BfVertex3Uni(nLine->second().getp()),
+         std::move(second_inter)
+      );
+      this->add(second_line);
+   }
+
    /**
     * @brief Finds near circle from center circles by this object type.
     * If type is INLET -> returns first central circle or circle with lowest 
