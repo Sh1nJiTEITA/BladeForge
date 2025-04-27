@@ -429,12 +429,14 @@ void BfBladeSection::_createIOCircles() {
       curves::BfIOCirclePack::Inlet
    );
 
-   // auto outlet_circle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
-   // auto outlet_dir = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
-   // auto opack = _addPartForward<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>( 
-   //    outlet_circle,
-   //    outlet_dir
-   // );
+   auto outlet_circle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
+   auto outlet_dir = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
+   auto opack = _addPartForward<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>( 
+      outlet_circle,
+      outlet_dir,
+      circles,
+      curves::BfIOCirclePack::Outlet
+   );
 }
 
 void BfBladeSection::_processIOCircles() { 
