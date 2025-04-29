@@ -398,6 +398,37 @@ BfMain::__loop()
       }
       ImGui::ShowDemoWindow();
 
+      ImGui::Begin("Choose image");
+      {
+         bool is_changed = false;
+         const char* var[]{
+             "./resources/test.jpg",
+             "./resources/test2.png",
+         };
+         static bool current = 0;
+         if (ImGui::RadioButton(var[0], current == 0))
+         {
+            is_changed = true;
+            current = 0;
+         }
+         if (ImGui::RadioButton(var[1], current == 1))
+         {
+            is_changed = true;
+            current = 1;
+         }
+         if (is_changed)
+         {
+            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+            auto& texture = man.get< base::desc::own::BfDescriptorTextureTest >(
+                base::desc::own::SetType::Texture,
+                0
+            );
+            texture.reload(var[current]);
+            man.updateSets();
+         }
+      }
+      ImGui::End();
+
       // ImGui::ShowDemoWindow();
 
       // ImGui::Begin("Bezier");

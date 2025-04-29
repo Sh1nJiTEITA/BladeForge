@@ -274,6 +274,8 @@ struct BfDescriptorSet
       }
    }
 
+   
+
    std::vector<VkWriteDescriptorSet> write(
       int frame,
       std::list<VkDescriptorBufferInfo>& binfos,
@@ -336,6 +338,16 @@ struct BfDescriptorTexture : public BfDescriptor {
    )
    , m_path { path }
    {
+   }
+
+   void reload(const std::filesystem::path& newPath) {
+      m_path = newPath;
+      m_buffer.reset();
+      m_image.reset();
+      m_view.reset();
+      createBuffer();
+      createImage();
+      createView();
    }
 
    // clang-format off
@@ -434,6 +446,7 @@ struct BfDescriptorTexture : public BfDescriptor {
 
          sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
          destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+         m_image->layout() = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
       }
       else if (oldl == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
                newl == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
@@ -443,6 +456,7 @@ struct BfDescriptorTexture : public BfDescriptor {
 
          sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
          destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+         m_image->layout() = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       }
       else
       {
