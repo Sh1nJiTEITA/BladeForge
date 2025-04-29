@@ -20,23 +20,5 @@ struct BfObjectData
    alignas(4) uint32_t index;
    alignas(4) uint32_t id = 999999;
    alignas(4) float line_thickness;
-
-   uint32_t __assign_id()
-   {
-      static uint32_t next_id = 0;
-      next_id++;
-      return next_id;
-   }
 };
-
-struct BfUniformBezierProperties
-{
-   uint32_t points_count;
-};
-
-struct BfStorageBezierPoints
-{
-   uint32_t coo;
-};
-
 #endif

@@ -2,6 +2,7 @@
 #define BF_DRAW_OBJECT_BUFFER_H
 
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -12,9 +13,8 @@
 namespace obj
 {
 
-class BfBuffer
+struct BfBuffer
 {
-public:
    BfBuffer(
        size_t allocSize,
        VkBufferUsageFlags usage,
@@ -31,6 +31,7 @@ public:
    void clear();
 
    VkBuffer& handle() { return m_buffer; }
+   size_t size() noexcept { return m_size; }
 
 protected:
    VkBuffer m_buffer;
@@ -41,68 +42,25 @@ protected:
    void* m_pData;
 };
 
-class BfImage
+struct BfImage
 {
-public:
    BfImage(
        size_t width,
        size_t height,
        VkImageUsageFlags usage,
        VmaMemoryUsage memoryUsage,
-       VmaAllocationCreateFlags flags = 0
-   )
-   {
-      fmt::print("============== CREATING IMAGE ==============\n");
-      VkImageCreateInfo image_info{
-          .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-          .imageType = VK_IMAGE_TYPE_2D,
-          .format = VK_FORMAT_R8G8B8A8_SRGB,
-          .extent =
-              {.width = static_cast< uint32_t >(width),
-               .height = static_cast< uint32_t >(height),
-               .depth = 1},
-          .mipLevels = 1,
-          .arrayLayers = 1,
-          .samples = VK_SAMPLE_COUNT_1_BIT,
-          .tiling = VK_IMAGE_TILING_OPTIMAL,
-          .usage = usage,
-          .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-          .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      };
-      VmaAllocationCreateInfo vmaAllocInfo{
-          .flags = flags,
-          .usage = memoryUsage,
-      };
-      auto res = vmaCreateImage(
-          BfAllocator::get(),
-          &image_info,
-          &vmaAllocInfo,
-          &m_image,
-          &m_alloc,
-          &m_allocinfo
-      );
+       VmaAllocationCreateFlags flags = 0,
+       VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED
+   );
 
-      if (res == VK_SUCCESS)
-      {
-         m_isalloc = true;
-         m_width = width;
-         m_height = height;
-      }
-      else
-      {
-         throw std::runtime_error("VkImage was not created. Aborting...\n");
-         abort();
-      }
-   }
-
-   ~BfImage() { vmaDestroyImage(BfAllocator::get(), m_image, m_alloc); }
-
+   ~BfImage();
    size_t width() noexcept { return m_width; }
    size_t height() noexcept { return m_height; }
-
    VkImage& handle() { return m_image; }
+   VkImageLayout& layout() noexcept { return m_layout; }
 
 private:
+   VkImageLayout m_layout;
    VkImage m_image;
    VmaAllocation m_alloc;
    VmaAllocationInfo m_allocinfo;
@@ -111,18 +69,11 @@ private:
    size_t m_height;
 };
 
-class BfImageView
+struct BfImageView
 {
-public:
-   BfImageView(const VkImageViewCreateInfo& ci)
-   {
-      if (vkCreateImageView(base::g::device(), &ci, nullptr, &m_view) !=
-          VK_SUCCESS)
-      {
-         throw std::runtime_error("Cant create VkImageView");
-      }
-   }
-   ~BfImageView() { vkDestroyImageView(base::g::device(), m_view, nullptr); }
+   BfImageView(const VkImageViewCreateInfo& ci);
+   ~BfImageView();
+
    VkImageView& handle() noexcept { return m_view; }
 
 private:
@@ -130,7 +81,6 @@ private:
 };
 
 // BufferCreateInfo
-
 class BfObjectBuffer
 {
 public:

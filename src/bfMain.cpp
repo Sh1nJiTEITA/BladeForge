@@ -3,6 +3,7 @@
 #include <cassert>
 #include <memory>
 
+#include "BfDescriptorStructs.h"
 #include "bfAllocator.h"
 #include "bfAxis.h"
 #include "bfBase.h"
@@ -125,6 +126,7 @@ BfMain::__init()
    bfCreateAllocator(__base);
 
    base::g::create(
+       MAX_FRAMES_IN_FLIGHT,
        &__base.instance,
        __base.physical_device,
        &__base.device,
@@ -156,6 +158,9 @@ BfMain::__init()
    bfCreateCommandPool(__base);
 
    bfInitOwnDescriptors(__base);
+
+   base::desc::own::BfDescriptorPipelineDefault story;
+   story.create();
 
    BfPipelineHandler::instance()->createLayout(
        BfPipelineLayoutType_Main,
@@ -222,6 +227,7 @@ BfMain::__kill()
    bfDestroyStandartFrameBuffers(__base);
    bfDestroyDepthBuffer(__base);
    BfPipelineHandler::instance()->kill();
+   base::desc::own::BfDescriptorPipelineDefault::manager().cleanup();
    bfDestroyOwnDescriptors(__base);
    bfDestroyIDMapImage(__base);
    bfDestroyGUIRenderPass(__base);

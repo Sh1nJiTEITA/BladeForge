@@ -14,6 +14,7 @@ class g
 {
 public:
    static void create(
+       int frames,
        VkInstance* vkinst,
        BfPhysicalDevice* bfphdevice,
        VkDevice* vkdevice,
@@ -22,6 +23,7 @@ public:
    )
    {
       auto& base = g::inst();
+      base.m_frames = frames;
       base.m_vkinst = vkinst;
       base.m_bfphdevice = bfphdevice;
       base.m_vkdevice = vkdevice;
@@ -57,6 +59,7 @@ public:
    static VkCommandPool& cmpool() { return *g::inst().m_vkcmpool; }
    static VkSampler& sampler() { return *g::inst().m_vksampler; }
    static VkPhysicalDeviceProperties& phdeviceprop() { return g::inst().m_bfphdevice->properties; }
+   static int frames() noexcept { return g::inst().m_frames; }
    // clang-format on
 
    static VkCommandBuffer beginSingleTimeCommands()
@@ -103,6 +106,7 @@ public:
    }
 
 private:
+   int m_frames;
    VkInstance* m_vkinst;
    BfPhysicalDevice* m_bfphdevice;
    VkDevice* m_vkdevice;
