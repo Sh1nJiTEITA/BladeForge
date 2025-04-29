@@ -6,10 +6,11 @@
 #include <stdexcept>
 #include <utility>
 
+#include "BfDescriptorStructs.h"
 #include "bfBase.h"
 
-std::unique_ptr<BfPipelineHandler> BfPipelineHandler::__instance =
-    std::unique_ptr<BfPipelineHandler>(new BfPipelineHandler);
+std::unique_ptr< BfPipelineHandler > BfPipelineHandler::__instance =
+    std::unique_ptr< BfPipelineHandler >(new BfPipelineHandler);
 
 BfPipelineHandler*
 BfPipelineHandler::instance()
@@ -20,7 +21,7 @@ BfPipelineHandler::instance()
 void
 BfPipelineHandler::createLayout(
     BfPipelineLayoutType type,
-    const std::vector<VkDescriptorSetLayout>& descSetLayouts
+    const std::vector< VkDescriptorSetLayout >& descSetLayouts
 )
 {
    // clang-format off
@@ -121,13 +122,13 @@ BfPipelineHandler::~BfPipelineHandler() {}
 
 BfEvent
 BfPipelineHandler::__readShaderFile(
-    std::vector<char>& data, const fs::path& path
+    std::vector< char >& data, const fs::path& path
 )
 {
    std::ifstream file(
        path,
-       std::ios::ate |       // Read from the end
-           std::ios::binary  // Read file as binary (avoid text transformations)
+       std::ios::ate |      // Read from the end
+           std::ios::binary // Read file as binary (avoid text transformations)
    );
 
    BfSingleEvent event{};
@@ -162,13 +163,13 @@ BfPipelineHandler::__readShaderFile(
 
 BfEvent
 BfPipelineHandler::__createShaderModule(
-    VkShaderModule& module, VkDevice device, const std::vector<char>& data
+    VkShaderModule& module, VkDevice device, const std::vector< char >& data
 )
 {
    VkShaderModuleCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
    createInfo.codeSize = data.size();
-   createInfo.pCode = reinterpret_cast<const uint32_t*>(data.data());
+   createInfo.pCode = reinterpret_cast< const uint32_t* >(data.data());
 
    BfSingleEvent event{};
    if (vkCreateShaderModule(device, &createInfo, nullptr, &module) ==
@@ -194,8 +195,8 @@ BfEvent
 BfPipelineHandler::__createShaderCreateInfos(
     VkDevice device,
     const fs::path& path,
-    std::vector<VkShaderModule>& modules,
-    std::vector<VkPipelineShaderStageCreateInfo>& out
+    std::vector< VkShaderModule >& modules,
+    std::vector< VkPipelineShaderStageCreateInfo >& out
 )
 {
    /*
@@ -208,7 +209,7 @@ BfPipelineHandler::__createShaderCreateInfos(
         "*.tessc"
     */
 
-   static std::map<std::string, VkShaderStageFlagBits> stage_bits = {
+   static std::map< std::string, VkShaderStageFlagBits > stage_bits = {
        {"vert", VK_SHADER_STAGE_VERTEX_BIT},
        {"frag", VK_SHADER_STAGE_FRAGMENT_BIT},
        {"geom", VK_SHADER_STAGE_GEOMETRY_BIT},
@@ -221,11 +222,12 @@ BfPipelineHandler::__createShaderCreateInfos(
    std::stringstream ss;
    ss << " ";
 
-   std::vector<std::string> file_names;
+   std::vector< std::string > file_names;
 
    for (const auto& entry : std::filesystem::directory_iterator(path))
    {
-      if (entry.path().extension().string() != ".spv") continue;
+      if (entry.path().extension().string() != ".spv")
+         continue;
       file_names.push_back(entry.path().filename().string());
    }
 
@@ -234,7 +236,7 @@ BfPipelineHandler::__createShaderCreateInfos(
 
    for (size_t i = 0; i < file_names.size(); ++i)
    {
-      std::vector<char> code;
+      std::vector< char > code;
       BfEvent e = __readShaderFile(code, path / file_names[i]);
 
       if (e.single_event.success)
@@ -287,8 +289,8 @@ BfPipelineHandler::__create(
    }
 
    // LOADING SHADERS;
-   std::vector<VkShaderModule> modules;
-   std::vector<VkPipelineShaderStageCreateInfo> infos;
+   std::vector< VkShaderModule > modules;
+   std::vector< VkPipelineShaderStageCreateInfo > infos;
 
    __createShaderCreateInfos(device, shaders_path, modules, infos);
 
@@ -494,7 +496,7 @@ BfPipelineInterfaceStd::genDepthStencilState()
    info.depthTestEnable = true ? VK_TRUE : VK_FALSE;
    info.depthWriteEnable = true ? VK_TRUE : VK_FALSE;
    info.depthCompareOp =
-       VK_COMPARE_OP_LESS;  // bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
+       VK_COMPARE_OP_LESS; // bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
    info.depthBoundsTestEnable = VK_FALSE;
    // info.minDepthBounds = -10.0f; // Optional
    // info.maxDepthBounds = 10.0f; // Optional
@@ -509,7 +511,9 @@ BfPipelineInterfaceStd::genLayout(
 )
 {
    // clang-format off
-   __descriptorSetLayouts = std::move(desc.getAllLayouts());
+   // __descriptorSetLayouts = std::move(desc.getAllLayouts());
+   auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+   __descriptorSetLayouts = man.getAllLayouts();
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
    pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(__descriptorSetLayouts.size());

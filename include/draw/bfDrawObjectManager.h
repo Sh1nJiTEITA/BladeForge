@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 
+#include "BfDescriptorStructs.h"
 #include "bfDescriptor.h"
 #include "bfDrawObject2.h"
 
@@ -42,6 +43,12 @@ public:
    void mapModels(size_t frame_index)
    {
       // clang-format off
+      auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+      auto& desc = man.get<base::desc::own::BfDescriptorModel>(
+         base::desc::own::SetType::Global, 0
+      );
+      
+      void* ndata = desc.map();
       void* data;
       m_descriptor->map_descriptor(BfDescriptorModelMtxUsage, frame_index, &data);
       {
@@ -50,8 +57,14 @@ public:
          { 
             obj->control().mapModel(frame_index, offset, data);
          }
+         offset = 0;
+         for (const auto& obj : m_rootObjects) 
+         { 
+            obj->control().mapModel(frame_index, offset, ndata);
+         }
       }
       m_descriptor->unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);
+      desc.unmap();
 
       // clang-format on
    }

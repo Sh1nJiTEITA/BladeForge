@@ -250,6 +250,11 @@ struct BfDescriptorSet
 
    VkDescriptorSetLayout& layoutHandle() noexcept { return m_layout; }
    VkDescriptorSet& setHandle(int frame) noexcept { return m_sets[frame]; }
+   
+   template <typename T>
+   T& get(uint8_t binding) { 
+      return static_cast<T&>(*m_desc[binding]);
+   }
 
 private:
    std::vector< std::unique_ptr< BfDescriptor > > m_desc;
@@ -378,9 +383,41 @@ struct BfDescriptorManager {
       }
    }
    
+   void bindSets(
+      E layout, 
+      int frame,
+      VkCommandBuffer cb, 
+      VkPipelineLayout pllayout
+   ) { 
+      vkCmdBindDescriptorSets(
+         cb,
+         VK_PIPELINE_BIND_POINT_GRAPHICS,
+         pllayout,
+         static_cast<uint32_t>(layout),
+         1,
+         &m_set[layout]->setHandle(frame),
+         0,                  
+         nullptr            
+   );
+   }
+
+   auto getAllLayouts() -> std::vector< VkDescriptorSetLayout > { 
+      std::vector< VkDescriptorSetLayout > l;
+      for (auto& [layout, set] : m_set) { 
+         l.push_back(set->layoutHandle());
+      }
+      return l;
+   }
+   
    void cleanup() { 
       m_pool.reset();
       m_set.clear();
+   }
+
+   template< typename T> 
+   T& get(E layout, uint8_t binding) { 
+      auto& ptr = m_set[layout];
+      return ptr->template get<T&>(binding);
    }
 
    ~BfDescriptorManager() { cleanup(); }

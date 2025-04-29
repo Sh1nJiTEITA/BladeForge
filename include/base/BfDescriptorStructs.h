@@ -32,7 +32,8 @@ struct BfDescriptorUBO : public BfDescriptor
              VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
              true,
              false,
-             VK_SHADER_STAGE_ALL
+             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
+                 VK_SHADER_STAGE_FRAGMENT_BIT
          )
    {
       fmt::println("Creating descriptor UBO");
@@ -43,7 +44,7 @@ struct BfDescriptorUBO : public BfDescriptor
       m_buffer = std::make_unique< obj::BfBuffer >( 
          sizeof(BfUniformView),
          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-         VMA_MEMORY_USAGE_AUTO,
+         VMA_MEMORY_USAGE_CPU_TO_GPU,
          0
       );
    }
@@ -51,6 +52,15 @@ struct BfDescriptorUBO : public BfDescriptor
    virtual void createImage() override { }
    virtual void createView() override { }
    // clang-format on
+
+   void map(const BfUniformView& ubo)
+   {
+      void* data = m_buffer->map();
+      {
+         memcpy(data, &ubo, sizeof(ubo));
+      }
+      m_buffer->unmap();
+   }
 };
 
 struct BfDescriptorModel : public BfDescriptor
@@ -62,7 +72,9 @@ struct BfDescriptorModel : public BfDescriptor
              VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
              true,
              false,
-             VK_SHADER_STAGE_ALL
+             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
+                 VK_SHADER_STAGE_FRAGMENT_BIT
+
          )
    {
       fmt::println("Creating descriptor MODEL");
@@ -80,6 +92,10 @@ struct BfDescriptorModel : public BfDescriptor
 
    virtual void createImage() override { }
    virtual void createView() override { }
+
+   void* map() { return m_buffer->map(); }
+   void unmap() { m_buffer->unmap(); }
+
    // clang-format on
 
    inline static const uint32_t maxUniqueObjects = 10000;

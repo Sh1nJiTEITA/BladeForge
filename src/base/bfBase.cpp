@@ -8,6 +8,7 @@
 
 #include <stdexcept>
 
+#include "BfDescriptorStructs.h"
 #include "bfAllocator.h"
 #include "bfCamera.h"
 #include "bfDescriptor.h"
@@ -3414,26 +3415,39 @@ bfMainRecordCommandBuffer(BfBase& base)
       vkCmdSetScissor(local_buffer, 0, 1, &scissor);
 
       // Bind descriptor sets to pipeline-layouts
-      base.descriptor.bind_desc_sets(  // GLOBAL
-          BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
+      // base.descriptor.bind_desc_sets(  // GLOBAL
+      //     BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
+      //     base.current_frame,
+      //     local_buffer,
+      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+      //     0
+      // );
+      // base.descriptor.bind_desc_sets(  // MAIN
+      //     BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
+      //     base.current_frame,
+      //     local_buffer,
+      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+      //     1
+      // );
+      // base.descriptor.bind_desc_sets(  // MAIN
+      //     BfEnDescriptorSetLayoutType::BfDescriptorSetTexture,
+      //     base.current_frame,
+      //     local_buffer,
+      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+      //     2
+      // );
+      auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+      man.bindSets(
+          base::desc::own::SetType::Main,
           base.current_frame,
           local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-          0
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
       );
-      base.descriptor.bind_desc_sets(  // MAIN
-          BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
+      man.bindSets(
+          base::desc::own::SetType::Global,
           base.current_frame,
           local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-          1
-      );
-      base.descriptor.bind_desc_sets(  // MAIN
-          BfEnDescriptorSetLayoutType::BfDescriptorSetTexture,
-          base.current_frame,
-          local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-          2
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
       );
 
       // base.layer_handler.draw(local_buffer);
@@ -3801,6 +3815,13 @@ bfUpdateUniformViewNew(BfBase& base)
        BfDescriptorViewDataUsage,
        base.current_frame
    );
+
+   auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+   auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
+       base::desc::own::SetType::Main,
+       0
+   );
+   desc.map(ubo);
 }
 
 void
