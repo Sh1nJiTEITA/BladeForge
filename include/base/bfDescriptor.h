@@ -5,7 +5,6 @@
 #include "bfDrawObjectBuffer.h"
 #include "bfSingle.h"
 #include "bfVariative.hpp"
-#include "stb_image.h"
 #include <algorithm>
 #include <filesystem>
 #include <fmt/format.h>

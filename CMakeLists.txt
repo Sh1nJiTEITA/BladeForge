@@ -277,10 +277,8 @@ add_library(bfinteractionlib STATIC ${BF_INTERACTION})
 target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
 target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
 
-set(BF_OTHER
-    "include/other/bfVariative.hpp" "include/other/bfMath.hpp"
-    "src/other/bfMath.cpp" "src/other/bfTextureLoad.cpp"
-    "src/other/bfConfigManager.cpp")
+set(BF_OTHER "include/other/bfVariative.hpp" "include/other/bfMath.hpp"
+             "src/other/bfMath.cpp" "src/other/bfConfigManager.cpp")
 
 add_library(bfotherlib STATIC ${BF_OTHER})
 target_link_libraries(bfotherlib PUBLIC bfexternallib)

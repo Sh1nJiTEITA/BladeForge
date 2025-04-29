@@ -15,7 +15,6 @@
 #include "bfConsole.h"
 #include "bfEvent.h"
 #include "bfGui.h"
-#include "bfTextureLoad.h"
 
 #define BF_APP_NAME "BladeForge"
 #define BF_APP_VERSION "0.001"
@@ -30,8 +29,8 @@ private:
    BfGui __gui;
    BfCamera __cam;
 
-   BfDrawLayer *__blade_bases = nullptr;
-   BfDrawLayer *__other_layer = nullptr;
+   BfDrawLayer* __blade_bases = nullptr;
+   BfDrawLayer* __other_layer = nullptr;
 
    void __process_keys();
    void __poll_events();

@@ -1,4 +1,9 @@
 #include "bfDescriptor.h"
+#include "bfVariative.hpp"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace base
 {
 namespace desc
