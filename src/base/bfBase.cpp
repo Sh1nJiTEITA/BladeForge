@@ -15,7 +15,7 @@
 #include "bfEvent.h"
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
-#include "bfTexture.h"
+// #include "bfTexture.h"
 #include "implot.h"
 
 #define IMGUI_ENABLE_DOCKING
