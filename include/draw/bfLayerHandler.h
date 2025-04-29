@@ -6,23 +6,22 @@
 #include <functional>
 #include <stdexcept>
 
-#include "bfDescriptor.h"
 #include "bfDrawObject.h"
 #include "bfVariative.hpp"
 
 class BfLayerHandler
 {
-   std::vector<std::shared_ptr<BfDrawLayer>> __layers;
+   std::vector< std::shared_ptr< BfDrawLayer > > __layers;
    //
-   BfDescriptor* __pDescriptor;
+   // BfDescriptor* __pDescriptor;
    static BfLayerHandler* __pInstance;
    VmaAllocator* __pAllocator;
 
    struct __varTransaction
    {
-      std::optional<BfDrawLayer::itptrVar_t> what;
-      std::optional<BfDrawLayer::ptrLayer_t> above;
-      std::optional<BfDrawLayer::ptrLayer_t> root;
+      std::optional< BfDrawLayer::itptrVar_t > what;
+      std::optional< BfDrawLayer::ptrLayer_t > above;
+      std::optional< BfDrawLayer::ptrLayer_t > root;
    };
 
 public:
@@ -33,19 +32,19 @@ public:
    static BfLayerHandler* instance() noexcept;
    VmaAllocator* allocator() noexcept;
 
-   BfEvent bind_descriptor(BfDescriptor* desc);
+   // BfEvent bind_descriptor(BfDescriptor* desc);
    BfEvent bind_allocator(VmaAllocator* allocator);
    // TODO: Remake pipelines
 
-   BfEvent add(std::shared_ptr<BfDrawLayer> pLayer);
+   BfEvent add(std::shared_ptr< BfDrawLayer > pLayer);
 
    BfEvent move_inner(
        size_t what_id,
        size_t where_id,
-       std::function<void(int)> err_msg = nullptr
+       std::function< void(int) > err_msg = nullptr
    );
    BfEvent swap_inner(
-       size_t f_id, size_t s_id, std::function<void(int)> err_msg = nullptr
+       size_t f_id, size_t s_id, std::function< void(int) > err_msg = nullptr
    );
 
    void del(size_t id);
@@ -57,11 +56,11 @@ public:
    void map_model_matrices(size_t frame_index);
    void draw(VkCommandBuffer command_buffer);
 
-   std::shared_ptr<BfDrawLayer> get_layer_by_index(size_t index);
-   std::shared_ptr<BfDrawLayer> get_layer_by_id(size_t id);
+   std::shared_ptr< BfDrawLayer > get_layer_by_index(size_t index);
+   std::shared_ptr< BfDrawLayer > get_layer_by_id(size_t id);
 
-   std::shared_ptr<BfDrawLayer>& get_ref_find_layer(size_t id);
-   std::shared_ptr<BfDrawObj>& get_ref_find_obj(size_t id);
+   std::shared_ptr< BfDrawLayer >& get_ref_find_layer(size_t id);
+   std::shared_ptr< BfDrawObj >& get_ref_find_obj(size_t id);
 
    BfDrawLayer::layerPair get_it_layer(size_t id);
    BfDrawLayer::objPair get_it_obj(size_t id);

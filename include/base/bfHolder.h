@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "bfBuffer.h"
-#include "bfDescriptor.h"
 #include "bfEvent.h"
 #include "bfPhysicalDevice.h"
 #include "bfVertex2.hpp"

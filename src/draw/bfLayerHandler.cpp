@@ -10,7 +10,7 @@
 #include "bfEvent.h"
 
 BfLayerHandler::BfLayerHandler(size_t reserved_layer_count)
-    : __pDescriptor{nullptr}
+// : __pDescriptor{nullptr}
 {
    if (__pInstance)
    {
@@ -52,26 +52,28 @@ BfLayerHandler::allocator() noexcept
    return __pAllocator;
 }
 
-BfEvent
-BfLayerHandler::bind_descriptor(BfDescriptor* desc)
-{
-   BfSingleEvent event{};
-   event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
-
-   if (desc == nullptr)
-   {
-      event.action = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE;
-      event.success = false;
-      __pDescriptor = nullptr;
-   }
-   else
-   {
-      event.action = BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS;
-      event.success = true;
-      __pDescriptor = desc;
-   }
-   return event;
-}
+// BfEvent
+// BfLayerHandler::bind_descriptor(BfDescriptor* desc)
+// {
+//    BfSingleEvent event{};
+//    event.type = BF_SINGLE_EVENT_TYPE_INITIALIZATION_EVENT;
+//
+//    if (desc == nullptr)
+//    {
+//       event.action =
+//       BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_FAILURE;
+//       event.success = false;
+//       // __pDescriptor = nullptr;
+//    }
+//    else
+//    {
+//       event.action =
+//       BF_ACTION_TYPE_BIND_BFDESCRIPTOR_TO_LAYER_HANDLER_SUCCESS;
+//       event.success = true;
+//       __pDescriptor = desc;
+//    }
+//    return event;
+// }
 
 BfEvent
 BfLayerHandler::bind_allocator(VmaAllocator* allocator)
