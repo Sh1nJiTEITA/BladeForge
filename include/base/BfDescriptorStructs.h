@@ -1,13 +1,14 @@
 #pragma once
-#include "bfDrawObjectBuffer.h"
-#include "bfUniforms.h"
-#include "bfVariative.hpp"
-#include <fmt/color.h>
-#include <vulkan/vulkan_core.h>
+
 #ifndef BF_DESCRIPTOR_STRUCTS_H
 #define BF_DESCRIPTOR_STRUCTS_H
 
+#include "bfDrawObjectBuffer.h"
+#include "bfUniforms.h"
+#include "bfVariative.hpp"
 #include <bfDescriptor2.h>
+#include <fmt/color.h>
+#include <vulkan/vulkan_core.h>
 
 namespace base
 {
@@ -74,7 +75,6 @@ struct BfDescriptorModel : public BfDescriptor
              false,
              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
                  VK_SHADER_STAGE_FRAGMENT_BIT
-
          )
    {
       fmt::println("Creating descriptor MODEL");
@@ -101,6 +101,14 @@ struct BfDescriptorModel : public BfDescriptor
    inline static const uint32_t maxUniqueObjects = 10000;
 };
 
+struct BfDescriptorTextureTest : public BfDescriptorTexture
+{
+   BfDescriptorTextureTest()
+       : BfDescriptorTexture{"./resources/test.jpg", 2, 0}
+   {
+   }
+};
+
 struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
 {
    static BfDescriptorManager< SetType >& manager()
@@ -119,6 +127,7 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
          auto& man = this->manager();
          man.add< BfDescriptorUBO >();
          man.add< BfDescriptorModel >();
+         man.add< BfDescriptorTextureTest >();
 
 
          std::vector< VkDescriptorPoolSize > sizes = {

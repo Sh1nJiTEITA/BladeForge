@@ -1439,9 +1439,9 @@ bfInitOwnDescriptors(BfBase& base)
 
    base.descriptor.add_descriptor_create_info(infos);
 
-   auto test_texture =
-       std::make_shared< base::texture::BfTexture >("./resources/test.jpg");
-   base.descriptor.add_texture(test_texture);
+   // auto test_texture =
+   //     std::make_shared< base::texture::BfTexture >("./resources/test.jpg");
+   // base.descriptor.add_texture(test_texture);
 
    base.descriptor.allocate_desc_buffers();
    base.descriptor.allocate_desc_images();
@@ -3449,6 +3449,12 @@ bfMainRecordCommandBuffer(BfBase& base)
           local_buffer,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
       );
+      man.bindSets(
+          base::desc::own::SetType::Texture,
+          base.current_frame,
+          local_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+      );
 
       // base.layer_handler.draw(local_buffer);
 
@@ -3858,7 +3864,7 @@ bfCreateSampler(BfBase& base)
    // {
    //    throw std::runtime_error("Failed to create texture sampler!");
    // }
-   base.sampler = std::make_unique< base::texture::BfSampler >();
+   base.sampler = std::make_unique< base::desc::BfSampler >();
    base::g::bindSampler(&base.sampler->handle());
 }
 

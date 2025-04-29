@@ -1,9 +1,8 @@
 #ifndef BF_BASE_H
 #define BF_BASE_H
 
-#include <filesystem>
-
 #include "bfDescriptor.h"
+#include "bfDescriptor2.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"
@@ -16,6 +15,7 @@
 #include "bfVariative.hpp"
 #include "bfVertex2.hpp"
 #include "bfWindow.h"
+#include <filesystem>
 
 #define MAX_UNIQUE_DRAW_OBJECTS 10000
 
@@ -78,8 +78,7 @@ struct BfBase
 
    VkDescriptorPool gui_descriptor_pool;
 
-   // VkSampler sampler;
-   std::unique_ptr< base::texture::BfSampler > sampler;
+   std::unique_ptr< base::desc::BfSampler > sampler;
 
    BfLayerHandler layer_handler;
    BfLayerKiller layer_killer;
