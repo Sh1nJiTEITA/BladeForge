@@ -1,7 +1,7 @@
 #ifndef BF_BASE_H
 #define BF_BASE_H
 
-#include "bfDescriptor2.h"
+#include "bfDescriptor.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
 #include "bfIconsFontAwesome6.h"

@@ -6,7 +6,7 @@
 #include "bfDrawObjectBuffer.h"
 #include "bfUniforms.h"
 #include "bfVariative.hpp"
-#include <bfDescriptor2.h>
+#include <bfDescriptor.h>
 #include <fmt/color.h>
 #include <vulkan/vulkan_core.h>
 
