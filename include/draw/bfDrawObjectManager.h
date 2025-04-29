@@ -3,8 +3,7 @@
 
 #include <stdexcept>
 
-#include "BfDescriptorStructs.h"
-#include "bfDescriptor.h"
+#include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 
 namespace obj
@@ -20,8 +19,6 @@ public:
       static BfDrawManager m;
       return m;
    }
-
-   void bindDescriptor(BfDescriptor* descriptor) { m_descriptor = descriptor; }
 
    void setHovered(uint32_t id) { m_hoveredid = id; }
    uint32_t getHovered() noexcept { return m_hoveredid; }
@@ -49,21 +46,13 @@ public:
       );
       
       void* ndata = desc.map();
-      void* data;
-      m_descriptor->map_descriptor(BfDescriptorModelMtxUsage, frame_index, &data);
       {
          size_t offset = 0;
-         for (const auto& obj : m_rootObjects) 
-         { 
-            obj->control().mapModel(frame_index, offset, data);
-         }
-         offset = 0;
          for (const auto& obj : m_rootObjects) 
          { 
             obj->control().mapModel(frame_index, offset, ndata);
          }
       }
-      m_descriptor->unmap_descriptor(BfDescriptorModelMtxUsage, frame_index);
       desc.unmap();
 
       // clang-format on
@@ -99,7 +88,6 @@ public:
 
 private:
    uint32_t m_hoveredid;
-   BfDescriptor* m_descriptor;
    std::vector< BfObj > m_rootObjects;
 };
 

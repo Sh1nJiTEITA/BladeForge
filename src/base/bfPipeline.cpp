@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <utility>
 
-#include "BfDescriptorStructs.h"
 #include "bfBase.h"
+#include "bfDescriptorStructs.h"
 
 std::unique_ptr< BfPipelineHandler > BfPipelineHandler::__instance =
     std::unique_ptr< BfPipelineHandler >(new BfPipelineHandler);
@@ -506,9 +506,7 @@ BfPipelineInterfaceStd::genDepthStencilState()
 }
 
 BfPipelineInterface::L_t
-BfPipelineInterfaceStd::genLayout(
-    const VkDevice& device, const BfDescriptor& desc
-)
+BfPipelineInterfaceStd::genLayout(const VkDevice& device)
 {
    // clang-format off
    // __descriptorSetLayouts = std::move(desc.getAllLayouts());

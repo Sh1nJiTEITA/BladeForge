@@ -15,7 +15,6 @@
 #include <unordered_map>
 
 #include "bfBase.h"
-#include "bfDescriptor.h"
 #include "bfVariative.hpp"
 
 namespace fs = std::filesystem;
@@ -311,7 +310,7 @@ struct BfPipelineInterface
     * @return VkPipelineLayoutCreateInfo => a structure defining the pipeline
     * layout.
     */
-   virtual L_t genLayout(const VkDevice& device, const BfDescriptor& desc) = 0;
+   virtual L_t genLayout(const VkDevice& device) = 0;
 };
 
 class BfPipelineInterfaceStd : public BfPipelineInterface
@@ -332,7 +331,7 @@ public:
    virtual M_t genMultisampleState() override;
    virtual CB_t genColorBlendAttachmentState() override;
    virtual DS_t genDepthStencilState() override;
-   virtual L_t genLayout(const VkDevice& device, const BfDescriptor& desc) override;
+   virtual L_t genLayout(const VkDevice& device) override;
    // clang-format on
 };
 

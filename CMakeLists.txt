@@ -235,7 +235,7 @@ set(BF_BASE
     "include/base/bfVertex2.hpp"
     "src/base/bfBase.cpp"
     "src/base/bfBuffer.cpp"
-    "src/base/bfDescriptor.cpp"
+    "src/base/bfDescriptor2.cpp"
     "src/base/bfPhysicalDevice.cpp"
     "src/base/bfSwapChain.cpp"
     "src/base/bfUniforms.cpp"

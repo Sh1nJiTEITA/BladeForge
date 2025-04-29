@@ -1,7 +1,6 @@
 #ifndef BF_BASE_H
 #define BF_BASE_H
 
-#include "bfDescriptor.h"
 #include "bfDescriptor2.h"
 #include "bfEvent.h"
 #include "bfHolder.h"
@@ -71,8 +70,6 @@ struct BfBase
 
    VkRenderPass standart_render_pass;
    VkRenderPass gui_render_pass;
-
-   BfDescriptor descriptor;
 
    VkCommandPool command_pool;
 
@@ -226,7 +223,6 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 // CleanUp's
 BfEvent bfCleanUpSwapchain(BfBase& base);
 
-void bfUpdateUniformView(BfBase& base);
 void bfUpdateUniformViewNew(BfBase& base);
 void bfUpdateUniformBuffer(BfBase& base);
 

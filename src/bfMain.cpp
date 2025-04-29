@@ -3,7 +3,6 @@
 #include <cassert>
 #include <memory>
 
-#include "BfDescriptorStructs.h"
 #include "bfAllocator.h"
 #include "bfAxis.h"
 #include "bfBase.h"
@@ -12,6 +11,7 @@
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
 #include "bfCurves4.h"
+#include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
 #include "bfPipeline.h"
@@ -164,7 +164,7 @@ BfMain::__init()
 
    BfPipelineHandler::instance()->createLayout(
        BfPipelineLayoutType_Main,
-       __base.descriptor.getAllLayouts()
+       story.manager().getAllLayouts()
    );
    BfPipelineHandler::instance()->create< BfPipelineBuilderLine >(
        BfPipelineType_Lines,
