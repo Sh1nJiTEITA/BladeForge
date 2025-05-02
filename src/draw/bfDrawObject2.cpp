@@ -267,9 +267,6 @@ BfDrawControlProxy::updateBuffer(
              size
          );
          *off_i += size;
-
-         // innerMap(g.vertices(), sizeof(BfVertex3), v, off_v);
-         // innerMap(g.indices(), sizeof(uint32_t), i, off_i);
       }
       // If current DrawObject is LAYER -> iterate over
       // children and search for OBJECTs to map data or
@@ -432,17 +429,7 @@ BfDrawObjectBase::BfDrawObjectBase(
    // }
 }
 
-std::shared_ptr<BfDrawObjectBase>
-BfDrawObjectBase::clone() const
-{
-   return std::make_shared<BfDrawObjectBase>(
-       BfTypeManager::inst().getTypeNameByTypeId(m_type),
-       m_pipeline,
-       m_type,
-       0,
-       0
-   );
-}
+
 
 void
 BfDrawObjectBase::add(BfObj n)
@@ -544,17 +531,7 @@ BfDrawObject::make()
    throw std::runtime_error("[BfDrawObject] make() method must be implemented");
 }
 
-std::shared_ptr<BfDrawObjectBase>
-BfDrawObject::clone() const
-{
-   auto pre_cloned = std::make_shared<BfDrawObject>(
-       BfTypeManager::inst().getTypeNameByTypeId(type()),
-       m_pipeline,
-       m_discretization
-   );
-   pre_cloned->copy(*this);
-   return pre_cloned;
-}
+
 
 void
 BfDrawObject::_genIndicesStandart()

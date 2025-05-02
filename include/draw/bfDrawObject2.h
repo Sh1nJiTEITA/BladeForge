@@ -223,8 +223,6 @@ public:
        size_t max_obj = 20
    );
 
-   virtual std::shared_ptr< BfDrawObjectBase > clone() const;
-
    /**
     *
     *
@@ -275,12 +273,6 @@ public:
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
 
    BfObj root();
-   virtual void copy(const BfDrawObjectBase& obj)
-   {
-      m_root = obj.m_root;
-      m_modelMatrix = obj.m_modelMatrix;
-      m_pipeline = obj.m_pipeline;
-   }
 
    virtual bool toggleRender(int sts = -1)
    {
@@ -340,17 +332,6 @@ public:
    void add() = delete;
 
    glm::vec3& color() { return m_color; }
-
-   virtual void copy(const BfDrawObjectBase& obj) override
-   {
-      BfDrawObjectBase::copy(obj);
-
-      const auto& casted = static_cast< const BfDrawObject& >(obj);
-      m_color = casted.m_color;
-      m_discretization = casted.m_discretization;
-   }
-
-   virtual std::shared_ptr< BfDrawObjectBase > clone() const override;
 
 protected:
    /**

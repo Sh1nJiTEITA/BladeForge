@@ -144,21 +144,6 @@ public:
       _genIndicesStandart();
    }
 
-   virtual std::shared_ptr< BfDrawObjectBase > clone() const override
-   {
-      auto cloned = std::make_shared< BfCircleCenter< T > >(m_center, m_radius);
-      cloned->copy(*this);
-      return cloned;
-   }
-
-   virtual void copy(const BfDrawObjectBase& obj) override
-   {
-      BfDrawObject::copy(obj);
-      const auto& casted = static_cast< const BfCircleCenter< T >& >(obj);
-      m_radius = casted.m_radius;
-      m_center = casted.m_center;
-   }
-
 private:
    float m_radius;
    T m_center;
@@ -199,21 +184,6 @@ public:
           )
       );
       _genIndicesStandart();
-   }
-
-   virtual std::shared_ptr< BfDrawObjectBase > clone() const override
-   {
-      auto cloned = std::make_shared< BfCircle2Vertices >(m_center, m_other);
-      cloned->copy(*this);
-      return cloned;
-   }
-
-   virtual void copy(const BfDrawObjectBase& obj) override
-   {
-      BfDrawObject::copy(obj);
-      const auto& casted = static_cast< const BfCircle2Vertices& >(obj);
-      m_other = casted.m_other;
-      m_center = casted.m_center;
    }
 
 private:
@@ -289,37 +259,22 @@ public:
       }
    }
 
-   virtual std::shared_ptr<BfDrawObjectBase> clone() const override
-   {
-      auto cloned = std::make_shared<BfCircleCenterFilled>(m_center, m_radius);
-      cloned->copy(*this);
-      return cloned;
-   }
-
-   virtual void copy(const BfDrawObjectBase& obj) override
-   {
-      BfDrawObject::copy(obj);
-      const auto& casted = static_cast<const BfCircleCenterFilled&>(obj);
-      m_radius = casted.m_radius;
-      m_center = casted.m_center;
-   }
+   
 
 protected:
    float m_radius;
    BfVertex3Uni m_center;
 };
 
-class BfHandle : public BfCircleCenterFilled
+class BfHandleCircle : public BfCircleCenterFilled
                , public BfHandleBehavior
 {
 public:
    template <typename T>
-   BfHandle(T&& center, float radius)
+   BfHandleCircle(T&& center, float radius)
        : BfCircleCenterFilled(std::forward<T>(center), radius)
    {
    }
-
-   virtual void copy(const BfDrawObjectBase& obj) override { }
 
    virtual void processDragging() override {
       BfHandleBehavior::processDragging();
@@ -334,67 +289,13 @@ public:
       }
    }
 
-   // virtual void processDragging() override
-   // {
-   //    bool is_dragging =
-   //        ((this->m_isHovered || m_isDraggingStarted) &&
-   //         ImGui::IsMouseDown(ImGuiMouseButton_Left));
-   //
-   //    auto inst = BfCamera::m_pInstance;
-   //    if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
-   //    {
-   //       // Calculate the initial offset between the object's center and the
-   //       // mouse position
-   //
-   //       if (!m_isDraggingStarted)
-   //       {
-   //          // Store the initial positions when the dragging starts
-   //          m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
-   //          m_initialCenterPos = this->center().pos;
-   //          m_isDraggingStarted = true;
-   //       }
-   //
-   //       // Calculate the difference (offset) between the initial mouse position
-   //       // and the center of the object
-   //       glm::vec3 mouse_offset =
-   //           BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
-   //
-   //       // Update the object’s center position based on this offset, keeping it
-   //       // relative
-   //       this->center().pos = m_initialCenterPos + mouse_offset;
-   //
-   //       // You can make your copy if necessary, or just continue with the
-   //       // camera update
-   //       // this->make();
-   //       m_isChanged = true;
-   //
-   //       this->root()->make();
-   //       this->root()->control().updateBuffer(true);
-   //    }
-   //    else
-   //    {
-   //       m_isDraggingStarted = false;
-   //    }
-   // }
-
-
    virtual void make() override { 
       BfCircleCenterFilled::make();
       m_isChanged = false;
    }
 
-   std::shared_ptr<BfDrawObjectBase> clone() const override
-   {
-      auto cloned = std::make_shared<BfHandle>(this->m_center, this->m_radius);
-      cloned->copy(*this);
-      return cloned;
-   }
-
    bool isChanged() const noexcept { return m_isChanged; }
-
-   void resetPos() { 
-      m_initialCenterPos = m_center.pos();
-   }
+   void resetPos() { m_initialCenterPos = m_center.pos(); }
 
 private:
    glm::vec3 m_initialMousePos;
@@ -543,7 +444,7 @@ public:
 
       for (auto& v : *curve)
       {
-         handles_layer->add(std::make_shared<curves::BfHandle>(v.getp(), 0.01f));
+         handles_layer->add(std::make_shared<curves::BfHandleCircle>(v.getp(), 0.01f));
       }
 
       auto lines_layer = std::make_shared<obj::BfDrawLayer>("Lines layer");
@@ -579,12 +480,12 @@ public:
       for (size_t i = 0; i < new_vertices.size() - 1; ++i) 
       { 
          (*this)[i].pos() = new_vertices[i].pos();
-         auto handle = std::static_pointer_cast<curves::BfHandle>(handles_layer->children()[i]);
+         auto handle = std::static_pointer_cast<curves::BfHandleCircle>(handles_layer->children()[i]);
          handle->resetPos();
       }
       this->push_back(*new_vertices.rbegin());
 
-      handles_layer->add(std::make_shared< curves::BfHandle >(this->rbegin()->getp(), 0.01f));
+      handles_layer->add(std::make_shared< curves::BfHandleCircle >(this->rbegin()->getp(), 0.01f));
       lines_layer->add(std::make_shared< curves::BfSingleLine >(this->rbegin()->getp(), (this->rbegin() + 1)->getp()));
 
       auto casted_curve = std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
@@ -606,7 +507,7 @@ public:
       for (size_t i = 0; i < new_vertices.size(); ++i) 
       { 
          (*this)[i].pos() = new_vertices[i].pos();
-         auto handle = std::static_pointer_cast<curves::BfHandle>(handles_layer->children()[i]);
+         auto handle = std::static_pointer_cast<curves::BfHandleCircle>(handles_layer->children()[i]);
          handle->resetPos();
       }
 
@@ -618,7 +519,7 @@ public:
 
    bool toggleHandle(size_t i, int status = -1){ 
       auto handles = std::static_pointer_cast<obj::BfDrawLayer>(m_children[1]);
-      auto handle = std::static_pointer_cast<curves::BfHandle>(handles->children()[i]);
+      auto handle = std::static_pointer_cast<curves::BfHandleCircle>(handles->children()[i]);
       return handle->toggleRender(status);
    }
 
@@ -656,11 +557,11 @@ public:
        , m_right{std::forward<U>(right)}
    {
       // clang-format off
-      auto lHandle = std::make_shared< curves::BfHandle >(
+      auto lHandle = std::make_shared< curves::BfHandleCircle >(
          m_left.getp(), 0.01f
       );
       this->add(lHandle);
-      auto rHandle = std::make_shared< curves::BfHandle >(
+      auto rHandle = std::make_shared< curves::BfHandleCircle >(
          m_right.getp(), 0.01f
       );
       this->add(rHandle);
@@ -678,14 +579,14 @@ public:
    BfVertex3Uni& right() { return m_right; }
    const BfVertex3Uni& right() const { return m_right; }
 
-   std::shared_ptr< curves::BfHandle > leftHandle()
+   std::shared_ptr< curves::BfHandleCircle > leftHandle()
    {
-      return std::static_pointer_cast< curves::BfHandle >(m_children[0]);
+      return std::static_pointer_cast< curves::BfHandleCircle >(m_children[0]);
    }
 
-   std::shared_ptr< curves::BfHandle > rightHandle()
+   std::shared_ptr< curves::BfHandleCircle > rightHandle()
    {
-      return std::static_pointer_cast< curves::BfHandle >(m_children[1]);
+      return std::static_pointer_cast< curves::BfHandleCircle >(m_children[1]);
    }
 
    std::shared_ptr< curves::BfSingleLine > line()
@@ -695,8 +596,8 @@ public:
 
    // clang-format off
    virtual bool isChanged() const noexcept { 
-      return std::static_pointer_cast<curves::BfHandle>(m_children[0])->isChanged() ||
-             std::static_pointer_cast<curves::BfHandle>(m_children[1])->isChanged();
+      return std::static_pointer_cast<curves::BfHandleCircle>(m_children[0])->isChanged() ||
+             std::static_pointer_cast<curves::BfHandleCircle>(m_children[1])->isChanged();
    }
    // clang-format on
 
@@ -738,13 +639,13 @@ public:
       );
       this->add(circle);
 
-      auto center_handle = std::make_shared<curves::BfHandle>(
+      auto center_handle = std::make_shared<curves::BfHandleCircle>(
          m_center.getp(),
          0.01f
       );
       this->add(center_handle);
 
-      auto r_handle = std::make_shared<curves::BfHandle>(
+      auto r_handle = std::make_shared<curves::BfHandleCircle>(
          m_other.getp(),
          0.01f
       );
@@ -813,19 +714,19 @@ public:
    }
 
    // clang-format off
-   std::shared_ptr< BfHandle > centerHandle() {
-      return std::static_pointer_cast< BfHandle >(m_children[1]);
+   std::shared_ptr< BfHandleCircle > centerHandle() {
+      return std::static_pointer_cast< BfHandleCircle >(m_children[1]);
    }
 
-   std::shared_ptr< BfHandle > otherHandle() {
-      return std::static_pointer_cast< BfHandle >(m_children[2]);
+   std::shared_ptr< BfHandleCircle > otherHandle() {
+      return std::static_pointer_cast< BfHandleCircle >(m_children[2]);
    }
 
    
 
    virtual bool isChanged() const noexcept { 
-      return std::static_pointer_cast<curves::BfHandle>(m_children[1])->isChanged() ||
-             std::static_pointer_cast<curves::BfHandle>(m_children[2])->isChanged();
+      return std::static_pointer_cast<curves::BfHandleCircle>(m_children[1])->isChanged() ||
+             std::static_pointer_cast<curves::BfHandleCircle>(m_children[2])->isChanged();
    }
    // clang-format on
 
@@ -910,7 +811,7 @@ public:
       
       glm::vec3 circle_center = circle->center().pos;
       glm::vec3 direction_to_handle = glm::normalize(circle_center - m_center.pos());
-      auto handle = std::make_shared<curves::BfHandle>(
+      auto handle = std::make_shared<curves::BfHandleCircle>(
          BfVertex3( 
             circle_center + direction_to_handle * m_radius.get(),
             m_center.color(),
@@ -973,9 +874,9 @@ public:
       return std::static_pointer_cast<curves::BfCircle2Lines>(m_children[0]);
    }
 
-   std::shared_ptr<curves::BfHandle> handle()  
+   std::shared_ptr<curves::BfHandleCircle> handle()  
    {
-      return std::static_pointer_cast<curves::BfHandle>(m_children[1]);
+      return std::static_pointer_cast<curves::BfHandleCircle>(m_children[1]);
    }
    
    BfVar<float>& radius() noexcept { 
