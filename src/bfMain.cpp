@@ -14,6 +14,7 @@
 #include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
+#include "bfHandle.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
 #include "bfWindow.h"
@@ -93,6 +94,19 @@ BfMain::_pollEvents()
    // __gui.updateFonts();
    m_gui.pollEvents();
    m_cam.update();
+
+   // TODO: REMAKE !
+   obj::BfGuiIntegration::runtimeID = 0;
+}
+
+void
+BfMain::_processSelfInteraction()
+{
+   while (!base::g::intrstack().empty())
+   {
+      base::g::intrstack().top()();
+      base::g::intrstack().pop();
+   }
 }
 
 void
@@ -130,6 +144,7 @@ BfMain::_init()
        &m_base.command_pool
        // &__base.sampler->handle()
    );
+   base::g::bindStack(&m_base.self_interaction);
 
    bfCreateSampler(m_base);
 
@@ -292,7 +307,7 @@ BfMain::_loop()
    bs->make();
 
    mainRoot->add(bs);
-   auto tp = std::make_shared< obj::curves::BfTexturePlane >();
+   auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
    tp->make();
    mainRoot->add(tp);
    mainRoot->control().updateBuffer();
@@ -305,11 +320,13 @@ BfMain::_loop()
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
+      _processSelfInteraction();
+
       m_gui.presentMenuBar();
       // __gui.presentCamera();
       // __gui.presentLayerHandler();
       m_gui.presentEventLog();
-      m_gui.presentToolType();
+      m_gui.presentTooltip();
       m_gui.presentSettings();
       // __gui.presentLuaInteraction();
       m_gui.presentFileDialog();

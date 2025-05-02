@@ -118,6 +118,8 @@ BfBladeSection::_createChord()
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
    );
+   oChord->toggleRender(false);
+   oChord->toggleRender(false);
    m_lastChordL = oChord->left().get();
    m_lastChordR = oChord->right().get();
 
@@ -129,6 +131,8 @@ BfBladeSection::_createChord()
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
    );
+   oChordLeft->toggleRender(false);
+   oChordLeft->toggleRender(false);
 
    auto oChordRight = _addPartForward<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),

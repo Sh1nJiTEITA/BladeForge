@@ -87,7 +87,7 @@ public:
    void presentMenuBar();
    void presentCamera();
    void presentEventLog();
-   void presentToolType();
+   void presentTooltip();
    void presentLeftDock();
    void presentTopDock();
    void presentSettings();

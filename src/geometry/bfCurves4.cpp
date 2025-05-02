@@ -353,6 +353,23 @@ namespace curves
 //    _genIndicesStandart();
 // }
 
+void
+BfTextureQuad::presentContextMenu()
+{
+   if (auto root = m_root.lock())
+   {
+      auto casted = std::static_pointer_cast< BfTexturePlane >(root);
+      if (ImGui::Checkbox("Lock", &m_isLocked))
+      {
+         casted->tlHandle()->toggleRender(!m_isLocked);
+         casted->trHandle()->toggleRender(!m_isLocked);
+         casted->brHandle()->toggleRender(!m_isLocked);
+         casted->blHandle()->toggleRender(!m_isLocked);
+      }
+      ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
+   }
+}
+
 } // namespace curves
 } // namespace obj
 //

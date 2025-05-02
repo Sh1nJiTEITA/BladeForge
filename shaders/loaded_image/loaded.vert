@@ -28,7 +28,6 @@ layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormals;
 
 // layout(location = 2) out vec3 outNormals;
-layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTex;
 layout(location = 2) flat out uint objectIndex;
 
@@ -40,6 +39,5 @@ void main() {
 
     gl_Position = coo;
     objectIndex = gl_BaseInstance;
-    fragTex = vec2(inNormals.x, inNormals.y); 
-    fragColor = inColor;
+    fragTex = vec2(inColor.x, inColor.y); 
 }

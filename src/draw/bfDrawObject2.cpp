@@ -314,14 +314,15 @@ BfDrawControlProxy::draw(
              *vertex_offset,
              *offset
          );
+         g.updateHoveredStatus(g.id() == hovered_id);
+
+         auto ptr = &m_obj;
+         base::g::intrstack().push([ptr]() { ptr->processInteraction(); });
       }
 
       *offset += 1;
       *index_offset += g.indices().size();
       *vertex_offset += g.vertices().size();
-
-      g.updateHoveredStatus(g.id() == hovered_id);
-      g.processInteraction();
    }
    else // IF LAYER
    {

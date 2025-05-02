@@ -6,12 +6,14 @@
 #include <glm/trigonometric.hpp>
 #include <imgui_internal.h>
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <utility>
 #include <variant>
 
 #include "bfBladeSection2.h"
 #include "bfCamera.h"
+#include "bfCurves4.h"
 #include "bfDrawObjectManager.h"
 #include "bfIconsFontAwesome6.h"
 #include "bfTypeManager.h"
@@ -344,11 +346,18 @@ BfGui::presentCamera()
 }
 
 void
-BfGui::presentToolType()
+BfGui::presentTooltip()
 {
    auto hovered_id = obj::BfDrawManager::getHovered();
    if (hovered_id)
    {
+      auto o = obj::BfDrawManager::findObjectById(hovered_id);
+      if (auto tq = std::dynamic_pointer_cast< obj::curves::BfTextureQuad >(o))
+      {
+         if (tq->isLocked())
+            return;
+      }
+
       ImGui::BeginTooltip();
 
       ImGui::Text(
@@ -358,7 +367,6 @@ BfGui::presentToolType()
       ImGui::Text("id=%i", hovered_id);
       ImGui::Separator();
 
-      auto o = obj::BfDrawManager::findObjectById(hovered_id);
       o->presentTooltipInfo();
 
       ImGui::EndTooltip();

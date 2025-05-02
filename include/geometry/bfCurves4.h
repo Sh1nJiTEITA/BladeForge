@@ -12,6 +12,7 @@
 #include <glm/gtc/epsilon.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/vector_relational.hpp>
+#include <imgui.h>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -267,7 +268,7 @@ protected:
 };
 
 class BfHandleCircle : public BfCircleCenterFilled
-               , public BfHandleBehavior
+                     , public virtual BfHandleBehavior
 {
 public:
    template <typename T>
@@ -302,6 +303,63 @@ private:
    glm::vec3 m_initialCenterPos;
    bool m_isChanged = false;
 };
+
+class BfHandleRectangle : public BfDrawObject 
+                     , public virtual BfHandleBehavior
+{
+public:
+   template <typename T>
+   BfHandleRectangle (T&& center, float side)
+       : BfDrawObject ("Square handle", BF_PIPELINE(BfPipelineType_Triangles), 200)
+       , m_center { std::forward<T>(center) }
+       , m_side { side }
+   {
+   }
+
+   virtual void processDragging() override {
+      BfHandleBehavior::processDragging();
+      if (m_isPressed) { 
+         m_initialCenterPos = center().pos();
+      }
+      if (m_isDown) { 
+         center().pos() = m_initialCenterPos + delta3D();
+         m_isChanged = true;
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
+   }
+
+   virtual void make() override { 
+      m_vertices.clear();
+      m_indices.clear();
+      auto& cp = m_center.pos();
+      auto& cn = m_center.normals();
+      float h = m_side;
+      m_vertices = { 
+         BfVertex3{ { cp.x - h, cp.y + h, cp.z }, color(), cn },
+         BfVertex3{ { cp.x + h, cp.y + h, cp.z }, color(), cn },
+         BfVertex3{ { cp.x + h, cp.y - h, cp.z }, color(), cn },
+         BfVertex3{ { cp.x - h, cp.y - h, cp.z }, color(), cn },
+      };
+      m_indices = { 0, 1, 2, 2, 0, 3 };
+      m_isChanged = false;
+   }
+   
+   BfVertex3Uni& center() { return m_center; };
+
+   bool isChanged() const noexcept { return m_isChanged; }
+   void resetPos() { m_initialCenterPos = m_center.pos(); }
+
+private:
+   glm::vec3 m_initialMousePos;
+   glm::vec3 m_initialCenterPos;
+   bool m_isChanged = false;
+   BfVertex3Uni m_center;
+   float m_side;
+};
+
+
+
 //
 //
 //
@@ -1634,38 +1692,142 @@ private:
    std::weak_ptr< BfIOCirclePack > m_opack;
 };
 
-
-
-class BfTexturePlane : public obj::BfDrawObject { 
+class BfQuad : public obj::BfDrawObject { 
 public:
-   // BfPipelineType_LoadedImage
-   BfTexturePlane() 
+   template < typename P1, typename P2, typename P3, typename P4> 
+   BfQuad(P1&& tl, P2&& tr, P3&& br, P4&& bl) 
       : obj::BfDrawObject("Texture plane", BF_PIPELINE(BfPipelineType_LoadedImage), 10)
-      // : obj::BfDrawObject("Texture plane", BF_PIPELINE(BfPipelineType_Triangles), 10)
+      , m_tl{ std::forward<P1>(tl) }
+      , m_tr{ std::forward<P2>(tr) }
+      , m_br{ std::forward<P3>(br) }
+      , m_bl{ std::forward<P4>(bl) }
    { 
    }
    
    void make() override { 
-      m_vertices = {
-          {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-          {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
-          {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-          {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.0f}}
-      };
-      m_indices = { 
-         0, 1, 2,
-         2, 0, 3
-      };
+      m_vertices.clear();
+      m_indices.clear();
+      m_vertices = { m_tl.get(), m_tr.get(), m_br.get(), m_bl.get() };
+      m_indices = { 0, 1, 2, 2, 0, 3 };
    }
+   
+   
+
+   BfVertex3Uni& tl() { return m_tl; }
+   BfVertex3Uni& tr() { return m_tr; }
+   BfVertex3Uni& br() { return m_br; }
+   BfVertex3Uni& bl() { return m_bl; }
+
+private:
+   BfVertex3Uni m_tl;
+   BfVertex3Uni m_tr;
+   BfVertex3Uni m_br;
+   BfVertex3Uni m_bl;
 };
 
-// class BfTexturePlaneWH : public obj::BfDrawLayer { 
-// public:
-//    BfTexturePlaneWH 
-//
-//
-// private:
-// }
+class BfTextureQuad : public BfQuad { 
+public:
+
+   template < typename P1, typename P2, typename P3, typename P4> 
+   BfTextureQuad(P1&& tl, P2&& tr, P3&& br, P4&& bl) 
+      : BfQuad { std::forward<P1>(tl), std::forward<P2>(tr),
+                 std::forward<P3>(br), std::forward<P4>(bl) }
+   { 
+   }
+
+   void presentContextMenu() override;
+   bool isLocked() noexcept { return m_isLocked; }
+
+   virtual BfObjectData _objectData() override { 
+      return {
+         .model_matrix = m_modelMatrix,
+         .select_color = glm::vec3(m_transp, 0.5f, 0.0f) ,
+         .index = static_cast<uint32_t>(m_isLocked ? 1 : 0),
+         .id = id(),
+         .line_thickness = 0.00025f
+      };
+   }
+
+private:
+   float m_transp = 1.0f;
+   bool m_isLocked = false;
+};
+
+class BfTexturePlane : public obj::BfDrawLayer 
+{ 
+public:
+   BfTexturePlane(float w, float h) : obj::BfDrawLayer { "Texture plane" }
+   {
+      const auto n = glm::vec3{ 0.f , 0.f, 1.f };
+      auto quad = std::make_shared< BfTextureQuad  >( 
+         BfVertex3{ glm::vec3(0, h, -.1f), glm::vec3(0.0f, 0.0f, 0.0f), n },
+         BfVertex3{ glm::vec3(w, h, -.1f), glm::vec3(1.0f, 0.0f, 0.0f), n },
+         BfVertex3{ glm::vec3(w, 0, -.1f), glm::vec3(1.0f, 1.0f, 0.0f), n },
+         BfVertex3{ glm::vec3(0, 0, -.1f), glm::vec3(0.0f, 1.0f, 0.0f), n }
+      );
+      this->add(std::make_shared< BfHandleCircle >(quad->tl().getp(),  0.01f));
+      this->add(std::make_shared< BfHandleCircle >(quad->tr().getp(),  0.01f));
+      this->add(std::make_shared< BfHandleCircle >(quad->br().getp(),  0.01f));
+      this->add(std::make_shared< BfHandleRectangle >(quad->bl().getp(),  0.01f));
+      this->add(quad);
+   }
+
+   std::shared_ptr< BfHandleCircle > tlHandle() { 
+      return std::static_pointer_cast< BfHandleCircle >(m_children[0]); 
+   }
+   std::shared_ptr< BfHandleCircle > trHandle() { 
+      return std::static_pointer_cast< BfHandleCircle >(m_children[1]); 
+   }
+   std::shared_ptr< BfHandleCircle > brHandle() { 
+      return std::static_pointer_cast< BfHandleCircle >(m_children[2]); 
+   }
+   std::shared_ptr< BfHandleRectangle > blHandle() { 
+      return std::static_pointer_cast< BfHandleRectangle >(m_children[3]); 
+   }
+
+   void make() override { 
+      auto bl = blHandle();
+      auto br = brHandle();
+      auto tr = trHandle();
+      auto tl = tlHandle();
+
+      if (bl->isChanged()) {
+         auto dir = bl->center().pos() - m_oldbl;
+         br->center().pos += dir;
+         tr->center().pos += dir;
+         tl->center().pos += dir;
+      }
+      if (br->isChanged()) {
+         br->center().pos.y = bl->center().pos().y;
+         tr->center().pos.x = br->center().pos.x;
+      }
+      if (tr->isChanged()) { 
+         br->center().pos.x = tr->center().pos.x;
+         tl->center().pos.y = tr->center().pos.y;
+      }
+      if (tl->isChanged()) { 
+         tl->center().pos.x = bl->center().pos().x;
+         tr->center().pos.y = tl->center().pos.y;
+      }
+   
+      obj::BfDrawLayer::make();
+      m_oldtl = tlHandle()->center().pos;
+      m_oldtr = trHandle()->center().pos;
+      m_oldbr = brHandle()->center().pos;
+      m_oldbl = blHandle()->center().pos();
+   }
+   
+      
+
+   
+
+private:
+   glm::vec3 m_oldtl;
+   glm::vec3 m_oldtr;
+   glm::vec3 m_oldbr;
+   glm::vec3 m_oldbl;
+};
+
 
 
 

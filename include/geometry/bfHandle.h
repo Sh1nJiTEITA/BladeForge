@@ -1,20 +1,47 @@
 #pragma once
+#include <fmt/format.h>
 #ifndef BF_HANDLE_H
 #define BF_HANDLE_H
 
 #include "bfCamera.h"
+#include "functional"
 #include <fmt/base.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <string>
 namespace obj
 {
 
 class BfGuiIntegration
 {
 public:
+   inline static uint32_t runtimeID = 0;
+
    void updateHoveredStatus(bool sts) noexcept { m_isHovered = sts; };
    virtual void processDragging() {}
-   virtual void processInteraction() {}
+   virtual void presentContextMenu() {}
+
+   virtual void processInteraction()
+   {
+      const std::string s(fmt::format("context-menu-id={}", runtimeID));
+
+      if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && m_isHovered)
+      {
+         fmt::println("clicked");
+         ImGui::OpenPopup(s.c_str());
+      }
+
+      if (ImGui::BeginPopup(s.c_str()))
+      {
+         ImGui::PushID(runtimeID);
+         {
+            presentContextMenu();
+         }
+         ImGui::PopID();
+         ImGui::EndPopup();
+      }
+      runtimeID++;
+   }
    virtual void presentTooltipInfo() {}
 
 protected:

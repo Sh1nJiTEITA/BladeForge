@@ -4,7 +4,9 @@
 #define BF_SINGLE_H
 #include "bfPhysicalDevice.h"
 #include "bfVariative.hpp"
+#include <functional>
 #include <map>
+#include <stack>
 #include <stdexcept>
 
 namespace base
@@ -36,6 +38,11 @@ public:
       g::inst().m_vksampler = vksampler;
    }
 
+   static void bindStack(std::stack< std::function< void() > >* m_intrstack)
+   {
+      g::inst().m_intrstack = m_intrstack;
+   }
+
    static void validate()
    {
       // clang-format off
@@ -60,6 +67,7 @@ public:
    static VkSampler& sampler() { return *g::inst().m_vksampler; }
    static VkPhysicalDeviceProperties& phdeviceprop() { return g::inst().m_bfphdevice->properties; }
    static int frames() noexcept { return g::inst().m_frames; }
+   static std::stack< std::function< void() > >& intrstack() { return *g::inst().m_intrstack; }
    // clang-format on
 
    static VkCommandBuffer beginSingleTimeCommands()
@@ -107,6 +115,8 @@ public:
 
 private:
    int m_frames;
+   std::stack< std::function< void() > >* m_intrstack;
+
    VkInstance* m_vkinst;
    BfPhysicalDevice* m_bfphdevice;
    VkDevice* m_vkdevice;

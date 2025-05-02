@@ -32,6 +32,7 @@ private:
 
    void _processKeys();
    void _pollEvents();
+   void _processSelfInteraction();
 
    void _init();
    void _loop();

@@ -15,6 +15,7 @@
 #include "bfVertex2.hpp"
 #include "bfWindow.h"
 #include <filesystem>
+#include <functional>
 
 #define MAX_UNIQUE_DRAW_OBJECTS 10000
 
@@ -81,6 +82,8 @@ struct BfBase
    BfLayerKiller layer_killer;
 
    bool is_resized;
+
+   std::stack< std::function< void() > > self_interaction;
 };
 
 // Main functions
