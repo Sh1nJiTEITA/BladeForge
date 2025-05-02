@@ -700,7 +700,8 @@ BfDrawLayer::draw(
           __vertex_offsets[i] + vertex_offset,
           i + offset
       );
-      __objects[i]->is_hovered = (pBase->pos_id == __objects[i]->id.get());
+      // FIXME: pBase->pos_id DEPRECATED
+      // __objects[i]->is_hovered = (pBase->pos_id == __objects[i]->id.get());
       __objects[i]->update();
    }
    if (!__objects.empty())

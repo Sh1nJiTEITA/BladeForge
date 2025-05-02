@@ -21,12 +21,8 @@ class BfTypeManager
        bi::unordered_set_of< BfOTypeName > >;
    using id_map = std::unordered_map< BfOID, BfOType >;
 
-   // clang-format off
    types_map m_types;
-   // clang-format on
-
    id_map m_id;
-
    BfTypeManager() {};
 
 protected:

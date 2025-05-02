@@ -81,7 +81,6 @@ struct BfBase
    BfLayerKiller layer_killer;
 
    bool is_resized;
-   uint32_t pos_id;
 };
 
 // Main functions

@@ -32,8 +32,8 @@ public:
       return m;
    }
 
-   void setHovered(BfOID id) { m_hoveredID = id; }
-   BfOID getHovered() { return m_hoveredID; }
+   static void setHovered(BfOID id) { inst().m_hoveredID = id; }
+   static BfOID getHovered() { return inst().m_hoveredID; }
 
    // void createDefault() { auto main = }
 
@@ -72,7 +72,7 @@ public:
       );
    }
 
-   BfObj findObjectById(BfOID id)
+   static BfObj findObjectById(BfOID id)
    {
       // clang-format off
       auto findInLayer = [](BfObj l, BfOID id) -> std::optional< BfObj > {
@@ -85,7 +85,7 @@ public:
       };
       std::stack< BfObj > stack;
       
-      for (auto& [type, l] : m_rootObjects) {
+      for (auto& [type, l] : inst().m_rootObjects) {
          auto found = findInLayer(l, id);
          if (found.has_value()) return found.value();
          std::for_each(l->children().begin(),

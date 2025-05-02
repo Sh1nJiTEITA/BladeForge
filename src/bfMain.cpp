@@ -85,8 +85,7 @@ BfMain::_pollEvents()
    else
    {
       auto hovered = bfGetCurrentObjectId(m_base);
-      m_base.pos_id = hovered;
-      // obj::BfDrawManager::inst().setHovered(hovered);
+      obj::BfDrawManager::inst().setHovered(hovered);
    }
 
    _processKeys();

@@ -3187,7 +3187,7 @@ bfUpdateUniformViewNew(BfBase& base)
    ubo.proj = BfCamera::instance()->projection();
 
    ubo.cursor_pos = {base.window->xpos, base.window->ypos};
-   ubo.id_on_cursor = base.pos_id;
+   ubo.id_on_cursor = obj::BfDrawManager::getHovered();
    ubo.camera_pos = base.window->pos;
    ubo.model = BfCamera::instance()->m_scale;
 

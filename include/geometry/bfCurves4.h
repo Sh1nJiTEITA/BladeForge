@@ -319,12 +319,19 @@ public:
    {
    }
 
-   virtual void copy(const BfDrawObjectBase& obj) override
-   {
-      BfCircleCenterFilled::copy(obj);
-      const auto& casted = static_cast<const BfHandle&>(obj);
-      m_initialMousePos = casted.m_initialMousePos;
-      m_initialCenterPos = casted.m_initialCenterPos;
+   virtual void copy(const BfDrawObjectBase& obj) override { }
+
+   virtual void processDragging() override {
+      BfHandleBehavior::processDragging();
+      if (m_isPressed) { 
+         m_initialCenterPos = center().pos;
+      }
+      if (m_isDown) { 
+         center().pos = m_initialCenterPos + delta3D();
+         m_isChanged = true;
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
    }
 
    // virtual void processDragging() override
@@ -392,7 +399,6 @@ public:
 private:
    glm::vec3 m_initialMousePos;
    glm::vec3 m_initialCenterPos;
-   bool m_isDraggingStarted = false;
    bool m_isChanged = false;
 };
 //

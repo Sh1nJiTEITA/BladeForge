@@ -346,16 +346,20 @@ BfGui::presentCamera()
 void
 BfGui::presentToolType()
 {
-   if (__ptr_base->pos_id != 0)
+   auto hovered_id = obj::BfDrawManager::getHovered();
+   if (hovered_id)
    {
       ImGui::BeginTooltip();
 
       ImGui::Text(
           "type=%s",
-          obj::BfTypeManager::inst().getTypeNameById(__ptr_base->pos_id)
+          obj::BfTypeManager::inst().getTypeNameById(hovered_id)
       );
+      ImGui::Text("id=%i", hovered_id);
+      ImGui::Separator();
 
-      ImGui::Text("id=%i", __ptr_base->pos_id);
+      auto o = obj::BfDrawManager::findObjectById(hovered_id);
+      o->presentTooltipInfo();
 
       ImGui::EndTooltip();
    }
