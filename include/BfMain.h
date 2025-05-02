@@ -2,6 +2,7 @@
 #define BF_MAIN_H
 
 // #define STB_IMAGE_IMPLEMENTATION
+#include "bfDrawObject2.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include <stb_image.h>
 #include <stb_image_write.h>
@@ -24,20 +25,17 @@
 class BfMain
 {
 private:
-   BfBase __base;
-   BfHolder __holder;
-   BfGui __gui;
-   BfCamera __cam;
+   BfBase m_base;
+   BfHolder m_holder;
+   BfGui m_gui;
+   BfCamera m_cam;
 
-   BfDrawLayer* __blade_bases = nullptr;
-   BfDrawLayer* __other_layer = nullptr;
+   void _processKeys();
+   void _pollEvents();
 
-   void __process_keys();
-   void __poll_events();
-
-   void __init();
-   void __loop();
-   void __kill();
+   void _init();
+   void _loop();
+   void _kill();
 
 public:
    BfMain();

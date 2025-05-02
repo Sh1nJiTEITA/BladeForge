@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include "bfDrawObjectBuffer.h"
+#include "bfHandle.h"
 #include "bfObjectId.h"
 #include "bfTypeManager.h"
 #include "bfUniforms.h"
@@ -179,15 +180,6 @@ private:
    BfDrawObjectBase& m_obj;
 };
 
-class BfGuiIntegration2
-{
-public:
-   virtual void processDragging() {}
-
-protected:
-   bool isHovered;
-};
-
 /**
  * @class BfDrawObjectBase
  * @brief Базовый класс объектов. Объект наследует BfObjectId, который
@@ -197,7 +189,7 @@ protected:
 class BfDrawObjectBase
     : public std::enable_shared_from_this< BfDrawObjectBase >,
       public BfObjectId,
-      public obj::BfGuiIntegration2
+      public virtual obj::BfGuiIntegration
 {
 public:
    /**
@@ -304,6 +296,8 @@ public:
       return current;
    }
 
+   std::vector< BfObj >& children();
+
 protected:
    virtual BfObjectData _objectData();
    void _assignRoots();
@@ -365,6 +359,8 @@ protected:
     * когда нужно будет использовать цвет.
     */
    void _genIndicesStandart();
+
+protected:
    uint32_t m_discretization;
    glm::vec3 m_color;
 };
@@ -391,8 +387,6 @@ public:
     */
    const std::vector< BfIndex >& indices() const = delete;
 
-   std::vector< BfObj >& children();
-
    virtual bool toggleRender(int sts = -1) override;
 };
 
@@ -408,7 +402,7 @@ public:
    }
 
 protected:
-   std::unordered_map< PartEnum, BfOId > m_idMap;
+   std::unordered_map< PartEnum, BfOID > m_idMap;
 
    template < PartEnum part >
    void _addPart(pObj obj)
@@ -441,7 +435,7 @@ protected:
       return item;
    };
 
-   pObj _findObjectById(BfOId id)
+   pObj _findObjectById(BfOID id)
    {
       // clang-format off
       auto b = std::find_if(m_children.begin(), m_children.end(), 

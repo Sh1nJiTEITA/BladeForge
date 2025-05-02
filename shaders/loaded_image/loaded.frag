@@ -26,13 +26,40 @@ layout(set = 2, binding = 0) uniform sampler2D texSampler[1];
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTex;
+layout(location = 2) flat in uint objectIndex;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out uint outId;
 
-layout(location = 4) flat in uint obj_index;
 
 void main() {
-    outColor = vec4(fragColor, 1.0);
-    outColor = texture(texSampler[0], fragTex);
+    vec4 texColor = texture(texSampler[0], fragTex);
+    float borderWidth = 0.005; // adjust as needed
+
+    bool isCursorSelected = obj_data_buffer.obj_data[objectIndex].id == 
+                            ubo.id_on_cursor;
+    bool isBorder =
+        (fragTex.x < borderWidth || fragTex.x > 1.0 - borderWidth ||
+        fragTex.y < borderWidth || fragTex.y > 1.0 - borderWidth) &&
+        isCursorSelected;
+
+
+    vec4 borderColor = vec4(0.6, 0.6, 0.6, 1.0); // red border
+    
+    outColor = isBorder ? borderColor : texColor;
+    outId = obj_data_buffer.obj_data[objectIndex].id;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -335,7 +335,7 @@ public:
    friend difference_type
    operator-(const BfMatrixIterator& lhs, const BfMatrixIterator& rhs)
    {
-      return lhs.m_ptr - rhs.m_ptr;
+      return lhs.__ptr - rhs.__ptr;
    }
 
 private:

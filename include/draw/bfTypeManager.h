@@ -8,7 +8,7 @@
 namespace obj
 {
 
-using BfOId = uint32_t;
+using BfOID = uint32_t;
 using BfOType = uint32_t;
 using BfOTypeName = const char*;
 
@@ -17,10 +17,9 @@ namespace bi = boost::bimaps;
 class BfTypeManager
 {
    using types_map = bi::bimap<
-       bi::unordered_set_of<BfOType>,
-       bi::unordered_set_of<BfOTypeName> 
-   >;
-   using id_map = std::unordered_map<BfOId, BfOType>;
+       bi::unordered_set_of< BfOType >,
+       bi::unordered_set_of< BfOTypeName > >;
+   using id_map = std::unordered_map< BfOID, BfOType >;
 
    // clang-format off
    types_map m_types;
@@ -41,12 +40,8 @@ public:
       return m;
    };
 
-   const types_map& types() { 
-      return m_types; 
-   }
-   const id_map& ids() { 
-      return m_id;
-   }
+   const types_map& types() { return m_types; }
+   const id_map& ids() { return m_id; }
 
    BfOType regType(BfOTypeName name)
    {
@@ -68,17 +63,17 @@ public:
       }
    };
 
-   void regId(BfOType type, BfOId id) { m_id[id] = type; }
-   void remId(BfOId id) { m_id.erase(id); }
+   void regId(BfOType type, BfOID id) { m_id[id] = type; }
+   void remId(BfOID id) { m_id.erase(id); }
 
    BfOTypeName getTypeNameByTypeId(BfOType id) { return m_types.left.at(id); }
-   BfOTypeName getTypeNameById(BfOId id)
+   BfOTypeName getTypeNameById(BfOID id)
    {
       return m_types.left.at(m_id.at(id));
    }
 };
 inline BfOType BfTypeManager::m_counter = 0;
 
-};  // namespace obj
+}; // namespace obj
 
 #endif

@@ -685,118 +685,119 @@ BfGui::presentSmartLayerObserver()
    __smart_layer_observer.render();
 }
 
-void
-BfGui::presentInfo()
-{
-   double currentTime = glfwGetTime();
-   static int counter = 0;
-   static int print_counter = 0;
-   static double previousTime = currentTime;
-   if (__is_info)
-   {
-      std::string fps = "Current FPS: ";
-      int screenWidth = ImGui::GetIO().DisplaySize.x;
-      int screenHeight = ImGui::GetIO().DisplaySize.y;
-      auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                   ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove |
-                   ImGuiWindowFlags_NoBackground |
-                   ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
-      ImGui::SetNextWindowPos(
-          ImVec2(screenWidth - 100, 100),
-          ImGuiCond_Always,
-          ImVec2(1.0f, 0.0f)
-      );
-      ImGui::Begin("Info", nullptr, flags);
-      // Display the frame count here any way you want.
-      counter += 1;
-      float x = 1.0; // displays the frame rate every 1 second
-      if ((currentTime - previousTime) >= x)
-      {
-         print_counter = counter;
-         counter = 0;
-         previousTime = currentTime;
-      }
-      ImGui::Text((fps + std::to_string(print_counter)).c_str());
-      std::string pos_string =
-          "Position = (" + std::to_string(__ptr_base->window->pos.x) + ", " +
-          std::to_string(__ptr_base->window->pos.y) + ", " +
-          std::to_string(__ptr_base->window->pos.z) + ")";
-      std::string up_string = "Up-vector = (" +
-                              std::to_string(__ptr_base->window->up.x) + ", " +
-                              std::to_string(__ptr_base->window->up.y) + ", " +
-                              std::to_string(__ptr_base->window->up.z) + ")";
-      std::string front_string =
-          "Front-vector = (" + std::to_string(__ptr_base->window->front.x) +
-          ", " + std::to_string(__ptr_base->window->front.y) + ", " +
-          std::to_string(__ptr_base->window->front.z) + ")";
-      std::string center_string =
-          "Center-vector = (" +
-          std::to_string(
-              __ptr_base->window->front.x + __ptr_base->window->pos.x
-          ) +
-          ", " +
-          std::to_string(
-              __ptr_base->window->front.y + __ptr_base->window->pos.y
-          ) +
-          ", " +
-          std::to_string(
-              __ptr_base->window->front.z + __ptr_base->window->pos.z
-          ) +
-          ")";
-      std::string yaw_string =
-          "Current-yaw = " + std::to_string(__ptr_base->window->yaw);
-      std::string pitch_string =
-          "Current-pitch = " + std::to_string(__ptr_base->window->pitch);
-      std::string mpos_string =
-          "Mouse-pos = " + std::to_string(__ptr_base->window->xpos) + ", " +
-          std::to_string(__ptr_base->window->ypos);
-      std::string selected_id_string =
-          "Selected_id = " + std::to_string(__ptr_base->pos_id);
-      ImGui::Text(pos_string.c_str());
-      ImGui::Text(up_string.c_str());
-      ImGui::Text(front_string.c_str());
-      ImGui::Text(center_string.c_str());
-      ImGui::Text(yaw_string.c_str());
-      ImGui::Text(pitch_string.c_str());
-      ImGui::Text(mpos_string.c_str());
-      ImGui::Text(selected_id_string.c_str());
-      ImGui::Text("NewId: %i", obj::BfDrawManager::inst().getHovered());
-      ImGui::Separator();
-      {
-#define BF_SPLIT_VEC3(VEC) VEC.x, VEC.y, VEC.z
-#define BF_SPLIT_VEC2(VEC) VEC.x, VEC.y
-#define BF_SPLIT_BFKEYSTATE(KEY)                                               \
-   KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld,             \
-       KEY.isPressedInitial
-         auto pCam = BfCamera::instance();
-
-         ImGui::Text("Vertical Angle %f", glm::degrees(pCam->m_vAngle));
-         // ImGui::Text("Old Vertical Angle %f",
-         // glm::degrees(pCam->m_vAngleOld));
-         ImGui::Text("Old Vertical Angle %f", pCam->m_vAngleOld);
-         ImGui::Text("CamPos: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_pos));
-         ImGui::Text("CamTarget: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_target));
-         ImGui::Text("CamUp: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_up));
-         ImGui::Text("MousePosOld: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouseOld));
-         ImGui::Text("MousePos: %f, %f", BF_SPLIT_VEC2(pCam->m_posMouse));
-         ImGui::Text("MouseDelta: %f, %f", BF_SPLIT_VEC2(pCam->m_mouseDelta));
-         ImGui::Text("YScroll: %f", pCam->m_yScroll);
-         ImGui::Text(
-             "Middle key (isPressedBefore, isPressed, isReleased, isHeld, "
-             "isPressedInitial): %d, "
-             "%d, %d, %d, %d",
-             BF_SPLIT_BFKEYSTATE(pCam->m_middleMouseState)
-         );
-         ImGui::Text(
-             "Left key (isPressedBefore, isPressed, isReleased, isHeld, "
-             "isPressedInitial): %d, "
-             "%d, %d, %d, %d",
-             BF_SPLIT_BFKEYSTATE(pCam->m_leftMouseState)
-         );
-      }
-      ImGui::End();
-   }
-}
+// void
+// BfGui::presentInfo()
+// {
+//    double currentTime = glfwGetTime();
+//    static int counter = 0;
+//    static int print_counter = 0;
+//    static double previousTime = currentTime;
+//    if (__is_info)
+//    {
+//       std::string fps = "Current FPS: ";
+//       int screenWidth = ImGui::GetIO().DisplaySize.x;
+//       int screenHeight = ImGui::GetIO().DisplaySize.y;
+//       auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+//                    ImGuiWindowFlags_AlwaysAutoResize |
+//                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+//                    ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs;
+//       ImGui::SetNextWindowPos(
+//           ImVec2(screenWidth - 100, 100),
+//           ImGuiCond_Always,
+//           ImVec2(1.0f, 0.0f)
+//       );
+//       ImGui::Begin("Info", nullptr, flags);
+//       // Display the frame count here any way you want.
+//       counter += 1;
+//       float x = 1.0; // displays the frame rate every 1 second
+//       if ((currentTime - previousTime) >= x)
+//       {
+//          print_counter = counter;
+//          counter = 0;
+//          previousTime = currentTime;
+//       }
+//       ImGui::Text((fps + std::to_string(print_counter)).c_str());
+//       std::string pos_string =
+//           "Position = (" + std::to_string(__ptr_base->window->pos.x) + ", " +
+//           std::to_string(__ptr_base->window->pos.y) + ", " +
+//           std::to_string(__ptr_base->window->pos.z) + ")";
+//       std::string up_string = "Up-vector = (" +
+//                               std::to_string(__ptr_base->window->up.x) + ", "
+//                               + std::to_string(__ptr_base->window->up.y) + ",
+//                               " + std::to_string(__ptr_base->window->up.z) +
+//                               ")";
+//       std::string front_string =
+//           "Front-vector = (" + std::to_string(__ptr_base->window->front.x) +
+//           ", " + std::to_string(__ptr_base->window->front.y) + ", " +
+//           std::to_string(__ptr_base->window->front.z) + ")";
+//       std::string center_string =
+//           "Center-vector = (" +
+//           std::to_string(
+//               __ptr_base->window->front.x + __ptr_base->window->pos.x
+//           ) +
+//           ", " +
+//           std::to_string(
+//               __ptr_base->window->front.y + __ptr_base->window->pos.y
+//           ) +
+//           ", " +
+//           std::to_string(
+//               __ptr_base->window->front.z + __ptr_base->window->pos.z
+//           ) +
+//           ")";
+//       std::string yaw_string =
+//           "Current-yaw = " + std::to_string(__ptr_base->window->yaw);
+//       std::string pitch_string =
+//           "Current-pitch = " + std::to_string(__ptr_base->window->pitch);
+//       std::string mpos_string =
+//           "Mouse-pos = " + std::to_string(__ptr_base->window->xpos) + ", " +
+//           std::to_string(__ptr_base->window->ypos);
+//       std::string selected_id_string =
+//           "Selected_id = " + std::to_string(__ptr_base->pos_id);
+//       ImGui::Text(pos_string.c_str());
+//       ImGui::Text(up_string.c_str());
+//       ImGui::Text(front_string.c_str());
+//       ImGui::Text(center_string.c_str());
+//       ImGui::Text(yaw_string.c_str());
+//       ImGui::Text(pitch_string.c_str());
+//       ImGui::Text(mpos_string.c_str());
+//       ImGui::Text(selected_id_string.c_str());
+//       ImGui::Text("NewId: %i", obj::BfDrawManager::inst().getHovered());
+//       ImGui::Separator();
+//       {
+// #define BF_SPLIT_VEC3(VEC) VEC.x, VEC.y, VEC.z
+// #define BF_SPLIT_VEC2(VEC) VEC.x, VEC.y
+// #define BF_SPLIT_BFKEYSTATE(KEY) \
+//    KEY.isPressedBefore, KEY.isPressed, KEY.isReleased, KEY.isHeld, \
+//        KEY.isPressedInitial
+//          auto pCam = BfCamera::instance();
+//
+//          ImGui::Text("Vertical Angle %f", glm::degrees(pCam->m_vAngle));
+//          // ImGui::Text("Old Vertical Angle %f",
+//          // glm::degrees(pCam->m_vAngleOld));
+//          ImGui::Text("Old Vertical Angle %f", pCam->m_vAngleOld);
+//          ImGui::Text("CamPos: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_pos));
+//          ImGui::Text("CamTarget: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_target));
+//          ImGui::Text("CamUp: %f, %f, %f", BF_SPLIT_VEC3(pCam->m_up));
+//          ImGui::Text("MousePosOld: %f, %f",
+//          BF_SPLIT_VEC2(pCam->m_posMouseOld)); ImGui::Text("MousePos: %f, %f",
+//          BF_SPLIT_VEC2(pCam->m_posMouse)); ImGui::Text("MouseDelta: %f, %f",
+//          BF_SPLIT_VEC2(pCam->m_mouseDelta)); ImGui::Text("YScroll: %f",
+//          pCam->m_yScroll); ImGui::Text(
+//              "Middle key (isPressedBefore, isPressed, isReleased, isHeld, "
+//              "isPressedInitial): %d, "
+//              "%d, %d, %d, %d",
+//              BF_SPLIT_BFKEYSTATE(pCam->m_middleMouseState)
+//          );
+//          ImGui::Text(
+//              "Left key (isPressedBefore, isPressed, isReleased, isHeld, "
+//              "isPressedInitial): %d, "
+//              "%d, %d, %d, %d",
+//              BF_SPLIT_BFKEYSTATE(pCam->m_leftMouseState)
+//          );
+//       }
+//       ImGui::End();
+//    }
+// }
 
 void
 BfGui::presentCameraWindow()

@@ -323,8 +323,8 @@ BfDrawControlProxy::draw(
       *index_offset += g.indices().size();
       *vertex_offset += g.vertices().size();
 
-      g.isHovered = g.id() == hovered_id;
-      m_obj.processDragging();
+      g.updateHoveredStatus(g.id() == hovered_id);
+      g.processInteraction();
    }
    else // IF LAYER
    {
@@ -367,11 +367,11 @@ BfDrawControlProxy::toggleHover(int status)
 {
    if (status == -1)
    {
-      m_obj.isHovered = !m_obj.isHovered;
+      m_obj.m_isHovered = !m_obj.m_isHovered;
    }
    else
    {
-      m_obj.isHovered = static_cast<bool>(status);
+      m_obj.m_isHovered = static_cast<bool>(status);
    }
 }
 
@@ -584,7 +584,7 @@ BfDrawLayer::make()
    }
 }
 
-std::vector< BfObj >& BfDrawLayer::children() { 
+std::vector< BfObj >& BfDrawObjectBase::children() { 
    return m_children;
 }
 

@@ -28,53 +28,53 @@
 #include "vk_mem_alloc.h"
 
 void
-BfMain::__process_keys()
+BfMain::_processKeys()
 {
-   if (glfwGetKey(__base.window->pWindow, GLFW_KEY_C) == GLFW_PRESS)
+   if (glfwGetKey(m_base.window->pWindow, GLFW_KEY_C) == GLFW_PRESS)
    {
-      bfToggleCamParts(__base.window, 0, true);
+      bfToggleCamParts(m_base.window, 0, true);
       return;
    }
    else
    {
-      bfToggleCamParts(__base.window, 0, false);
+      bfToggleCamParts(m_base.window, 0, false);
    }
 
    if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
-       (glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
+       (glfwGetMouseButton(m_base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
         GLFW_PRESS) &&
-       (glfwGetKey(__base.window->pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS))
+       (glfwGetKey(m_base.window->pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS))
    {
-      bfToggleCamParts(__base.window, 1, true);
+      bfToggleCamParts(m_base.window, 1, true);
       return;
    }
    else
    {
-      bfToggleCamParts(__base.window, 1, false);
+      bfToggleCamParts(m_base.window, 1, false);
    }
 
    if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
-       glfwGetMouseButton(__base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
+       glfwGetMouseButton(m_base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
        GLFW_PRESS)
    {
-      bfToggleCamParts(__base.window, 2, true);
+      bfToggleCamParts(m_base.window, 2, true);
       return;
    }
    else
    {
-      bfToggleCamParts(__base.window, 2, false);
+      bfToggleCamParts(m_base.window, 2, false);
    }
 
    if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
         ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
        ImGui::IsKeyPressed(ImGuiKey_E, false))
    {
-      __gui.toggleRenderCreateWindow();
+      m_gui.toggleRenderCreateWindow();
    }
 }
 
 void
-BfMain::__poll_events()
+BfMain::_pollEvents()
 {
    glfwPollEvents();
    auto& io = ImGui::GetIO();
@@ -84,79 +84,78 @@ BfMain::__poll_events()
    }
    else
    {
-      auto hovered = bfGetCurrentObjectId(__base);
-      __base.pos_id = hovered;
-
-      obj::BfDrawManager::inst().setHovered(hovered);
+      auto hovered = bfGetCurrentObjectId(m_base);
+      m_base.pos_id = hovered;
+      // obj::BfDrawManager::inst().setHovered(hovered);
    }
 
-   __process_keys();
+   _processKeys();
 
    // __gui.updateFonts();
-   __gui.pollEvents();
-   __cam.update();
+   m_gui.pollEvents();
+   m_cam.update();
 }
 
 void
-BfMain::__init()
+BfMain::_init()
 {
    BfConfigManager::createInstance();
 
-   bfBindBase(&__base);
-   bfBindHolder(&__holder);
+   bfBindBase(&m_base);
+   bfBindHolder(&m_holder);
 
-   bfHoldWindow(__base.window);
+   bfHoldWindow(m_base.window);
 
-   bfHoldPhysicalDevice(__base.physical_device);
+   bfHoldPhysicalDevice(m_base.physical_device);
 
-   bfSetWindowSize(__base.window, BF_START_W, BF_START_H);
-   bfSetWindowName(__base.window, BF_APP_NAME);
-   bfCreateWindow(__base.window);
+   bfSetWindowSize(m_base.window, BF_START_W, BF_START_H);
+   bfSetWindowName(m_base.window, BF_APP_NAME);
+   bfCreateWindow(m_base.window);
 
-   bfBindGuiWindowHoveringFunction(__base.window, []() {
+   bfBindGuiWindowHoveringFunction(m_base.window, []() {
       return ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
    });
 
-   bfCreateInstance(__base);
-   bfCreateDebugMessenger(__base);
-   bfCreateSurface(__base);
-   bfCreatePhysicalDevice(__base);
-   bfCreateLogicalDevice(__base);
-   bfCreateAllocator(__base);
+   bfCreateInstance(m_base);
+   bfCreateDebugMessenger(m_base);
+   bfCreateSurface(m_base);
+   bfCreatePhysicalDevice(m_base);
+   bfCreateLogicalDevice(m_base);
+   bfCreateAllocator(m_base);
 
    base::g::create(
        MAX_FRAMES_IN_FLIGHT,
-       &__base.instance,
-       __base.physical_device,
-       &__base.device,
-       &__base.command_pool
+       &m_base.instance,
+       m_base.physical_device,
+       &m_base.device,
+       &m_base.command_pool
        // &__base.sampler->handle()
    );
 
-   bfCreateSampler(__base);
+   bfCreateSampler(m_base);
 
-   bfCreateSwapchain(__base);
+   bfCreateSwapchain(m_base);
 
    // Setup camera
-   BfCamera::bindInstance(&__cam);
-   BfCamera::instance()->bindWindow(__base.window->pWindow);
+   BfCamera::bindInstance(&m_cam);
+   BfCamera::instance()->bindWindow(m_base.window->pWindow);
    // NOTE: WAS ADDITIONALY SET IN RECREATE SWAP-CHAIN FUNCTION
    BfCamera::instance()->setExtent(
-       __base.swap_chain_extent.width,
-       __base.swap_chain_extent.height
+       m_base.swap_chain_extent.width,
+       m_base.swap_chain_extent.height
    );
 
-   bfCreateImageViews(__base);
-   bfCreateDepthBuffer(__base);
-   bfCreateStandartRenderPass(__base);
-   bfCreateGUIRenderPass(__base);
+   bfCreateImageViews(m_base);
+   bfCreateDepthBuffer(m_base);
+   bfCreateStandartRenderPass(m_base);
+   bfCreateGUIRenderPass(m_base);
 
-   bfCreateIDMapImage(__base);
+   bfCreateIDMapImage(m_base);
 
    // bfCreateTextureLoader(__base);
-   bfCreateCommandPool(__base);
+   bfCreateCommandPool(m_base);
 
-   bfInitOwnDescriptors(__base);
+   bfInitOwnDescriptors(m_base);
 
    base::desc::own::BfDescriptorPipelineDefault story;
    story.create();
@@ -187,74 +186,70 @@ BfMain::__init()
            "shaders/loaded_image"
    );
 
-   bfCreateStandartFrameBuffers(__base);
-   bfCreateGUIFrameBuffers(__base);
+   bfCreateStandartFrameBuffers(m_base);
+   bfCreateGUIFrameBuffers(m_base);
 
-   bfCreateGUIDescriptorPool(__base);
-   bfCreateStandartCommandBuffers(__base);
-   bfCreateGUICommandBuffers(__base);
-   bfCreateSyncObjects(__base);
+   bfCreateGUIDescriptorPool(m_base);
+   bfCreateStandartCommandBuffers(m_base);
+   bfCreateGUICommandBuffers(m_base);
+   bfCreateSyncObjects(m_base);
 
-   bfBindAllocatorToLayerHandler(__base);
+   bfBindAllocatorToLayerHandler(m_base);
 
-   __gui.bindSettings(
+   m_gui.bindSettings(
        BfConfigManager::getInstance()->exePath() / "scripts/guiconfig.lua"
    );
-   bfInitImGUI(__base);
+   bfInitImGUI(m_base);
    {
-      __gui.bindDefaultFont();
-      __gui.bindIconFont();
-      __gui.bindGreekFont();
+      m_gui.bindDefaultFont();
+      m_gui.bindIconFont();
+      m_gui.bindGreekFont();
    }
-   bfPostInitImGui(__base);
+   bfPostInitImGui(m_base);
 
-   __gui.bindBase(&__base);
-   __gui.bindHolder(&__holder);
+   m_gui.bindBase(&m_base);
+   m_gui.bindHolder(&m_holder);
 }
 
 void
-BfMain::__kill()
+BfMain::_kill()
 {
    obj::BfDrawManager::inst().kill();
 
-   bfDestroyImGUI(__base);
-   bfDestorySyncObjects(__base);
-   bfDestroyGUICommandBuffers(__base);
-   bfDestroyStandartCommandBuffers(__base);
-   bfDestroyCommandPool(__base);
-   bfDestroyGUIFrameBuffers(__base);
-   bfDestroyStandartFrameBuffers(__base);
-   bfDestroyDepthBuffer(__base);
+   bfDestroyImGUI(m_base);
+   bfDestorySyncObjects(m_base);
+   bfDestroyGUICommandBuffers(m_base);
+   bfDestroyStandartCommandBuffers(m_base);
+   bfDestroyCommandPool(m_base);
+   bfDestroyGUIFrameBuffers(m_base);
+   bfDestroyStandartFrameBuffers(m_base);
+   bfDestroyDepthBuffer(m_base);
    BfPipelineHandler::instance()->kill();
    base::desc::own::BfDescriptorPipelineDefault::manager().cleanup();
-   bfDestroyOwnDescriptors(__base);
-   bfDestroyIDMapImage(__base);
-   bfDestroyGUIRenderPass(__base);
-   bfDestroyStandartRenderPass(__base);
-   bfDestroyImageViews(__base);
-   bfDestroySwapchain(__base);
-   __base.sampler.reset();
+   bfDestroyOwnDescriptors(m_base);
+   bfDestroyIDMapImage(m_base);
+   bfDestroyGUIRenderPass(m_base);
+   bfDestroyStandartRenderPass(m_base);
+   bfDestroyImageViews(m_base);
+   bfDestroySwapchain(m_base);
+   m_base.sampler.reset();
    // bfDestorySampler(__base);
    // BUG: Not destorying vulkan objects inside
    // bfDestroyTextureLoader(__base);
    // id buffer
-   bfDestroyBuffer(&__base.id_image_buffer);
-   __base.layer_handler.kill();
-   __base.layer_killer.kill();
-   bfDestroySurface(__base);
-   bfDestroyAllocator(__base);
-   bfDestroyLogicalDevice(__base);
-   bfDestroyDebufMessenger(__base);
-   bfDestroyInstance(__base);
+   bfDestroyBuffer(&m_base.id_image_buffer);
+   m_base.layer_handler.kill();
+   m_base.layer_killer.kill();
+   bfDestroySurface(m_base);
+   bfDestroyAllocator(m_base);
+   bfDestroyLogicalDevice(m_base);
+   bfDestroyDebufMessenger(m_base);
+   bfDestroyInstance(m_base);
 }
 
-void
-BfMain::__loop()
-{
-   __base.current_frame = 0;
-   __base.is_resized = true;
+/*
 
-   // auto xAxis = std::make_shared<BfSingleLine>(
+// auto xAxis = std::make_shared<BfSingleLine>(
    //     glm::vec3{0.0f, 0.0f, 0.0},
    //     glm::vec3{1.0f, 0.0f, 0.0f}
    // );
@@ -280,120 +275,54 @@ BfMain::__loop()
    // zAxis->createVertices();
    // zAxis->createIndices();
 
-   auto test_root = std::make_shared< obj::BfDrawRootLayer >(2000, 10);
 
-   // auto filled_circle = std::make_shared<obj::curves::BfCircleCenterFilled>(
-   //     BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
-   //     0.1f
-   // );
-   // filled_circle->make();
-   // auto circle = std::make_shared<obj::curves::BfHandle>(
-   //     BfVertex3({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}),
-   //     0.1f
-   // );
-   // circle->make();
+*/
 
-   // auto bez = std::make_shared< obj::curves::BfBezierWH >(
-   //     BfVertex3Uni{BfVertex3(
-   //         glm::vec3(0.0f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     )},
-   //     BfVertex3Uni{BfVertex3(
-   //         glm::vec3(.5f, .5f, 0.0f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     )},
-   //     BfVertex3Uni{BfVertex3(
-   //         glm::vec3(1.f, 0.0f, 0.0f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     )}
-   // );
-   // bez->make();
+void
+BfMain::_loop()
+{
+   m_base.current_frame = 0;
+   m_base.is_resized = true;
 
-   // test_root->add(circle);
-   // test_root->add(bez);
+   constexpr auto type = obj::BfDrawManager::RootType::MAIN;
+   obj::BfDrawManager::inst().addRoot< type >();
+   auto mainRoot = obj::BfDrawManager::inst().get< type >();
 
-   // auto cirhan = std::make_shared<obj::curves::BfCircleCenterWH>(
-   //     BfVertex3{
-   //         glm::vec3(-0.5f),
-   //         glm::vec3(1.0f),
-   //         glm::vec3{0.0f, 0.0f, 1.0f}
-   //     },
-   //     0.5f
-   // );
-   // cirhan->make();
-   // test_root->add(cirhan);
-
-   // auto l = std::make_shared<obj::curves::BfSingleLineWH>(&v1, &v2);
-   // l->make();
-   // test_root->add(l);
    auto info = obj::section::SectionCreateInfo{};
-
    auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
    bs->make();
-   test_root->add(bs);
+
+   mainRoot->add(bs);
    auto tp = std::make_shared< obj::curves::BfTexturePlane >();
    tp->make();
-   test_root->add(tp);
+   mainRoot->add(tp);
+   mainRoot->control().updateBuffer();
 
-   test_root->control().updateBuffer();
-   obj::BfDrawManager::inst().add(test_root);
-
-   // bfSetOrthoLeft(__base.window);
-
-   // int bez_order = bez->size();
-
-   auto _tmpcol = [&bs, &test_root](const char* name, float* v) {
-      ImGui::TableNextRow();
-      ImGui::TableSetColumnIndex(0);
-      ImGui::Text("%s", name);
-
-      ImGui::TableSetColumnIndex(1);
-      if (ImGui::InputFloat(
-              (std::string("##___") + std::string(name)).c_str(),
-              v
-          ))
-      {
-         bs->make();
-         test_root->control().updateBuffer();
-      }
-   };
-#define tmpcol(NAME) _tmpcol(#NAME, &info.NAME)
-   bool renderInter = true;
-
-   while (!glfwWindowShouldClose(__base.window->pWindow))
+   while (!glfwWindowShouldClose(m_base.window->pWindow))
    {
-      __poll_events();
+      _pollEvents();
 
       ImGui_ImplVulkan_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      // __present_blade_base_create_window();
-
-      __gui.presentInfo();
-      // __gui.presentTopDock();
-      // __gui.presentLeftDock();
-
-      __gui.presentMenuBar();
+      m_gui.presentMenuBar();
       // __gui.presentCamera();
       // __gui.presentLayerHandler();
-      __gui.presentEventLog();
-      __gui.presentToolType();
-      __gui.presentSettings();
+      m_gui.presentEventLog();
+      m_gui.presentToolType();
+      m_gui.presentSettings();
       // __gui.presentLuaInteraction();
-      __gui.presentFileDialog();
-      __gui.presentCreateWindow();
+      m_gui.presentFileDialog();
+      m_gui.presentCreateWindow();
       // __gui.presentSmartLayerObserver();
-      __gui.presentCameraWindow();
-      __gui.presentIds();
+      m_gui.presentCameraWindow();
+      m_gui.presentIds();
 
-      if (__gui.presentBladeSectionCreateWindow(&info))
+      if (m_gui.presentBladeSectionCreateWindow(&info))
       {
          bs->make();
-         test_root->control().updateBuffer();
+         mainRoot->control().updateBuffer();
       }
       ImGui::ShowDemoWindow();
 
@@ -428,44 +357,12 @@ BfMain::__loop()
       }
       ImGui::End();
 
-      // ImGui::ShowDemoWindow();
-
-      // ImGui::Begin("Bezier");
-      //
-      // if (ImGui::InputInt("Order of bezier", &bez_order))
-      // {
-      //    if (bez_order > bez->size()) {
-      //       bez->elevateOrder();
-      //       test_root->make();
-      //       test_root->control().updateBuffer();
-      //    }
-      //    else {
-      //       bez->lowerateOrder();
-      //       test_root->make();
-      //       test_root->control().updateBuffer();
-      //    }
-      //
-      // }
-      // if (ImGui::Button("toggle")) {
-      //    bez->toggleBoundHandles();
-      // }
-
-      // ImGui::End();
-
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();
-      bfDrawFrame(__base);
+      bfDrawFrame(m_base);
    }
 
-   auto layer_killer = BfLayerKiller::get_root();
-   for (size_t i = 0; i < __base.layer_handler.get_layer_count(); ++i)
-   {
-      auto buffer = __base.layer_handler.get_layer_by_index(i);
-      layer_killer->add(__base.layer_handler.get_layer_by_index(i));
-   }
-   layer_killer->kill();
-
-   vkDeviceWaitIdle(__base.device);
+   vkDeviceWaitIdle(m_base.device);
 }
 
 /*
@@ -474,18 +371,14 @@ BfMain::__loop()
    для каждого такого класса не прописывать bind
 */
 BfMain::BfMain()
-    : __base{}
-    , __holder{}
-    ,
-    // __cam{{0, 0, -3}, {0, 0, 1}, {0, 1, 0}, nullptr}
-    __cam{BfCameraMode_Ortho}
+    : m_base{}, m_holder{}, m_cam{BfCameraMode_Ortho}
 {
 }
 
 void
 BfMain::run()
 {
-   __init();
-   __loop();
-   __kill();
+   _init();
+   _loop();
+   _kill();
 }

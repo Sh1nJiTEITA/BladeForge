@@ -19,6 +19,7 @@
 
 #include "bfCamera.h"
 #include "bfDrawObject2.h"
+#include "bfHandle.h"
 #include "bfObjectMath.h"
 #include "bfPipeline.h"
 #include "bfVertex2.hpp"
@@ -308,8 +309,8 @@ protected:
    BfVertex3Uni m_center;
 };
 
-// template <typename T, math::IsBfVertex3Variation<T> = true>
 class BfHandle : public BfCircleCenterFilled
+               , public BfHandleBehavior
 {
 public:
    template <typename T>
@@ -326,48 +327,48 @@ public:
       m_initialCenterPos = casted.m_initialCenterPos;
    }
 
-   virtual void processDragging() override
-   {
-      bool is_dragging =
-          ((this->isHovered || m_isDraggingStarted) &&
-           ImGui::IsMouseDown(ImGuiMouseButton_Left));
-
-      auto inst = BfCamera::m_pInstance;
-      if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
-      {
-         // Calculate the initial offset between the object's center and the
-         // mouse position
-
-         if (!m_isDraggingStarted)
-         {
-            // Store the initial positions when the dragging starts
-            m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
-            m_initialCenterPos = this->center().pos;
-            m_isDraggingStarted = true;
-         }
-
-         // Calculate the difference (offset) between the initial mouse position
-         // and the center of the object
-         glm::vec3 mouse_offset =
-             BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
-
-         // Update the object’s center position based on this offset, keeping it
-         // relative
-         this->center().pos = m_initialCenterPos + mouse_offset;
-
-         // You can make your copy if necessary, or just continue with the
-         // camera update
-         // this->make();
-         m_isChanged = true;
-
-         this->root()->make();
-         this->root()->control().updateBuffer(true);
-      }
-      else
-      {
-         m_isDraggingStarted = false;
-      }
-   }
+   // virtual void processDragging() override
+   // {
+   //    bool is_dragging =
+   //        ((this->m_isHovered || m_isDraggingStarted) &&
+   //         ImGui::IsMouseDown(ImGuiMouseButton_Left));
+   //
+   //    auto inst = BfCamera::m_pInstance;
+   //    if (is_dragging && inst->m_mode == BfCameraMode_Ortho)
+   //    {
+   //       // Calculate the initial offset between the object's center and the
+   //       // mouse position
+   //
+   //       if (!m_isDraggingStarted)
+   //       {
+   //          // Store the initial positions when the dragging starts
+   //          m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
+   //          m_initialCenterPos = this->center().pos;
+   //          m_isDraggingStarted = true;
+   //       }
+   //
+   //       // Calculate the difference (offset) between the initial mouse position
+   //       // and the center of the object
+   //       glm::vec3 mouse_offset =
+   //           BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
+   //
+   //       // Update the object’s center position based on this offset, keeping it
+   //       // relative
+   //       this->center().pos = m_initialCenterPos + mouse_offset;
+   //
+   //       // You can make your copy if necessary, or just continue with the
+   //       // camera update
+   //       // this->make();
+   //       m_isChanged = true;
+   //
+   //       this->root()->make();
+   //       this->root()->control().updateBuffer(true);
+   //    }
+   //    else
+   //    {
+   //       m_isDraggingStarted = false;
+   //    }
+   // }
 
 
    virtual void make() override { 

@@ -30,9 +30,7 @@ layout(location = 2) in vec3 inNormals;
 // layout(location = 2) out vec3 outNormals;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTex;
-
-
-layout(location = 4) flat out uint obj_index;
+layout(location = 2) flat out uint objectIndex;
 
 void main() {
     vec4 coo = ubo.proj * 
@@ -41,13 +39,7 @@ void main() {
 	       vec4(inPosition, 1.0);
 
     gl_Position = coo;
-    obj_index = gl_BaseInstance;
-
+    objectIndex = gl_BaseInstance;
     fragTex = vec2(inNormals.x, inNormals.y); 
-    // if (obj_data_buffer.obj_data[gl_BaseInstance].id == ubo.id_on_cursor) {                
-    //     fragColor = vec3(0.0, 1.0, 0.5);
-    // }
-    // else {
-        fragColor = inColor;
-    // }
+    fragColor = inColor;
 }

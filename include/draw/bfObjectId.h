@@ -9,10 +9,10 @@ namespace obj
 
 class BfObjectId
 {
-   BfOId m_value;
-   BfOId m_type;
+   BfOID m_value;
+   BfOID m_type;
 
-   static BfOId m_counter;
+   static BfOID m_counter;
 
 public:
    explicit BfObjectId(BfOTypeName typeName)
@@ -47,11 +47,11 @@ public:
    {
       return BfTypeManager::inst().getTypeNameByTypeId(m_type);
    }
-   BfOId type() const { return m_type; }
-   BfOId id() const { return m_value; }
+   BfOID type() const { return m_type; }
+   BfOID id() const { return m_value; }
 };
 
-inline BfOId BfObjectId::m_counter = 0;
+inline BfOID BfObjectId::m_counter = 0;
 }; // namespace obj
 
 #endif
