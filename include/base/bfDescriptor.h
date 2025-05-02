@@ -190,6 +190,11 @@ struct BfDescriptorTexture : public BfDescriptor {
    const VkImageView& view() noexcept { return m_view->handle(); }
    const VkImage& image() noexcept { return m_image->handle(); }
 
+   float ratio() noexcept  {
+      return static_cast<float>(m_texWidth) / 
+             static_cast<float>(m_texHeight);
+   }
+
 protected:
    int m_texWidth;
    int m_texHeight;

@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "bfCamera.h"
+#include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 #include "bfHandle.h"
 #include "bfObjectMath.h"
@@ -1737,6 +1738,15 @@ public:
 
    void presentContextMenu() override;
    bool isLocked() noexcept { return m_isLocked; }
+   bool isRatio() noexcept { return m_isRatio; }
+   // void setRatio() { 
+   //    // auto& desc = base::desc::own::BfDescriptorPipelineDefault::getTextureDescriptor();
+   //    // float ratio = desc.ratio();
+   //    // float current_width = glm::distance(br().pos(), bl().pos());
+   //    // float new_height = 1 / ratio * current_width; 
+   //    // tr().pos().y = br().pos().y + new_height;
+   //    // tl().pos().y = bl().pos().y + new_height;
+   // }
 
    virtual BfObjectData _objectData() override { 
       return {
@@ -1751,6 +1761,7 @@ public:
 private:
    float m_transp = 1.0f;
    bool m_isLocked = false;
+   bool m_isRatio = false;
 };
 
 class BfTexturePlane : public obj::BfDrawLayer 
@@ -1784,52 +1795,101 @@ public:
    std::shared_ptr< BfHandleRectangle > blHandle() { 
       return std::static_pointer_cast< BfHandleRectangle >(m_children[3]); 
    }
+   std::shared_ptr< BfTextureQuad > quad() { 
+      return std::static_pointer_cast< BfTextureQuad >(m_children[4 ]); 
+   }
 
-   void make() override { 
+   void make() override {
+      _assignRoots(); 
+
       auto bl = blHandle();
       auto br = brHandle();
       auto tr = trHandle();
       auto tl = tlHandle();
+      bool isRatio = quad()->isRatio();
+      bool isRatioChanged = isRatio != m_isRatioOld;
 
-      if (bl->isChanged()) {
-         auto dir = bl->center().pos() - m_oldbl;
+      const float ratio = base::desc::own::BfDescriptorPipelineDefault::getTextureDescriptor().ratio();
+
+      glm::vec3 blPos = bl->center().pos();
+
+      if (bl->isChanged() || isRatioChanged)
+      {
+         auto dir = blPos - m_oldbl;
          br->center().pos += dir;
          tr->center().pos += dir;
          tl->center().pos += dir;
       }
-      if (br->isChanged()) {
-         br->center().pos.y = bl->center().pos().y;
-         tr->center().pos.x = br->center().pos.x;
-      }
-      if (tr->isChanged()) { 
-         br->center().pos.x = tr->center().pos.x;
-         tl->center().pos.y = tr->center().pos.y;
-      }
-      if (tl->isChanged()) { 
-         tl->center().pos.x = bl->center().pos().x;
-         tr->center().pos.y = tl->center().pos.y;
-      }
-   
-      obj::BfDrawLayer::make();
-      m_oldtl = tlHandle()->center().pos;
-      m_oldtr = trHandle()->center().pos;
-      m_oldbr = brHandle()->center().pos;
-      m_oldbl = blHandle()->center().pos();
-   }
-   
-      
 
-   
+      if (br->isChanged())
+      {
+         glm::vec3 newBr = br->center().pos;
+
+         if (!isRatio)
+         {
+            br->center().pos.y = blPos.y;
+            tr->center().pos.x = br->center().pos.x;
+         }
+         else { 
+            br->center().pos.y = bl->center().pos().y;
+            br->center().pos.x = tr->center().pos.x;
+         }
+      }
+
+      if (tr->isChanged() || isRatioChanged)
+      {
+         glm::vec3 newTr = tr->center().pos;
+
+         if (isRatio)
+         {
+            float width = newTr.x - blPos.x;
+            float height = width / ratio;
+
+            tr->center().pos.y = blPos.y + height;
+            br->center().pos = glm::vec3(newTr.x, blPos.y, br->center().pos.z);
+            tl->center().pos =
+                glm::vec3(blPos.x, blPos.y + height, tl->center().pos.z);
+         }
+         else
+         {
+            br->center().pos.x = tr->center().pos.x;
+            tl->center().pos.y = tr->center().pos.y;
+         }
+      }
+
+      if (tl->isChanged() || isRatioChanged)
+      {
+         glm::vec3 newTl = tl->center().pos;
+
+         if (!isRatio) 
+         {
+            tl->center().pos.x = blPos.x;
+            tr->center().pos.y = tl->center().pos.y;
+         }
+         else { 
+            tl->center().pos.y = tr->center().pos.y;
+            tl->center().pos.x = bl->center().pos().x;
+         }
+      }
+
+      obj::BfDrawLayer::make();
+
+      m_oldtl = tl->center().pos;
+      m_oldtr = tr->center().pos;
+      m_oldbr = br->center().pos;
+      m_oldbl = bl->center().pos();
+
+      m_isRatioOld = isRatio;
+   }
 
 private:
+   bool m_isRatioOld;
+
    glm::vec3 m_oldtl;
    glm::vec3 m_oldtr;
    glm::vec3 m_oldbr;
    glm::vec3 m_oldbl;
 };
-
-
-
 
 }; // namespace curves
 

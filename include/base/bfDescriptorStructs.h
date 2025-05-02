@@ -117,6 +117,13 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
       return m;
    }
 
+   static BfDescriptorTextureTest& getTextureDescriptor()
+   {
+      auto& man = manager();
+      auto& td = man.get< BfDescriptorTextureTest >(SetType::Texture, 0);
+      return td;
+   };
+
    virtual void create() override
    {
       // clang-format off

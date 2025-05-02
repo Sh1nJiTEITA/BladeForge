@@ -366,6 +366,12 @@ BfTextureQuad::presentContextMenu()
          casted->brHandle()->toggleRender(!m_isLocked);
          casted->blHandle()->toggleRender(!m_isLocked);
       }
+      if (ImGui::Checkbox("Save ratio", &m_isRatio))
+      {
+         fmt::println("Changing ratio flag: {}", m_isRatio);
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
       ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
    }
 }
