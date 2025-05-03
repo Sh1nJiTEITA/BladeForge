@@ -373,6 +373,11 @@ BfTextureQuad::presentContextMenu()
          this->root()->control().updateBuffer(true);
       }
       ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
+      if (ImGui::DragFloat("Rotate", &m_rotateAngle, 1, 0, 360))
+      {
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
       if (ImGui::Button("Move to center"))
       {
          casted->moveToCenter();

@@ -1742,22 +1742,26 @@ public:
    void presentContextMenu() override;
    bool isLocked() noexcept { return m_isLocked; }
    bool isRatio() noexcept { return m_isRatio; }
-   // void setRatio() { 
-   //    // auto& desc = base::desc::own::BfDescriptorPipelineDefault::getTextureDescriptor();
-   //    // float ratio = desc.ratio();
-   //    // float current_width = glm::distance(br().pos(), bl().pos());
-   //    // float new_height = 1 / ratio * current_width; 
-   //    // tr().pos().y = br().pos().y + new_height;
-   //    // tl().pos().y = bl().pos().y + new_height;
-   // }
 
-   void make() override { 
+   void make() override {
       m_vertices.clear();
       m_indices.clear();
-      glm::mat4 r = glm::rotate(glm::mat4(1.0f), glm::radians(m_rotateAngle), 
-                                m_bl.normals());
-      
-      m_vertices = { m_tl.get(), m_tr.get(), m_br.get(), m_bl.get() };
+
+      glm::mat4 r = glm::rotate(glm::mat4(1.0f), glm::radians(m_rotateAngle), m_bl.normals());
+      glm::vec3 center = (m_tl.pos() + m_br.pos()) * 0.5f;
+
+      auto rotate = [&](BfVertex3Uni& v) -> BfVertex3 {
+         glm::vec4 local = glm::vec4(v.pos() - center, 1.0f);
+         glm::vec3 rotated = glm::vec3(r * local) + center;
+         return BfVertex3{ rotated, v.color(), v.normals() };
+      };
+
+      m_vertices = {
+         rotate(m_tl),
+         rotate(m_tr),
+         rotate(m_br),
+         rotate(m_bl)
+      };
       m_indices = { 0, 1, 2, 2, 0, 3 };
    }
 

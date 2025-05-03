@@ -356,8 +356,9 @@ BfMain::_loop()
          const char* var[]{
              "./resources/test.jpg",
              "./resources/test2.png",
+             "./resources/R.jpg",
          };
-         static bool current = 0;
+         static int current = 0;
          if (ImGui::RadioButton(var[0], current == 0))
          {
             is_changed = true;
@@ -367,6 +368,11 @@ BfMain::_loop()
          {
             is_changed = true;
             current = 1;
+         }
+         if (ImGui::RadioButton(var[2], current == 2))
+         {
+            is_changed = true;
+            current = 2;
          }
          if (is_changed)
          {
