@@ -329,6 +329,11 @@ public:
          this->root()->control().updateBuffer(true);
       }
    }
+   
+   void move(const glm::vec3& v) { 
+      m_center.pos() = v;
+      m_isChanged = true;
+   }
 
    virtual void make() override { 
       m_vertices.clear();
@@ -1711,15 +1716,13 @@ public:
       m_vertices = { m_tl.get(), m_tr.get(), m_br.get(), m_bl.get() };
       m_indices = { 0, 1, 2, 2, 0, 3 };
    }
-   
-   
 
    BfVertex3Uni& tl() { return m_tl; }
    BfVertex3Uni& tr() { return m_tr; }
    BfVertex3Uni& br() { return m_br; }
    BfVertex3Uni& bl() { return m_bl; }
 
-private:
+protected:
    BfVertex3Uni m_tl;
    BfVertex3Uni m_tr;
    BfVertex3Uni m_br;
@@ -1748,6 +1751,16 @@ public:
    //    // tl().pos().y = bl().pos().y + new_height;
    // }
 
+   void make() override { 
+      m_vertices.clear();
+      m_indices.clear();
+      glm::mat4 r = glm::rotate(glm::mat4(1.0f), glm::radians(m_rotateAngle), 
+                                m_bl.normals());
+      
+      m_vertices = { m_tl.get(), m_tr.get(), m_br.get(), m_bl.get() };
+      m_indices = { 0, 1, 2, 2, 0, 3 };
+   }
+
    virtual BfObjectData _objectData() override { 
       return {
          .model_matrix = m_modelMatrix,
@@ -1759,6 +1772,7 @@ public:
    }
 
 private:
+   float m_rotateAngle = 0.0f;
    float m_transp = 1.0f;
    bool m_isLocked = false;
    bool m_isRatio = false;
@@ -1797,6 +1811,10 @@ public:
    }
    std::shared_ptr< BfTextureQuad > quad() { 
       return std::static_pointer_cast< BfTextureQuad >(m_children[4 ]); 
+   }
+
+   void moveToCenter() { 
+      blHandle()->move({ 0, 0, blHandle()->center().pos().z });
    }
 
    void make() override {

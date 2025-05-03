@@ -262,6 +262,13 @@ BfDescriptorTexture::createBuffer()
    );
    VkDeviceSize imageSize = m_texWidth * m_texHeight * 4;
 
+   fmt::println(
+       "Loaded image with width={}, height={}, channels={}",
+       m_texWidth,
+       m_texHeight,
+       m_texChannels
+   );
+
    if (!pixels)
    {
       throw std::runtime_error("failed to load texture image!");

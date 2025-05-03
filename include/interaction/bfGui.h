@@ -16,6 +16,7 @@
 #include "bfCamera.h"
 #include "bfConfigManager.h"
 #include "bfCurves3.h"
+#include "bfCurves4.h"
 #include "bfEvent.h"
 #include "bfGuiCamera.h"
 #include "bfGuiCreateWindow.h"
@@ -99,7 +100,10 @@ public:
    void presentCameraWindow();
    void presentIds();
 
-   bool presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info);
+   bool presentBladeSectionCreateWindow(
+       obj::section::SectionCreateInfo* info,
+       std::shared_ptr< obj::curves::BfTexturePlane > plane
+   );
 
    void toggleRenderCreateWindow();
 

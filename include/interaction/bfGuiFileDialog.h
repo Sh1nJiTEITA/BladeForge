@@ -86,6 +86,8 @@ class BfGuiFileDialog
    void __update();
    void __updateElementExtensions();
 
+   fs::path _exePath();
+
 public:
    BfGuiFileDialog();
 

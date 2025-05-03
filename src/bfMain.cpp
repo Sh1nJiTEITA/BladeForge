@@ -293,14 +293,22 @@ BfMain::_kill()
 */
 
 void
+createRootLayers()
+{
+   constexpr auto type = obj::BfDrawManager::RootType::MAIN;
+   obj::BfDrawManager::inst().addRoot< type >();
+};
+
+void
 BfMain::_loop()
 {
    m_base.current_frame = 0;
    m_base.is_resized = true;
 
-   constexpr auto type = obj::BfDrawManager::RootType::MAIN;
-   obj::BfDrawManager::inst().addRoot< type >();
-   auto mainRoot = obj::BfDrawManager::inst().get< type >();
+   createRootLayers();
+
+   auto mainRoot =
+       obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
 
    auto info = obj::section::SectionCreateInfo{};
    auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
@@ -335,7 +343,7 @@ BfMain::_loop()
       m_gui.presentCameraWindow();
       m_gui.presentIds();
 
-      if (m_gui.presentBladeSectionCreateWindow(&info))
+      if (m_gui.presentBladeSectionCreateWindow(&info, tp))
       {
          bs->make();
          mainRoot->control().updateBuffer();

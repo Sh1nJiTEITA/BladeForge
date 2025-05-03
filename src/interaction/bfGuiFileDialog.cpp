@@ -13,9 +13,10 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
+const char*
+bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
 {
-   static std::map<BfFileDialogElementType_, const char*> s{
+   static std::map< BfFileDialogElementType_, const char* > s{
        {BfFileDialogElementType_None, "\uefa4"},
        {BfFileDialogElementType_Directory, ICON_FA_FOLDER},
        {BfFileDialogElementType_DirectoryEmpty, ICON_FA_FOLDER_MINUS},
@@ -27,9 +28,10 @@ const char* bfGetFileDialogElementTypeEmoji(BfFileDialogElementType_ e)
    return s.at(e);
 }
 
-const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
+const ImVec4
+bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
 {
-   static std::map<BfFileDialogElementType_, const ImVec4> s{
+   static std::map< BfFileDialogElementType_, const ImVec4 > s{
        {BfFileDialogElementType_None, {0.0f, 0.0f, 0.0f, 1.0f}},
        {BfFileDialogElementType_Directory, {255.0f, 165.0f, 0.0f, 1.0f}},
        {BfFileDialogElementType_DirectoryEmpty, {255.0f, 200.0f, 100.0f, 1.0f}},
@@ -42,51 +44,72 @@ const ImVec4 bfGetFileDialogElementTypeColor(BfFileDialogElementType_ e)
 
 BfGuiFileDialog* BfGuiFileDialog::__instance = nullptr;
 
-BfGuiFileDialog::BfGuiFileDialog() {}
+BfGuiFileDialog::BfGuiFileDialog()
+    : __root{_exePath()}
+{
+}
 
-void BfGuiFileDialog::setRoot(fs::path root) noexcept
+void
+BfGuiFileDialog::setRoot(fs::path root) noexcept
 {
    __root = (fs::canonical(root));
    __update();
 }
 
-void BfGuiFileDialog::setExtension(
-    std::initializer_list<std::string> list) noexcept
+void
+BfGuiFileDialog::setExtension(
+    std::initializer_list< std::string > list
+) noexcept
 {
    __extensions = list;
-   if (!__extensions.empty()) __chosen_ext = 0;
+   if (!__extensions.empty())
+      __chosen_ext = 0;
 }
 
-void BfGuiFileDialog::bindInstance(BfGuiFileDialog* ptr) noexcept
+void
+BfGuiFileDialog::bindInstance(BfGuiFileDialog* ptr) noexcept
 {
    __instance = ptr;
 }
 
-BfGuiFileDialog* BfGuiFileDialog::instance() noexcept { return __instance; }
+BfGuiFileDialog*
+BfGuiFileDialog::instance() noexcept
+{
+   return __instance;
+}
 
-void BfGuiFileDialog::openFile(fs::path*                          path,
-                               std::initializer_list<std::string> ext)
+void
+BfGuiFileDialog::openFile(
+    fs::path* path, std::initializer_list< std::string > ext
+)
 {
    show();
    __extensions = ext;
-   __mode       = BfFileDialogOpenMode_File;
-   __out        = path;
+   __mode = BfFileDialogOpenMode_File;
+   __out = path;
 
-   if (!__extensions.empty()) __chosen_ext = 0;
+   if (!__extensions.empty())
+      __chosen_ext = 0;
+
+   this->__update();
 }
 
-void BfGuiFileDialog::openFiles(std::vector<fs::path>*             path,
-                                std::initializer_list<std::string> ext)
+void
+BfGuiFileDialog::openFiles(
+    std::vector< fs::path >* path, std::initializer_list< std::string > ext
+)
 {
    show();
    __extensions = ext;
-   __mode       = BfFileDialogOpenMode_Files;
-   __out        = path;
+   __mode = BfFileDialogOpenMode_Files;
+   __out = path;
 
-   if (!__extensions.empty()) __chosen_ext = 0;
+   if (!__extensions.empty())
+      __chosen_ext = 0;
 }
 
-void BfGuiFileDialog::openDir(fs::path* path)
+void
+BfGuiFileDialog::openDir(fs::path* path)
 {
    if (!path)
    {
@@ -95,10 +118,11 @@ void BfGuiFileDialog::openDir(fs::path* path)
    }
    show();
    __mode = BfFileDialogOpenMode_Directory;
-   __out  = path;
+   __out = path;
 }
 
-void BfGuiFileDialog::__render()
+void
+BfGuiFileDialog::__render()
 {
    if (__is_render)
    {
@@ -115,15 +139,19 @@ void BfGuiFileDialog::__render()
    }
 }
 
-void BfGuiFileDialog::__renderSettings()
+void
+BfGuiFileDialog::__renderSettings()
 {
-   ImGui::Checkbox("Search extensions inside directories",
-                   &__is_check_extension_in_dirs);
+   ImGui::Checkbox(
+       "Search extensions inside directories",
+       &__is_check_extension_in_dirs
+   );
    ImGui::Separator();
    //
 }
 
-void BfGuiFileDialog::__renderArrows()
+void
+BfGuiFileDialog::__renderArrows()
 {
    if (ImGui::Button(ICON_FA_ARROW_LEFT))
    {
@@ -142,15 +170,17 @@ void BfGuiFileDialog::__renderArrows()
    ImGui::SameLine();
 }
 
-void BfGuiFileDialog::__renderPath()
+void
+BfGuiFileDialog::__renderPath()
 {
-   bool     found_hovered = false;
-   bool     is_update     = false;
+   bool found_hovered = false;
+   bool is_update = false;
    fs::path new_path;
    for (auto it = __root.begin(); it != __root.end(); ++it)
    {
-      if (!is_update) new_path /= *it;
-      size_t      distance = std::distance(__root.begin(), it);
+      if (!is_update)
+         new_path /= *it;
+      size_t distance = std::distance(__root.begin(), it);
       std::string strid =
           std::move(it->string() + "##" + std::to_string(distance));
 
@@ -165,10 +195,14 @@ void BfGuiFileDialog::__renderPath()
       bool is_hovered = __hovered_item != -1 && __hovered_item >= distance;
       if (is_hovered)
       {
-         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                               ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
-         ImGui::PushStyleColor(ImGuiCol_Button,
-                               ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+         ImGui::PushStyleColor(
+             ImGuiCol_ButtonHovered,
+             ImVec4(0.26f, 0.59f, 0.98f, 1.0f)
+         );
+         ImGui::PushStyleColor(
+             ImGuiCol_Button,
+             ImVec4(0.26f, 0.59f, 0.98f, 1.0f)
+         );
       }
       if (ImGui::Button(path_item.c_str()))
       {
@@ -178,19 +212,21 @@ void BfGuiFileDialog::__renderPath()
       if (ImGui::IsItemHovered() && !found_hovered)
       {
          __hovered_item = distance;
-         found_hovered  = true;
+         found_hovered = true;
       }
       ImGui::SameLine();
    }
    ImGui::Dummy({0, 0});
-   if (!found_hovered) __hovered_item = -1;
+   if (!found_hovered)
+      __hovered_item = -1;
    if (is_update)
    {
       goTo(new_path);
    }
 }
 
-void BfGuiFileDialog::__renderTable()
+void
+BfGuiFileDialog::__renderTable()
 {
    bool is_update = false;
    //
@@ -200,44 +236,53 @@ void BfGuiFileDialog::__renderTable()
                                   : false;
    //
    bool is_single_selection_done = false;
-   auto ptr_selected             = __elements.end();
+   auto ptr_selected = __elements.end();
 
    fs::path new_path;
 
    float window_padding_h = ImGui::GetStyle().WindowPadding.y;
-   float open_button_h    = 90.0f + window_padding_h * 0.25f + 30.0f;
-   float window_h         = ImGui::GetWindowSize().y;
-   float child_h          = window_h - open_button_h;
+   float open_button_h = 90.0f + window_padding_h * 0.25f + 30.0f;
+   float window_h = ImGui::GetWindowSize().y;
+   float child_h = window_h - open_button_h;
 
    ImGui::BeginChild("##BfGuiFileDialogTableChild", {0, child_h}, false);
    {
-      if (ImGui::BeginTable("##BfGuiFileDialogTable",
-                            3,
-                            /*ImGuiTableFlags_RowBg | */
-                            ImGuiTableFlags_Sortable))
+      if (ImGui::BeginTable(
+              "##BfGuiFileDialogTable",
+              3,
+              /*ImGuiTableFlags_RowBg | */
+              ImGuiTableFlags_Sortable
+          ))
       {
          float table_w = ImGui::GetContentRegionAvail().x;
-         float name_w  = 60.0f;
-         float date_w  = 140.0f;
+         float name_w = 60.0f;
+         float date_w = 140.0f;
 
-         ImGui::TableSetupColumn("Name",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 table_w - name_w - date_w);
-         ImGui::TableSetupColumn("Size",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 name_w);
-         ImGui::TableSetupColumn("Last modified",
-                                 ImGuiTableColumnFlags_WidthFixed,
-                                 date_w);
+         ImGui::TableSetupColumn(
+             "Name",
+             ImGuiTableColumnFlags_WidthFixed,
+             table_w - name_w - date_w
+         );
+         ImGui::TableSetupColumn(
+             "Size",
+             ImGuiTableColumnFlags_WidthFixed,
+             name_w
+         );
+         ImGui::TableSetupColumn(
+             "Last modified",
+             ImGuiTableColumnFlags_WidthFixed,
+             date_w
+         );
 
          ImGui::TableHeadersRow();
          ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
-         if (sort_specs) sort(sort_specs);
+         if (sort_specs)
+            sort(sort_specs);
          int row_index = 0;
 
-         for (auto element = __elements.begin();  //
-              element != __elements.end();        //
-              ++element)                          //
+         for (auto element = __elements.begin(); //
+              element != __elements.end();       //
+              ++element)                         //
          {
             if (__mode == BfFileDialogOpenMode_Files ||
                 __mode == BfFileDialogOpenMode_File)
@@ -246,7 +291,8 @@ void BfGuiFileDialog::__renderTable()
                {
                   if (element->type == BfFileDialogElementType_Directory)
                   {
-                     if (!element->is_extension) continue;
+                     if (!element->is_extension)
+                        continue;
                   }
                   else if (element->type == BfFileDialogElementType_RegularFile)
                   {
@@ -265,21 +311,23 @@ void BfGuiFileDialog::__renderTable()
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
 
-            ImGui::Selectable(("##" + element->path.string()).c_str(),
-                              element->is_selected,
-                              ImGuiSelectableFlags_SpanAllColumns);
+            ImGui::Selectable(
+                ("##" + element->path.string()).c_str(),
+                element->is_selected,
+                ImGuiSelectableFlags_SpanAllColumns
+            );
 
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
             {
                if (element->type == BfFileDialogElementType_Directory ||
                    element->type == BfFileDialogElementType_DirectoryEmpty)
                {
-                  new_path  = fs::absolute(__root / element->path);
+                  new_path = fs::absolute(__root / element->path);
                   is_update = true;
                }
                else if (element->type == BfFileDialogElementType_BackDirectory)
                {
-                  new_path  = __root.parent_path();
+                  new_path = __root.parent_path();
                   is_update = true;
                }
             }
@@ -291,9 +339,9 @@ void BfGuiFileDialog::__renderTable()
                {
                   if (!is_single_selection_done)
                   {
-                     element->is_selected     = !element->is_selected;
+                     element->is_selected = !element->is_selected;
                      is_single_selection_done = true;
-                     ptr_selected             = element;
+                     ptr_selected = element;
                   }
                }
                else
@@ -303,47 +351,57 @@ void BfGuiFileDialog::__renderTable()
             }
 
             ImGui::SameLine();
-            ImGui::TextColored(bfGetFileDialogElementTypeColor(element->type),
-                               "%s",
-                               bfGetFileDialogElementTypeEmoji(element->type));
+            ImGui::TextColored(
+                bfGetFileDialogElementTypeColor(element->type),
+                "%s",
+                bfGetFileDialogElementTypeEmoji(element->type)
+            );
             ImGui::SameLine();
             ImGui::SetCursorPosX(40.0);
             ImGui::Text("%s", element->path.filename().c_str());
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%s",
-                        (element->size ? std::to_string(element->size).c_str()
-                                       : std::string("").c_str()));
+            ImGui::Text(
+                "%s",
+                (element->size ? std::to_string(element->size).c_str()
+                               : std::string("").c_str())
+            );
             ImGui::TableSetColumnIndex(2);
             ImGui::Text(
                 "%s",
                 (element->date != std::time_t()
                      ? getLastWriteFileTime_string(element->date).c_str()
-                     : std::string("").c_str()));
+                     : std::string("").c_str())
+            );
             row_index += 1;
          }
+         ImGui::EndTable();
       }
-      ImGui::EndTable();
    }
    ImGui::EndChild();
 
    if (is_single_selection && is_single_selection_done)
    {
-      for (auto element = __elements.begin();  //
-           element != __elements.end();        //
-           ++element)                          //
+      for (auto element = __elements.begin(); //
+           element != __elements.end();       //
+           ++element)                         //
       {
-         if (element != ptr_selected) element->is_selected = false;
+         if (element != ptr_selected)
+            element->is_selected = false;
       }
    }
 
-   if (is_update) goTo(new_path);
+   if (is_update)
+      goTo(new_path);
 }
 
-void BfGuiFileDialog::__renderWarning()
+void
+BfGuiFileDialog::__renderWarning()
 {
-   if (ImGui::BeginPopupModal("File dialog warning",
-                              NULL,
-                              ImGuiWindowFlags_AlwaysAutoResize))
+   if (ImGui::BeginPopupModal(
+           "File dialog warning",
+           NULL,
+           ImGuiWindowFlags_AlwaysAutoResize
+       ))
    {
       ImGui::Text("%s", __warning_msg.c_str());
       if (ImGui::Button("Close"))
@@ -355,13 +413,14 @@ void BfGuiFileDialog::__renderWarning()
    }
 }
 
-void BfGuiFileDialog::__renderPicker()
+void
+BfGuiFileDialog::__renderPicker()
 {
-   float window_w         = ImGui::GetWindowSize().x;
+   float window_w = ImGui::GetWindowSize().x;
    float window_padding_x = ImGui::GetStyle().WindowPadding.x;
    float window_padding_y = ImGui::GetStyle().WindowPadding.y;
-   float combo_w          = 80.0f;
-   float combo_x          = window_w - combo_w - window_padding_x;
+   float combo_w = 80.0f;
+   float combo_x = window_w - combo_w - window_padding_x;
 
    ImGui::Separator();
    ImGui::Dummy({0, window_padding_y * 0.1f});
@@ -379,7 +438,7 @@ void BfGuiFileDialog::__renderPicker()
       ImGui::SetCursorPosX(combo_x);
       ImGui::SetNextItemWidth(combo_w);
 
-      std::string chosen_ext = __chosen_ext == -1  //
+      std::string chosen_ext = __chosen_ext == -1 //
                                    ? ""
                                    : __extensions[__chosen_ext];
 
@@ -407,7 +466,8 @@ void BfGuiFileDialog::__renderPicker()
    }
 }
 
-void BfGuiFileDialog::__renderChosenFiles()
+void
+BfGuiFileDialog::__renderChosenFiles()
 {
    std::ostringstream oss;
    for (auto element = __elements.begin(); element != __elements.end();
@@ -418,23 +478,27 @@ void BfGuiFileDialog::__renderChosenFiles()
       {
          oss << element->path.filename();
 
-         if (distance < __elements.size()) oss << ", ";
+         if (distance < __elements.size())
+            oss << ", ";
       }
    }
    std::string res = oss.str();
-   ImGui::InputText("##BfGuiFileDialogRenderChosenFilesId",
-                    const_cast<char*>(res.c_str()),
-                    100000);
+   ImGui::InputText(
+       "##BfGuiFileDialogRenderChosenFilesId",
+       const_cast< char* >(res.c_str()),
+       100000
+   );
 }
 
-void BfGuiFileDialog::__pick()
+void
+BfGuiFileDialog::__pick()
 {
    if (__mode == BfFileDialogOpenMode_File)
    {
       std::visit(
           [&](auto&& arg) {
-             using T = std::decay_t<decltype(arg)>;
-             if constexpr (std::is_same_v<T, fs::path*>)
+             using T = std::decay_t< decltype(arg) >;
+             if constexpr (std::is_same_v< T, fs::path* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -445,7 +509,7 @@ void BfGuiFileDialog::__pick()
                    }
                 }
              }
-             else if constexpr (std::is_same_v<T, std::vector<fs::path>*>)
+             else if constexpr (std::is_same_v< T, std::vector< fs::path >* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -457,14 +521,15 @@ void BfGuiFileDialog::__pick()
                 }
              }
           },
-          __out);
+          __out
+      );
    }
    else if (__mode == BfFileDialogOpenMode_Files)
    {
       std::visit(
           [&](auto&& arg) {
-             using T = std::decay_t<decltype(arg)>;
-             if constexpr (std::is_same_v<T, fs::path*>)
+             using T = std::decay_t< decltype(arg) >;
+             if constexpr (std::is_same_v< T, fs::path* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -475,7 +540,7 @@ void BfGuiFileDialog::__pick()
                    }
                 }
              }
-             else if constexpr (std::is_same_v<T, std::vector<fs::path>*>)
+             else if constexpr (std::is_same_v< T, std::vector< fs::path >* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -486,14 +551,15 @@ void BfGuiFileDialog::__pick()
                 }
              }
           },
-          __out);
+          __out
+      );
    }
    else if (__mode == BfFileDialogOpenMode_Directory)
    {
       std::visit(
           [&](auto&& arg) {
-             using T = std::decay_t<decltype(arg)>;
-             if constexpr (std::is_same_v<T, fs::path*>)
+             using T = std::decay_t< decltype(arg) >;
+             if constexpr (std::is_same_v< T, fs::path* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -504,7 +570,7 @@ void BfGuiFileDialog::__pick()
                    }
                 }
              }
-             else if constexpr (std::is_same_v<T, std::vector<fs::path>*>)
+             else if constexpr (std::is_same_v< T, std::vector< fs::path >* >)
              {
                 for (auto& elem : __elements)
                 {
@@ -516,34 +582,39 @@ void BfGuiFileDialog::__pick()
                 }
              }
           },
-          __out);
+          __out
+      );
    }
 }
 
-std::time_t BfGuiFileDialog::getLastWriteFileTime_time_t(const fs::path& path)
+std::time_t
+BfGuiFileDialog::getLastWriteFileTime_time_t(const fs::path& path)
 {
    fs::file_time_type file_time = fs::last_write_time(path);
    return bfUtilsToTimeT(file_time);
 }
 
-std::string BfGuiFileDialog::getLastWriteFileTime_string(const fs::path& path)
+std::string
+BfGuiFileDialog::getLastWriteFileTime_string(const fs::path& path)
 {
    // External solution
-   std::time_t       tt  = getLastWriteFileTime_time_t(path);
-   std::tm*          gmt = std::gmtime(&tt);
+   std::time_t tt = getLastWriteFileTime_time_t(path);
+   std::tm* gmt = std::gmtime(&tt);
    std::stringstream buffer;
    buffer << std::put_time(gmt, "%d.%m.%Y %H:%M");
    return buffer.str();
 }
-std::string BfGuiFileDialog::getLastWriteFileTime_string(std::time_t time)
+std::string
+BfGuiFileDialog::getLastWriteFileTime_string(std::time_t time)
 {
-   std::tm*          gmt = std::gmtime(&time);
+   std::tm* gmt = std::gmtime(&time);
    std::stringstream buffer;
    buffer << std::put_time(gmt, "%d.%m.%Y %H:%M");
    return buffer.str();
 }
 
-size_t BfGuiFileDialog::getElementSize(const fs::path& root)
+size_t
+BfGuiFileDialog::getElementSize(const fs::path& root)
 {
    if (fs::is_directory(root))
    {
@@ -557,7 +628,8 @@ size_t BfGuiFileDialog::getElementSize(const fs::path& root)
    return 0;
 }
 
-size_t BfGuiFileDialog::getDirectorySize(const fs::path& root)
+size_t
+BfGuiFileDialog::getDirectorySize(const fs::path& root)
 {
    size_t total_size = 0;
    for (const auto& item : fs::directory_iterator(root))
@@ -580,91 +652,125 @@ size_t BfGuiFileDialog::getDirectorySize(const fs::path& root)
    return total_size;
 }
 
-size_t BfGuiFileDialog::getFileSize(const fs::path& path)
+size_t
+BfGuiFileDialog::getFileSize(const fs::path& path)
 {
    return fs::file_size(path);
 }
 
-bool BfGuiFileDialog::isDirectoryEmpty(const fs::path& path)
+bool
+BfGuiFileDialog::isDirectoryEmpty(const fs::path& path)
 {
    return std::filesystem::directory_iterator(path) ==
           std::filesystem::end(std::filesystem::directory_iterator());
 }
 
-bool BfGuiFileDialog::isDirectoryContainsExt(const fs::path& root,
-                                             std::string     ext)
+bool
+BfGuiFileDialog::isDirectoryContainsExt(const fs::path& root, std::string ext)
 {
-   if (ext == ".*" || ext == "") return true;
+   if (ext == ".*" || ext == "")
+      return true;
    for (const auto& it : fs::recursive_directory_iterator(root))
    {
-      if (it.path().filename().extension().string() == ext) return true;
+      if (it.path().filename().extension().string() == ext)
+         return true;
    }
    return false;
 }
 
-void BfGuiFileDialog::__sortByTime(bool inverse)
+void
+BfGuiFileDialog::__sortByTime(bool inverse)
 {
    if (!inverse)
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
-         if (a.type == BfFileDialogElementType_BackDirectory) return true;
-         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+         if (a.type == BfFileDialogElementType_BackDirectory)
+            return true;
+         if (b.type == BfFileDialogElementType_BackDirectory)
+            return false;
 
          return a.date < b.date;
       });
    else
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
-         if (a.type == BfFileDialogElementType_BackDirectory) return true;
-         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+         if (a.type == BfFileDialogElementType_BackDirectory)
+            return true;
+         if (b.type == BfFileDialogElementType_BackDirectory)
+            return false;
 
          return a.date > b.date;
       });
 }
 
-void BfGuiFileDialog::__sortBySize(bool inverse)
+void
+BfGuiFileDialog::__sortBySize(bool inverse)
 {
    if (!inverse)
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
-         if (a.type == BfFileDialogElementType_BackDirectory) return true;
-         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+         if (a.type == BfFileDialogElementType_BackDirectory)
+            return true;
+         if (b.type == BfFileDialogElementType_BackDirectory)
+            return false;
          return a.size < b.size;
       });
    else
       __elements.sort([&](const BfFileDialogElement& a, BfFileDialogElement b) {
-         if (a.type == BfFileDialogElementType_BackDirectory) return true;
-         if (b.type == BfFileDialogElementType_BackDirectory) return false;
+         if (a.type == BfFileDialogElementType_BackDirectory)
+            return true;
+         if (b.type == BfFileDialogElementType_BackDirectory)
+            return false;
          return a.size > b.size;
       });
 }
-void BfGuiFileDialog::__sortByName(bool inverse)
+void
+BfGuiFileDialog::__sortByName(bool inverse)
 {
-   __elements.sort(
-       [&](const BfFileDialogElement& a, const BfFileDialogElement& b) {
-          if (a.type == BfFileDialogElementType_BackDirectory) return true;
-          if (b.type == BfFileDialogElementType_BackDirectory) return false;
+   __elements.sort([&](const BfFileDialogElement& a,
+                       const BfFileDialogElement& b) {
+      if (a.type == BfFileDialogElementType_BackDirectory)
+         return true;
+      if (b.type == BfFileDialogElementType_BackDirectory)
+         return false;
 
-          if (a.type != b.type)
-          {
-             if (a.type == BfFileDialogElementType_Directory) return true;
-             if (b.type == BfFileDialogElementType_Directory) return false;
+      if (a.type != b.type)
+      {
+         if (a.type == BfFileDialogElementType_Directory)
+            return true;
+         if (b.type == BfFileDialogElementType_Directory)
+            return false;
 
-             if (a.type == BfFileDialogElementType_DirectoryEmpty) return true;
-             if (b.type == BfFileDialogElementType_DirectoryEmpty) return false;
+         if (a.type == BfFileDialogElementType_DirectoryEmpty)
+            return true;
+         if (b.type == BfFileDialogElementType_DirectoryEmpty)
+            return false;
 
-             return a.type == BfFileDialogElementType_RegularFile;
-          }
+         return a.type == BfFileDialogElementType_RegularFile;
+      }
 
-          std::string a_str = a.path.filename().string();
-          std::string b_str = b.path.filename().string();
+      std::string a_str = a.path.filename().string();
+      std::string b_str = b.path.filename().string();
 
-          return inverse ? a_str.compare(b_str) > 0 : a_str.compare(b_str) < 0;
-       });
+      return inverse ? a_str.compare(b_str) > 0 : a_str.compare(b_str) < 0;
+   });
 }
-void BfGuiFileDialog::show() noexcept { __is_render = true; }
-void BfGuiFileDialog::hide() noexcept { __is_render = false; }
+void
+BfGuiFileDialog::show() noexcept
+{
+   __is_render = true;
+}
+void
+BfGuiFileDialog::hide() noexcept
+{
+   __is_render = false;
+}
 
-void BfGuiFileDialog::draw() { __render(); }
+void
+BfGuiFileDialog::draw()
+{
+   __render();
+}
 
-void BfGuiFileDialog::sort(const ImGuiTableSortSpecs* sort_specs)
+void
+BfGuiFileDialog::sort(const ImGuiTableSortSpecs* sort_specs)
 {
    if (sort_specs->SpecsDirty)
    {
@@ -697,14 +803,16 @@ void BfGuiFileDialog::sort(const ImGuiTableSortSpecs* sort_specs)
    }
 }
 
-void BfGuiFileDialog::__update()
+void
+BfGuiFileDialog::__update()
 {
    __root = fs::absolute(__root);
    try
    {
-      std::list<BfFileDialogElement> tmp;
+      std::list< BfFileDialogElement > tmp;
       tmp.push_back(
-          {__root.root_name(), 0, 0, BfFileDialogElementType_BackDirectory});
+          {__root.root_name(), 0, 0, BfFileDialogElementType_BackDirectory}
+      );
       for (const auto& item : fs::directory_iterator(__root))
       {
          fs::path abs = fs::absolute(__root / item);
@@ -716,11 +824,12 @@ void BfGuiFileDialog::__update()
          {
             abs = fs::canonical(abs);
             BfFileDialogElement element{
-                .path         = abs,
-                .date         = getLastWriteFileTime_time_t(abs),
-                .size         = getElementSize(abs),
-                .type         = BfFileDialogElementType_None,
-                .is_extension = true};
+                .path = abs,
+                .date = getLastWriteFileTime_time_t(abs),
+                .size = getElementSize(abs),
+                .type = BfFileDialogElementType_None,
+                .is_extension = true
+            };
             if (fs::is_directory(abs))
             {
                if (isDirectoryEmpty(abs))
@@ -751,7 +860,8 @@ void BfGuiFileDialog::__update()
    }
 }
 
-void BfGuiFileDialog::__updateElementExtensions()
+void
+BfGuiFileDialog::__updateElementExtensions()
 {
    if (!__is_check_extension_in_dirs)
    {
@@ -766,7 +876,8 @@ void BfGuiFileDialog::__updateElementExtensions()
          {
             if (BfGuiFileDialog::isDirectoryContainsExt(
                     elem.path,
-                    __extensions[__chosen_ext]))
+                    __extensions[__chosen_ext]
+                ))
             {
                elem.is_extension = true;
             }
@@ -779,18 +890,61 @@ void BfGuiFileDialog::__updateElementExtensions()
    }
 }
 
-void BfGuiFileDialog::goTo(const fs::path& path)
+fs::path
+BfGuiFileDialog::_exePath()
+{
+#ifdef _WIN32
+   char buffer[MAX_PATH];
+   DWORD size = GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+
+   if (size == 0)
+   {
+      throw std::runtime_error("Failed to retrieve the executable path");
+   }
+
+   return std::filesystem::path(buffer).remove_filename();
+#elif __linux__
+   char buffer[2048];
+   ssize_t count = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+   if (count != -1)
+   {
+      buffer[count] = '\0';
+      return std::filesystem::path(buffer).remove_filename();
+   }
+   else
+   {
+      throw std::runtime_error("Failed to resolve executable path");
+   }
+#elif __APPLE__
+   char buffer[2048];
+   uint32_t size = sizeof(buffer);
+   if (_NSGetExecutablePath(buffer, &size) == 0)
+   {
+      return std::filesystem::path(buffer).remove_filename();
+   }
+   else
+   {
+      throw std::runtime_error("Buffer too small; increase its size");
+   }
+#else
+   throw std::runtime_error("Unsupported platform");
+#endif
+}
+
+void
+BfGuiFileDialog::goTo(const fs::path& path)
 {
    if (path != __root)
    {
       __back_stack.push(__root);
-      __root          = path;
-      __forward_stack = std::stack<fs::path>();
+      __root = path;
+      __forward_stack = std::stack< fs::path >();
    }
    __update();
 }
 
-void BfGuiFileDialog::goBack()
+void
+BfGuiFileDialog::goBack()
 {
    if (!__back_stack.empty())
    {
@@ -804,7 +958,8 @@ void BfGuiFileDialog::goBack()
    }
 }
 
-void BfGuiFileDialog::goForward()
+void
+BfGuiFileDialog::goForward()
 {
    if (!__forward_stack.empty())
    {
@@ -818,11 +973,16 @@ void BfGuiFileDialog::goForward()
    }
 }
 
-bool BfGuiFileDialog::isActive() { return __is_render; }
+bool
+BfGuiFileDialog::isActive()
+{
+   return __is_render;
+}
 
-void bfGetDirectoryItemsList(fs::path               root,
-                             std::vector<fs::path>& dirs,
-                             std::vector<fs::path>& files)
+void
+bfGetDirectoryItemsList(
+    fs::path root, std::vector< fs::path >& dirs, std::vector< fs::path >& files
+)
 {
    if (!dirs.empty())
    {

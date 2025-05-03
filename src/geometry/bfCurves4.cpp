@@ -373,6 +373,12 @@ BfTextureQuad::presentContextMenu()
          this->root()->control().updateBuffer(true);
       }
       ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
+      if (ImGui::Button("Move to center"))
+      {
+         casted->moveToCenter();
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
    }
 }
 

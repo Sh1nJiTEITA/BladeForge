@@ -1,6 +1,7 @@
 #include "bfGui.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <glm/trigonometric.hpp>
@@ -1084,7 +1085,11 @@ renderBitCheckbox(const char* label, uint32_t bit, uint32_t* bitfield)
 }
 
 bool
-BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
+BfGui::presentBladeSectionCreateWindow(
+    obj::section::SectionCreateInfo* info,
+    std::shared_ptr< obj::curves::BfTexturePlane > tp
+
+)
 {
    static ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_NoUndocking;
    ImGuiWindowFlags window_flags =
@@ -1093,6 +1098,7 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
    ImGui::Begin("MainDockSpaceHost", nullptr, window_flags);
    ImGuiID dockspace_id = ImGui::GetID("BladeSectionDockspace");
    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
+
    static bool built = false;
    if (!built)
    {
@@ -1110,8 +1116,18 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
       );
       ImGuiID right_id = dockspace_id;
 
+      ImGuiID bot_id = ImGui::DockBuilderSplitNode(
+          dockspace_id,
+          ImGuiDir_Down,
+          0.80f,
+          nullptr,
+          &right_id
+      );
+      ImGuiID top_id = right_id;
+
       ImGui::DockBuilderDockWindow("Parameters", left_id);
-      ImGui::DockBuilderDockWindow("Preview", right_id);
+      ImGui::DockBuilderDockWindow("Preview", bot_id);
+      ImGui::DockBuilderDockWindow("Image", top_id);
       ImGui::DockBuilderFinish(dockspace_id);
    }
 
@@ -1165,6 +1181,41 @@ BfGui::presentBladeSectionCreateWindow(obj::section::SectionCreateInfo* info)
       // clang-format on
    }
    ImGui::End();
+
+   ImGui::Begin("Image");
+   {
+      static fs::path file_path;
+      static bool is_searching = false;
+      tp->quad()->presentContextMenu();
+      if (ImGui::Button("Open Image"))
+      {
+         BfGuiFileDialog::instance()->openFile(
+             &file_path,
+             /* {".*"} */ {".jpeg", ".png", ".jpg"}
+         );
+         is_searching = true;
+      }
+      ImGui::SameLine();
+      ImGui::Text("Path: %s", file_path.string().c_str());
+
+      if (!BfGuiFileDialog::instance()->isActive() && is_searching)
+      {
+         is_searching = false;
+         fmt::println("Found path: {}", file_path.string());
+         if (fs::exists(file_path))
+         {
+            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+            auto& texture = man.get< base::desc::own::BfDescriptorTextureTest >(
+                base::desc::own::SetType::Texture,
+                0
+            );
+            texture.reload(file_path);
+            man.updateSets();
+         }
+      }
+   }
+   ImGui::End();
+
    return !no_remake;
 }
 
