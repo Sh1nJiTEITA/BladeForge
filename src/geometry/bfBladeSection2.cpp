@@ -429,7 +429,7 @@ void BfBladeSection::_createCenterCircles2() {
          BfVar< float >(45.0f),
          BfVar< float >(45.0f),
          _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>()->curve()
-         , curves::BfCirclePackWH::Flag::SeparateHandles
+         , curves::BfCirclePackWH::Flag::SeparateHandles// | curves::BfCirclePackWH::Flag::FixedAngle
       );
    }
    circ_layer->make();

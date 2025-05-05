@@ -664,9 +664,9 @@ BfCirclePackWH::_calcTangentLineVertices()
 void
 BfCirclePackWH::_addUpdateTangentLine()
 {
-   auto [center_vert, tangent_vert] = _calcTangentLineVertices();
    if (!_isPart< E::CenterTangentLine >())
    {
+      auto [center_vert, tangent_vert] = _calcTangentLineVertices();
       auto line = _addPartF< E::CenterTangentLine, BfSingleLine >(
           center_vert,
           tangent_vert
@@ -675,6 +675,8 @@ BfCirclePackWH::_addUpdateTangentLine()
    }
    else
    {
+      _updateCircleCenter();
+      auto [center_vert, tangent_vert] = _calcTangentLineVertices();
       auto line = _part< E::CenterTangentLine, BfSingleLine >();
       line->first().pos() = center_vert.pos;
       line->second().pos() = tangent_vert.pos;
@@ -727,6 +729,25 @@ BfCirclePackWH::_calcRadius()
 }
 
 void
+BfCirclePackWH::_updateCircleCenter()
+{
+   auto center_handle = _part< E::CenterHandle, BfHandleCircle >();
+   if (center_handle->isChanged())
+   {
+      auto bez = bezierCurve();
+      const auto info_vert = bez->calc(m_relativePos.get());
+      const auto actual_vert = center_handle->center().get();
+
+      if (glm::any(glm::notEqual(info_vert.pos, actual_vert.pos)))
+      {
+         float close_t = math::BfBezierBase::findClosest(*bez, actual_vert);
+         fmt::println("({}) {} -> {}", close_t, info_vert.pos, actual_vert.pos);
+         m_relativePos.get() = close_t;
+      }
+   }
+}
+
+void
 BfCirclePackWH::_updateRadius()
 {
    auto [fR, sR] = _calcRadius();
@@ -751,22 +772,19 @@ BfCirclePackWH::_updateRadius()
       else if (second_handle->isChanged())
       {
          m_radius.get() = sR;
-
          if (m_flags & FixedAngle)
             return;
 
-         const float R = math::angleBetween3Vertices(
+         const float angle = math::angleBetween3Vertices(
              tangent_line->second(),
              tangent_line->first(),
              second_handle->center()
          );
-         // const float posR = glm::abs(R);
-         // const float clmR = glm::clamp(R, 0.0f, 180.f);
 
          if (m_flags & SeparateHandles)
-            m_angleSecond.get() = R;
+            m_angleSecond.get() = angle;
          else
-            m_angleFirst.get() = 180.f - R;
+            m_angleFirst.get() = 180.f - angle;
       }
    }
 }
@@ -781,6 +799,7 @@ BfCirclePackWH::_addUpdateCircle()
       BfVertex3Uni& center_vert = center_line->first();
       
       _addPartF< E::Circle, BfCircleCenter >( center_vert.getp(), m_radius.getp());
+      _addPartF< E::CenterHandle, BfHandleCircle >( center_vert.getp(), 0.01f);
 
       const auto [aR, bR] = _calcRadiusVertices();
       auto fangle_line = _addPartF< E::FirstAngleLine, BfSingleLine >(center_vert.getp(), aR);

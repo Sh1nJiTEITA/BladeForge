@@ -460,6 +460,7 @@ enum class BfCirclePackWHEnum
 {
    CenterTangentLine = 0,
    Circle,
+   CenterHandle,
    FirstAngleLine,
    SecondAngleLine,
    FirstHandle,
@@ -536,10 +537,11 @@ public:
    std::shared_ptr< BfBezierN > bezierCurve();
 
 private:
-   std::pair< BfVertex3, BfVertex3 > _calcTangentLineVertices();
+   auto _calcTangentLineVertices() -> std::pair< BfVertex3, BfVertex3 >;
    void _addUpdateTangentLine();
-   std::pair< BfVertex3, BfVertex3 > _calcRadiusVertices();
-   std::pair< float, float > _calcRadius();
+   auto _calcRadiusVertices() -> std::pair< BfVertex3, BfVertex3 >;
+   auto _calcRadius() -> std::pair< float, float >;
+   void _updateCircleCenter();
    void _updateRadius();
    void _addUpdateCircle();
 
