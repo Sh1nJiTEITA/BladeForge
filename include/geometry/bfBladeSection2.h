@@ -55,7 +55,10 @@ enum class BfBladeSectionEnum : uint32_t
    OutletPack	        = 1 << 11,
    FrontCurveChain	= 1 << 12,
    BackCurveChain	= 1 << 13,
-   End                  = 1 << 14
+   
+   CenterCircles2	= 1 << 14,
+
+   End                  = 1 << 15
 };
 // clang-format on
 
@@ -74,9 +77,14 @@ public:
       _createCircleEdges();
       _createIOAngles();
       _createAverageInitialCurve();
-      _createCenterCircles();
-      _createIOCircles();
-      _createFrontCurves();
+      _createCenterCircles2();
+      // FRONTIER 
+
+      
+      
+      // _createCenterCircles();
+      // _createIOCircles();
+      // _createFrontCurves();
       // _createCCLines();
       // _createFrontIntersectionLines();
       // _createFrontCurves();
@@ -97,12 +105,14 @@ public:
    }
 
    virtual void premake() { 
-      applyRenderToggle();
+      // applyRenderToggle();
       _processChord(); 
       _processCircleEdges();
       _processIOAngles();
       _processAverageInitialCurve();
-      _processCenterCircles();
+      // FRONTIER 
+
+      // _processCenterCircles();
       // _processCCLines();
       // _processFrontIntersectionLines();
    }
@@ -184,6 +194,9 @@ private:
     */
    void _createCenterCircles();
    void _processCenterCircles();
+
+   void _createCenterCircles2();
+   void _processCenterCircles2();
 
    /**
     * @brief Создание пакетов входных и выходных кромок

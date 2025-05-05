@@ -1165,19 +1165,19 @@ BfGui::presentBladeSectionCreateWindow(
    if (ImGui::Begin("Preview"))
    {
       // clang-format off
-      no_remake *= renderBitCheckbox("Chord",             static_cast<uint32_t>(obj::section::BfBladeSectionEnum::Chord), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("_ChordLeftBorder",  static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordLeftBorder), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("_ChordRightBorder", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordRightBorder), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("InletCircle",       static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletCircle), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("OutletCircle",      static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletCircle), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("InletDirection",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletDirection), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("OutletDirection",   static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletDirection), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("CenterCircles",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::CenterCircles), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("InletPack",          static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletPack), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("OutletPack",         static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletPack), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("FrontCurveChain",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::FrontCurveChain), &info->renderBitSet);
-      no_remake *= renderBitCheckbox("BackCurveChain",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::BackCurveChain), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("Chord",             static_cast<uint32_t>(obj::section::BfBladeSectionEnum::Chord), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("_ChordLeftBorder",  static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordLeftBorder), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("_ChordRightBorder", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::_ChordRightBorder), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("InletCircle",       static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletCircle), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("OutletCircle",      static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletCircle), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("InletDirection",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletDirection), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("OutletDirection",   static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletDirection), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(obj::section::BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("CenterCircles",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::CenterCircles), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("InletPack",          static_cast<uint32_t>(obj::section::BfBladeSectionEnum::InletPack), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("OutletPack",         static_cast<uint32_t>(obj::section::BfBladeSectionEnum::OutletPack), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("FrontCurveChain",    static_cast<uint32_t>(obj::section::BfBladeSectionEnum::FrontCurveChain), &info->renderBitSet);
+      // no_remake *= renderBitCheckbox("BackCurveChain",     static_cast<uint32_t>(obj::section::BfBladeSectionEnum::BackCurveChain), &info->renderBitSet);
       // clang-format on
    }
    ImGui::End();

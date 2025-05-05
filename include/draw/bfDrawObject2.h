@@ -1,6 +1,7 @@
 #ifndef BF_DRAWOBJECT2_H
 #define BF_DRAWOBJECT2_H
 
+#include <utility>
 #include <vulkan/vulkan_core.h>
 
 #include <memory>
@@ -255,6 +256,14 @@ public:
     * @param n объект
     */
    void add(BfObj n);
+
+   template < typename T, typename... Args >
+   std::shared_ptr< T > addf(Args&&... args)
+   {
+      auto obj = std::make_shared< T >(std::forward< Args >(args)...);
+      this->add(obj);
+      return obj;
+   }
 
    /**
     * @brief Построение объекта.

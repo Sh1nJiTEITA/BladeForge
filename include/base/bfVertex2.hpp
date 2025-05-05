@@ -30,7 +30,18 @@ struct BfVertex3
    {
    }
 
-   glm::vec3 operator=(const BfVertex3& o) { return o.pos; }
+   // glm::vec3 operator=(const BfVertex3& o) { return o.pos; }
+   //
+   BfVertex3& operator=(const BfVertex3& o)
+   {
+      pos = o.pos;
+      color = o.color;
+      normals = o.normals;
+      return *this;
+   }
+
+   operator glm::vec3() const { return pos; }
+
    bool operator==(const BfVertex3& o)
    {
       return o.pos == this->pos && o.normals == this->normals &&
@@ -74,7 +85,7 @@ struct BfVertex3
        : pos{ipos}, color{icol}, normals{inor}
    {
    }
-
+   //
    BfVertex3(
        glm::vec3&& ipos,
        glm::vec3&& icol = {1.0f, 1.0f, 1.0f},
@@ -82,6 +93,26 @@ struct BfVertex3
    )
        : pos{std::move(ipos)}, color{std::move(icol)}, normals{std::move(inor)}
    {
+   }
+   // template <
+   //     typename P = glm::vec3,
+   //     typename C = glm::vec3,
+   //     typename N = glm::vec3 >
+   // BfVertex3(
+   //     P&& ipos,
+   //     C&& icol = glm::vec3{1.0f, 1.0f, 1.0f},
+   //     N&& inor = glm::vec3{0.0f, 0.0f, 0.0f}
+   // )
+   //     : pos(std::forward< P >(ipos))
+   //     , color(std::forward< C >(icol))
+   //     , normals(std::forward< N >(inor))
+   // {
+   // }
+
+   template < typename POS >
+   BfVertex3 otherPos(POS&& pos)
+   {
+      return BfVertex3{std::forward< POS >(pos), this->color, this->normals};
    }
 
    static BfVertex3 nan()

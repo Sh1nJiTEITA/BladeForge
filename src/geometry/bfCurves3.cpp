@@ -725,20 +725,21 @@ bfMathGetDistanceToLine(const BfSingleLine& L, BfVertex3 P)
 
    return glm::distance(projectionPoint, P.pos);*/
 
-   glm::vec3 normal =
-       bfMathGetNormal(L.get_first().pos, L.get_second().pos, P.pos);
-   glm::vec3 dir_to_line =
-       glm::normalize(glm::cross(L.get_direction_from_start(), normal));
-
-   BfSingleLine line(P, P.pos + dir_to_line);
-
-   glm::vec3 intersection = bfMathFindLinesIntersection(
-       L,
-       line,
-       BF_MATH_FIND_LINES_INTERSECTION_ANY
-   );
-
-   return glm::distance(intersection, P.pos);
+   // glm::vec3 normal =
+   //     bfMathGetNormal(L.get_first().pos, L.get_second().pos, P.pos);
+   // glm::vec3 dir_to_line =
+   //     glm::normalize(glm::cross(L.get_direction_from_start(), normal));
+   //
+   // BfSingleLine line(P, P.pos + dir_to_line);
+   //
+   // glm::vec3 intersection = bfMathFindLinesIntersection(
+   //     L,
+   //     line,
+   //     BF_MATH_FIND_LINES_INTERSECTION_ANY
+   // );
+   //
+   // return glm::distance(intersection, P.pos);
+   return 0;
 }
 
 std::vector< BfVertex3 >

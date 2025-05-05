@@ -118,8 +118,8 @@ BfBladeSection::_createChord()
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
    );
-   oChord->toggleRender(false);
-   oChord->toggleRender(false);
+   // oChord->toggleRender(false);
+   // oChord->toggleRender(false);
    m_lastChordL = oChord->left().get();
    m_lastChordR = oChord->right().get();
 
@@ -131,8 +131,8 @@ BfBladeSection::_createChord()
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
    );
-   oChordLeft->toggleRender(false);
-   oChordLeft->toggleRender(false);
+   // oChordLeft->toggleRender(false);
+   // oChordLeft->toggleRender(false);
 
    auto oChordRight = _addPartForward<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
@@ -419,6 +419,23 @@ void BfBladeSection::_processCenterCircles() {
       prev = pack;
    }
 }
+
+void BfBladeSection::_createCenterCircles2() { 
+   auto circ_layer = _addPartForward<BfBladeSectionEnum::CenterCircles2, obj::BfDrawLayer>("Circles layer 2");
+   for (auto& circ : m_info.get().centerCircles) { 
+      circ_layer->addf<curves::BfCirclePackWH>(
+         BfVar< float >(&circ.relativePos),
+         BfVar< float >(&circ.radius),
+         BfVar< float >(90.0f),
+         _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>()->curve()
+      );
+   }
+   circ_layer->make();
+}
+void BfBladeSection::_processCenterCircles2() {
+
+}
+
 
 void BfBladeSection::_createIOCircles() { 
    auto circles = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
