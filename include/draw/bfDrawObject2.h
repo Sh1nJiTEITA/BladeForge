@@ -385,6 +385,7 @@ class BfDrawLayerWithAccess : public obj::BfDrawLayer
 {
 public:
    using pObj = std::shared_ptr< BfDrawObjectBase >;
+   using E = PartEnum;
 
    BfDrawLayerWithAccess(BfOTypeName typeName)
        : obj::BfDrawLayer(typeName)
@@ -394,7 +395,7 @@ public:
 protected:
    std::unordered_map< PartEnum, BfOID > m_idMap;
 
-   template < PartEnum part >
+   template < E part >
    void _addPart(pObj obj)
    {
       this->add(obj);
@@ -410,15 +411,15 @@ protected:
    }
 
    template < typename T, typename... Args >
-   std::shared_ptr< T > _addPartForward(PartEnum part, Args&&... args)
+   std::shared_ptr< T > _addPartForward(E part, Args&&... args)
    {
       auto item = std::make_shared< T >(std::forward< Args >(args)...);
       _addPart< part >(item);
       return item;
    }
 
-   template < PartEnum part, typename T, typename... Args >
-   std::shared_ptr< T > _addPartForward(Args&&... args)
+   template < E part, typename T, typename... Args >
+   std::shared_ptr< T > _addPartF(Args&&... args)
    {
       auto item = std::make_shared< T >(std::forward< Args >(args)...);
       _addPart< part >(item);
@@ -441,20 +442,26 @@ protected:
    }
 
    template < class Cast >
-   std::shared_ptr< Cast > _part(PartEnum e)
+   std::shared_ptr< Cast > _part(E e)
    {
       auto id = m_idMap[e];
       return std::static_pointer_cast< Cast >(_findObjectById(id));
    }
 
-   template < PartEnum part, class Cast >
+   template < E part, class Cast >
    std::shared_ptr< Cast > _part()
    {
       auto id = m_idMap[part];
       return std::static_pointer_cast< Cast >(_findObjectById(id));
    }
 
-   template < PartEnum part >
+   template < E part >
+   bool _isPart()
+   {
+      return m_idMap.contains(part);
+   }
+
+   template < E part >
    bool _toggleRender(int sts = -1)
    {
       auto id = m_idMap[part];
@@ -462,7 +469,7 @@ protected:
       return obj->toggleRender(sts);
    }
 
-   bool _toggleRender(PartEnum part, int sts = -1)
+   bool _toggleRender(E part, int sts = -1)
    {
       auto id = m_idMap[part];
       auto obj = _findObjectById(id);

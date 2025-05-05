@@ -639,36 +639,6 @@ BfCircle2LinesWH::radius() noexcept
 
 /* BfCirclePackWH BEGIN */
 
-std::shared_ptr< BfSingleLine >
-BfCirclePackWH::centerTangentLine()
-{
-   return std::static_pointer_cast< BfSingleLine >(m_children[0]);
-}
-
-std::shared_ptr< BfCircleCenterWH >
-BfCirclePackWH::circle()
-{
-   return std::static_pointer_cast< BfCircleCenterWH >(m_children[1]);
-}
-
-std::shared_ptr< BfSingleLine >
-BfCirclePackWH::angleLine()
-{
-   return std::static_pointer_cast< BfSingleLine >(m_children[2]);
-}
-
-std::shared_ptr< BfHandleCircle >
-BfCirclePackWH::firstAngleLineHandle()
-{
-   return std::static_pointer_cast< BfHandleCircle >(m_children[3]);
-}
-
-std::shared_ptr< BfHandleCircle >
-BfCirclePackWH::secondAngleLineHandle()
-{
-   return std::static_pointer_cast< BfHandleCircle >(m_children[4]);
-}
-
 std::shared_ptr< BfBezierN >
 BfCirclePackWH::bezierCurve()
 {
@@ -695,14 +665,17 @@ void
 BfCirclePackWH::_addUpdateTangentLine()
 {
    auto [center_vert, tangent_vert] = _calcTangentLineVertices();
-   if (m_children.size() != m_totalObjectCount)
+   if (!_isPart< E::CenterTangentLine >())
    {
-      auto line = addf< BfSingleLine >(center_vert, tangent_vert);
+      auto line = _addPartF< E::CenterTangentLine, BfSingleLine >(
+          center_vert,
+          tangent_vert
+      );
       line->color() = glm::vec3(0.0, 0.7, 0.2);
    }
    else
    {
-      auto line = centerTangentLine();
+      auto line = _part< E::CenterTangentLine, BfSingleLine >();
       line->first().pos() = center_vert.pos;
       line->second().pos() = tangent_vert.pos;
    }
@@ -711,77 +684,123 @@ BfCirclePackWH::_addUpdateTangentLine()
 std::pair< BfVertex3, BfVertex3 >
 BfCirclePackWH::_calcRadiusVertices()
 {
-   const auto tangent_line = centerTangentLine();
+   const auto tangent_line = _part< E::CenterTangentLine, BfSingleLine >();
    const auto dir = tangent_line->directionFromStart();
    auto center = tangent_line->first().get();
-   glm::vec3 new_dir = glm::rotate(
-                           glm::mat4(1.0f),
-                           glm::radians(this->m_angle.get()),
-                           center.normals
-                       ) *
-                       glm::vec4(dir, 1.0f);
-   return {
-       center.otherPos(center.pos + new_dir * m_radius.get()),
-       center.otherPos(center.pos - new_dir * m_radius.get()),
-   };
+
+   const auto fangle = glm::radians(this->m_angleFirst.get());
+   const auto fmtx = glm::rotate(glm::mat4(1.0f), fangle, center.normals);
+   const glm::vec3 fdir = fmtx * glm::vec4(dir, 1.0f);
+
+   if (m_flags & SeparateHandles)
+   {
+      const auto sangle = glm::radians(this->m_angleSecond.get());
+      const auto smtx = glm::rotate(glm::mat4(1.0f), -sangle, center.normals);
+      const glm::vec3 sdir = smtx * glm::vec4(dir, 1.0f);
+
+      return {
+          center.otherPos(center.pos + fdir * m_radius.get()),
+          center.otherPos(center.pos + sdir * m_radius.get()),
+      };
+   }
+   else
+   {
+      return {
+          center.otherPos(center.pos + fdir * m_radius.get()),
+          center.otherPos(center.pos - fdir * m_radius.get()),
+      };
+   }
 }
 
 std::pair< float, float >
 BfCirclePackWH::_calcRadius()
 {
-   auto fline = firstAngleLineHandle();
-   auto sline = secondAngleLineHandle();
-   auto line = centerTangentLine();
-   return {
-       glm::distance(fline->center().pos(), line->first().pos()),
-       glm::distance(sline->center().pos(), line->first().pos())
-   };
+   auto line = _part< E::CenterTangentLine, BfSingleLine >();
+
+   auto fline = _part< E::FirstHandle, BfHandleCircle >();
+   const auto fdis = glm::distance(fline->center().pos(), line->first().pos());
+
+   auto sline = _part< E::SecondHandle, BfHandleCircle >();
+   const auto sdis = glm::distance(sline->center().pos(), line->first().pos());
+
+   return {fdis, sdis};
+}
+
+void
+BfCirclePackWH::_updateRadius()
+{
+   auto [fR, sR] = _calcRadius();
+   if (fR != sR)
+   {
+      auto tangent_line = _part< E::CenterTangentLine, BfSingleLine >();
+      auto first_handle = _part< E::FirstHandle, BfHandleCircle >();
+      auto second_handle = _part< E::SecondHandle, BfHandleCircle >();
+
+      if (first_handle->isChanged())
+      {
+         m_radius.get() = fR;
+         if (m_flags & FixedAngle)
+            return;
+
+         m_angleFirst.get() = math::angleBetween3Vertices(
+             tangent_line->second(),
+             tangent_line->first(),
+             first_handle->center()
+         );
+      }
+      else if (second_handle->isChanged())
+      {
+         m_radius.get() = sR;
+
+         if (m_flags & FixedAngle)
+            return;
+
+         const float R = math::angleBetween3Vertices(
+             tangent_line->second(),
+             tangent_line->first(),
+             second_handle->center()
+         );
+         // const float posR = glm::abs(R);
+         // const float clmR = glm::clamp(R, 0.0f, 180.f);
+
+         if (m_flags & SeparateHandles)
+            m_angleSecond.get() = R;
+         else
+            m_angleFirst.get() = 180.f - R;
+      }
+   }
 }
 
 void
 BfCirclePackWH::_addUpdateCircle()
 {
-   if (m_children.size() != m_totalObjectCount)
+   // clang-format off
+   if (!_isPart< E::Circle >())
    {
-      auto line = centerTangentLine();
-      this->addf< BfCircleCenter >(line->first().getp(), m_radius.getp());
-      auto [aR, bR] = _calcRadiusVertices();
-      auto angle_line = this->addf< BfSingleLine >(aR, bR);
-      this->addf< BfHandleCircle >(angle_line->first().getp(), 0.01f);
-      this->addf< BfHandleCircle >(angle_line->second().getp(), 0.01f);
+      auto center_line = _part< E::CenterTangentLine, BfSingleLine >();
+      BfVertex3Uni& center_vert = center_line->first();
+      
+      _addPartF< E::Circle, BfCircleCenter >( center_vert.getp(), m_radius.getp());
+
+      const auto [aR, bR] = _calcRadiusVertices();
+      auto fangle_line = _addPartF< E::FirstAngleLine, BfSingleLine >(center_vert.getp(), aR);
+      auto sangle_line = _addPartF< E::SecondAngleLine, BfSingleLine >(center_vert.getp(), bR);
+
+      _addPartF< E::FirstHandle, BfHandleCircle >( fangle_line->second().getp(), 0.01f);
+      _addPartF< E::SecondHandle, BfHandleCircle >( sangle_line->second().getp(), 0.01f);
    }
    else
    {
-      auto [fR, sR] = _calcRadius();
-      if (fR != sR)
-      {
-         auto tangent_line = centerTangentLine();
-         if (firstAngleLineHandle()->isChanged())
-         {
-            m_radius.get() = fR;
-            m_angle.get() = math::angleBetween3Vertices(
-                tangent_line->second(),
-                tangent_line->first(),
-                firstAngleLineHandle()->center()
-            );
-         }
-         else if (secondAngleLineHandle()->isChanged())
-         {
-            m_radius.get() = sR;
-            const float new_angle = math::angleBetween3Vertices(
-                tangent_line->second(),
-                tangent_line->first(),
-                secondAngleLineHandle()->center()
-            );
-            m_angle.get() = 180.f - new_angle;
-         }
-      }
-
+      _updateRadius();
       auto [aR, bR] = _calcRadiusVertices();
-      auto angle_line = angleLine();
-      angle_line->first().pos() = aR.pos;
-      angle_line->second().pos() = bR.pos;
+
+      auto fangle_line = _part< E::FirstAngleLine, BfSingleLine >();
+      auto sangle_line = _part< E::SecondAngleLine, BfSingleLine >();
+
+      fangle_line->second().pos() = aR.pos;
+      sangle_line->second().pos() = bR.pos;
    }
+   // clang-format off
 }
 
 void

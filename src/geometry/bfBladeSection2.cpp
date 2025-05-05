@@ -106,7 +106,7 @@ BfBladeSection::_createChord()
 {
    // clang-format off
    auto& g = m_info;
-   auto oChord = _addPartForward<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
+   auto oChord = _addPartF<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
       BfVertex3{
          glm::vec3{ 0.0f, 0.0f, 0.0f }, 
          glm::vec3{ 0.5f, 0.5f, 0.1f },
@@ -123,7 +123,7 @@ BfBladeSection::_createChord()
    m_lastChordL = oChord->left().get();
    m_lastChordR = oChord->right().get();
 
-   auto oChordLeft = _addPartForward<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
+   auto oChordLeft = _addPartF<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->left().getp(),
       BfVertex3{
          glm::vec3{ oChord->left().pos().x, g.get().chord, 0.0f }, 
@@ -134,7 +134,7 @@ BfBladeSection::_createChord()
    // oChordLeft->toggleRender(false);
    // oChordLeft->toggleRender(false);
 
-   auto oChordRight = _addPartForward<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
+   auto oChordRight = _addPartF<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
       BfVertex3{
          glm::vec3{ oChord->right().pos().x, g.get().chord, 0.0f }, 
@@ -184,14 +184,14 @@ BfBladeSection::_createCircleEdges()
    auto oChordL = _part<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>();
    auto oChordR = _part<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>();
 
-   auto inletCircle = _addPartForward<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>(
+   auto inletCircle = _addPartF<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>(
       oChordL->right().getp(),
       oChord->left().getp(),
       oChord->right().getp(),
       &g.get().inletRadius 
    );
 
-   auto outletCircle = _addPartForward<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>(
+   auto outletCircle = _addPartF<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>(
       oChord->left().getp(),
       oChord->right().getp(),
       oChordR->right().getp(),
@@ -217,7 +217,7 @@ void BfBladeSection::_createIOAngles() {
    auto OC = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
 
    auto iFree = IC->centerVertex();
-   auto iLine = _addPartForward<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>( 
+   auto iLine = _addPartF<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>( 
       iFree,
       BfVertex3{  
          iFree.pos - _eqInletDirection() * m_info.get().chord * 0.2f,
@@ -227,7 +227,7 @@ void BfBladeSection::_createIOAngles() {
    );
 
    auto oFree = OC->centerVertex();
-   auto oLine = _addPartForward<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>( 
+   auto oLine = _addPartF<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>( 
       oFree,
       BfVertex3{  
          oFree.pos - _eqOutletDirection() * m_info.get().chord * 0.2f,
@@ -276,7 +276,7 @@ void BfBladeSection::_createAverageInitialCurve()
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();   
    auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
    
-   auto curve = _addPartForward<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
+   auto curve = _addPartF<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
       BfVertex3Uni(inletCircle->circle()->center()),
       BfVertex3Uni(BfVertex3(
          _ioIntersection(),
@@ -339,7 +339,7 @@ void BfBladeSection::_processAverageInitialCurve() {
 
 void BfBladeSection::_createCenterCircles() {
    auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   auto circleLayer = _addPartForward<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>(
+   auto circleLayer = _addPartF<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>(
       "Center circles layer"
    );
    std::shared_ptr< curves::BfCirclePack > last { nullptr };
@@ -421,13 +421,15 @@ void BfBladeSection::_processCenterCircles() {
 }
 
 void BfBladeSection::_createCenterCircles2() { 
-   auto circ_layer = _addPartForward<BfBladeSectionEnum::CenterCircles2, obj::BfDrawLayer>("Circles layer 2");
+   auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles2, obj::BfDrawLayer>("Circles layer 2");
    for (auto& circ : m_info.get().centerCircles) { 
       circ_layer->addf<curves::BfCirclePackWH>(
          BfVar< float >(&circ.relativePos),
          BfVar< float >(&circ.radius),
-         BfVar< float >(90.0f),
+         BfVar< float >(45.0f),
+         BfVar< float >(45.0f),
          _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>()->curve()
+         , curves::BfCirclePackWH::Flag::SeparateHandles
       );
    }
    circ_layer->make();
@@ -442,7 +444,7 @@ void BfBladeSection::_createIOCircles() {
 
    auto inlet_circle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto inlet_dir = _part<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>();
-   auto ipack = _addPartForward<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>( 
+   auto ipack = _addPartF<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>( 
       inlet_circle,
       inlet_dir, 
       circles,
@@ -451,7 +453,7 @@ void BfBladeSection::_createIOCircles() {
 
    auto outlet_circle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
    auto outlet_dir = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
-   auto opack = _addPartForward<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>( 
+   auto opack = _addPartF<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>( 
       outlet_circle,
       outlet_dir,
       circles,
@@ -469,14 +471,14 @@ void BfBladeSection::_createFrontCurves() {
    // _toggleRender<BfBladeSectionEnum::InletPack>();
    // _toggleRender<BfBladeSectionEnum::OutletPack>();
 
-   _addPartForward<BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain>(
+   _addPartF<BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain>(
       curves::BfBezierChain::Type::Front,
       _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
       _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
       _part<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>()
    );
 
-   _addPartForward<BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain>(
+   _addPartF<BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain>(
       curves::BfBezierChain::Type::Back,
       _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
       _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
