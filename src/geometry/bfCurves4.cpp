@@ -10,6 +10,7 @@
 #include <stdexcept>
 
 #include "bfCamera.h"
+#include "bfObjectMath.h"
 #include "imgui.h"
 
 namespace obj
@@ -754,13 +755,25 @@ BfCirclePackWH::_addUpdateCircle()
       auto [fR, sR] = _calcRadius();
       if (fR != sR)
       {
+         auto tangent_line = centerTangentLine();
          if (firstAngleLineHandle()->isChanged())
          {
             m_radius.get() = fR;
+            m_angle.get() = math::angleBetween3Vertices(
+                tangent_line->second(),
+                tangent_line->first(),
+                firstAngleLineHandle()->center()
+            );
          }
          else if (secondAngleLineHandle()->isChanged())
          {
             m_radius.get() = sR;
+            const float new_angle = math::angleBetween3Vertices(
+                tangent_line->second(),
+                tangent_line->first(),
+                secondAngleLineHandle()->center()
+            );
+            m_angle.get() = 180.f - new_angle;
          }
       }
 
