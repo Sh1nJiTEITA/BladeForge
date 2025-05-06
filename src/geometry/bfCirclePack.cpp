@@ -1,4 +1,5 @@
 #include "bfCirclePack.h"
+#include "bfCurves4.h"
 
 /* BfCirclePackWH BEGIN */
 namespace obj
@@ -17,6 +18,40 @@ BfCirclePackWH::bezierCurve()
    {
       throw std::runtime_error("Can't lock Bezier curve");
    }
+}
+std::pair< BfVertex3Uni, BfVertex3Uni >
+BfCirclePackWH::backConnections()
+{
+   auto back = _part< E::SecondTangentLine, BfSingleLine >();
+   return {
+       BfVertex3Uni(back->first().getp()),
+       BfVertex3Uni(back->second().getp())
+   };
+}
+
+std::pair< BfVertex3Uni, BfVertex3Uni >
+BfCirclePackWH::frontConnections()
+{
+   auto front = _part< E::FirstTangentLine, BfSingleLine >();
+   return {
+       BfVertex3Uni(front->first().getp()),
+       BfVertex3Uni(front->second().getp())
+   };
+}
+
+float
+BfCirclePackWH::relativePos()
+{
+   return m_relativePos.get();
+}
+
+std::pair< const BfVertex3Uni, const BfVertex3Uni >
+BfCirclePackWH::frontBackTangentVertices()
+{
+   return {
+       _part< E::FirstAngleLine, BfSingleLine >()->second(),
+       _part< E::SecondAngleLine, BfSingleLine >()->second()
+   };
 }
 
 std::pair< BfVertex3, BfVertex3 >
@@ -171,6 +206,8 @@ BfCirclePackWH::_addUpdateCircle()
       const auto [aR, bR] = _calcRadiusVertices();
       auto fangle_line = _addPartF< E::FirstAngleLine, BfSingleLine >(center_vert.getp(), aR);
       auto sangle_line = _addPartF< E::SecondAngleLine, BfSingleLine >(center_vert.getp(), bR);
+      fangle_line->color() = glm::vec3(0.8, 0.1, 0.05);
+      sangle_line->color() = glm::vec3(0.05, 0.1, 0.08);
 
       _addPartF< E::FirstHandle, BfHandleCircle >( fangle_line->second().getp(), 0.01f);
       _addPartF< E::SecondHandle, BfHandleCircle >( sangle_line->second().getp(), 0.01f);
@@ -194,7 +231,7 @@ BfCirclePackWH::_addUpdateTangentLines()
 {
    auto fangle_line = _part< E::FirstAngleLine, BfSingleLine >();
    auto sangle_line = _part< E::SecondAngleLine, BfSingleLine >();
-   auto [fdir, sdir] = _calcTangentDirections();
+   auto [fdir, sdir] = frontBackDirection();
 
    BfVertex3* fvert = fangle_line->second().getp();
    BfVertex3* svert = sangle_line->second().getp();
@@ -206,23 +243,32 @@ BfCirclePackWH::_addUpdateTangentLines()
 
    if (!_isPart< E::FirstTangentLine >())
    {
-      const BfVertex3 ftangentb = fvert->otherPos(fposb);
-      const BfVertex3 ftangentt = fvert->otherPos(fpost);
-      _addPartF< E::FirstTangentLine, BfSingleLine >(ftangentb, ftangentt);
+      const BfVertex3 ftanb = fvert->otherPos(fposb);
+      const BfVertex3 ftant = fvert->otherPos(fpost);
+      auto f = _addPartF< E::FirstTangentLine, BfSingleLine >(ftanb, ftant);
+      f->color() = glm::vec3(0.8, 0.1, 0.05);
 
-      const BfVertex3 stangentb = fvert->otherPos(sposb);
-      const BfVertex3 stangentt = fvert->otherPos(spost);
-      _addPartF< E::SecondTangentLine, BfSingleLine >(stangentb, stangentt);
+      const BfVertex3 stanb = fvert->otherPos(sposb);
+      const BfVertex3 stant = fvert->otherPos(spost);
+      auto s = _addPartF< E::SecondTangentLine, BfSingleLine >(stanb, stant);
+      s->color() = glm::vec3(0.05, 0.1, 0.8);
    }
    else
    {
-      _part< E::FirstTangentLine, BfSingleLine >()->setPos(fposb, fpost);
-      _part< E::SecondTangentLine, BfSingleLine >()->setPos(sposb, spost);
+      // change second vertices here
+      // _part< E::FirstTangentLine, BfSingleLine >()->setPos(fposb, fpost);
+      // _part< E::SecondTangentLine, BfSingleLine >()->setPos(sposb, spost);
+
+      // _part< E::FirstTangentLine, BfSingleLine >()->setPos(fposb, fpost);
+      // _part< E::SecondTangentLine, BfSingleLine >()->setPos(sposb, spost);
+      // _part< E::FirstTangentLine, BfSingleLine >()->first().pos() =
+      // fvert->pos; _part< E::SecondTangentLine, BfSingleLine
+      // >()->first().pos() = svert->pos;
    }
 }
 
 std::pair< glm::vec3, glm::vec3 >
-BfCirclePackWH::_calcTangentDirections()
+BfCirclePackWH::frontBackDirection()
 {
    const float hpi = glm::half_pi< float >();
 

@@ -158,22 +158,22 @@ BfGuiCreateWindowContainer::__renderResizeButton(int side)
       __is_resizing = true;
       switch (side)
       {
-         case BfGuiCreateWindowContainer_ButtonType_Left:
-            __window_size.x -= ImGui::GetIO().MouseDelta.x;
-            __window_pos.x += ImGui::GetIO().MouseDelta.x;
-            break;
-         case BfGuiCreateWindowContainer_ButtonType_Right:
-            __window_size.x += ImGui::GetIO().MouseDelta.x;
+      case BfGuiCreateWindowContainer_ButtonType_Left:
+         __window_size.x -= ImGui::GetIO().MouseDelta.x;
+         __window_pos.x += ImGui::GetIO().MouseDelta.x;
+         break;
+      case BfGuiCreateWindowContainer_ButtonType_Right:
+         __window_size.x += ImGui::GetIO().MouseDelta.x;
 
-            break;
-         case BfGuiCreateWindowContainer_ButtonType_Top:
-            __window_pos.y += ImGui::GetIO().MouseDelta.y;
-            __window_size.y -= ImGui::GetIO().MouseDelta.y;
-            break;
-         case BfGuiCreateWindowContainer_ButtonType_Bot:
-            __window_size.y += ImGui::GetIO().MouseDelta.y;
+         break;
+      case BfGuiCreateWindowContainer_ButtonType_Top:
+         __window_pos.y += ImGui::GetIO().MouseDelta.y;
+         __window_size.y -= ImGui::GetIO().MouseDelta.y;
+         break;
+      case BfGuiCreateWindowContainer_ButtonType_Bot:
+         __window_size.y += ImGui::GetIO().MouseDelta.y;
 
-            break;
+         break;
       }
 
       ImGui::SetWindowSize(__window_size);
@@ -203,10 +203,12 @@ BfGuiCreateWindowContainer::__renderChildBorder()
    );
    {
       __updateResizeButtonSize();
-      if (__is_render_header) __renderHeader();
+      if (__is_render_header)
+         __renderHeader();
       if (!__is_collapsed)
       {
-         if (__is_render_header) ImGui::Separator();
+         if (__is_render_header)
+            ImGui::Separator();
          __renderChildContent();
       }
       __updatePosition();
@@ -217,11 +219,11 @@ BfGuiCreateWindowContainer::__renderChildBorder()
    return is_hovered;
 }
 
-std::function<void(const std::string&, const std::string&)>
+std::function< void(const std::string&, const std::string&) >
     BfGuiCreateWindowContainer::__swapFunc =
         [](const auto& a, const auto& b) {};
 
-std::function<void(const std::string&, const std::string&)>
+std::function< void(const std::string&, const std::string&) >
     BfGuiCreateWindowContainer::__moveFunc =
         [](const auto& a, const auto& b) {};
 
@@ -316,7 +318,8 @@ BfGuiCreateWindowContainer::render()
             {
                ImGui::SameLine();
 
-               __renderResizeButton(BfGuiCreateWindowContainer_ButtonType_Right
+               __renderResizeButton(
+                   BfGuiCreateWindowContainer_ButtonType_Right
                );
 
                ImGui::SetCursorPosX(
@@ -469,24 +472,24 @@ BfGuiCreateWindowContainer::bindMoveFunction(swapFuncType func) noexcept
    __moveFunc = func;
 }
 //
-std::list<ptrContainer>::iterator
+std::list< ptrContainer >::iterator
 BfGuiCreateWindowContainer::begin()
 {
    return __containers.begin();
 }
-std::list<ptrContainer>::iterator
+std::list< ptrContainer >::iterator
 BfGuiCreateWindowContainer::end()
 {
    return __containers.end();
 }
 
-std::list<ptrContainer>::reverse_iterator
+std::list< ptrContainer >::reverse_iterator
 BfGuiCreateWindowContainer::rbegin()
 {
    return __containers.rbegin();
 }
 
-std::list<ptrContainer>::reverse_iterator
+std::list< ptrContainer >::reverse_iterator
 BfGuiCreateWindowContainer::rend()
 {
    return __containers.rend();
@@ -516,9 +519,9 @@ BfGuiCreateWindowContainer::rem(ptrContainer container)
 
 bool BfGuiCreateWindowContainerObj::__is_moving_container = false;
 
-#define BF_GUI_CREATE_WINDOW_CONTAINER_OBJ_MOVE_BUTTON_PASSIVE \
+#define BF_GUI_CREATE_WINDOW_CONTAINER_OBJ_MOVE_BUTTON_PASSIVE                 \
    ImVec4(0.0f, 0.0f, 0.0f, 1.0f)
-#define BF_GUI_CREATE_WINDOW_CONTAINER_OBJ_MOVE_BUTTON_HOVER \
+#define BF_GUI_CREATE_WINDOW_CONTAINER_OBJ_MOVE_BUTTON_HOVER                   \
    ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
 
 void
@@ -663,7 +666,8 @@ BfGuiCreateWindowContainerObj::__renderDragDropSource()
 void
 BfGuiCreateWindowContainerObj::__renderDragDropTarget()
 {
-   if (!__is_drop_target) return;
+   if (!__is_drop_target)
+      return;
 
    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1.0f);
    if (ImGui::Button(ICON_FA_INFO))
@@ -726,7 +730,8 @@ BfGuiCreateWindowContainerObj::__processDragDropSource()
          Далее данный указатель мы передаем через ImGui::SetDragDropPayload
 
       */
-      std::shared_ptr<BfGuiCreateWindowContainerObj> self = shared_from_this();
+      std::shared_ptr< BfGuiCreateWindowContainerObj > self =
+          shared_from_this();
 
       ImGui::SetDragDropPayload("Container", &self, sizeof(self));
       ImGui::Text("Moving: %s", __str_id.c_str());
@@ -743,8 +748,8 @@ BfGuiCreateWindowContainerObj::__processDragDropTarget()
       if (const ImGuiPayload* payload =
               ImGui::AcceptDragDropPayload("Container"))
       {
-         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
-             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+         std::shared_ptr< BfGuiCreateWindowContainerObj > dropped_container =
+             *(std::shared_ptr< BfGuiCreateWindowContainerObj >*)payload->Data;
          __moveFunc(dropped_container->name(), this->name());
       }
       ImGui::EndDragDropTarget();
@@ -754,7 +759,7 @@ BfGuiCreateWindowContainerObj::__processDragDropTarget()
 void
 BfGuiCreateWindowContainerObj::__createObj()
 {
-   __layer_obj = std::make_shared<BfDrawLayer>();
+   __layer_obj = std::make_shared< BfDrawLayer >();
 }
 
 BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
@@ -776,7 +781,9 @@ BfGuiCreateWindowContainerObj::BfGuiCreateWindowContainerObj(
 }
 
 void
-BfGuiCreateWindowContainerObj::__addToLayer(std::shared_ptr<BfDrawLayer> add_to)
+BfGuiCreateWindowContainerObj::__addToLayer(
+    std::shared_ptr< BfDrawLayer > add_to
+)
 {
    if (auto shared_root = __ptr_root.lock())
    {
@@ -802,18 +809,18 @@ BfGuiCreateWindowContainerPopup::__assignButtons()
 {
    switch (__side)
    {
-      case BfGuiCreateWindowContainerPopup_Side_Left:
-         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Right, false);
-         break;
-      case BfGuiCreateWindowContainerPopup_Side_Right:
-         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Left, false);
-         break;
-      case BfGuiCreateWindowContainerPopup_Side_Top:
-         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Bot, false);
-         break;
-      case BfGuiCreateWindowContainerPopup_Side_Bot:
-         this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Top, false);
-         break;
+   case BfGuiCreateWindowContainerPopup_Side_Left:
+      this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Right, false);
+      break;
+   case BfGuiCreateWindowContainerPopup_Side_Right:
+      this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Left, false);
+      break;
+   case BfGuiCreateWindowContainerPopup_Side_Top:
+      this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Bot, false);
+      break;
+   case BfGuiCreateWindowContainerPopup_Side_Bot:
+      this->toggleButton(BfGuiCreateWindowContainer_ButtonType_Top, false);
+      break;
    }
 }
 
@@ -845,51 +852,49 @@ BfGuiCreateWindowContainerPopup::__clampPosition()
 
       switch (__side)
       {
-         case BfGuiCreateWindowContainerPopup_Side_Left: {
-            float top = shared_root->pos().y;
-            float bot = shared_root->pos().y + shared_root->size().y - size().y;
+      case BfGuiCreateWindowContainerPopup_Side_Left: {
+         float top = shared_root->pos().y;
+         float bot = shared_root->pos().y + shared_root->size().y - size().y;
 
-            new_pos = {
-                shared_root->pos().x - size().x + __resize_button_size.x * 3 +
-                    padding_x,
-                std::clamp(__window_pos.y + delta_pos.y, top, bot)
-            };
-         }
-         break;
-         case BfGuiCreateWindowContainerPopup_Side_Right: {
-            float top = shared_root->pos().y;
-            float bot = shared_root->pos().y + shared_root->size().y - size().y;
+         new_pos = {
+             shared_root->pos().x - size().x + __resize_button_size.x * 3 +
+                 padding_x,
+             std::clamp(__window_pos.y + delta_pos.y, top, bot)
+         };
+      }
+      break;
+      case BfGuiCreateWindowContainerPopup_Side_Right: {
+         float top = shared_root->pos().y;
+         float bot = shared_root->pos().y + shared_root->size().y - size().y;
 
-            new_pos = {
-                shared_root->pos().x + shared_root->size().x -
-                    __resize_button_size.x * 3 - padding_x,
-                std::clamp(__window_pos.y + delta_pos.y, top, bot)
-            };
-         }
-         break;
-         case BfGuiCreateWindowContainerPopup_Side_Top: {
-            float left = shared_root->pos().x;
-            float right =
-                shared_root->pos().x + shared_root->size().x - size().x;
+         new_pos = {
+             shared_root->pos().x + shared_root->size().x -
+                 __resize_button_size.x * 3 - padding_x,
+             std::clamp(__window_pos.y + delta_pos.y, top, bot)
+         };
+      }
+      break;
+      case BfGuiCreateWindowContainerPopup_Side_Top: {
+         float left = shared_root->pos().x;
+         float right = shared_root->pos().x + shared_root->size().x - size().x;
 
-            new_pos = {
-                std::clamp(__window_pos.x + delta_pos.x, left, right),
-                shared_root->pos().y - size().y + __bot_resize_button_size.y * 3
-            };
-         }
-         break;
-         case BfGuiCreateWindowContainerPopup_Side_Bot: {
-            float left = shared_root->pos().x;
-            float right =
-                shared_root->pos().x + shared_root->size().x - size().x;
+         new_pos = {
+             std::clamp(__window_pos.x + delta_pos.x, left, right),
+             shared_root->pos().y - size().y + __bot_resize_button_size.y * 3
+         };
+      }
+      break;
+      case BfGuiCreateWindowContainerPopup_Side_Bot: {
+         float left = shared_root->pos().x;
+         float right = shared_root->pos().x + shared_root->size().x - size().x;
 
-            new_pos = {
-                std::clamp(__window_pos.x + delta_pos.x, left, right),
-                shared_root->pos().y + shared_root->size().y -
-                    __bot_resize_button_size.y * 3
-            };
-         }
-         break;
+         new_pos = {
+             std::clamp(__window_pos.x + delta_pos.x, left, right),
+             shared_root->pos().y + shared_root->size().y -
+                 __bot_resize_button_size.y * 3
+         };
+      }
+      break;
       }
    }
    else
@@ -956,7 +961,7 @@ BfGuiCreateWindowContainerPopup::BfGuiCreateWindowContainerPopup(
     wptrContainer root,
     int side,
     bool is_force_render,
-    std::function<void(wptrContainer)> popup_func
+    std::function< void(wptrContainer) > popup_func
 )
     : BfGuiCreateWindowContainer{root}
     , __side{side}

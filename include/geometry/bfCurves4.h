@@ -1034,6 +1034,20 @@ private:
    glm::vec3 m_oldbl;
 };
 
+class BfChainElement
+{
+public:
+   ~BfChainElement() = default;
+
+   // clang-format off
+   virtual auto backConnections() -> std::pair< BfVertex3Uni, BfVertex3Uni > = 0;
+   virtual auto frontConnections() -> std::pair< BfVertex3Uni, BfVertex3Uni > = 0;
+   virtual auto relativePos() -> float = 0;
+   virtual auto frontBackDirection() -> std::pair< glm::vec3, glm::vec3 > = 0;
+   virtual auto frontBackTangentVertices() -> std::pair< const BfVertex3Uni, const BfVertex3Uni >  = 0;
+   // clang-format on
+};
+
 }; // namespace curves
 
 } // namespace obj

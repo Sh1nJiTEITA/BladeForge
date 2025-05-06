@@ -33,15 +33,15 @@ BfArrow3D::BfArrow3D(
        pointTo.color,
        backDirection
    };
-   {  // CONE
+   { // CONE
       auto cone_ptr =
-          std::make_shared<BfCone>(50, pointTo, coneBase, circleRadius);
+          std::make_shared< BfCone >(50, pointTo, coneBase, circleRadius);
       cone_ptr->bind_pipeline(pipeline);
       cone_ptr->set_color(coneColor);
       this->add_l(cone_ptr);
    }
-   {  // TAIL
-      auto tail_prt = std::make_shared<BfDoubleTube>(
+   { // TAIL
+      auto tail_prt = std::make_shared< BfDoubleTube >(
           51,
           coneBase,
           tail,

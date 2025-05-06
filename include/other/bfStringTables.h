@@ -35,41 +35,41 @@
 // constexpr bool has_to_string_with_int_v = has_to_string_with_int<T>::value;
 
 // Шаблон для проверки, существует ли функция `to_string` с параметром типа T
-template <typename T, typename = void>
+template < typename T, typename = void >
 struct has_to_string_with_int : std::false_type
 {
 };
 
-template <typename T>
+template < typename T >
 struct has_to_string_with_int<
     T,
-    std::void_t<decltype(std::to_string(std::declval<T>(), 0))>>
+    std::void_t< decltype(std::to_string(std::declval< T >(), 0)) > >
     : std::true_type
 {
 };
 
 // === === === === === === === === === === === === === === === === === === ===
-template <typename T, typename = void>
+template < typename T, typename = void >
 struct is_container : std::false_type
 {
 };
 
-template <typename T>
+template < typename T >
 struct is_container<
     T,
     std::void_t<
         typename T::iterator,
         typename T::const_iterator,
-        decltype(std::declval<T>().begin()),
-        decltype(std::declval<T>().end())>> : std::true_type
+        decltype(std::declval< T >().begin()),
+        decltype(std::declval< T >().end()) > > : std::true_type
 {
 };
 
-template <typename T>
-constexpr bool is_container_v = has_to_string_with_int<T>::value;
+template < typename T >
+constexpr bool is_container_v = has_to_string_with_int< T >::value;
 // === === === === === === === === === === === === === === === === === === ===
 
-template <class T>
+template < class T >
 std::string bfStringTablesGenPair(
     std::string name,
     const T& v,
@@ -288,40 +288,43 @@ to_string(const BfGuiCreateWindowBladeBase& o, int indent = 0)
 // clang-format on
 
 inline string
-to_string(const std::list<ptrContainer> o, int indent = 0)
+to_string(const std::list< ptrContainer > o, int indent = 0)
 {
    auto indent_str = std::string(indent, '\t');
-   if (!std::size(o)) return std::format("{}{{}}", indent_str);
+   if (!std::size(o))
+      return std::format("{}{{}}", indent_str);
    auto format_str = std::format("{}{{\n", indent_str);
 
    for (auto it = std::begin(o); it != std::end(o); ++it)
    {
       if (auto casted =
-              std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(*it))
+              std::dynamic_pointer_cast< BfGuiCreateWindowBladeBase >(*it))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
       else if (auto casted =
-                   std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(*it
+                   std::dynamic_pointer_cast< BfGuiCreateWindowBladeSection >(
+                       *it
                    ))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
       else if (auto casted =
-                   std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(*it
+                   std::dynamic_pointer_cast< BfGuiCreateWindowContainerObj >(
+                       *it
                    ))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
       else if (auto casted =
-                   std::dynamic_pointer_cast<BfGuiCreateWindowContainerPopup>(
+                   std::dynamic_pointer_cast< BfGuiCreateWindowContainerPopup >(
                        *it
                    ))
       {
          continue;
       }
       else if (auto casted =
-                   std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(*it))
+                   std::dynamic_pointer_cast< BfGuiCreateWindowContainer >(*it))
       {
          format_str += std::to_string(*casted, indent + 1);
       }
@@ -334,9 +337,9 @@ to_string(const std::list<ptrContainer> o, int indent = 0)
    format_str += std::format("{}}}", indent_str);
    return format_str;
 }
-}  // namespace std
+} // namespace std
 
-template <class T>
+template < class T >
 std::string
 bfStringTablesGenPair(
     std::string name, const T& v, bool last, bool next_row, int indent
@@ -346,26 +349,26 @@ bfStringTablesGenPair(
    // auto indent_str = std::string(indent, '');
    std::ostringstream ss;
 
-   if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
+   if constexpr (std::is_same_v< std::decay_t< T >, std::string >)
    {
       ss << indent_str << name << " = \"" << std::string(v.c_str()) << "\"";
    }
-   else if constexpr (std::is_same_v<std::decay_t<T>, const char*> ||
-                      std::is_same_v<std::decay_t<T>, char*>)
+   else if constexpr (std::is_same_v< std::decay_t< T >, const char* > ||
+                      std::is_same_v< std::decay_t< T >, char* >)
    {
       ss << indent_str << name << " = \"" << std::string(v) << "\"";
    }
-   else if constexpr (std::is_floating_point_v<std::decay_t<T>>)
+   else if constexpr (std::is_floating_point_v< std::decay_t< T > >)
    {
       ss << std::fixed << std::setprecision(4);
       ss << indent_str << name << " = " << v;
    }
 
-   else if constexpr (std::is_integral_v<std::decay_t<T>>)
+   else if constexpr (std::is_integral_v< std::decay_t< T > >)
    {
       ss << indent_str << name << " = " << v;
    }
-   else if constexpr (is_container<T>::value)
+   else if constexpr (is_container< T >::value)
    {
       ss << indent_str << name << " = {\n";
       bool first = true;
@@ -373,32 +376,29 @@ bfStringTablesGenPair(
       for (const auto& elem : v)
       {
          if (auto casted =
-                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(elem))
-         {
-            ss << std::to_string(*casted, indent + 1);
-         }
-         else if (auto casted =
-                      std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
-                          elem
-                      ))
-         {
-            ss << std::to_string(*casted, indent + 1);
-         }
-         else if (auto casted =
-                      std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(
-                          elem
-                      ))
+                 std::dynamic_pointer_cast< BfGuiCreateWindowBladeBase >(elem))
          {
             ss << std::to_string(*casted, indent + 1);
          }
          else if (auto casted = std::dynamic_pointer_cast<
-                      BfGuiCreateWindowContainerPopup>(elem))
+                      BfGuiCreateWindowBladeSection >(elem))
+         {
+            ss << std::to_string(*casted, indent + 1);
+         }
+         else if (auto casted = std::dynamic_pointer_cast<
+                      BfGuiCreateWindowContainerObj >(elem))
+         {
+            ss << std::to_string(*casted, indent + 1);
+         }
+         else if (auto casted = std::dynamic_pointer_cast<
+                      BfGuiCreateWindowContainerPopup >(elem))
          {
             current_index++;
             continue;
          }
          else if (auto casted =
-                      std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(elem
+                      std::dynamic_pointer_cast< BfGuiCreateWindowContainer >(
+                          elem
                       ))
          {
             ss << std::to_string(*casted, indent + 1);
@@ -419,11 +419,13 @@ bfStringTablesGenPair(
       ss << (last ? "" : ",") << (next_row ? "\n" : "");
       // return ss.str();
    }
-   else if constexpr (std::is_same_v<BfBladeSectionCreateInfo, std::decay_t<T>>)
+   else if constexpr (std::is_same_v<
+                          BfBladeSectionCreateInfo,
+                          std::decay_t< T > >)
    {
       ss << indent_str << name << " = " << std::to_string(v, indent);
    }
-   else if constexpr (has_to_string_with_int<std::decay_t<T>>::value)
+   else if constexpr (has_to_string_with_int< std::decay_t< T > >::value)
    {
       ss << indent_str << name << " = " << std::to_string(v, indent);
    }

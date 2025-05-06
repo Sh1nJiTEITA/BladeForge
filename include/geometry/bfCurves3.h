@@ -34,7 +34,7 @@ class BfBezierCurve;
 class BfCircle;
 class BfTriangle;
 
-#define BF_PI glm::pi<float>()
+#define BF_PI glm::pi< float >()
 #define BF_MATH_ABS_ACCURACY 10e-5
 #define BF_MATH_DEFAULT_DERIVATIVE_STEP 10e-5
 
@@ -96,7 +96,7 @@ glm::mat4 bfOrtho(float right, float left, float bot, float top, float far, floa
 class BfPlane : public BfDrawObj
 {
 public:
-   BfPlane(std::vector<BfVertex3> d_vertices);
+   BfPlane(std::vector< BfVertex3 > d_vertices);
    virtual void createVertices() override;
    virtual void createIndices() override;
 
@@ -202,11 +202,10 @@ public:
    const BfVertex3& get_first() const noexcept;
    const BfVertex3& get_second() const noexcept;
    const BfVertex3& get_third() const noexcept;
-   
 
    const float get_radius() const noexcept;
 
-   std::array<BfVertex3, 2> get_tangent_vert(const BfVertex3& P) const;
+   std::array< BfVertex3, 2 > get_tangent_vert(const BfVertex3& P) const;
 
    virtual void createVertices() override;
 
@@ -268,9 +267,9 @@ public:
    BfCircleFilledWithHandles(size_t m, const BfVertex3& center, float radius);
    BfCircleFilledWithHandles(size_t m, BfVertex3* center, float radius);
 
-   std::shared_ptr<BfCircle> circle() noexcept;
-   std::shared_ptr<BfCircleFilled> centerHandle() noexcept;
-   std::shared_ptr<BfCircleFilled> radiusHandle() noexcept;
+   std::shared_ptr< BfCircle > circle() noexcept;
+   std::shared_ptr< BfCircleFilled > centerHandle() noexcept;
+   std::shared_ptr< BfCircleFilled > radiusHandle() noexcept;
 
    virtual void createVertices();
 };
@@ -441,8 +440,10 @@ class BfBezierCurve : public BfDrawObj
 
 public:
    BfBezierCurve(size_t in_n, size_t in_m);
-   BfBezierCurve(size_t in_n, size_t in_m, std::vector<BfVertex3>&& dvert);
-   BfBezierCurve(size_t in_n, size_t in_m, const std::vector<BfVertex3>& dvert);
+   BfBezierCurve(size_t in_n, size_t in_m, std::vector< BfVertex3 >&& dvert);
+   BfBezierCurve(
+       size_t in_n, size_t in_m, const std::vector< BfVertex3 >& dvert
+   );
    BfBezierCurve(BfBezierCurve&& ncurve) noexcept;
    BfBezierCurve(const BfBezierCurve& ncurve);
 
@@ -469,9 +470,8 @@ public:
    virtual void createVertices() override;
 
    friend float bfMathGetBezierCurveLength(BfBezierCurve* curve);
-   friend std::vector<glm::vec3> bfMathGetBezierCurveLengthDerivative(
-       BfBezierCurve* curve
-   );
+   friend std::vector< glm::vec3 >
+   bfMathGetBezierCurveLengthDerivative(BfBezierCurve* curve);
 };
 
 //
@@ -497,10 +497,10 @@ public:
 class BfBezierCurveWithHandles : public BfDrawLayer
 {
 public:
-   BfBezierCurveWithHandles(size_t in_m, std::vector<BfVertex3>&& dvert);
-   BfBezierCurveWithHandles(size_t in_m, const std::vector<BfVertex3>& dvert);
+   BfBezierCurveWithHandles(size_t in_m, std::vector< BfVertex3 >&& dvert);
+   BfBezierCurveWithHandles(size_t in_m, const std::vector< BfVertex3 >& dvert);
 
-   std::shared_ptr<BfBezierCurve> curve();
+   std::shared_ptr< BfBezierCurve > curve();
 };
 //
 //
@@ -525,23 +525,24 @@ public:
 // FIX: DEPRECATE
 class BfBezierCurveFrame : public BfDrawLayer
 {
-   std::shared_ptr<BfBezierCurve> __curve;
+   std::shared_ptr< BfBezierCurve > __curve;
 
    VkPipeline __lines_pipeline;
    VkPipeline __triangle_pipeline;
 
 public:
    BfBezierCurveFrame(
-       std::shared_ptr<BfBezierCurve> curve,
+       std::shared_ptr< BfBezierCurve > curve,
        VmaAllocator allocator,
        VkPipeline lines_pipeline,
        VkPipeline triangle_pipeline
    );
 
-   std::shared_ptr<BfBezierCurve> attachedCurve() noexcept;
+   std::shared_ptr< BfBezierCurve > attachedCurve() noexcept;
 
    void remake(
-       std::shared_ptr<BfBezierCurve> curve, glm::vec3 col = {1.0f, 1.0f, 1.0f}
+       std::shared_ptr< BfBezierCurve > curve,
+       glm::vec3 col = {1.0f, 1.0f, 1.0f}
    );
    void remake() override;
 };
@@ -554,10 +555,10 @@ class BfCubicSplineCurve : public BfDrawObj
    size_t __out_vertices_count;
 
 public:
-   BfCubicSplineCurve(size_t out_vertices_count, std::vector<BfVertex3>& dp);
-   BfCubicSplineCurve(size_t out_vertices_count, std::vector<glm::vec3>& dp);
+   BfCubicSplineCurve(size_t out_vertices_count, std::vector< BfVertex3 >& dp);
+   BfCubicSplineCurve(size_t out_vertices_count, std::vector< glm::vec3 >& dp);
 
    virtual void createVertices();
 };
 
-#endif  // !BF_CURVES3_H
+#endif // !BF_CURVES3_H

@@ -21,9 +21,11 @@ BfCircleFilled::update()
                    (is_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left));
       if (is_dragged)
       {
-         if (__depMode != BfDrawObjDependencies_Mode_Ptr) return;
+         if (__depMode != BfDrawObjDependencies_Mode_Ptr)
+            return;
          // TODO: REMAKE if function `mouseWorldCoordinates` will be updated
-         if (BfCamera::instance()->m_mode != BfCameraMode_Ortho) return;
+         if (BfCamera::instance()->m_mode != BfCameraMode_Ortho)
+            return;
 
          auto pLayerHandler = BfLayerHandler::instance();
          auto notNestedRoot = pLayerHandler->findNotNestedRoot(m_root);

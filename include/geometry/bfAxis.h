@@ -13,8 +13,8 @@
  */
 class BfArrow3D : public BfDrawLayer
 {
-   std::shared_ptr<BfDoubleTube> __tail;
-   std::shared_ptr<BfCone> __cone;
+   std::shared_ptr< BfDoubleTube > __tail;
+   std::shared_ptr< BfCone > __cone;
 
 public:
    /**

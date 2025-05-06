@@ -20,8 +20,8 @@ set(CMAKE_TOOLCHAIN_FILE
 set(CMAKE_SUPPRESS_REGENERATION TRUE)
 
 set(CMAKE_CXX_FLAGS "-g -O0")
-set(CMAKE_CXX_STANDARD 20)
-add_compile_options(-std=c++20)
+set(CMAKE_CXX_STANDARD 23)
+add_compile_options(-std=c++23)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(IS_BUILD_TESTS "build tests" ON)
@@ -251,6 +251,7 @@ set(BF_GEOMETRY
     "src/geometry/bfCurves4.cpp"
     "src/geometry/bfCirclePack.cpp"
     "src/geometry/bfEdge.cpp"
+    "src/geometry/bfChain.cpp"
     "src/geometry/bfCurves3_gui.cpp"
     "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfBladeSection2.cpp"

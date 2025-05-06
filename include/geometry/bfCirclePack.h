@@ -23,7 +23,8 @@ enum class BfCirclePackWHEnum
    SecondTangentLine
 };
 
-class BfCirclePackWH : public obj::BfDrawLayerWithAccess< BfCirclePackWHEnum >
+class BfCirclePackWH : public obj::BfDrawLayerWithAccess< BfCirclePackWHEnum >,
+                       public BfChainElement
 {
 public:
    using FlagType = uint32_t;
@@ -90,6 +91,14 @@ public: // ASSIGNMENT
 public:
    std::shared_ptr< BfBezierN > bezierCurve();
 
+   // clang-format off
+   auto backConnections() -> std::pair< BfVertex3Uni, BfVertex3Uni > override;
+   auto frontConnections() -> std::pair< BfVertex3Uni, BfVertex3Uni > override;
+   auto frontBackDirection() -> std::pair< glm::vec3, glm::vec3 > override;
+   auto relativePos() -> float override;
+   auto frontBackTangentVertices() -> std::pair< const BfVertex3Uni, const BfVertex3Uni> override;
+   // clang-format on
+
 private:
    auto _calcTangentLineVertices() -> std::pair< BfVertex3, BfVertex3 >;
    void _addUpdateTangentLine();
@@ -99,7 +108,6 @@ private:
    void _updateRadius();
    void _addUpdateCircle();
    void _addUpdateTangentLines();
-   auto _calcTangentDirections() -> std::pair< glm::vec3, glm::vec3 >;
 
 private:
    BfVar< float > m_radius;

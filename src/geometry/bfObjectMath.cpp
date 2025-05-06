@@ -1,6 +1,5 @@
 #include "bfObjectMath.h"
 
-
 namespace obj
 {
 namespace curves

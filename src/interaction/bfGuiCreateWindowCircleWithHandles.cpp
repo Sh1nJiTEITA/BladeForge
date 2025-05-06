@@ -14,7 +14,7 @@ BfGuiCreateWindowCircleFilledWithHandles::
 void
 BfGuiCreateWindowCircleFilledWithHandles::__createObj()
 {
-   __layer_obj = std::make_shared<BfCircleFilledWithHandles>(
+   __layer_obj = std::make_shared< BfCircleFilledWithHandles >(
        100,
        BfVertex3({0.0f, 0.f, 0.f}, {1.0, .0f, 0.f}, {0.0f, 0.0f, 1.0f}),
        0.3f
@@ -28,7 +28,7 @@ BfGuiCreateWindowCircleFilledWithHandles::__renderChildContent()
    {
       if (!__layer_choser)
       {
-         __layer_choser = std::make_shared<BfGuiCreateWindowContainerPopup>(
+         __layer_choser = std::make_shared< BfGuiCreateWindowContainerPopup >(
              shared_from_this(),
              BfGuiCreateWindowContainerPopup_Side_Right,
              false,
@@ -36,7 +36,7 @@ BfGuiCreateWindowCircleFilledWithHandles::__renderChildContent()
                 BfGuiSmartLayerObserver::instance()->renderChoser([&]() {
                    size_t selected_id =
                        BfGuiSmartLayerObserver::instance()->selectedLayer();
-                   std::shared_ptr<BfDrawLayer> selected_layer =
+                   std::shared_ptr< BfDrawLayer > selected_layer =
                        BfLayerHandler::instance()->get_layer_by_id(selected_id);
                    // __createObj();
                    __addToLayer(selected_layer);

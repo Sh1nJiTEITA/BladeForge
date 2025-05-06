@@ -60,9 +60,11 @@ enum class BfBladeSectionEnum : uint32_t
    CenterCircles2	= 1 << 14,
    InletEdge            = 1 << 15,
    OutletEdge           = 1 << 16,
+   
+   Chain                = 1 << 17,
 
 
-   End                  = 1 << 17
+   End                  = 1 << 18
 };
 // clang-format on
 
@@ -85,6 +87,7 @@ public:
       
       _createCenterCircles2();
       _createIOCircles2();
+      _createFrontCurves2();
 
       
       
@@ -216,6 +219,9 @@ private:
 
    void _createFrontCurves();
    void _processFrontCurves();
+
+   void _createFrontCurves2();
+   void _processFrontCurves2();
    
    /** @} */ // End of MathFunctions group
 

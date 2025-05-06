@@ -4,6 +4,7 @@
 #include "bfEdge.h"
 #include "bfObjectMath.h"
 #include <algorithm>
+#include <bfChain.h>
 #include <cmath>
 #include <fmt/base.h>
 #include <fmt/ranges.h>
@@ -475,14 +476,17 @@ void BfBladeSection::_createIOCircles2() {
       BfVar< float >(90.f),
       BfVar< float >(90.f),
       _part<E::InletDirection, curves::BfSingleLineWH>(),
-      _part<E::InletCircle, curves::BfCircle2LinesWH>()
+      _part<E::InletCircle, curves::BfCircle2LinesWH>(),
+      curves::BfEdge::Type::Inlet
+
    );
 
    _addPartF<E::OutletEdge, curves::BfEdge>(
       BfVar< float >(90.f),
       BfVar< float >(90.f),
       _part<E::OutletDirection, curves::BfSingleLineWH>(),
-      _part<E::OutletCircle, curves::BfCircle2LinesWH>()
+      _part<E::OutletCircle, curves::BfCircle2LinesWH>(),
+      curves::BfEdge::Type::Outlet
    );
 }
 
@@ -513,6 +517,18 @@ void BfBladeSection::_createFrontCurves() {
 
 void BfBladeSection::_processFrontCurves() { 
    
+}
+
+void BfBladeSection::_createFrontCurves2() { 
+   _addPartF<E::Chain, curves::BfChain>(
+       _part<E::CenterCircles2, obj::BfDrawLayer>(),
+       _part<E::InletEdge, curves::BfEdge>(),
+       _part<E::OutletEdge, curves::BfEdge>()
+   );
+}
+
+void BfBladeSection::_processFrontCurves2() { 
+
 }
 
 

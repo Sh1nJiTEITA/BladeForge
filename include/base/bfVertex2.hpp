@@ -110,7 +110,7 @@ struct BfVertex3
    // }
 
    template < typename POS >
-   BfVertex3 otherPos(POS&& pos)
+   BfVertex3 otherPos(POS&& pos) const
    {
       return BfVertex3{std::forward< POS >(pos), this->color, this->normals};
    }
