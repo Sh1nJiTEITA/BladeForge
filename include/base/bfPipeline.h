@@ -26,6 +26,7 @@ typedef uint32_t BfPipelineType;
 enum BfPipelineType_ : BfPipelineType
 {
    BfPipelineType_Lines,
+   BfPipelineType_TLines,
    BfPipelineType_Triangles,
    BfPipelineType_Axis,
    BfPipelineType_LoadedImage,

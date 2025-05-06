@@ -503,7 +503,7 @@ BfDrawObjectBase::_objectData()
        .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
        .index = 0,
        .id = id(),
-       .line_thickness = 0.00025f
+       .line_thickness = 0.00055f
    };
 }
 

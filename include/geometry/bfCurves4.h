@@ -39,7 +39,7 @@ class BfSingleLine : public obj::BfDrawObject
 public:
    template < typename T, typename U >
    BfSingleLine(T&& fp, U&& sp)
-       : obj::BfDrawObject{"Single line", BF_PIPELINE(BfPipelineType_Lines)}
+       : obj::BfDrawObject{"Single line", BF_PIPELINE(BfPipelineType_TLines)}
        , m_first{std::forward< T >(fp)}
        , m_second{std::forward< U >(sp)}
    {
@@ -167,6 +167,7 @@ public:
 
 protected:
    virtual BfObjectData _objectData()override { 
+
       return {
           .model_matrix = /*  */
             glm::translate(center().pos()) * 

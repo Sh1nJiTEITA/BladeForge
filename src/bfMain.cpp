@@ -3,6 +3,7 @@
 #include <cassert>
 #include <memory>
 
+#include "BfPipelineTLines.hpp"
 #include "bfAllocator.h"
 #include "bfAxis.h"
 #include "bfBase.h"
@@ -203,6 +204,12 @@ BfMain::_init()
        BfPipelineType_Handles,
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/handles"
+   );
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTLine >(
+       BfPipelineType_TLines,
+       BfPipelineLayoutType_Main,
+       fs::path(BfConfigManager::getInstance()->exePath()) /
+           "shaders/thick_lines"
    );
 
    bfCreateStandartFrameBuffers(m_base);

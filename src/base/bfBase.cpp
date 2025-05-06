@@ -2929,7 +2929,7 @@ bfMainRecordCommandBuffer(BfBase& base)
       );
 
       // base.layer_handler.draw(local_buffer);
-
+      vkCmdSetLineWidth(local_buffer, 2.f);
       obj::BfDrawManager::inst().draw(local_buffer);
    }
    vkCmdEndRenderPass(local_buffer);
