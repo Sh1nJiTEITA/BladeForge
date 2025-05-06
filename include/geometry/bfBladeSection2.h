@@ -5,6 +5,7 @@
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 
+#include "bfBladeParts.h"
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
 
@@ -57,8 +58,11 @@ enum class BfBladeSectionEnum : uint32_t
    BackCurveChain	= 1 << 13,
    
    CenterCircles2	= 1 << 14,
+   InletEdge            = 1 << 15,
+   OutletEdge           = 1 << 16,
 
-   End                  = 1 << 15
+
+   End                  = 1 << 17
 };
 // clang-format on
 
@@ -77,8 +81,10 @@ public:
       _createCircleEdges();
       _createIOAngles();
       _createAverageInitialCurve();
-      _createCenterCircles2();
       // FRONTIER 
+      
+      _createCenterCircles2();
+      _createIOCircles2();
 
       
       
@@ -110,6 +116,7 @@ public:
       _processCircleEdges();
       _processIOAngles();
       _processAverageInitialCurve();
+      _processCenterCircles2();
       // FRONTIER 
 
       // _processCenterCircles();
@@ -140,12 +147,12 @@ public:
 
 private:
 
-   bool _isChordChanged();
-   float _eqInletAngle();
-   float _eqOutletAngle();
-   glm::vec3 _eqInletDirection(); 
-   glm::vec3 _eqOutletDirection(); 
-   glm::vec3 _ioIntersection();
+   auto _isChordChanged() -> bool;
+   auto _eqInletAngle() -> float;
+   auto _eqOutletAngle() -> float;
+   auto _eqInletDirection() -> glm::vec3; 
+   auto _eqOutletDirection() -> glm::vec3; 
+   auto _ioIntersection() -> glm::vec3;
 
 private:
 
@@ -203,6 +210,9 @@ private:
     */
    void _createIOCircles();
    void _processIOCircles();
+
+   void _createIOCircles2();
+   void _processIOCircles2();
 
    void _createFrontCurves();
    void _processFrontCurves();

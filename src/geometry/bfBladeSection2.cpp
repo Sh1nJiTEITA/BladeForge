@@ -1,6 +1,7 @@
 #include "bfBladeSection2.h"
 
 #include "bfCurves4.h"
+#include "bfEdge.h"
 #include "bfObjectMath.h"
 #include <algorithm>
 #include <cmath>
@@ -434,8 +435,12 @@ void BfBladeSection::_createCenterCircles2() {
    }
    circ_layer->make();
 }
-void BfBladeSection::_processCenterCircles2() {
 
+void BfBladeSection::_processCenterCircles2() {
+   auto& c = m_info.get().centerCircles;
+   c.sort([](const auto& lhs, const auto& rhs) { 
+      return std::less{}(lhs.relativePos, rhs.relativePos);
+   });
 }
 
 
@@ -462,6 +467,26 @@ void BfBladeSection::_createIOCircles() {
 }
 
 void BfBladeSection::_processIOCircles() { 
+
+}
+
+void BfBladeSection::_createIOCircles2() { 
+   _addPartF<E::InletEdge, curves::BfEdge>(
+      BfVar< float >(90.f),
+      BfVar< float >(90.f),
+      _part<E::InletDirection, curves::BfSingleLineWH>(),
+      _part<E::InletCircle, curves::BfCircle2LinesWH>()
+   );
+
+   _addPartF<E::OutletEdge, curves::BfEdge>(
+      BfVar< float >(90.f),
+      BfVar< float >(90.f),
+      _part<E::OutletDirection, curves::BfSingleLineWH>(),
+      _part<E::OutletCircle, curves::BfCircle2LinesWH>()
+   );
+}
+
+void BfBladeSection::_processIOCircles2(){  
 
 }
 

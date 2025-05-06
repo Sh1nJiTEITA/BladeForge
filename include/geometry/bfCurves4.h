@@ -42,11 +42,14 @@ public:
        , m_second{std::forward< U >(sp)}
    {
    }
-   BfVertex3Uni& first();
-   BfVertex3Uni& second();
-   const float length() const;
-   glm::vec3 directionFromStart() const;
-   glm::vec3 directionFromEnd() const;
+
+   auto first() -> BfVertex3Uni&;
+   auto second() -> BfVertex3Uni&;
+   auto length() const -> const float;
+   auto directionFromStart() const -> glm::vec3;
+   auto directionFromEnd() const -> glm::vec3;
+   void setPos(const glm::vec3& f, const glm::vec3& s);
+
    void make();
 
    // clang-format on
@@ -454,104 +457,6 @@ public:
 private:
    BfVertex3Uni m_center;
    BfVar< float > m_radius;
-};
-
-enum class BfCirclePackWHEnum
-{
-   CenterTangentLine = 0,
-   Circle,
-   CenterHandle,
-   FirstAngleLine,
-   SecondAngleLine,
-   FirstHandle,
-   SecondHandle
-};
-
-class BfCirclePackWH : public obj::BfDrawLayerWithAccess< BfCirclePackWHEnum >
-{
-public:
-   using FlagType = uint32_t;
-   enum Flag : FlagType
-   {
-      FixedAngle = 1 << 1,
-      SeparateHandles = 1 << 2
-   };
-
-public: // ASSIGNMENT
-   /**
-    * @brief
-    *
-    * @tparam T BfVar<float> only
-    * @param t Relative pos [0 .. 1]
-    * @param R Radius of circle
-    * @param angle Angle to rotate from tangent of Bezier curve point
-    * @param curve Pointer to Bezier curve to be located on
-    * @param flags Class flags, CANT be SeparateHandles
-    * @return Pack of draw objects with handles
-    */
-   template < typename T >
-   BfCirclePackWH(
-       T&& t,
-       T&& R,
-       T&& angle,
-       std::weak_ptr< BfBezierN > curve,
-       FlagType flags = 0
-   )
-       : obj::BfDrawLayerWithAccess< E >("Circle pack")
-       , m_relativePos{std::forward< T >(t)}
-       , m_radius{std::forward< T >(R)}
-       , m_angleFirst{std::forward< T >(angle)}
-       , m_angleSecond{std::forward< T >(angle)}
-       , m_curve{curve}
-       , m_flags{flags}
-   {
-      assert(
-          flags & SeparateHandles &&
-          "Wrong type. Flags cant contain SeparateHandles and be specified "
-          "only single angle"
-      );
-   }
-
-   template < typename T >
-   BfCirclePackWH(
-       T&& t,
-       T&& R,
-       T&& angle_first,
-       T&& angle_second,
-       std::weak_ptr< BfBezierN > curve,
-       FlagType flags = 0
-   )
-       : obj::BfDrawLayerWithAccess< E >("Circle pack")
-       , m_relativePos{std::forward< T >(t)}
-       , m_radius{std::forward< T >(R)}
-       , m_angleFirst{std::forward< T >(angle_first)}
-       , m_angleSecond{std::forward< T >(angle_second)}
-       , m_curve{curve}
-       , m_flags{flags}
-   {
-   }
-
-   void make() override;
-
-public:
-   std::shared_ptr< BfBezierN > bezierCurve();
-
-private:
-   auto _calcTangentLineVertices() -> std::pair< BfVertex3, BfVertex3 >;
-   void _addUpdateTangentLine();
-   auto _calcRadiusVertices() -> std::pair< BfVertex3, BfVertex3 >;
-   auto _calcRadius() -> std::pair< float, float >;
-   void _updateCircleCenter();
-   void _updateRadius();
-   void _addUpdateCircle();
-
-private:
-   BfVar< float > m_radius;
-   BfVar< float > m_relativePos;
-   BfVar< float > m_angleFirst;
-   BfVar< float > m_angleSecond;
-   std::weak_ptr< BfBezierN > m_curve;
-   FlagType m_flags;
 };
 
 class BfCirclePack : public obj::BfDrawLayer

@@ -686,6 +686,8 @@ public:
    }
 };
 
+
+
 }  // namespace math
 }  // namespace curves
 }  // namespace obj

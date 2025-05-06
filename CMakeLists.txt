@@ -249,6 +249,8 @@ target_link_libraries(bfbaselib PUBLIC bfexternallib)
 set(BF_GEOMETRY
     "src/geometry/bfCurves3.cpp"
     "src/geometry/bfCurves4.cpp"
+    "src/geometry/bfCirclePack.cpp"
+    "src/geometry/bfEdge.cpp"
     "src/geometry/bfCurves3_gui.cpp"
     "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfBladeSection2.cpp"
