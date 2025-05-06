@@ -29,6 +29,7 @@ enum BfPipelineType_ : BfPipelineType
    BfPipelineType_Triangles,
    BfPipelineType_Axis,
    BfPipelineType_LoadedImage,
+   BfPipelineType_Handles,
 };
 
 typedef uint32_t BfPipelineLayoutType;

@@ -82,6 +82,7 @@ public:
    glm::vec3 m_up;
 
    glm::mat4 m_scale = glm::mat4(1.0f); // NOTE: for ORTHO only
+   glm::mat4 m_descale = glm::mat4(1.0f);
 
    static BfCamera* m_pInstance;
 

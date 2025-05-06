@@ -17,8 +17,10 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vulkan/vulkan_core.h>
 
 #include "bfCamera.h"
+#include "bfCurves3.h"
 #include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 #include "bfHandle.h"
@@ -86,9 +88,10 @@ class BfCircleCenterFilled : public obj::BfDrawObject
 public:
    // clang-format off
    template< typename U > 
-   BfCircleCenterFilled(U&& center, float radius)
-       : obj::BfDrawObject{"Circle center filled", 
-                           BF_PIPELINE(BfPipelineType_Triangles), 200}
+   BfCircleCenterFilled(U&& center, 
+                        float radius, 
+                        VkPipeline pipeline = BF_PIPELINE(BfPipelineType_Triangles) )
+       : obj::BfDrawObject{"Circle center filled", pipeline, 200}
        , m_radius{radius}
        , m_center{std::forward<U>(center)}
    {
@@ -109,7 +112,8 @@ class BfHandleCircle : public BfCircleCenterFilled
 public:
    template <typename T>
    BfHandleCircle(T&& center, float radius)
-       : BfCircleCenterFilled(std::forward<T>(center), radius)
+       : BfCircleCenterFilled(std::forward<T>(center), radius, 
+                              BF_PIPELINE(BfPipelineType_Handles))
    {
    }
 
@@ -118,6 +122,23 @@ public:
    virtual void make() override;
    bool isChanged() const noexcept;
    void resetPos();
+
+protected:
+
+   virtual BfObjectData _objectData()override { 
+      return {
+          .model_matrix = /*  */
+            glm::translate(center().pos()) * 
+            glm::inverse(BfCamera::instance()->m_scale) * 
+            glm::scale(glm::vec3(950.0f / BfCamera::instance()->m_extent.y)) * 
+            glm::translate(-center().pos())
+         ,
+          .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
+          .index = 0,
+          .id = id(),
+          .line_thickness = 0.00025f
+      };
+   }
 
 private:
    glm::vec3 m_initialMousePos;
@@ -131,7 +152,7 @@ class BfHandleRectangle : public BfDrawObject
 public:
    template <typename T>
    BfHandleRectangle (T&& center, float side)
-       : BfDrawObject ("Square handle", BF_PIPELINE(BfPipelineType_Triangles), 200)
+       : BfDrawObject ("Square handle", BF_PIPELINE(BfPipelineType_Handles), 200)
        , m_center { std::forward<T>(center) }
        , m_side { side }
    {
@@ -143,6 +164,22 @@ public:
    BfVertex3Uni& center();
    bool isChanged() const noexcept;
    void resetPos();
+
+protected:
+   virtual BfObjectData _objectData()override { 
+      return {
+          .model_matrix = /*  */
+            glm::translate(center().pos()) * 
+            glm::inverse(BfCamera::instance()->m_scale) * 
+            glm::scale(glm::vec3(950.f / BfCamera::instance()->m_extent.y)) * 
+            glm::translate(-center().pos())
+         ,
+          .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
+          .index = 0,
+          .id = id(),
+          .line_thickness = 0.00025f
+      };
+   }
 
 private:
    glm::vec3 m_initialMousePos;

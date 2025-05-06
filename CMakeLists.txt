@@ -74,6 +74,7 @@ set(SHADER_PACK_PATHS
     "${CMAKE_SOURCE_DIR}/shaders/thick_lines"
     "${CMAKE_SOURCE_DIR}/shaders/lines"
     "${CMAKE_SOURCE_DIR}/shaders/triangle"
+    "${CMAKE_SOURCE_DIR}/shaders/handles"
     "${CMAKE_SOURCE_DIR}/shaders/loaded_image"
     "${CMAKE_SOURCE_DIR}/shaders/axis")
 

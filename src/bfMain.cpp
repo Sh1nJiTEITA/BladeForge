@@ -199,6 +199,11 @@ BfMain::_init()
        fs::path(BfConfigManager::getInstance()->exePath()) /
            "shaders/loaded_image"
    );
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTriangle >(
+       BfPipelineType_Handles,
+       BfPipelineLayoutType_Main,
+       fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/handles"
+   );
 
    bfCreateStandartFrameBuffers(m_base);
    bfCreateGUIFrameBuffers(m_base);
