@@ -207,7 +207,7 @@ BfChain::_addUpdateLines()
 void
 BfChain::make()
 {
-   // _addUpdateLines();
+   _addUpdateLines();
    BfDrawLayer::make();
 }
 

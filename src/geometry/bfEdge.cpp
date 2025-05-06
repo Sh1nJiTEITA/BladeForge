@@ -22,13 +22,21 @@ BfEdge::circle()
 std::pair< BfVertex3Uni, BfVertex3Uni >
 BfEdge::backConnections()
 {
-   // if (m_type == Inlet)
-   // {
    auto back = _part< E::SecondTangentLine, BfSingleLine >();
-   return {
-       BfVertex3Uni(back->first().getp()),
-       BfVertex3Uni(back->second().getp())
-   };
+   if (m_type == Inlet)
+   {
+      return {
+          BfVertex3Uni(back->first().getp()),
+          BfVertex3Uni(back->second().getp())
+      };
+   }
+   else
+   {
+      return {
+          BfVertex3Uni(back->second().getp()),
+          BfVertex3Uni(back->first().getp())
+      };
+   }
    // }
    // else
    // {
@@ -43,23 +51,21 @@ BfEdge::backConnections()
 std::pair< BfVertex3Uni, BfVertex3Uni >
 BfEdge::frontConnections()
 {
-   // if (m_type == Inlet)
-   // {
    auto front = _part< E::FirstTangentLine, BfSingleLine >();
-   return {
-       BfVertex3Uni(front->first().getp()),
-       BfVertex3Uni(front->second().getp())
-   };
-   // }
-   // else
-   // {
-   //
-   //    auto back = _part< E::SecondTangentLine, BfSingleLine >();
-   //    return {
-   //        BfVertex3Uni(back->first().getp()),
-   //        BfVertex3Uni(back->second().getp())
-   //    };
-   // }
+   if (m_type == Inlet)
+   {
+      return {
+          BfVertex3Uni(front->first().getp()),
+          BfVertex3Uni(front->second().getp())
+      };
+   }
+   else
+   {
+      return {
+          BfVertex3Uni(front->second().getp()),
+          BfVertex3Uni(front->first().getp())
+      };
+   }
 }
 
 float
@@ -193,21 +199,21 @@ BfEdge::_addUpdateTangentLines()
       // clang-format off
       const BfVertex3 ftangentb = fvert->otherPos(fposb);
       auto f = _addPartF< E::FirstTangentLine, BfSingleLine >(fvert, ftangentb);
-      // f->color() = (m_type == Inlet) ? glm::vec3(0.8, 0.1, 0.05) : glm::vec3(0.05, 0.1, 0.08);
+      f->color() = glm::vec3(0.8, 0.1, 0.05);
 
       const BfVertex3 stangentb = fvert->otherPos(sposb);
       auto s = _addPartF< E::SecondTangentLine, BfSingleLine >(svert, stangentb);
-      // s->color() = (m_type == Inlet) ? glm::vec3(0.05, 0.1, 0.8) : glm::vec3(0.8, 0.1, 0.0);
+      s->color() = glm::vec3(0.05, 0.1, 0.8);
       // clang-format on
    }
    else
    {
       // change second vertices here
-      _part< E::FirstTangentLine, BfSingleLine >()->setPos(fvert->pos, fposb);
-      _part< E::SecondTangentLine, BfSingleLine >()->setPos(svert->pos, sposb);
-      // _part< E::FirstTangentLine, BfSingleLine >()->first().pos() =
-      // fvert->pos; _part< E::SecondTangentLine, BfSingleLine
-      // >()->first().pos() = svert->pos;
+      // _part< E::FirstTangentLine, BfSingleLine >()->setPos(fvert->pos,
+      // fposb); _part< E::SecondTangentLine, BfSingleLine
+      // >()->setPos(svert->pos, sposb);
+      _part< E::FirstTangentLine, BfSingleLine >()->first().pos() = fvert->pos;
+      _part< E::SecondTangentLine, BfSingleLine >()->first().pos() = svert->pos;
    }
 }
 
@@ -230,7 +236,10 @@ BfEdge::frontBackDirection()
    const glm::mat4 srot = glm::rotate(glm::mat4(1.0f), -hpi, snor);
    const glm::vec3 stangent = srot * glm::vec4(sdir, 1.0f);
 
-   return {ftangent, stangent};
+   return {
+       ftangent * (m_type == Inlet ? 1.f : -1.f),
+       stangent * (m_type == Inlet ? 1.f : -1.f)
+   };
 }
 std::pair< const BfVertex3Uni, const BfVertex3Uni >
 BfEdge::frontBackTangentVertices()
@@ -245,7 +254,7 @@ void
 BfEdge::make()
 {
    _addUpdateAngleLines();
-   // _addUpdateTangentLines();
+   _addUpdateTangentLines();
    BfDrawLayer::make();
 }
 
