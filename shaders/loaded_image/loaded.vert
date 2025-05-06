@@ -32,7 +32,8 @@ layout(location = 1) out vec2 fragTex;
 layout(location = 2) flat out uint objectIndex;
 
 void main() {
-    vec4 coo = ubo.proj * 
+    vec4 coo = ubo.model * 
+	       ubo.proj * 
 	       ubo.view * 
 	       obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
 	       vec4(inPosition, 1.0);

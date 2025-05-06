@@ -16,7 +16,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/vec2.hpp>
 
-template <int KEY>
+template < int KEY >
 struct BfKeyState
 {
    bool isPressed;  /** Нажата ли кнопка в целом? */
@@ -27,8 +27,8 @@ struct BfKeyState
    bool isPressedInitial;
 };
 
-template <int KEY>
-void bfKeyUpdate(BfKeyState<KEY>& key, GLFWwindow* window);
+template < int KEY >
+void bfKeyUpdate(BfKeyState< KEY >& key, GLFWwindow* window);
 
 typedef uint32_t BfCameraMode;
 enum BfCameraMode_ : BfCameraMode
@@ -44,7 +44,7 @@ enum BfCameraMode_ : BfCameraMode
 inline const char*
 bfGetCameraModeStr(BfCameraMode mode)
 {
-   static std::unordered_map<BfCameraMode, const char*> map{
+   static std::unordered_map< BfCameraMode, const char* > map{
        {BfCameraMode_Perspective, "Perspective"},
        {BfCameraMode_PerspectiveCentered, "PerspectiveCentered"},
        {BfCameraMode_Ortho, "Ortho"},
@@ -65,9 +65,9 @@ public:
    glm::vec2 m_posMouse;
    glm::vec2 m_mouseDelta;
 
-   BfKeyState<GLFW_MOUSE_BUTTON_MIDDLE> m_middleMouseState;
-   BfKeyState<GLFW_MOUSE_BUTTON_LEFT> m_leftMouseState;
-   BfKeyState<GLFW_MOUSE_BUTTON_RIGHT> m_rightMouseState;
+   BfKeyState< GLFW_MOUSE_BUTTON_MIDDLE > m_middleMouseState;
+   BfKeyState< GLFW_MOUSE_BUTTON_LEFT > m_leftMouseState;
+   BfKeyState< GLFW_MOUSE_BUTTON_RIGHT > m_rightMouseState;
 
    glm::vec3 m_pos;
    glm::vec3 m_posOld;
@@ -81,7 +81,7 @@ public:
    glm::vec3 m_target;
    glm::vec3 m_up;
 
-   glm::mat4 m_scale;  // NOTE: for ORTHO only
+   glm::mat4 m_scale = glm::mat4(1.0f); // NOTE: for ORTHO only
 
    static BfCamera* m_pInstance;
 

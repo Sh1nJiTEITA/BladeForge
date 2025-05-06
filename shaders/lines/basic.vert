@@ -68,7 +68,7 @@ void main() {
     //    debugPrintfEXT("col = %f, %f. %f", inColor[0], inColor[1], inColor[2]);
     //    debugPrintfEXT("nor = %f, %f. %f", inNormals[0], inNormals[1], inNormals[2]);
 
-    vec4 coo = ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
+    vec4 coo = ubo.model * ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
     outNormals = inNormals;
     gl_Position = coo;
