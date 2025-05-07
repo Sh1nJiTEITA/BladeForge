@@ -300,8 +300,11 @@ BfMain::_kill()
 void
 createRootLayers()
 {
-   constexpr auto type = obj::BfDrawManager::RootType::MAIN;
-   obj::BfDrawManager::inst().addRoot< type >();
+   const auto mtype = obj::BfDrawManager::RootType::MAIN;
+   obj::BfDrawManager::inst().addRoot< mtype >();
+
+   const auto ttype = obj::BfDrawManager::RootType::IMAGE_LOAD;
+   obj::BfDrawManager::inst().addRoot< ttype >();
 };
 
 void
@@ -312,8 +315,10 @@ BfMain::_loop()
 
    createRootLayers();
 
-   auto mainRoot =
-       obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
+   // clang-format off
+   auto mainRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
+   auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
+   // clang-format on
 
    auto info = obj::section::SectionCreateInfo{};
    auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
@@ -322,8 +327,10 @@ BfMain::_loop()
    mainRoot->add(bs);
    auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
    tp->make();
-   mainRoot->add(tp);
+   textRoot->add(tp);
+
    mainRoot->control().updateBuffer();
+   textRoot->control().updateBuffer();
 
    while (!glfwWindowShouldClose(m_base.window->pWindow))
    {
