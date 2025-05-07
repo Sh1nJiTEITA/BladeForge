@@ -440,125 +440,154 @@ void BfBladeSection::_createCenterCircles2() {
 }
 
 void BfBladeSection::_processCenterCircles2() {
+   // clang-format on
    auto& c = m_info.get().centerCircles;
-   auto circ_layer = _part<E::CenterCircles2, obj::BfDrawLayer>();
+   auto circ_layer = _part< E::CenterCircles2, obj::BfDrawLayer >();
 
-   if (c.size() > circ_layer->children().size()) { 
-      // fmt::println("Adding new circle");
-       circ_layer->addf<curves::BfCirclePackWH>(
-       BfVar< float >(&c.back().relativePos),
-       BfVar< float >(&c.back().radius),
-       BfVar< float >(90.0f),
-       BfVar< float >(90.0f),
-       _part<E::AverageInitialCurve, curves::BfBezierWH>()->curve(), 
-       curves::BfCirclePackWH::Flag::SeparateHandles
-      );   
-   } else { 
-      std::erase_if(circ_layer->children(),
-                    [](const std::shared_ptr< BfDrawObjectBase >& p) { 
-                        auto pack = std::static_pointer_cast<curves::BfCirclePackWH>(p);
-                        return std::isnan(pack->relativePos());
-                    });
+   if (c.size() > circ_layer->children().size())
+   {
+      // NOTE:
+      // If new circle was added somewhere -> add it to
+      // circle layers, assuming that adding are done by
+      // single element max per frame and pushed to the
+      // back of create info circle list
+      //
+      circ_layer->addf< curves::BfCirclePackWH >(
+          BfVar< float >(&c.back().relativePos),
+          BfVar< float >(&c.back().radius),
+          BfVar< float >(90.0f),
+          BfVar< float >(90.0f),
+          _part< E::AverageInitialCurve, curves::BfBezierWH >()->curve(),
+          curves::BfCirclePackWH::Flag::SeparateHandles
+      );
+   }
+   else
+   {
+      // NOTE:
+      // If relative position from gui set to NAN -> erase it
+      // from layers and from create info
+      //
+      std::erase_if(
+          circ_layer->children(),
+          [](const std::shared_ptr< BfDrawObjectBase >& p) {
+             auto pack = std::static_pointer_cast< curves::BfCirclePackWH >(p);
+             return std::isnan(pack->relativePos());
+          }
+      );
 
-      std::erase_if(m_info.get().centerCircles,
-                    [](const CenterCircle& c) { 
-                        return std::isnan(c.relativePos);
-                    });
-   } 
+      std::erase_if(m_info.get().centerCircles, [](const CenterCircle& c) {
+         return std::isnan(c.relativePos);
+      });
+   }
 
-   c.sort([](const auto& lhs, const auto& rhs) { 
+   c.sort([](const auto& lhs, const auto& rhs) {
       return std::less{}(lhs.relativePos, rhs.relativePos);
    });
 }
 
+void
+BfBladeSection::_createIOCircles()
+{
+   auto circles =
+       _part< BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer >();
 
-void BfBladeSection::_createIOCircles() { 
-   auto circles = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
+   auto inlet_circle =
+       _part< BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH >();
+   auto inlet_dir =
+       _part< BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH >();
+   auto ipack =
+       _addPartF< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(
+           inlet_circle,
+           inlet_dir,
+           circles,
+           curves::BfIOCirclePack::Inlet
+       );
 
-   auto inlet_circle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
-   auto inlet_dir = _part<BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH>();
-   auto ipack = _addPartF<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>( 
-      inlet_circle,
-      inlet_dir, 
-      circles,
-      curves::BfIOCirclePack::Inlet
+   auto outlet_circle =
+       _part< BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH >();
+   auto outlet_dir =
+       _part< BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH >();
+   auto opack =
+       _addPartF< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >(
+           outlet_circle,
+           outlet_dir,
+           circles,
+           curves::BfIOCirclePack::Outlet
+       );
+}
+
+void
+BfBladeSection::_processIOCircles()
+{
+}
+
+void
+BfBladeSection::_createIOCircles2()
+{
+   _addPartF< E::InletEdge, curves::BfEdge >(
+       BfVar< float >(90.f),
+       BfVar< float >(90.f),
+       _part< E::InletDirection, curves::BfSingleLineWH >(),
+       _part< E::InletCircle, curves::BfCircle2LinesWH >(),
+       curves::BfEdge::Type::Inlet
+
    );
 
-   auto outlet_circle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
-   auto outlet_dir = _part<BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH>();
-   auto opack = _addPartF<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>( 
-      outlet_circle,
-      outlet_dir,
-      circles,
-      curves::BfIOCirclePack::Outlet
+   _addPartF< E::OutletEdge, curves::BfEdge >(
+       BfVar< float >(90.f),
+       BfVar< float >(90.f),
+       _part< E::OutletDirection, curves::BfSingleLineWH >(),
+       _part< E::OutletCircle, curves::BfCircle2LinesWH >(),
+       curves::BfEdge::Type::Outlet
    );
 }
 
-void BfBladeSection::_processIOCircles() { 
-
+void
+BfBladeSection::_processIOCircles2()
+{
 }
 
-void BfBladeSection::_createIOCircles2() { 
-   _addPartF<E::InletEdge, curves::BfEdge>(
-      BfVar< float >(90.f),
-      BfVar< float >(90.f),
-      _part<E::InletDirection, curves::BfSingleLineWH>(),
-      _part<E::InletCircle, curves::BfCircle2LinesWH>(),
-      curves::BfEdge::Type::Inlet
-
-   );
-
-   _addPartF<E::OutletEdge, curves::BfEdge>(
-      BfVar< float >(90.f),
-      BfVar< float >(90.f),
-      _part<E::OutletDirection, curves::BfSingleLineWH>(),
-      _part<E::OutletCircle, curves::BfCircle2LinesWH>(),
-      curves::BfEdge::Type::Outlet
-   );
-}
-
-void BfBladeSection::_processIOCircles2(){  
-
-}
-
-
-void BfBladeSection::_createFrontCurves() { 
+void
+BfBladeSection::_createFrontCurves()
+{
    // _toggleRender<BfBladeSectionEnum::CenterCircles>();
    // _toggleRender<BfBladeSectionEnum::InletPack>();
    // _toggleRender<BfBladeSectionEnum::OutletPack>();
 
-   _addPartF<BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain>(
-      curves::BfBezierChain::Type::Front,
-      _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
-      _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
-      _part<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>()
+   _addPartF< BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain >(
+       curves::BfBezierChain::Type::Front,
+       _part< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(),
+       _part< BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack >(),
+       _part< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >()
    );
 
-   _addPartF<BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain>(
-      curves::BfBezierChain::Type::Back,
-      _part<BfBladeSectionEnum::InletPack, curves::BfIOCirclePack>(),
-      _part<BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack>(),
-      _part<BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack>()
-   );
-}
-
-void BfBladeSection::_processFrontCurves() { 
-   
-}
-
-void BfBladeSection::_createFrontCurves2() { 
-   _addPartF<E::Chain, curves::BfChain>(
-       _part<E::CenterCircles2, obj::BfDrawLayer>(),
-       _part<E::InletEdge, curves::BfEdge>(),
-       _part<E::OutletEdge, curves::BfEdge>()
+   _addPartF< BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain >(
+       curves::BfBezierChain::Type::Back,
+       _part< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(),
+       _part< BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack >(),
+       _part< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >()
    );
 }
 
-void BfBladeSection::_processFrontCurves2() { 
-
+void
+BfBladeSection::_processFrontCurves()
+{
 }
 
+void
+BfBladeSection::_createFrontCurves2()
+{
+   _addPartF< E::Chain, curves::BfChain >(
+       _part< E::CenterCircles2, obj::BfDrawLayer >(),
+       _part< E::InletEdge, curves::BfEdge >(),
+       _part< E::OutletEdge, curves::BfEdge >()
+   );
+}
 
+void
+BfBladeSection::_processFrontCurves2()
+{
+}
 
-};  // namespace section
-};  // namespace obj
+}; // namespace section
+}; // namespace obj

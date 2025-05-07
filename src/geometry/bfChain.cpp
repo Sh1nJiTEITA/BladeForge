@@ -3,6 +3,7 @@
 #include "bfDrawObject2.h"
 #include "bfObjectMath.h"
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <memory>
 #include <ranges>
@@ -115,6 +116,58 @@ BfChain::_updateList()
    m_list.push_back(m_outletCircle);
 }
 
+void
+BfChain::_addUpdateChains()
+{
+   if (!_isPart< E::BackLinesLayer >())
+   {
+      _addPartF< E::BackLinesLayer, obj::BfDrawLayer >("Back Bezier chain");
+      _addPartF< E::FrontLinesLayer, obj::BfDrawLayer >("Front Bezier chain");
+   }
+   else
+   {
+      auto back_layer = _part< E::BackLinesLayer, obj::BfDrawLayer >();
+      auto front_layer = _part< E::FrontLinesLayer, obj::BfDrawLayer >();
+
+      bool isReadding = back_layer->children().size() != m_list.size() - 1;
+      if (isReadding)
+      {
+         back_layer->children().clear();
+         front_layer->children().clear();
+      }
+
+      auto lit = m_list.begin();
+      auto rit = std::next(lit);
+
+      while (rit != m_list.end())
+      {
+         auto back_v = _getBezierVert(ChainType::Back, *lit, *rit);
+         auto front_v = _getBezierVert(ChainType::Front, *lit, *rit);
+
+         if (isReadding)
+         {
+            front_layer->addf< BfBezierN >(front_v[0], front_v[1], front_v[2]);
+            back_layer->addf< BfBezierN >(back_v[0], back_v[1], back_v[2]);
+         }
+         else
+         {
+            const size_t bez_index = std::distance(m_list.begin(), lit);
+
+            auto front_bez_b = front_layer->children().at(bez_index);
+            auto front_bez = std::static_pointer_cast< BfBezierN >(front_bez_b);
+            front_bez->assign(front_v.begin(), front_v.end());
+
+            auto back_bez_b = back_layer->children().at(bez_index);
+            auto back_bez = std::static_pointer_cast< BfBezierN >(back_bez_b);
+            back_bez->assign(back_v.begin(), back_v.end());
+         }
+
+         lit = std::next(lit);
+         rit = std::next(rit);
+      }
+   }
+}
+
 glm::vec3
 BfChain::_findIntersection(
     const glm::vec3& left_tangent,
@@ -136,71 +189,82 @@ auto
 BfChain::_addUpdateLines()
 {
    _updateList();
-   if (!_isPart< E::BackLinesLayer >())
+
+   auto lit = m_list.begin();
+   auto rit = std::next(lit);
+
+   while (rit != m_list.end())
    {
-      _addPartF< E::BackLinesLayer, obj::BfDrawLayer >("Back lines layer");
-      _addPartF< E::FrontLinesLayer, obj::BfDrawLayer >("Front lines layer");
+      auto l = upgrade(*lit);
+      auto r = upgrade(*rit);
+
+      // clang-format off
+         const auto& [lfront_tang, lback_tang] = l->frontBackTangentVertices();
+         const auto& [lfront_dir, lback_dir] = l->frontBackDirection();
+         const auto& [rfront_tang, rback_tang] = r->frontBackTangentVertices();
+         const auto& [rfront_dir, rback_dir] = r->frontBackDirection();
+      // clang-format on
+
+      const glm::vec3 front_intersection = _findIntersection(
+          lfront_tang.pos(),
+          lfront_dir,
+          rfront_tang.pos(),
+          rfront_dir
+      );
+
+      const glm::vec3 back_intersection = _findIntersection(
+          lback_tang.pos(),
+          lback_dir,
+          rback_tang.pos(),
+          rback_dir
+      );
+      // BACK
+      auto lback_con = l->backConnections();
+      lback_con.second.pos() = back_intersection;
+      auto rback_con = r->backConnections();
+      rback_con.first.pos() = back_intersection;
+
+      // FRONT
+      auto lfront_con = l->frontConnections();
+      lfront_con.second.pos() = front_intersection;
+      auto rfront_con = r->frontConnections();
+      rfront_con.first.pos() = front_intersection;
+
+      lit = std::next(lit);
+      rit = std::next(rit);
+   }
+   // }
+}
+
+std::array< BfVertex3Uni, 3 >
+BfChain::_getBezierVert(
+    ChainType type,
+    std::weak_ptr< BfChainElement > left,
+    std::weak_ptr< BfChainElement > right
+)
+{
+   auto l = upgrade(left);
+   auto r = upgrade(right);
+
+   auto [L_TAN_FRONT, L_TAN_BACK] = l->frontBackTangentVertices();
+   auto [R_TAN_FRONT, R_TAN_BACK] = r->frontBackTangentVertices();
+   auto INTR_FRONT = l->frontConnections().second;
+   auto INTR_BACK = l->backConnections().second;
+   if (type == ChainType::Front)
+   {
+      return {
+          BfVertex3Uni(L_TAN_FRONT),
+          BfVertex3Uni(INTR_FRONT),
+          BfVertex3Uni(R_TAN_FRONT)
+      };
    }
    else
    {
-      auto back = _part< E::BackLinesLayer, obj::BfDrawLayer >();
-      auto front = _part< E::FrontLinesLayer, obj::BfDrawLayer >();
-
-      // if (back->children().size() != m_list.size())
-      // {
-      // back->children().clear();
-
-      auto lit = m_list.begin();
-      auto rit = std::next(lit);
-
-      const auto v = inletCircle()->circle()->centerVertex();
-      while (rit != m_list.end())
-      {
-         auto l = upgrade(*lit);
-         auto r = upgrade(*rit);
-
-         // clang-format off
-            const auto& [lfront_tang, lback_tang] = l->frontBackTangentVertices();
-            const auto& [lfront_dir, lback_dir] = l->frontBackDirection();
-            
-
-            const auto& [rfront_tang, rback_tang] = r->frontBackTangentVertices();
-            const auto& [rfront_dir, rback_dir] = r->frontBackDirection();
-         // clang-format on
-
-         const glm::vec3 front_intersection = _findIntersection(
-             lfront_tang.pos(),
-             lfront_dir,
-             rfront_tang.pos(),
-             rfront_dir
-         );
-
-         const glm::vec3 back_intersection = _findIntersection(
-             lback_tang.pos(),
-             lback_dir,
-             rback_tang.pos(),
-             rback_dir
-         );
-
-         // fmt::println("{} : {}", front_intersection, back_intersection);
-         // fmt::println("{} : {}", lfront_dir, rfront_dir);
-
-         auto lback_con = l->backConnections();
-         lback_con.second.pos() = back_intersection;
-         auto rback_con = r->backConnections();
-         rback_con.first.pos() = back_intersection;
-
-         auto lfront_con = l->frontConnections();
-         lfront_con.second.pos() = front_intersection;
-         auto rfront_con = r->frontConnections();
-         rfront_con.first.pos() = front_intersection;
-
-         // back->addf< BfHandleCircle >(v.otherPos(bintr), 0.01f);
-
-         lit = std::next(lit);
-         rit = std::next(rit);
-         // }
-      }
+      return {
+          BfVertex3Uni(L_TAN_BACK),
+          BfVertex3Uni(INTR_BACK),
+          BfVertex3Uni(R_TAN_BACK)
+      };
    }
 }
 
@@ -208,6 +272,7 @@ void
 BfChain::make()
 {
    _addUpdateLines();
+   _addUpdateChains();
    BfDrawLayer::make();
 }
 

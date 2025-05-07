@@ -1,6 +1,7 @@
 #pragma once
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
+#include <array>
 #ifndef BF_BLADE_CHAIN_H
 #define BF_BLADE_CHAIN_H
 
@@ -20,6 +21,13 @@ enum BfChainPartEnum
 
 class BfChain : public obj::BfDrawLayerWithAccess< BfChainPartEnum >
 {
+public:
+   enum ChainType
+   {
+      Back,
+      Front
+   };
+
 public:
    BfChain(
        std::weak_ptr< BfDrawLayer > cc,
@@ -43,6 +51,13 @@ public:
 private:
    auto _addUpdateLines();
    void _updateList();
+   void _addUpdateChains();
+
+   auto _getBezierVert(
+       ChainType type,
+       std::weak_ptr< BfChainElement > left,
+       std::weak_ptr< BfChainElement > right
+   ) -> std::array< BfVertex3Uni, 3 >;
 
    auto _findIntersection(
        const glm::vec3& left_tangent,
