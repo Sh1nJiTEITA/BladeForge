@@ -378,6 +378,7 @@ bfCreateLogicalDevice(BfBase& base)
    deviceFeatures.independentBlend = VK_TRUE;
    deviceFeatures.geometryShader = VK_TRUE;
    deviceFeatures.samplerAnisotropy = VK_TRUE;
+   deviceFeatures.wideLines = VK_TRUE;
 
    VkDeviceCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

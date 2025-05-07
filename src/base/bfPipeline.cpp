@@ -417,7 +417,7 @@ BfPipelineInterfaceStd::genRasterizationState()
    rasterizationState.depthClampEnable = VK_FALSE;
    rasterizationState.rasterizerDiscardEnable = VK_FALSE;
    rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
-   rasterizationState.lineWidth = 1.0f;
+   rasterizationState.lineWidth = 2.0f;
    rasterizationState.cullMode = VK_CULL_MODE_NONE;
    rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    // clang-format on
