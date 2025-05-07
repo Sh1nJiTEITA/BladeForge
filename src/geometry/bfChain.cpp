@@ -111,12 +111,6 @@ BfChain::_updateList()
       return llock->relativePos() < rlock->relativePos();
    });
 
-   std::for_each(m_list.begin(), m_list.end(), [](const auto& e) {
-      auto ee = upgrade(e);
-      fmt::print("{} => ", ee->relativePos());
-   });
-   fmt::print("\n");
-
    m_list.push_front(m_inletCircle);
    m_list.push_back(m_outletCircle);
 }

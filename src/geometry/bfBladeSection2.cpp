@@ -1,6 +1,8 @@
 #include "bfBladeSection2.h"
 
+#include "bfCirclePack.h"
 #include "bfCurves4.h"
+#include "bfDrawObject2.h"
 #include "bfEdge.h"
 #include "bfObjectMath.h"
 #include <algorithm>
@@ -428,8 +430,8 @@ void BfBladeSection::_createCenterCircles2() {
       circ_layer->addf<curves::BfCirclePackWH>(
          BfVar< float >(&circ.relativePos),
          BfVar< float >(&circ.radius),
-         BfVar< float >(45.0f),
-         BfVar< float >(45.0f),
+         BfVar< float >(90.0f),
+         BfVar< float >(90.0f),
          _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>()->curve()
          , curves::BfCirclePackWH::Flag::SeparateHandles// | curves::BfCirclePackWH::Flag::FixedAngle
       );
@@ -441,22 +443,28 @@ void BfBladeSection::_processCenterCircles2() {
    auto& c = m_info.get().centerCircles;
    auto circ_layer = _part<E::CenterCircles2, obj::BfDrawLayer>();
 
-
    if (c.size() > circ_layer->children().size()) { 
       // fmt::println("Adding new circle");
        circ_layer->addf<curves::BfCirclePackWH>(
        BfVar< float >(&c.back().relativePos),
        BfVar< float >(&c.back().radius),
-       BfVar< float >(45.0f),
-       BfVar< float >(45.0f),
+       BfVar< float >(90.0f),
+       BfVar< float >(90.0f),
        _part<E::AverageInitialCurve, curves::BfBezierWH>()->curve(), 
        curves::BfCirclePackWH::Flag::SeparateHandles
       );   
-   } else if (c.size() < circ_layer->children().size()) { 
-      // fmt::println("Erasing new circle");
    } else { 
-      // fmt::println("No manu with circle");
-   }
+      std::erase_if(circ_layer->children(),
+                    [](const std::shared_ptr< BfDrawObjectBase >& p) { 
+                        auto pack = std::static_pointer_cast<curves::BfCirclePackWH>(p);
+                        return std::isnan(pack->relativePos());
+                    });
+
+      std::erase_if(m_info.get().centerCircles,
+                    [](const CenterCircle& c) { 
+                        return std::isnan(c.relativePos);
+                    });
+   } 
 
    c.sort([](const auto& lhs, const auto& rhs) { 
       return std::less{}(lhs.relativePos, rhs.relativePos);
