@@ -40,7 +40,7 @@ public:
    template < RootType Type >
    void addRoot()
    {
-      auto root = std::make_shared< obj::BfDrawRootLayer >(2000, 10);
+      auto root = std::make_shared< obj::BfDrawRootLayer >(3000, 50);
       auto [_, sts] = m_rootObjects.insert({Type, root});
       if (!sts)
       {

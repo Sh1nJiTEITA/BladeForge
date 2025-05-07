@@ -300,7 +300,12 @@ struct BfVar
          m_value
       );
    } 
-   // clanf-format on
+   
+   // template< typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
+   template< typename U>
+   explicit operator BfVar<U>() { 
+      return BfVar<U>( static_cast< U* >(this->getp()));
+   }
 
 private:
    var m_value;

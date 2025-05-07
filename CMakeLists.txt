@@ -255,6 +255,7 @@ set(BF_GEOMETRY
     "src/geometry/bfChain.cpp"
     "src/geometry/bfCurves3_gui.cpp"
     "src/geometry/bfBladeSection.cpp"
+    "src/geometry/bfBladeBody.cpp"
     "src/geometry/bfBladeSection2.cpp"
     "src/geometry/bfAxis.cpp"
     "src/geometry/bfObjectMath.cpp")

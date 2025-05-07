@@ -6,6 +6,7 @@
 #include "bfAllocator.h"
 #include "bfAxis.h"
 #include "bfBase.h"
+#include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfConfigManager.h"
@@ -320,14 +321,17 @@ BfMain::_loop()
    auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
    // clang-format on
 
-   auto info = obj::section::SectionCreateInfo{};
-   auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
-   bs->make();
+   // auto info = obj::section::SectionCreateInfo{};
+   // auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
+   // bs->make();
 
-   mainRoot->add(bs);
+   // mainRoot->add(bs);
    auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
    tp->make();
    textRoot->add(tp);
+
+   auto body = std::make_shared< obj::body::BfBladeBody >();
+   mainRoot->add(body);
 
    mainRoot->control().updateBuffer();
    textRoot->control().updateBuffer();
@@ -350,16 +354,21 @@ BfMain::_loop()
       m_gui.presentSettings();
       // __gui.presentLuaInteraction();
       m_gui.presentFileDialog();
-      m_gui.presentCreateWindow();
+      // m_gui.presentCreateWindow();
       // __gui.presentSmartLayerObserver();
       m_gui.presentCameraWindow();
-      m_gui.presentIds();
-
-      if (m_gui.presentBladeSectionCreateWindow(&info, tp))
+      if (m_gui.presentNewCreateWindow(body))
       {
-         bs->make();
+         body->make();
          mainRoot->control().updateBuffer();
       }
+      // m_gui.presentIds();
+
+      // if (m_gui.presentBladeSectionCreateWindow(&info, tp))
+      // {
+      //    bs->make();
+      //    mainRoot->control().updateBuffer();
+      // }
       ImGui::ShowDemoWindow();
 
       ImGui::Begin("Choose image");

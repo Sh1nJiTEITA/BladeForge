@@ -1,6 +1,7 @@
 #include "bfGui.h"
 
 #include <cmath>
+#include <cstdio>
 #include <filesystem>
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -12,6 +13,7 @@
 #include <utility>
 #include <variant>
 
+#include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfCurves4.h"
@@ -869,6 +871,48 @@ BfGui::toggleRenderCreateWindow()
    __create_window.toggleRender();
 }
 
+bool
+BfGui::presentNewCreateWindow(std::shared_ptr< obj::body::BfBladeBody > body)
+{
+   static bool popen = true;
+   if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) |
+        ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+       ImGui::IsKeyReleased(ImGuiKey_E))
+   {
+      fmt::println("Toggle create window : {}", popen);
+      popen = !popen;
+   }
+
+   if (!popen)
+      return false;
+
+   bool should_remake = false;
+   ImGui::Begin("Create window", &popen);
+   {
+      if (ImGui::Button("Add empty section"))
+      {
+         body->addSection();
+         should_remake = true;
+      }
+
+      const float child_y = 38.0f;
+      const float child_x = ImGui::GetContentRegionAvail().x;
+      size_t i = 0;
+      for (auto info = body->beginInfo(); info != body->endInfo(); ++info, ++i)
+      {
+         std::string title = fmt::format("##section-part-{}", i);
+         ImGui::BeginChild(title.c_str(), ImVec2{child_x, child_y}, true);
+         {
+            ImGui::Text("%s", title.c_str());
+         }
+         ImGui::EndChild();
+      }
+   }
+   ImGui::End();
+
+   return should_remake;
+}
+
 using inputTableField = std::variant< int*, float* >;
 bool
 presentBladeSectionTable(
@@ -1115,19 +1159,21 @@ BfGui::presentBladeSectionCreateWindow(
           &dockspace_id
       );
       ImGuiID right_id = dockspace_id;
+      // ImGuiID tab_id = ImGui::DockBuilderAddNode(right_id);
 
-      ImGuiID bot_id = ImGui::DockBuilderSplitNode(
-          dockspace_id,
-          ImGuiDir_Down,
-          0.80f,
-          nullptr,
-          &right_id
-      );
-      ImGuiID top_id = right_id;
+      // ImGuiID bot_id = ImGui::DockBuilderSplitNode(
+      //     dockspace_id,
+      //     ImGuiDir_Down,
+      //     0.80f,
+      //     nullptr,
+      //     &right_id
+      // );
+      // ImGuiID top_id = right_id;
 
       ImGui::DockBuilderDockWindow("Parameters", left_id);
-      ImGui::DockBuilderDockWindow("Preview", bot_id);
-      ImGui::DockBuilderDockWindow("Image", top_id);
+      ImGui::DockBuilderDockWindow("Preview", right_id);
+      ImGui::DockBuilderDockWindow("Image", right_id);
+      ImGui::DockBuilderDockWindow("Type Manager", right_id);
       ImGui::DockBuilderFinish(dockspace_id);
    }
 

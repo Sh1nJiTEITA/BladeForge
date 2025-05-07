@@ -12,6 +12,7 @@
 #include <string>
 
 #include "bfBase.h"
+#include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfConfigManager.h"
@@ -104,6 +105,8 @@ public:
        obj::section::SectionCreateInfo* info,
        std::shared_ptr< obj::curves::BfTexturePlane > plane
    );
+
+   bool presentNewCreateWindow(std::shared_ptr< obj::body::BfBladeBody > body);
 
    void toggleRenderCreateWindow();
 
