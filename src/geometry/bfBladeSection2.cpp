@@ -439,6 +439,25 @@ void BfBladeSection::_createCenterCircles2() {
 
 void BfBladeSection::_processCenterCircles2() {
    auto& c = m_info.get().centerCircles;
+   auto circ_layer = _part<E::CenterCircles2, obj::BfDrawLayer>();
+
+
+   if (c.size() > circ_layer->children().size()) { 
+      // fmt::println("Adding new circle");
+       circ_layer->addf<curves::BfCirclePackWH>(
+       BfVar< float >(&c.back().relativePos),
+       BfVar< float >(&c.back().radius),
+       BfVar< float >(45.0f),
+       BfVar< float >(45.0f),
+       _part<E::AverageInitialCurve, curves::BfBezierWH>()->curve(), 
+       curves::BfCirclePackWH::Flag::SeparateHandles
+      );   
+   } else if (c.size() < circ_layer->children().size()) { 
+      // fmt::println("Erasing new circle");
+   } else { 
+      // fmt::println("No manu with circle");
+   }
+
    c.sort([](const auto& lhs, const auto& rhs) { 
       return std::less{}(lhs.relativePos, rhs.relativePos);
    });

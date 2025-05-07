@@ -52,6 +52,20 @@ BfChain::outletCircle()
    }
 }
 
+template < typename T >
+std::shared_ptr< T >
+upgrade(const std::weak_ptr< T >& weak)
+{
+   if (auto locked = weak.lock())
+   {
+      return locked;
+   }
+   else
+   {
+      throw std::runtime_error("Cant lock some element");
+   }
+}
+
 void
 BfChain::_updateList()
 {
@@ -94,8 +108,14 @@ BfChain::_updateList()
       {
          throw std::runtime_error("Cant lock lhs || rhs");
       }
-      return llock->relativePos() > llock->relativePos();
+      return llock->relativePos() < rlock->relativePos();
    });
+
+   std::for_each(m_list.begin(), m_list.end(), [](const auto& e) {
+      auto ee = upgrade(e);
+      fmt::print("{} => ", ee->relativePos());
+   });
+   fmt::print("\n");
 
    m_list.push_front(m_inletCircle);
    m_list.push_back(m_outletCircle);
@@ -118,20 +138,6 @@ BfChain::_findIntersection(
    );
 }
 
-template < typename T >
-std::shared_ptr< T >
-upgrade(const std::weak_ptr< T >& weak)
-{
-   if (auto locked = weak.lock())
-   {
-      return locked;
-   }
-   else
-   {
-      throw std::runtime_error("Cant lock some element");
-   }
-}
-
 auto
 BfChain::_addUpdateLines()
 {
@@ -146,60 +152,60 @@ BfChain::_addUpdateLines()
       auto back = _part< E::BackLinesLayer, obj::BfDrawLayer >();
       auto front = _part< E::FrontLinesLayer, obj::BfDrawLayer >();
 
-      if (back->children().size() != m_list.size())
+      // if (back->children().size() != m_list.size())
+      // {
+      // back->children().clear();
+
+      auto lit = m_list.begin();
+      auto rit = std::next(lit);
+
+      const auto v = inletCircle()->circle()->centerVertex();
+      while (rit != m_list.end())
       {
-         back->children().clear();
+         auto l = upgrade(*lit);
+         auto r = upgrade(*rit);
 
-         auto lit = m_list.begin();
-         auto rit = std::next(lit);
-
-         const auto v = inletCircle()->circle()->centerVertex();
-         while (rit != m_list.end())
-         {
-            auto l = upgrade(*lit);
-            auto r = upgrade(*rit);
-
-            // clang-format off
+         // clang-format off
             const auto& [lfront_tang, lback_tang] = l->frontBackTangentVertices();
             const auto& [lfront_dir, lback_dir] = l->frontBackDirection();
             
 
             const auto& [rfront_tang, rback_tang] = r->frontBackTangentVertices();
             const auto& [rfront_dir, rback_dir] = r->frontBackDirection();
-            // clang-format on
+         // clang-format on
 
-            const glm::vec3 front_intersection = _findIntersection(
-                lfront_tang.pos(),
-                lfront_dir,
-                rfront_tang.pos(),
-                rfront_dir
-            );
+         const glm::vec3 front_intersection = _findIntersection(
+             lfront_tang.pos(),
+             lfront_dir,
+             rfront_tang.pos(),
+             rfront_dir
+         );
 
-            const glm::vec3 back_intersection = _findIntersection(
-                lback_tang.pos(),
-                lback_dir,
-                rback_tang.pos(),
-                rback_dir
-            );
+         const glm::vec3 back_intersection = _findIntersection(
+             lback_tang.pos(),
+             lback_dir,
+             rback_tang.pos(),
+             rback_dir
+         );
 
-            // fmt::println("{} : {}", front_intersection, back_intersection);
-            // fmt::println("{} : {}", lfront_dir, rfront_dir);
+         // fmt::println("{} : {}", front_intersection, back_intersection);
+         // fmt::println("{} : {}", lfront_dir, rfront_dir);
 
-            auto lback_con = l->backConnections();
-            lback_con.second.pos() = back_intersection;
-            auto rback_con = r->backConnections();
-            rback_con.first.pos() = back_intersection;
+         auto lback_con = l->backConnections();
+         lback_con.second.pos() = back_intersection;
+         auto rback_con = r->backConnections();
+         rback_con.first.pos() = back_intersection;
 
-            auto lfront_con = l->frontConnections();
-            lfront_con.second.pos() = front_intersection;
-            auto rfront_con = r->frontConnections();
-            rfront_con.first.pos() = front_intersection;
+         auto lfront_con = l->frontConnections();
+         lfront_con.second.pos() = front_intersection;
+         auto rfront_con = r->frontConnections();
+         rfront_con.first.pos() = front_intersection;
 
-            // back->addf< BfHandleCircle >(v.otherPos(bintr), 0.01f);
+         // back->addf< BfHandleCircle >(v.otherPos(bintr), 0.01f);
 
-            lit = std::next(lit);
-            rit = std::next(rit);
-         }
+         lit = std::next(lit);
+         rit = std::next(rit);
+         // }
       }
    }
 }
