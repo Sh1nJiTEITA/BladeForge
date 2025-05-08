@@ -308,7 +308,7 @@ findLinesIntersection(T&& l1begin, U&& l1end, B&& l2begin, A&& l2end, int mode)
    auto _a2 = BfVertex3(std::forward< B >(l2begin));
    auto _b2 = BfVertex3(std::forward< A >(l2end));
 
-   if (isVerticesInPlain(l1begin, l1end, l2begin, l2end))
+   // if (isVerticesInPlain(l1begin, l1end, l2begin, l2end))
    {
       glm::vec3 a1 = _a1.pos;
       glm::vec3 b1 = glm::normalize(_b1.pos - _a1.pos);
@@ -350,10 +350,10 @@ findLinesIntersection(T&& l1begin, U&& l1end, B&& l2begin, A&& l2end, int mode)
          );
       }
    }
-   else
-   {
-      return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
-   }
+   // else
+   // {
+   return glm::vec3(std::nan(""), std::nan(""), std::nan(""));
+   // }
 }
 
 /**

@@ -4,8 +4,10 @@
 #include <fmt/base.h>
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
+#include <memory>
 
 #include "bfBladeParts.h"
+#include "bfChain.h"
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
 
@@ -22,6 +24,8 @@ struct CenterCircle
 
 struct SectionCreateInfo
 {
+   float z = 0.0f;
+
    float chord = 1.0f;
    float installAngle = 80.0f;
 
@@ -103,13 +107,23 @@ public:
    {
       _assignRoots();
       
+      // fmt::println("z={}", m_info.get().z);
+      //
+      
+
       if (!m_children.empty()) premake(); 
       {
+         int i = 0;
          for (auto& child : m_children) {
             child->make();
          }
+         
          // applyRenderToggle();
       }
+      // _part<E::InletEdge, curves::BfEdge>()->make();
+      // _part<E::OutletEdge, curves::BfEdge>()->make();
+      // _part<E::Chain, curves::BfChain>()->make();
+
       postmake();    
    }
 
@@ -120,6 +134,7 @@ public:
       _processIOAngles();
       _processAverageInitialCurve();
       _processCenterCircles2();
+      _processFrontCurves2();
       // FRONTIER 
 
       // _processCenterCircles();

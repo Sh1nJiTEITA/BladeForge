@@ -112,12 +112,12 @@ BfBladeSection::_createChord()
    auto& g = m_info;
    auto oChord = _addPartF<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
       BfVertex3{
-         glm::vec3{ 0.0f, 0.0f, 0.0f }, 
+         glm::vec3{ 0.0f, 0.0f, g.get().z }, 
          glm::vec3{ 0.5f, 0.5f, 0.1f },
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       },
       BfVertex3{
-         glm::vec3{ g.get().chord, 0.0f, 0.0f }, 
+         glm::vec3{ g.get().chord, 0.0f, g.get().z }, 
          glm::vec3{ 0.5f, 0.5f, 0.1f },
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
@@ -130,7 +130,7 @@ BfBladeSection::_createChord()
    auto oChordLeft = _addPartF<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->left().getp(),
       BfVertex3{
-         glm::vec3{ oChord->left().pos().x, g.get().chord, 0.0f }, 
+         glm::vec3{ oChord->left().pos().x, g.get().chord, g.get().z }, 
          glm::vec3{ 0.5f, 0.5f, 0.1f },
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
@@ -141,7 +141,7 @@ BfBladeSection::_createChord()
    auto oChordRight = _addPartF<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
       BfVertex3{
-         glm::vec3{ oChord->right().pos().x, g.get().chord, 0.0f }, 
+         glm::vec3{ oChord->right().pos().x, g.get().chord, g.get().z }, 
          glm::vec3{ 0.5f, 0.5f, 0.1f },
          glm::vec3{ 0.0f, 0.0f, 1.0f }
       }
@@ -159,8 +159,16 @@ BfBladeSection::_processChord()
 
    m_info.get().chord = oChord->line()->length();
 
+   if (oChord->left().pos().z != m_info.get().z) { 
+      float z = m_info.get().z;
+      oChord->line()->setZ(z);
+      oChordL->line()->setZ(z);
+      oChordR->line()->setZ(z);
+   }
+
+
    if (oChord->leftHandle()->isChanged()) { 
-      oChord->left().pos() = { 0.0f, 0.0f, 0.0f };
+      oChord->left().pos() = { 0.0f, 0.0f, m_info.get().z };
    }
    if (oChord->rightHandle()->isChanged()) { 
       oChord->right().pos().y = oChord->left().pos().y;
@@ -339,6 +347,10 @@ void BfBladeSection::_processAverageInitialCurve() {
    glm::vec3 oCenter = outletCircle->centerVertex().pos;
    outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, oCenter, oCenter + _eqOutletDirection());
    curve->rbegin()->pos() = oCenter;
+
+   // FIXME: WORKS EVERY REMAKE
+   float z = m_info.get().z;
+   for (auto& v : *curve) { v.pos().z = z; }
 }
 
 void BfBladeSection::_createCenterCircles() {
@@ -577,7 +589,7 @@ BfBladeSection::_processFrontCurves()
 void
 BfBladeSection::_createFrontCurves2()
 {
-   _addPartF< E::Chain, curves::BfChain >(
+   auto chain = _addPartF< E::Chain, curves::BfChain >(
        _part< E::CenterCircles2, obj::BfDrawLayer >(),
        _part< E::InletEdge, curves::BfEdge >(),
        _part< E::OutletEdge, curves::BfEdge >()
@@ -587,6 +599,10 @@ BfBladeSection::_createFrontCurves2()
 void
 BfBladeSection::_processFrontCurves2()
 {
+   auto chain = _part< E::Chain, curves::BfChain >();
+   chain->z() = m_info.get().z;
+   // chain->addUpdateLines();
+   // chain->addUpdateLines();
 }
 
 }; // namespace section

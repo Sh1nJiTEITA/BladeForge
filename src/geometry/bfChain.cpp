@@ -4,6 +4,8 @@
 #include "bfObjectMath.h"
 #include <algorithm>
 #include <array>
+#include <fmt/base.h>
+#include <glm/ext/vector_float3.hpp>
 #include <iterator>
 #include <memory>
 #include <ranges>
@@ -185,44 +187,66 @@ BfChain::_findIntersection(
    );
 }
 
-auto
-BfChain::_addUpdateLines()
+void
+BfChain::addUpdateLines()
 {
    _updateList();
 
    auto lit = m_list.begin();
    auto rit = std::next(lit);
 
+   fmt::println("-------------------------------");
    while (rit != m_list.end())
    {
       auto l = upgrade(*lit);
       auto r = upgrade(*rit);
 
       // clang-format off
-         const auto& [lfront_tang, lback_tang] = l->frontBackTangentVertices();
-         const auto& [lfront_dir, lback_dir] = l->frontBackDirection();
-         const auto& [rfront_tang, rback_tang] = r->frontBackTangentVertices();
-         const auto& [rfront_dir, rback_dir] = r->frontBackDirection();
+      const auto& [lfront_tang, lback_tang] = l->frontBackTangentVertices();
+      const auto& [lfront_dir, lback_dir] = l->frontBackDirection();
+      const auto& [rfront_tang, rback_tang] = r->frontBackTangentVertices();
+      const auto& [rfront_dir, rback_dir] = r->frontBackDirection();
       // clang-format on
 
-      const glm::vec3 front_intersection = _findIntersection(
-          lfront_tang.pos(),
+      auto z = this->z();
+      // auto z = -1.f;
+
+      glm::vec3 front_intersection = _findIntersection(
+          // lfront_tang.pos(),
+          lfront_tang.get().otherZ(z),
           lfront_dir,
-          rfront_tang.pos(),
+          // rfront_tang.pos(),
+          rfront_tang.get().otherZ(z),
           rfront_dir
       );
+      front_intersection.z = z;
 
-      const glm::vec3 back_intersection = _findIntersection(
-          lback_tang.pos(),
+      glm::vec3 back_intersection = _findIntersection(
+          lback_tang.get().otherZ(z),
+          // lback_tang.pos(),
           lback_dir,
-          rback_tang.pos(),
+          rback_tang.get().otherZ(z),
+          // rback_tang.pos(),
           rback_dir
       );
+      back_intersection.z = z;
+
       // BACK
       auto lback_con = l->backConnections();
       lback_con.second.pos() = back_intersection;
       auto rback_con = r->backConnections();
       rback_con.first.pos() = back_intersection;
+
+      fmt::println(
+          "z={}|tf={}, \t tb={}, \t f={} \t b={}",
+          z,
+          lfront_tang.get().pos,
+          lback_tang.get().pos,
+          // lfront_dir,
+          // lback_dir,
+          front_intersection,
+          back_intersection
+      );
 
       // FRONT
       auto lfront_con = l->frontConnections();
@@ -271,7 +295,7 @@ BfChain::_getBezierVert(
 void
 BfChain::make()
 {
-   _addUpdateLines();
+   addUpdateLines();
    _addUpdateChains();
    BfDrawLayer::make();
 }

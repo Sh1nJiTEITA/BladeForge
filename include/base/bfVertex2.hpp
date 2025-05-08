@@ -115,6 +115,15 @@ struct BfVertex3
       return BfVertex3{std::forward< POS >(pos), this->color, this->normals};
    }
 
+   BfVertex3 otherZ(float z) const
+   {
+      return BfVertex3{
+          {this->pos.x, this->pos.y, z},
+          this->color,
+          this->normals
+      };
+   }
+
    static BfVertex3 nan()
    {
       return BfVertex3{

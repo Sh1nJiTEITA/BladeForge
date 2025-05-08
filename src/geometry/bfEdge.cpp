@@ -245,8 +245,12 @@ std::pair< const BfVertex3Uni, const BfVertex3Uni >
 BfEdge::frontBackTangentVertices()
 {
    return {
-       _part< E::FirstAngleLine, BfSingleLine >()->second(),
-       _part< E::SecondAngleLine, BfSingleLine >()->second()
+       BfVertex3Uni(
+           _part< E::FirstAngleLine, BfSingleLine >()->second().getp()
+       ),
+       BfVertex3Uni(
+           _part< E::SecondAngleLine, BfSingleLine >()->second().getp()
+       ),
    };
 }
 

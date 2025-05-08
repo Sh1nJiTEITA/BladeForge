@@ -17,7 +17,6 @@ namespace body
 
 struct SectionCreateInfoExtended : public section::SectionCreateInfo
 {
-   float z;
    bool isActive = true;
 };
 
@@ -30,8 +29,8 @@ public:
 public: // ASSIGNMENT
    //
 
-   BfBladeBody()
-       : BfDrawLayer("Blade body")
+   BfBladeBody(float length)
+       : BfDrawLayer("Blade body"), m_length(length)
    {
    }
 
@@ -98,12 +97,15 @@ public:
       return addf< section::BfBladeSection >(BfVar< INFO >(std::forward< INFO >(info)));
    }
    auto addSection() -> section_t;
-   auto grabExtInfo(base_t base) -> BfVar< SectionCreateInfoExtended >;
+   auto length() -> float& { return m_length; }
 
+public:
+   static auto grabExtInfo(base_t base) -> BfVar< SectionCreateInfoExtended >;
    // clang-format on
-
 private:
    void _updateSectionList();
+
+   float m_length;
 };
 
 } // namespace body

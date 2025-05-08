@@ -49,8 +49,12 @@ std::pair< const BfVertex3Uni, const BfVertex3Uni >
 BfCirclePackWH::frontBackTangentVertices()
 {
    return {
-       _part< E::FirstAngleLine, BfSingleLine >()->second(),
-       _part< E::SecondAngleLine, BfSingleLine >()->second()
+       BfVertex3Uni(
+           _part< E::FirstAngleLine, BfSingleLine >()->second().getp()
+       ),
+       BfVertex3Uni(
+           _part< E::SecondAngleLine, BfSingleLine >()->second().getp()
+       )
    };
 }
 
@@ -143,7 +147,8 @@ BfCirclePackWH::_updateCircleCenter()
       if (glm::any(glm::notEqual(info_vert.pos, actual_vert.pos)))
       {
          float close_t = math::BfBezierBase::findClosest(*bez, actual_vert);
-         fmt::println("({}) {} -> {}", close_t, info_vert.pos, actual_vert.pos);
+         // fmt::println("({}) {} -> {}", close_t, info_vert.pos,
+         // actual_vert.pos);
          m_relativePos.get() = close_t;
       }
    }

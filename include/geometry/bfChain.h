@@ -38,6 +38,7 @@ public:
        , m_centerCircles(cc)
        , m_inletCircle(ic)
        , m_outletCircle(oc)
+       , m_z{0}
    {
    }
 
@@ -48,8 +49,11 @@ public:
    auto inletCircle() -> std::shared_ptr< BfEdge >;
    auto outletCircle() -> std::shared_ptr< BfEdge >;
 
+   auto z() -> float& { return m_z; }
+
+   void addUpdateLines();
+
 private:
-   auto _addUpdateLines();
    void _updateList();
    void _addUpdateChains();
 
@@ -67,6 +71,8 @@ private:
    ) -> glm::vec3;
 
 private:
+   float m_z;
+
    std::weak_ptr< BfDrawLayer > m_centerCircles;
    std::weak_ptr< BfEdge > m_inletCircle;
    std::weak_ptr< BfEdge > m_outletCircle;

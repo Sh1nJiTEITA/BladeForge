@@ -898,15 +898,43 @@ BfGui::presentNewCreateWindow(std::shared_ptr< obj::body::BfBladeBody > body)
       const float child_y = 38.0f;
       const float child_x = ImGui::GetContentRegionAvail().x;
       size_t i = 0;
-      for (auto info = body->beginInfo(); info != body->endInfo(); ++info, ++i)
+      // for (auto info = body->beginInfo(); info != body->endInfo(); ++info,
+      // ++i)
+      // clang-format off
+      for (auto sec = body->beginSection(); sec != body->endSection(); ++sec, ++i)
       {
          std::string title = fmt::format("##section-part-{}", i);
          ImGui::BeginChild(title.c_str(), ImVec2{child_x, child_y}, true);
          {
+
+            std::string buttontitle = fmt::format("#{}##section-part-button", i);
+            ImGui::Button(buttontitle.c_str());
+            ImGui::SameLine();
+
+            bool is_render = sec->isRender();
+            std::string isdrawtitle = fmt::format("##section-part-is-ren-{}", i);
+            if (ImGui::Checkbox(isdrawtitle.c_str(), &is_render))
+            {
+               sec->toggleRender();
+            }
+
+            ImGui::SameLine();
             ImGui::Text("%s", title.c_str());
+            ImGui::SameLine();
+
+            std::string ztitle = fmt::format("z##section-part-z-{}", i);
+            auto& info = sec->info().get();
+            // auto& infoext = static_cast< obj::body::SectionCreateInfoExtended& >(info);
+
+            const float speed = body->length() / 100.f;
+            if( ImGui::DragFloat(ztitle.c_str(), &info.z, 0.01)) { 
+               sec->make();
+               sec->control().updateBuffer();
+            }
          }
          ImGui::EndChild();
       }
+      // clang-format on
    }
    ImGui::End();
 

@@ -107,6 +107,7 @@ BfBladeBody::addSection()
 BfBladeBody::SectionIterator::SectionIterator(
     std::vector< base_pointer >::iterator begin
 )
+    : m_begin(begin)
 {
 }
 
@@ -156,13 +157,13 @@ BfBladeBody::SectionIterator::operator!=(
 BfBladeBody::SectionIterator
 BfBladeBody::beginSection()
 {
-   return this->m_children.begin();
+   return SectionIterator(this->m_children.begin());
 }
 
 BfBladeBody::SectionIterator
 BfBladeBody::endSection()
 {
-   return this->m_children.end();
+   return SectionIterator(this->m_children.end());
 }
 
 void

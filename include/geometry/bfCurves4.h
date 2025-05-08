@@ -51,6 +51,7 @@ public:
    auto directionFromStart() const -> glm::vec3;
    auto directionFromEnd() const -> glm::vec3;
    void setPos(const glm::vec3& f, const glm::vec3& s);
+   void setZ(float z);
 
    void make();
 

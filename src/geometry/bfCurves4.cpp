@@ -57,6 +57,13 @@ BfSingleLine::setPos(const glm::vec3& f, const glm::vec3& s)
 }
 
 void
+BfSingleLine::setZ(float z)
+{
+   m_first.pos().z = z;
+   m_second.pos().z = z;
+}
+
+void
 BfSingleLine::make()
 {
    m_vertices.clear();
@@ -144,7 +151,7 @@ BfHandleCircle::processDragging()
       center().pos() = m_initialCenterPos + delta3D();
       m_isChanged = true;
       this->root()->make();
-      this->root()->control().updateBuffer(true);
+      this->root()->control().updateBuffer();
    }
 }
 

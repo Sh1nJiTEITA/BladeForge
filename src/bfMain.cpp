@@ -330,7 +330,7 @@ BfMain::_loop()
    // tp->make();
    // textRoot->add(tp);
    //
-   auto body = std::make_shared< obj::body::BfBladeBody >();
+   auto body = std::make_shared< obj::body::BfBladeBody >(2);
    mainRoot->add(body);
    //
 

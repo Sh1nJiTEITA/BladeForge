@@ -487,11 +487,10 @@ std::vector< BfObj >& BfDrawObjectBase::children() {
 bool BfDrawLayer::toggleRender(int sts) { 
    // BUG: segmentation fault (no idea why)
    // bool current = toggleRender(sts);
-   bool current;
    for (auto& child : m_children) { 
-      current = child->toggleRender(sts);
+      child->toggleRender(sts);
    }
-   return current;
+   return BfDrawObjectBase::toggleRender(sts);
 }
 
 /* BfDrawRootLayer */

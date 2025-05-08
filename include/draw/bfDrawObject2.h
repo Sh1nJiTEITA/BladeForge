@@ -301,6 +301,8 @@ public:
       return current;
    }
 
+   bool isRender() { return m_isrender; }
+
    std::vector< BfObj >& children();
 
 protected:
