@@ -1,6 +1,7 @@
 #ifndef BF_DRAWOBJECT2_H
 #define BF_DRAWOBJECT2_H
 
+#include <queue>
 #include <utility>
 #include <vulkan/vulkan_core.h>
 
@@ -70,7 +71,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector< int32_t > vertexOffset(size_t last = 0) const;
+   // std::vector< int32_t > vertexOffset(size_t last = 0) const;
 
    /**
     *
@@ -79,7 +80,7 @@ public:
     *
     * @note Используется для LAYER
     */
-   std::vector< int32_t > indexOffset(size_t last = 0) const;
+   // std::vector< int32_t > indexOffset(size_t last = 0) const;
 
    /**
     *
@@ -132,6 +133,7 @@ public:
     */
    void updateBuffer(
        bool make = false,
+       std::queue< std::shared_ptr< BfDrawObjectBase > >* = nullptr,
        void* v = nullptr,
        void* i = nullptr,
        size_t* off_v = nullptr,
@@ -143,7 +145,7 @@ public:
     * Если это OBJECT -> рендерит геометрию
     * Если это LAYER -> рекурсивно рендерит одъекты внутри
     *
-    * @note Используется для LAYER & OBJECT
+    * @note Используется gля LAYER & OBJECT
     *
     * @param combuffer командный буффер открытый для рендер пасса
     * @param offset оффсет, то же самое что рендер-айди
@@ -152,6 +154,7 @@ public:
     */
    void draw(
        VkCommandBuffer combuffer,
+       std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
        size_t* offset,
        size_t* index_offset,
        size_t* vertex_offset,
@@ -199,9 +202,10 @@ public:
     */
    enum Type
    {
-      OBJECT,     /** Содержит только точки и индексы, без детей */
-      LAYER,      /** Содержит OBJECT & LAYERS, но без точек и индексов*/
-      ROOT_LAYER, /** Аналогично LAYER, но имеет свой vkbuffer */
+      OBJECT, /** Содержит только точки и индексы, без детей */
+      LAYER,  /** Содержит OBJECT & LAYERS, но без точек и индексов*/
+      /** Аналогично LAYER, но имеет свой vkbuffer */
+      BUFFER_LAYER,
    };
 
    /**
@@ -363,7 +367,7 @@ protected:
 class BfDrawLayer : public BfDrawObjectBase
 {
 public:
-   BfDrawLayer(BfOTypeName typeName);
+   BfDrawLayer(BfOTypeName typeName, Type type = LAYER);
 
    virtual void make() override;
 
@@ -387,8 +391,8 @@ public:
    using pObj = std::shared_ptr< BfDrawObjectBase >;
    using E = PartEnum;
 
-   BfDrawLayerWithAccess(BfOTypeName typeName)
-       : obj::BfDrawLayer(typeName)
+   BfDrawLayerWithAccess(BfOTypeName typeName, Type type = LAYER)
+       : obj::BfDrawLayer(typeName, type)
    {
    }
 

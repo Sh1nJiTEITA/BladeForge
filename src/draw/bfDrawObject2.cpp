@@ -13,151 +13,11 @@ BfDrawControlProxy::BfDrawControlProxy(BfDrawObjectBase& obj)
 {
 }
 
-std::vector< int32_t >
-BfDrawControlProxy::vertexOffset(size_t last) const
-{
-   // Check not to calc offsets for OBJECT
-   if (m_obj.m_type == BfDrawObjectBase::OBJECT)
-   {
-      throw std::runtime_error("OBJECT cant have vertex layer offsets");
-   }
-
-   std::vector< int32_t > offset;
-   offset.reserve(m_obj.m_children.size());
-   size_t growing_offset = last;
-
-   for (size_t i = 0; i < m_obj.m_children.size(); i++)
-   {
-      // auto size = m_obj.m_children[i]->vertices().size();
-      //
-      // // Check if layer has vertices inside?
-      // if ((m_obj.m_type == BfDrawObjectBase::LAYER) && (size != 0))
-      // {
-      //    throw std::runtime_error(
-      //        "Trying to calc vertexOffset() but found "
-      //        "vertices inside LAYER object"
-      //    );
-      // }
-
-      // offset[i] = growing_offset;
-      // growing_offset += size;
-      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER)
-      // continue;
-
-      auto size = m_obj.m_children[i]->vertices().size();
-      offset.push_back(growing_offset);
-      growing_offset += size;
-   }
-   return offset;
-}
-
-std::vector< int32_t >
-BfDrawControlProxy::indexOffset(size_t last) const
-{
-   if (m_obj.m_type == BfDrawObjectBase::OBJECT)
-   {
-      throw std::runtime_error("OBJECT cant have index layer offsets");
-   }
-
-   std::vector< int32_t > offset;
-   offset.reserve(m_obj.m_children.size());
-   size_t growing_offset = last;
-
-   for (size_t i = 0; i < m_obj.m_children.size(); i++)
-   {
-      // if ((m_obj.m_type == BfDrawObjectBase::LAYER))
-      // {
-      //    throw std::runtime_error(
-      //        "Trying to calc vertexOffset() but found "
-      //        "vertices inside LAYER object"
-      //    );
-      // }
-      // if (m_obj.m_children[i]->m_type == BfDrawObjectBase::LAYER)
-      // continue;
-
-      auto size = m_obj.m_children[i]->indices().size();
-      offset.push_back(growing_offset);
-      growing_offset += size;
-   }
-   return offset;
-}
-
-// std::vector<int32_t>
-// BfDrawControlProxy::vertexOffset() const
-// {
-//    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
-//    {
-//       throw std::runtime_error("OBJECT can't have vertex layer offsets");
-//    }
-//
-//    std::vector<int32_t> offset;
-//    offset.reserve(m_obj.m_children.size());
-//    size_t growing_offset = 0;
-//
-//    // Loop through children and calculate vertex offsets
-//    for (size_t i = 0; i < m_obj.m_children.size(); i++)
-//    {
-//       auto& child = m_obj.m_children[i];
-//
-//       // Ensure the child has vertices
-//       auto size = child->vertices().size();
-//
-//       // Check if the child is a valid layer with vertices
-//       if (size > 0)
-//       {
-//          offset.push_back(static_cast<int32_t>(growing_offset));
-//          growing_offset += size;  // Accumulate the size
-//       }
-//       else
-//       {
-//          // If there are no vertices, we skip this child
-//          offset.push_back(static_cast<int32_t>(growing_offset));
-//       }
-//    }
-//
-//    return offset;
-// }
-
-// std::vector<int32_t>
-// BfDrawControlProxy::indexOffset() const
-// {
-//    if (m_obj.m_type == BfDrawObjectBase::OBJECT)
-//    {
-//       throw std::runtime_error("OBJECT can't have index layer offsets");
-//    }
-//
-//    std::vector<int32_t> offset;
-//    offset.reserve(m_obj.m_children.size());
-//    size_t growing_offset = 0;
-//
-//    // Loop through children and calculate index offsets
-//    for (size_t i = 0; i < m_obj.m_children.size(); i++)
-//    {
-//       auto& child = m_obj.m_children[i];
-//
-//       // Ensure the child has indices
-//       auto size = child->indices().size();
-//
-//       // Check if the child has indices
-//       if (size > 0)
-//       {
-//          offset.push_back(static_cast<int32_t>(growing_offset));
-//          growing_offset += size;  // Accumulate the size
-//       }
-//       else
-//       {
-//          // If there are no indices, we skip this child
-//          offset.push_back(static_cast<int32_t>(growing_offset));
-//       }
-//    }
-//
-//    return offset;
-// }
-
 const glm::mat4&
 BfDrawControlProxy::model() const
 {
-   if (m_obj.m_type == BfDrawObjectBase::LAYER)
+   if (m_obj.m_type == BfDrawObjectBase::LAYER ||
+       m_obj.m_type == BfDrawObjectBase::BUFFER_LAYER)
    {
       throw std::runtime_error(
           "[BfDrawControlProxy] cant use model() method inside LAYER"
@@ -168,7 +28,7 @@ BfDrawControlProxy::model() const
 bool
 BfDrawControlProxy::isBuffer() const
 {
-   return m_obj.m_type == BfDrawObjectBase::ROOT_LAYER;
+   return m_obj.m_type == BfDrawObjectBase::BUFFER_LAYER;
 }
 
 void
@@ -201,23 +61,27 @@ BfDrawControlProxy::mapModel(
 
 void
 BfDrawControlProxy::updateBuffer(
-    bool make, void* v, void* i, size_t* off_v, size_t* off_i
+    bool make,
+    std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
+    void* v,
+    void* i,
+    size_t* off_v,
+    size_t* off_i
 )
 {
    auto& g = m_obj;
 
-   if (isBuffer() && (v || i || off_v || off_i))
+   std::queue< std::shared_ptr< BfDrawObjectBase > > inner_q;
+
+   if (isBuffer() && (v || i || off_v || off_i) && q)
    {
-      throw std::runtime_error(
-          "Trying to update buffer but updateBuffer() method seems to work "
-          "incorrect."
-          "input layer has buffer, but void pointers or offset pointers "
-          "provided"
-      );
+      q->push(m_obj.shared_from_this());
+      return;
    }
 
    if (isBuffer())
    {
+
       void* p_vertex = g.m_buffer->vertex().map();
       void* p_index = g.m_buffer->index().map();
 
@@ -228,6 +92,7 @@ BfDrawControlProxy::updateBuffer(
       {
          // clang-format off
          child->control().updateBuffer(make, 
+                                       q == nullptr ? &inner_q : q,
                                        p_vertex, 
                                        p_index, 
                                        &offset_v, 
@@ -275,19 +140,35 @@ BfDrawControlProxy::updateBuffer(
       {
          for (const auto& child : g.m_children)
          {
-            if (make)
-            {
-               child->make();
-            }
-            child->control().updateBuffer(make, v, i, off_v, off_i);
+            // if (make)
+            // {
+            //    child->make();
+            // }
+            child->control().updateBuffer(
+                make,
+                q == nullptr ? &inner_q : q,
+                v,
+                i,
+                off_v,
+                off_i
+            );
          }
       }
+   }
+
+   while (!inner_q.empty())
+   {
+      auto v = inner_q.front();
+      inner_q.pop();
+
+      v->control().updateBuffer(make);
    }
 }
 
 void
 BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
+    std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
     size_t* offset,
     size_t* index_offset,
     size_t* vertex_offset,
@@ -326,6 +207,15 @@ BfDrawControlProxy::draw(
    }
    else // IF LAYER
    {
+
+      std::queue< std::shared_ptr< BfDrawObjectBase > > inner_q;
+
+      if (isBuffer() && q)
+      {
+         q->push(m_obj.shared_from_this());
+         return;
+      }
+
       if (isBuffer())
       {
          std::vector< VkDeviceSize > vert_offset = {0};
@@ -351,11 +241,32 @@ BfDrawControlProxy::draw(
          // clang-format off
           g.m_children.at(i)->control().draw(
               combuffer,
+              q == nullptr ? &inner_q : q,
               offset,
               index_offset,
               vertex_offset,
               hovered_id
           );
+      }
+
+      if (q == nullptr)
+      {
+         while (!inner_q.empty())
+         {
+            auto v = inner_q.front();
+            inner_q.pop();
+
+            // size_t offset = 0;
+            size_t ioffset = 0;
+            size_t voffset = 0;
+
+            v->control().draw(combuffer,
+                              nullptr,
+                              offset,
+                              &ioffset,
+                              &voffset, 
+                              hovered_id);
+         }
       }
    }
 }
@@ -413,7 +324,7 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_root{}
     , m_isrender { true } 
 {
-   if (type == BfDrawObjectBase::ROOT_LAYER)
+   if ( type == BfDrawObjectBase::BUFFER_LAYER )
    {
       m_buffer = std::make_unique<BfObjectBuffer>(
           sizeof(BfVertex3),
@@ -441,7 +352,6 @@ BfDrawObjectBase::add(BfObj n)
    }
    m_children.push_back(n);
    auto weak = this->weak_from_this();
-   // m_root = shared_from_this();
    n->m_root = weak_from_this();
 }
 
@@ -547,8 +457,10 @@ BfDrawObject::_genIndicesStandart()
 }
 
 /* BfDrawLayer */
-BfDrawLayer::BfDrawLayer(BfOTypeName typeName)
-    : BfDrawObjectBase(typeName, nullptr, LAYER, 0, 0)
+BfDrawLayer::BfDrawLayer(BfOTypeName typeName, Type type)
+    : BfDrawObjectBase(typeName, nullptr, type, 
+                       type == BUFFER_LAYER ? 3000 : 0, 
+                       type == BUFFER_LAYER ? 30 : 0)
 {
 }
 
@@ -584,7 +496,7 @@ bool BfDrawLayer::toggleRender(int sts) {
 
 /* BfDrawRootLayer */
 BfDrawRootLayer::BfDrawRootLayer(size_t max_vertex, size_t max_obj)
-    : BfDrawObjectBase("Root Layer", nullptr, ROOT_LAYER, max_vertex, max_obj)
+    : BfDrawObjectBase("Root Layer", nullptr, BUFFER_LAYER, max_vertex, max_obj)
 {
 }
 

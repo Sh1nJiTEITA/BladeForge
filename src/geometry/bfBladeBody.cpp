@@ -86,18 +86,18 @@ BfBladeBody::addSection()
       auto last_raw = m_children.back();
       auto last = std::static_pointer_cast< section::BfBladeSection >(last_raw);
       auto new_info = BfVar< SectionCreateInfoExtended >{last->info()};
-      fmt::println(
-          "{}",
-          static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
-      );
+      // fmt::println(
+      //     "{}",
+      //     static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
+      // );
       return addf< section::BfBladeSection >(std::move(new_info));
    }
    // auto new_info = BfVar< SectionCreateInfoExtended >{{}};
    auto new_info = SectionCreateInfoExtended{};
-   fmt::println(
-       "{}",
-       static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
-   );
+   // fmt::println(
+   //     "{}",
+   //     static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
+   // );
    return addf< section::BfBladeSection >(std::move(new_info));
 }
 

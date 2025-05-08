@@ -8,7 +8,6 @@
 #include "bfBladeParts.h"
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
-#include "fmt/ranges.h"
 
 namespace obj
 {
@@ -77,7 +76,7 @@ public:
    // clang-format off
    template <typename T>
    BfBladeSection(T&& info)
-       : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section")
+       : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section", BUFFER_LAYER)
        , m_info{std::forward<T>(info)}
    {
       _createChord(); 
@@ -104,15 +103,14 @@ public:
    {
       _assignRoots();
       
-      if (!m_isInitial) premake(); 
+      if (!m_children.empty()) premake(); 
       {
          for (auto& child : m_children) {
             child->make();
          }
          // applyRenderToggle();
       }
-      postmake();
-      m_isInitial = false;
+      postmake();    
    }
 
    virtual void premake() { 
@@ -230,8 +228,6 @@ private:
    /** @} */ // End of MathFunctions group
 
 private:
-   bool m_isInitial = true;
-
    BfVertex3 m_lastChordL; 
    BfVertex3 m_lastChordR; 
 
@@ -241,41 +237,5 @@ private:
 }  // namespace section
 }  // namespace obj
 
-template <>
-struct fmt::formatter<obj::section::CenterCircle> {
-    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
-
-    template <typename FormatContext>
-    auto format(const obj::section::CenterCircle& c, FormatContext& ctx) const { 
-        return fmt::format_to(ctx.out(), "{{ relPos: {:.3f}, radius: {:.3f} }}", c.relativePos, c.radius);
-    }
-};
-
-template <>
-struct fmt::formatter<obj::section::SectionCreateInfo> {
-    // Optional: parse format (unused here)
-    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
-
-    // Format function
-    template <typename FormatContext>
-    auto format(const obj::section::SectionCreateInfo& info, FormatContext& ctx) const { 
-        return fmt::format_to(
-            ctx.out(),
-            "SectionCreateInfo {{ chord: {:.3f}, installAngle: {:.3f}, isEqMode: {}, "
-            "inletAngle: {:.3f}, outletAngle: {:.3f}, inletRadius: {:.3f}, outletRadius: {:.3f}, "
-            "centerCircles: {}, initialBezierCurveOrder: {}, renderBitSet: {} }}",
-            info.chord,
-            info.installAngle,
-            info.isEqMode,
-            info.inletAngle,
-            info.outletAngle,
-            info.inletRadius,
-            info.outletRadius,
-            info.centerCircles,  // relies on fmt::formatter for list
-            info.initialBezierCurveOrder,
-            info.renderBitSet
-        );
-    }
-};
 
 #endif

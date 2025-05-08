@@ -142,6 +142,7 @@ public:
 
          l->control().draw(
              command_buffer,
+             nullptr,
              &obj_data_offset,
              &index_offset,
              &vertex_offset,
