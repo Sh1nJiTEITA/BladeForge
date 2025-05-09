@@ -60,6 +60,8 @@ public:
    auto frontBackDirection() -> std::pair< glm::vec3, glm::vec3 > override;
    auto frontBackTangentVertices() -> std::pair< const BfVertex3Uni, const BfVertex3Uni > override;
 
+   auto arcVertices() -> std::array< BfVertex3Uni, 3 >;
+
    // clang-format on
 
 private:

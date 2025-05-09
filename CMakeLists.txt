@@ -263,6 +263,15 @@ set(BF_GEOMETRY
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
 
+set(BF_SAVEAS "src/saveas/bfStep.cpp")
+add_library(bfsaveaslib STATIC ${BF_SAVEAS})
+target_link_libraries(bfsaveaslib PUBLIC bfexternallib)
+
+set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
+find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
+target_link_libraries(bfsaveaslib PUBLIC ${OpenCASCADE_LIBRARIES})
+target_include_directories(bfsaveaslib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
+
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"
     "src/interaction/bfEvent.cpp"
@@ -278,9 +287,11 @@ set(BF_INTERACTION
     "src/interaction/bfGuiCreateWindowCircleWithHandles.cpp"
     "src/interaction/bfGuiWindow.cpp"
     "src/interaction/bfGuiCamera.cpp")
+
 add_library(bfinteractionlib STATIC ${BF_INTERACTION})
 target_link_libraries(bfinteractionlib PUBLIC bfexternallib)
 target_link_libraries(bfinteractionlib PUBLIC bfgeometrylib)
+target_link_libraries(bfinteractionlib PUBLIC bfsaveaslib)
 
 set(BF_OTHER "include/other/bfVariative.hpp" "include/other/bfMath.hpp"
              "src/other/bfMath.cpp" "src/other/bfConfigManager.cpp")
@@ -295,6 +306,9 @@ set(BF_DRAW
 
 add_library(bfdrawlib STATIC ${BF_DRAW})
 target_link_libraries(bfdrawlib PUBLIC bfexternallib)
+target_link_libraries(bfdrawlib PUBLIC bfgeometrylib)
+
+# find_package(
 
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} "main.cpp" "src/bfMain.cpp")
@@ -304,6 +318,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC bfgeometrylib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
+target_link_libraries(${PROJECT_NAME} PUBLIC bfsaveaslib)
 # target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")

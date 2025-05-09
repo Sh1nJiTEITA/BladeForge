@@ -254,6 +254,36 @@ BfEdge::frontBackTangentVertices()
    };
 }
 
+std::array< BfVertex3Uni, 3 >
+BfEdge::arcVertices()
+{
+   auto line = this->directionLine();
+
+   glm::vec3 start;
+   glm::vec3 end;
+
+   if (m_type == Inlet)
+   {
+      start = backConnections().first.get();
+      end = frontConnections().first.get();
+   }
+   else
+   {
+      start = frontConnections().second.get();
+      end = backConnections().second.get();
+   }
+
+   glm::vec3 ref = line->line()->directionFromStart();
+   BfVertex3 center = circle()->centerVertex();
+   float R = circle()->radius().get();
+
+   return {
+       BfVertex3Uni{start},
+       BfVertex3Uni{center.otherPos(center.pos + ref * R)},
+       BfVertex3Uni{end}
+   };
+}
+
 void
 BfEdge::make()
 {

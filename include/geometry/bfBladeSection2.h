@@ -8,8 +8,10 @@
 
 #include "bfBladeParts.h"
 #include "bfChain.h"
+#include "bfCirclePack.h"
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
+#include "bfEdge.h"
 
 namespace obj
 {
@@ -163,7 +165,14 @@ public:
    //
    // ToggleProxy toggle() { return ToggleProxy(*this); };
 
+public: // EXPORT
+
    BfVar< SectionCreateInfo >& info() { return m_info; }
+   
+   auto inletCircle() { return _part<E::InletEdge, curves::BfEdge>(); }
+   auto outletCircle() { return _part<E::OutletEdge, curves::BfEdge>(); }
+   auto chain() { return _part<E::Chain, curves::BfChain>(); }
+
 
 private:
 

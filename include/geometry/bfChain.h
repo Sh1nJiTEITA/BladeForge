@@ -45,9 +45,12 @@ public:
    void make() override;
 
 public:
+   // clang-format off
    auto centerCircles() -> std::shared_ptr< BfDrawLayer >;
    auto inletCircle() -> std::shared_ptr< BfEdge >;
    auto outletCircle() -> std::shared_ptr< BfEdge >;
+   auto bezierCurveChain(ChainType type) -> std::vector< std::shared_ptr< BfBezierN > >;
+   // clang-format on
 
    auto z() -> float& { return m_z; }
 

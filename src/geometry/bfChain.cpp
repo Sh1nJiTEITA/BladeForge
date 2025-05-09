@@ -54,6 +54,27 @@ BfChain::outletCircle()
       throw std::runtime_error("Cant lock outlet circle");
    }
 }
+std::vector< std::shared_ptr< BfBezierN > >
+BfChain::bezierCurveChain(ChainType type)
+{
+   // clang-format off
+   BfChainPartEnum part;
+   switch (type) { 
+      case Back: part = BfChainPartEnum::BackLinesLayer; break;
+      case Front: part = BfChainPartEnum::FrontLinesLayer; break;
+   }
+
+   auto l = _part< obj::BfDrawLayer >(part);
+   std::vector< std::shared_ptr< BfBezierN > > bez;
+   std::transform(l->children().begin(), 
+                  l->children().end(),
+                  std::back_inserter(bez),
+                  [](const auto& base) {
+                     return std::static_pointer_cast< BfBezierN >(base);
+                  });
+   // clang-format o
+   return bez;
+}
 
 template < typename T >
 std::shared_ptr< T >

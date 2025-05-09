@@ -19,6 +19,7 @@
 #include "bfCurves4.h"
 #include "bfDrawObjectManager.h"
 #include "bfIconsFontAwesome6.h"
+#include "bfStep.h"
 #include "bfTypeManager.h"
 #include "imgui.h"
 
@@ -930,6 +931,12 @@ BfGui::presentNewCreateWindow(std::shared_ptr< obj::body::BfBladeBody > body)
             if( ImGui::DragFloat(ztitle.c_str(), &info.z, 0.01)) { 
                sec->make();
                sec->control().updateBuffer();
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Save?")) { 
+               auto shapes = saveas::createSection(*sec);
+               saveas::exportToSTEP(shapes, "./test.step");
             }
          }
          ImGui::EndChild();
