@@ -101,12 +101,16 @@ public:
    void presentCameraWindow();
    void presentIds();
 
-   bool presentBladeSectionCreateWindow(
-       obj::section::SectionCreateInfo* info,
-       std::shared_ptr< obj::curves::BfTexturePlane > plane
-   );
-
-   bool presentNewCreateWindow(std::shared_ptr< obj::body::BfBladeBody > body);
+   // bool presentBladeSectionCreateWindow(
+   //     uint64_t index,
+   //     obj::section::SectionCreateInfo* info,
+   //     std::shared_ptr< obj::curves::BfTexturePlane > plane
+   // );
+   //
+   // bool presentNewCreateWindow(
+   //     std::shared_ptr< obj::body::BfBladeBody > body,
+   //     std::shared_ptr< obj::curves::BfTexturePlane > plane
+   // );
 
    void toggleRenderCreateWindow();
 

@@ -178,11 +178,6 @@ createSection(std::shared_ptr< obj::section::BfBladeSection > section)
    int i = 0;
    for (auto &front_elem : chain->bezierCurveChain(obj::curves::BfChain::ChainType::Front)) { 
       auto vert = toCascadeBfPoints(*front_elem);
-      fmt::print("Elem #{}: ", i);
-      for (const auto& v : vert) { 
-         fmt::print("{}; ", v.pos);
-      }
-      fmt::println("");
       shapes.push_back(createBezierCurve(vert));
    }
 
@@ -199,12 +194,6 @@ createSection(std::shared_ptr< obj::section::BfBladeSection > section)
    i = 0;
    for (auto &back_elem : chain->bezierCurveChain(obj::curves::BfChain::ChainType::Back)) { 
       auto vert = toCascadeBfPoints(*back_elem);
-      fmt::print("Elem #{}: ", i);
-      for (const auto& v : vert) { 
-         fmt::print("{}; ", v.pos);
-      }
-      fmt::println("");
-
       shapes.push_back(createBezierCurve(vert));
    }
 

@@ -278,6 +278,7 @@ set(BF_INTERACTION
     "src/interaction/bfGui.cpp"
     "src/interaction/bfGuiFileDialog.cpp"
     "src/interaction/bfGuiLuaInteraction.cpp"
+    "src/interaction/bfGuiBody.cpp"
     "src/interaction/bfGuiCreateWindow.cpp"
     "src/interaction/bfGuiCreateWindowContainer.cpp"
     "src/interaction/bfGuiCreateWindowBladeSection.cpp"

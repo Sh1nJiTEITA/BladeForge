@@ -318,7 +318,7 @@ BfMain::_loop()
 
    // clang-format off
    auto mainRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
-   // auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
+   auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
    // clang-format on
 
    // auto info = obj::section::SectionCreateInfo{};
@@ -326,16 +326,16 @@ BfMain::_loop()
    // bs->make();
    // mainRoot->add(bs);
 
-   // auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
-   // tp->make();
-   // textRoot->add(tp);
+   auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
+   tp->make();
+   textRoot->add(tp);
    //
    auto body = std::make_shared< obj::body::BfBladeBody >(2);
    mainRoot->add(body);
    //
 
    mainRoot->control().updateBuffer();
-   // textRoot->control().updateBuffer();
+   textRoot->control().updateBuffer();
 
    // auto top = std::make_shared< obj::BfDrawRootLayer >(3000, 30);
    // top->addf< obj::curves::BfSingleLineWH >(BfVertex3{}, BfVertex3{});
@@ -366,11 +366,11 @@ BfMain::_loop()
       // m_gui.presentCreateWindow();
       // __gui.presentSmartLayerObserver();
       m_gui.presentCameraWindow();
-      if (m_gui.presentNewCreateWindow(body))
-      {
-         body->make();
-         mainRoot->control().updateBuffer();
-      }
+      // if (m_gui.presentNewCreateWindow(body, tp))
+      // {
+      //    body->make();
+      //    mainRoot->control().updateBuffer();
+      // }
       // m_gui.presentIds();
 
       // if (m_gui.presentBladeSectionCreateWindow(&info, tp))
