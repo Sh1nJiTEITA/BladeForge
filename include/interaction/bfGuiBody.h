@@ -104,6 +104,7 @@ bool presentBodyCreateWindow(pBody body);
 struct SectionCreateInfoGui : public obj::body::SectionCreateInfoExtended { 
    bool isRender = true;
    bool isFormatting = false;
+   bool isParametersDockBuild = false;
 };
 
 bool processPopen(bool& handle, ImGuiKey down_key, ImGuiKey press_key);
@@ -135,6 +136,8 @@ public:
    auto presentMainDockCurrentExistingSections() -> MainDockSignal;
    auto presentMainDockMenuBar() -> MainDockSignal;
    void presentCurrentFormattingSections();
+   
+   void presentSectionParameters(pSection sec);
 
    auto activeSections() -> std::vector< pSection >;
    auto formattingSections() -> std::vector< pSection >;

@@ -222,7 +222,6 @@ makeTitle(const char* initial, uint32_t index) -> std::string
 bool
 presentBladeSectionCreateWindow(pSection sec)
 {
-
    auto index = sec->id();
 
    static ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_NoUndocking;
@@ -554,18 +553,104 @@ MainDock::presentMainDockMenuBar()
 void
 MainDock::presentCurrentFormattingSections()
 {
+   // clang-format off
    auto fsections = formattingSections();
    for (auto sec : fsections)
    {
       const std::string sec_name = genSectionWindowName(sec);
-      ImGui::Begin(sec_name.c_str());
+      const auto win_flags = 0
+         // | ImGuiWindowFlags_NoDocking 
+         | ImGuiWindowFlags_NoTitleBar
+      ;
+
+      ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
+      presentSectionParameters(sec);
       ImGui::End();
    }
    if (fsections.empty())
    {
       ImGui::Begin("Sections home page");
+      ImGui::Text("Here will be present section parameters");
       ImGui::End();
    }
+}
+
+void
+MainDock::presentSectionParameters(pSection sec)
+{
+   // clang-format off
+   const auto id = sec->id(); 
+   const std::string param_title = fmt::format("Parameters##sec-{}", id);
+   const std::string preview_title = fmt::format("Preview##sec-{}", id);
+   const std::string circles_title = fmt::format("Circles##sec-{}", id);
+   const std::string pdock_title = fmt::format("##sec-dock-{}", id);
+
+   ImGuiID dockspace_id = ImGui::GetID(pdock_title.c_str());
+
+   const auto dock_flags = 0
+      | ImGuiDockNodeFlags_NoUndocking
+      | ImGuiDockNodeFlags_NoTabBar
+   ;
+   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
+
+   auto info = static_cast< SectionCreateInfoGui* >(sec->info().getp());
+   if (!info->isParametersDockBuild) { 
+      ImGui::DockBuilderRemoveNode(dockspace_id);
+      ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetWindowSize());
+
+      ImGuiID left_id = ImGui::DockBuilderSplitNode(
+          dockspace_id,
+          ImGuiDir_Left,
+          0.35f,
+          nullptr,
+          &dockspace_id
+      );
+      ImGuiID right_id = dockspace_id;
+      ImGui::DockBuilderDockWindow(param_title.c_str(), left_id);
+      ImGui::DockBuilderDockWindow(circles_title.c_str(), right_id);
+      ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
+      ImGui::DockBuilderFinish(dockspace_id);
+      info->isParametersDockBuild = true;
+   }
+
+   bool no_remake = true;
+   
+   const auto param_flags = 0
+      | ImGuiWindowFlags_NoTitleBar
+      | ImGuiWindowFlags_NoDecoration
+   ;
+
+   if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
+   {
+      // clang-format off
+      inputTableField outer_values[] = { &info->chord, &info->installAngle };
+      const char* outer_names[] = {"Chord", "Install Angle"};
+      no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
+
+      ImGui::SeparatorText("Average curve");
+      inputTableField ave_values[] = {&info->initialBezierCurveOrder};
+      const char* ave_names[] = {"Average curve order" };
+      no_remake *= !presentBladeSectionTable("Ave", ave_values, ave_names, 1);
+
+      ImGui::SeparatorText("Inlet");
+      inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
+      const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
+      no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
+
+      ImGui::SeparatorText("Outlet");
+      inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
+      const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
+      no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
+      // clang-format on
+   }
+   ImGui::End();
+
+   ImGui::Begin(circles_title.c_str());
+   {
+      no_remake *= !presentCenterCirclesEditor(info->centerCircles);
+   }
+   ImGui::End();
 }
 
 std::vector< pSection >
