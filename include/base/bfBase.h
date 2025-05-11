@@ -193,6 +193,9 @@ BfEvent bfaCreateShaderCreateInfos(
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfDrawFrame(BfBase& base);
+void bfRenderDefault(BfBase& base, VkCommandBuffer& command_buffer);
+void bfPickID(BfBase& base, VkCommandBuffer& command_buffer);
+void bfRenderGUI(BfBase& base, VkCommandBufferBeginInfo& info);
 void bfMainRecordCommandBuffer(BfBase& base);
 uint32_t bfGetCurrentObjectId(BfBase& base);
 void bfUpdateImGuiPlatformWindows();

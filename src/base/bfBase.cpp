@@ -2824,6 +2824,136 @@ bfDrawFrame(BfBase& base)
 }
 
 void
+bfRenderDefault(BfBase& base, VkCommandBuffer& command_buffer)
+{
+   VkDeviceSize offsets[] = {0};
+
+   VkViewport viewport{};
+   viewport.x = 0.0f;
+   viewport.y = 0.0f;
+   viewport.width = static_cast< float >(base.swap_chain_extent.width);
+   viewport.height = static_cast< float >(base.swap_chain_extent.height);
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
+   vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+
+   VkRect2D scissor{};
+   scissor.offset = {0, 0};
+   scissor.extent = base.swap_chain_extent;
+   vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+
+   auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+   man.bindSets(
+       base::desc::own::SetType::Main,
+       base.current_frame,
+       command_buffer,
+       *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+   );
+   man.bindSets(
+       base::desc::own::SetType::Global,
+       base.current_frame,
+       command_buffer,
+       *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+   );
+   man.bindSets(
+       base::desc::own::SetType::Texture,
+       base.current_frame,
+       command_buffer,
+       *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+   );
+   obj::BfDrawManager::inst().draw(command_buffer);
+}
+
+void
+bfPickID(BfBase& base, VkCommandBuffer& command_buffer)
+{
+
+   VkImageSubresourceLayers sub{};
+   sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+   sub.mipLevel = 0;
+   sub.layerCount = 1;
+   sub.baseArrayLayer = 0;
+
+   VkBufferImageCopy region = {};
+   region.bufferOffset = 0;
+   region.bufferRowLength = base.swap_chain_extent.width;
+   region.bufferImageHeight = base.swap_chain_extent.height;
+   region.imageSubresource = sub;
+   region.imageExtent = {1, 1, 1};
+
+   int x = 0;
+   if ((int)base.window->xpos >= base.swap_chain_extent.width)
+   {
+      x = base.swap_chain_extent.width - 1;
+   }
+   else if ((int)base.window->xpos <= 0)
+   {
+      x = 1;
+   }
+   else
+   {
+      x = (int)base.window->xpos;
+   }
+
+   int y = 0;
+   if ((int)base.window->ypos >= base.swap_chain_extent.height)
+   {
+      y = base.swap_chain_extent.height - 1;
+   }
+   else if ((int)base.window->ypos <= 0)
+   {
+      y = 1;
+   }
+   else
+   {
+      y = (int)base.window->ypos;
+   }
+
+   region.imageOffset = {x, y, 0};
+
+   vkCmdCopyImageToBuffer(
+       command_buffer,
+       // base.descriptor.get_image(BfDescriptorPosPickUsage,
+       // base.current_frame)->image,
+       *base.image_packs[base.current_image].pImage_id,
+       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+       base.id_image_buffer.buffer,
+       1,
+       &region
+   );
+}
+
+void
+bfRenderGUI(BfBase& base, VkCommandBufferBeginInfo& beginInfo)
+{
+   auto& local_buffer = *base.frame_pack[base.current_frame].gui_command_buffer;
+
+   // IMGUI
+   if (vkBeginCommandBuffer(local_buffer, &beginInfo) != VK_SUCCESS)
+   {
+      throw std::runtime_error("Failed to begin recoding command buffer");
+   }
+
+   VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+   VkRenderPassBeginInfo info = {};
+   info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   info.renderPass = base.gui_render_pass;
+   info.framebuffer = *base.image_packs[base.current_image].pGUI_buffer;
+   info.renderArea.extent = base.swap_chain_extent;
+   info.clearValueCount = 1;
+   info.pClearValues = &clearColor;
+
+   vkCmdBeginRenderPass(local_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), local_buffer);
+   vkCmdEndRenderPass(local_buffer);
+
+   if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to record command buffer!");
+   }
+}
+void
 bfMainRecordCommandBuffer(BfBase& base)
 {
    // Depth buffer
@@ -2871,155 +3001,17 @@ bfMainRecordCommandBuffer(BfBase& base)
        VK_SUBPASS_CONTENTS_INLINE
    );
    {
-      VkDeviceSize offsets[] = {0};
-
-      VkViewport viewport{};
-      viewport.x = 0.0f;
-      viewport.y = 0.0f;
-      viewport.width = static_cast< float >(base.swap_chain_extent.width);
-      viewport.height = static_cast< float >(base.swap_chain_extent.height);
-      viewport.minDepth = 0.0f;
-      viewport.maxDepth = 1.0f;
-      vkCmdSetViewport(local_buffer, 0, 1, &viewport);
-
-      VkRect2D scissor{};
-      scissor.offset = {0, 0};
-      scissor.extent = base.swap_chain_extent;
-      vkCmdSetScissor(local_buffer, 0, 1, &scissor);
-
-      // Bind descriptor sets to pipeline-layouts
-      // base.descriptor.bind_desc_sets(  // GLOBAL
-      //     BfEnDescriptorSetLayoutType::BfDescriptorSetGlobal,
-      //     base.current_frame,
-      //     local_buffer,
-      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-      //     0
-      // );
-      // base.descriptor.bind_desc_sets(  // MAIN
-      //     BfEnDescriptorSetLayoutType::BfDescriptorSetMain,
-      //     base.current_frame,
-      //     local_buffer,
-      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-      //     1
-      // );
-      // base.descriptor.bind_desc_sets(  // MAIN
-      //     BfEnDescriptorSetLayoutType::BfDescriptorSetTexture,
-      //     base.current_frame,
-      //     local_buffer,
-      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-      //     2
-      // );
-      auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-      man.bindSets(
-          base::desc::own::SetType::Main,
-          base.current_frame,
-          local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
-      );
-      man.bindSets(
-          base::desc::own::SetType::Global,
-          base.current_frame,
-          local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
-      );
-      man.bindSets(
-          base::desc::own::SetType::Texture,
-          base.current_frame,
-          local_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
-      );
-
-      // base.layer_handler.draw(local_buffer);
-
-      obj::BfDrawManager::inst().draw(local_buffer);
+      bfRenderDefault(base, local_buffer);
    }
    vkCmdEndRenderPass(local_buffer);
-
-   {
-      VkImageSubresourceLayers sub{};
-      sub.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      sub.mipLevel = 0;
-      sub.layerCount = 1;
-      sub.baseArrayLayer = 0;
-
-      VkBufferImageCopy region = {};
-      region.bufferOffset = 0;
-      region.bufferRowLength = base.swap_chain_extent.width;
-      region.bufferImageHeight = base.swap_chain_extent.height;
-      region.imageSubresource = sub;
-      region.imageExtent = {1, 1, 1};
-
-      int x = 0;
-      if ((int)base.window->xpos >= base.swap_chain_extent.width)
-      {
-         x = base.swap_chain_extent.width - 1;
-      }
-      else if ((int)base.window->xpos <= 0)
-      {
-         x = 1;
-      }
-      else
-      {
-         x = (int)base.window->xpos;
-      }
-
-      int y = 0;
-      if ((int)base.window->ypos >= base.swap_chain_extent.height)
-      {
-         y = base.swap_chain_extent.height - 1;
-      }
-      else if ((int)base.window->ypos <= 0)
-      {
-         y = 1;
-      }
-      else
-      {
-         y = (int)base.window->ypos;
-      }
-
-      region.imageOffset = {x, y, 0};
-
-      vkCmdCopyImageToBuffer(
-          local_buffer,
-          // base.descriptor.get_image(BfDescriptorPosPickUsage,
-          // base.current_frame)->image,
-          *base.image_packs[base.current_image].pImage_id,
-          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-          base.id_image_buffer.buffer,
-          1,
-          &region
-      );
-   }
+   bfPickID(base, local_buffer);
 
    if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS)
    {
       throw std::runtime_error("Failed to begin recoding command buffer");
    }
 
-   local_buffer = *base.frame_pack[base.current_frame].gui_command_buffer;
-
-   // IMGUI
-   if (vkBeginCommandBuffer(local_buffer, &beginInfo) != VK_SUCCESS)
-   {
-      throw std::runtime_error("Failed to begin recoding command buffer");
-   }
-
-   VkRenderPassBeginInfo info = {};
-   info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   info.renderPass = base.gui_render_pass;
-   info.framebuffer = *base.image_packs[base.current_image].pGUI_buffer;
-   info.renderArea.extent = base.swap_chain_extent;
-   info.clearValueCount = 1;
-   info.pClearValues = &clearColor;
-
-   vkCmdBeginRenderPass(local_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
-   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), local_buffer);
-   vkCmdEndRenderPass(local_buffer);
-
-   if (vkEndCommandBuffer(local_buffer) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to record command buffer!");
-   }
+   bfRenderGUI(base, beginInfo);
 }
 
 uint32_t
