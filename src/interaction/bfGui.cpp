@@ -867,6 +867,58 @@ BfGui::presentIds()
 }
 
 void
+BfGui::presentViewportRatioButton(BfBase& base)
+{
+   // clang-format off
+   const auto flags = 0
+      | ImGuiWindowFlags_NoTitleBar
+      | ImGuiWindowFlags_NoDecoration
+      | ImGuiWindowFlags_NoBackground
+      | ImGuiWindowFlags_NoMove
+      | ImGuiWindowFlags_NoCollapse
+      | ImGuiWindowFlags_NoResize
+      | ImGuiWindowFlags_NoScrollWithMouse
+      | ImGuiWindowFlags_NoNavInputs
+      | ImGuiWindowFlags_NoNavFocus
+      | ImGuiWindowFlags_NoBringToFrontOnFocus
+   ;
+
+   const auto extent = base.swap_chain_extent;
+   const float button_w = 8.f;
+   const float center_x = extent.width * base.viewport_ratio;
+   const ImVec2 button_pos = { center_x - button_w * 0.5f,
+                               0 };
+   const ImVec2 button_sz = { button_w,
+                              static_cast<float>(extent.height) };
+   
+   // fmt::println("{},{} | {},{} | {},{}", extent.width, extent.height, button_pos.x, button_pos.y, button_sz.x, button_sz.y);
+   
+   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0, 0});
+
+   ImGui::SetNextWindowPos(button_pos, ImGuiCond_Always);
+   ImGui::SetNextWindowSize(button_sz, ImGuiCond_Always);
+   ImGui::Begin("##viewport-change-ratio", nullptr, flags);
+   
+   if (ImGui::Button("##viewport-change-ratio-button", {button_w, ImGui::GetContentRegionAvail().y}))
+   {
+      // Click logic (optional)
+   }
+
+   if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+   {
+      float delta = ImGui::GetIO().MouseDelta.x;
+      base.viewport_ratio += delta / static_cast<float>(extent.width);
+      base.viewport_ratio = std::clamp(base.viewport_ratio, 0.0f, 1.0f);
+   }
+
+
+   ImGui::End();
+   ImGui::PopStyleVar(2);
+   // clang-format on
+}
+
+void
 BfGui::toggleRenderCreateWindow()
 {
    __create_window.toggleRender();

@@ -103,6 +103,8 @@ public:
    // Out
    glm::mat4 view();
    glm::mat4 projection();
+   glm::mat4 projection(const glm::vec2& exntent);
+
    glm::vec3 mouseWorldCoordinates();
 
    void update();

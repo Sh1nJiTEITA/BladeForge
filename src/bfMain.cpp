@@ -361,29 +361,14 @@ BfMain::_loop()
       _processSelfInteraction();
 
       m_gui.presentMenuBar();
-      // __gui.presentCamera();
-      // __gui.presentLayerHandler();
       m_gui.presentEventLog();
       m_gui.presentTooltip();
       m_gui.presentSettings();
-      // __gui.presentLuaInteraction();
       m_gui.presentFileDialog();
-      // m_gui.presentCreateWindow();
-      // __gui.presentSmartLayerObserver();
       m_gui.presentCameraWindow();
-      // if (m_gui.presentNewCreateWindow(body, tp))
-      // {
-      //    body->make();
-      //    mainRoot->control().updateBuffer();
-      // }
-      // m_gui.presentIds();
+      m_gui.presentViewportRatioButton(m_base);
 
-      // if (m_gui.presentBladeSectionCreateWindow(&info, tp))
-      // {
-      //    bs->make();
-      //    mainRoot->control().updateBuffer();
-      // }
-      ImGui::ShowDemoWindow();
+      // ImGui::ShowDemoWindow();
       m_dock.draw();
 
       // ImGui::Begin("Choose image");

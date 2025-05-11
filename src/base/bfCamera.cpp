@@ -134,6 +134,38 @@ BfCamera::projection()
    throw std::runtime_error("Underfined camera mode (proj)");
 }
 
+glm::mat4
+BfCamera::projection(const glm::vec2& ext)
+{
+   float ratio = static_cast< double >(ext.y) / static_cast< double >(ext.x);
+   switch (m_mode)
+   {
+   case BfCameraMode_Perspective:
+      return glm::perspective(
+          glm::radians(45.0f),
+          ext.x / ext.y,
+          0.01f,
+          100.0f
+      );
+   case BfCameraMode_PerspectiveCentered:
+      return glm::perspective(
+          glm::radians(45.0f),
+          ext.x / ext.y,
+          0.01f,
+          100.0f
+      );
+   case BfCameraMode_Ortho:
+      return static_cast< glm::mat4 >(
+          glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
+      );
+   case BfCameraMode_OrthoCentered:
+      return static_cast< glm::mat4 >(
+          glm::ortho(-1.0, 1.0, 1.0 * ratio, -1.0 * ratio, -1000.0, 1000.0)
+      );
+   }
+   throw std::runtime_error("Underfined camera mode (proj)");
+}
+
 glm::vec3
 BfCamera::mouseWorldCoordinates()
 {

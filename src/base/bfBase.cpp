@@ -2824,22 +2824,29 @@ bfDrawFrame(BfBase& base)
 }
 
 void
-bfRenderDefault(BfBase& base, VkCommandBuffer& command_buffer)
+bfRenderDefault(
+    BfBase& base,
+    VkCommandBuffer& command_buffer,
+    float x,
+    float y,
+    float w,
+    float h
+)
 {
    VkDeviceSize offsets[] = {0};
 
    VkViewport viewport{};
-   viewport.x = 0.0f;
-   viewport.y = 0.0f;
-   viewport.width = static_cast< float >(base.swap_chain_extent.width);
-   viewport.height = static_cast< float >(base.swap_chain_extent.height);
+   viewport.x = x;
+   viewport.y = y;
+   viewport.width = w;
+   viewport.height = h;
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
    VkRect2D scissor{};
-   scissor.offset = {0, 0};
-   scissor.extent = base.swap_chain_extent;
+   scissor.offset = {static_cast< int32_t >(x), static_cast< int32_t >(y)};
+   scissor.extent = {static_cast< uint32_t >(w), static_cast< uint32_t >(h)};
    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
@@ -2959,7 +2966,7 @@ bfMainRecordCommandBuffer(BfBase& base)
    // Depth buffer
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   // beginInfo.flags = 0;
+   beginInfo.flags = 0;
    beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
    beginInfo.pInheritanceInfo = nullptr;
 
@@ -3001,7 +3008,22 @@ bfMainRecordCommandBuffer(BfBase& base)
        VK_SUBPASS_CONTENTS_INLINE
    );
    {
-      bfRenderDefault(base, local_buffer);
+      // clang-format off
+      // bfRenderDefault(base, local_buffer);
+      auto& extent = base.swap_chain_extent;
+      // Compute left/right widths based on ratio
+      float ratio = std::clamp(base.viewport_ratio, 0.0f, 1.0f);
+      float left_width = extent.width * ratio;
+      float right_width = extent.width - left_width;
+
+      // Left side
+      bfUpdateUniformViewExt(base, {left_width, extent.height});
+      bfRenderDefault(base, local_buffer, 0.0f, 0.0f, left_width, extent.height);
+
+      // Right side
+      bfUpdateUniformViewExt(base, {right_width, extent.height});
+      bfRenderDefault(base, local_buffer, left_width, 0.0f, right_width, extent.height);
+      // clang-format on
    }
    vkCmdEndRenderPass(local_buffer);
    bfPickID(base, local_buffer);
@@ -3010,7 +3032,6 @@ bfMainRecordCommandBuffer(BfBase& base)
    {
       throw std::runtime_error("Failed to begin recoding command buffer");
    }
-
    bfRenderGUI(base, beginInfo);
 }
 
@@ -3171,6 +3192,7 @@ bfCleanUpSwapchain(BfBase& base)
 
    return BfEvent(event);
 }
+
 void
 bfUpdateUniformViewNew(BfBase& base)
 {
@@ -3178,6 +3200,27 @@ bfUpdateUniformViewNew(BfBase& base)
 
    ubo.view = BfCamera::instance()->view();
    ubo.proj = BfCamera::instance()->projection();
+
+   ubo.cursor_pos = {base.window->xpos, base.window->ypos};
+   ubo.id_on_cursor = obj::BfDrawManager::getHovered();
+   ubo.camera_pos = base.window->pos;
+   ubo.model = BfCamera::instance()->m_scale;
+
+   auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+   auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
+       base::desc::own::SetType::Main,
+       0
+   );
+   desc.map(ubo);
+}
+
+void
+bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext)
+{
+   BfUniformView ubo{};
+
+   ubo.view = BfCamera::instance()->view();
+   ubo.proj = BfCamera::instance()->projection(ext);
 
    ubo.cursor_pos = {base.window->xpos, base.window->ypos};
    ubo.id_on_cursor = obj::BfDrawManager::getHovered();

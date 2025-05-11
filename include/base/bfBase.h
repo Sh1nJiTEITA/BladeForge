@@ -84,6 +84,8 @@ struct BfBase
    bool is_resized;
 
    std::stack< std::function< void() > > self_interaction;
+
+   float viewport_ratio = 0.5f;
 };
 
 // Main functions
@@ -193,7 +195,14 @@ BfEvent bfaCreateShaderCreateInfos(
 void bfBeginSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfEndSingleTimeCommands(BfBase& base, VkCommandBuffer& commandBuffer);
 void bfDrawFrame(BfBase& base);
-void bfRenderDefault(BfBase& base, VkCommandBuffer& command_buffer);
+void bfRenderDefault(
+    BfBase& base,
+    VkCommandBuffer& command_buffer,
+    float x,
+    float y,
+    float w,
+    float h
+);
 void bfPickID(BfBase& base, VkCommandBuffer& command_buffer);
 void bfRenderGUI(BfBase& base, VkCommandBufferBeginInfo& info);
 void bfMainRecordCommandBuffer(BfBase& base);
@@ -229,6 +238,7 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 BfEvent bfCleanUpSwapchain(BfBase& base);
 
 void bfUpdateUniformViewNew(BfBase& base);
+void bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext);
 void bfUpdateUniformBuffer(BfBase& base);
 
 void bfCreateSampler(BfBase& base);

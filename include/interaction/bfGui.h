@@ -101,6 +101,8 @@ public:
    void presentCameraWindow();
    void presentIds();
 
+   void presentViewportRatioButton(BfBase& base);
+
    // bool presentBladeSectionCreateWindow(
    //     uint64_t index,
    //     obj::section::SectionCreateInfo* info,
