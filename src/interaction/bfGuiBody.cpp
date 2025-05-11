@@ -22,7 +22,7 @@ presentBladeSectionTable(
    int count
 )
 {
-   bool should_change = false;
+   bool is_changed = false;
    const auto table_flags = 0 
       | ImGuiTableFlags_NoHostExtendX 
       | ImGuiTableFlags_BordersInnerV;
@@ -45,7 +45,7 @@ presentBladeSectionTable(
             names[i]
          );
 
-         bool sts = std::visit(
+         is_changed = is_changed || std::visit(
              [&field_name](auto&& arg) {
                 using T = std::remove_reference_t< decltype(arg) >;
                 if constexpr (std::is_same_v< T, int* >)
@@ -63,14 +63,11 @@ presentBladeSectionTable(
              },
              values[i]
          );
-         if (sts) {
-            should_change = true;
-         }
          ImGui::PopStyleColor();
       }
       ImGui::EndTable();
    }
-   return should_change;
+   return is_changed;
 }
 
 
@@ -419,11 +416,12 @@ MainDock::buildMainDock(ImGuiID dock_id)
 
    fmt::println("Building dock");
 
-   float ratio = 0.15f;
+   float ratio = 0.28f;
    if (m_leftPartID.has_value() && m_rightPartID.has_value()) { 
       auto left_node = ImGui::DockBuilderGetNode(m_leftPartID.value());
       const float prev_left_x = left_node->Size.x;
-      const float win_x = ImGui::GetContentRegionAvail().x + ImGui::GetStyle().WindowPadding.x * 1.5;
+      const float win_x = ImGui::GetContentRegionAvail().x + 
+                          ImGui::GetStyle().WindowPadding.x * 1.5;
       ratio = prev_left_x / win_x;
       fmt::println("Previous ratio={}", ratio);
    }
@@ -506,6 +504,8 @@ MainDock::draw()
    if (!processPopen(popen, ImGuiKey_LeftCtrl, ImGuiKey_E)) return;
    // clang-format on
 
+   m_body->sortSections();
+
    ImGui::SetNextWindowSize({700, 800}, ImGuiCond_FirstUseEver);
    ImGui::SetWindowPos({1, 1}, ImGuiCond_FirstUseEver);
    ImGui::Begin("Main create window", &popen, window_flags);
@@ -564,7 +564,10 @@ MainDock::presentCurrentFormattingSections()
       ;
 
       ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
-      presentSectionParameters(sec);
+      if (presentSectionParameters(sec)) { 
+         sec->make();
+         sec->control().updateBuffer();
+      }
       ImGui::End();
    }
    if (fsections.empty())
@@ -575,7 +578,7 @@ MainDock::presentCurrentFormattingSections()
    }
 }
 
-void
+bool
 MainDock::presentSectionParameters(pSection sec)
 {
    // clang-format off
@@ -614,43 +617,43 @@ MainDock::presentSectionParameters(pSection sec)
       info->isParametersDockBuild = true;
    }
 
-   bool no_remake = true;
    
    const auto param_flags = 0
       | ImGuiWindowFlags_NoTitleBar
       | ImGuiWindowFlags_NoDecoration
    ;
 
+   bool is_changed = false;
    if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
    {
       // clang-format off
       inputTableField outer_values[] = { &info->chord, &info->installAngle };
       const char* outer_names[] = {"Chord", "Install Angle"};
-      no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
+      is_changed = is_changed || presentBladeSectionTable("Outer", outer_values, outer_names, 2);
 
       ImGui::SeparatorText("Average curve");
       inputTableField ave_values[] = {&info->initialBezierCurveOrder};
       const char* ave_names[] = {"Average curve order" };
-      no_remake *= !presentBladeSectionTable("Ave", ave_values, ave_names, 1);
+      is_changed = is_changed || presentBladeSectionTable("Ave", ave_values, ave_names, 1);
 
       ImGui::SeparatorText("Inlet");
       inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
       const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
-      no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
+      is_changed = is_changed || presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
 
       ImGui::SeparatorText("Outlet");
       inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
-      no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
-      // clang-format on
+      is_changed = is_changed || presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
    }
    ImGui::End();
 
    ImGui::Begin(circles_title.c_str());
    {
-      no_remake *= !presentCenterCirclesEditor(info->centerCircles);
+      is_changed = is_changed || presentCenterCirclesEditor(info->centerCircles);
    }
    ImGui::End();
+   return is_changed;
 }
 
 std::vector< pSection >
@@ -699,7 +702,17 @@ MainDock::presentMainDockCurrentExistingSections()
    ImGui::Begin("Body manager");
    const float y = 25;
    const float x = ImGui::GetContentRegionAvail().x;
-   ImGui::SeparatorText("Operate on sections");
+   const std::string blade_height_title = fmt::format(
+      "Total blade height##sec-{}", 
+      m_body->id()
+   );
+   ImGui::SetNextItemWidth(x * 0.35f);
+   bool is_height_changed = ImGui::DragFloat(
+      blade_height_title.c_str(), 
+      &m_body->length(), 
+      0.01f, 
+      0.f, FLT_MAX
+   );
    if (ImGui::Button("New section", {x, y}))
    {
       addSectionAndUpdateBuffer();
@@ -717,6 +730,15 @@ MainDock::presentMainDockCurrentExistingSections()
       ImGui::Checkbox(check_name.c_str(), &ginfo->isActive);
       ImGui::SetItemTooltip("Toggle item activity. Active sections will be used "
                             "to generate 3D blade");
+      ImGui::SameLine();
+      ImGui::SetNextItemWidth(x * 0.25f);
+      const std::string z_title = fmt::format("##z-{}", sec->id());
+      if (ImGui::DragFloat(z_title.c_str(), &ginfo->relZ, 0.01f, 0.f, 1.f) || is_height_changed ) { 
+         sec->make();
+         sec->control().updateBuffer();
+         ginfo->z = ginfo->relZ * m_body->length();
+      }
+      ImGui::SetItemTooltip("Relative Z coordinate between 0..1 of blade height");
       ImGui::SameLine();
 
       const std::string select_name = fmt::format("Section-{}", sec->id());

@@ -107,7 +107,6 @@ public:
    // clang-format on
 private:
    void _updateSectionList();
-
    float m_length;
 };
 
