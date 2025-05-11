@@ -81,24 +81,19 @@ BfBladeBody::grabExtInfo(base_t base)
 BfBladeBody::section_t
 BfBladeBody::addSection()
 {
+   return addf< section::BfBladeSection >(lastInfoCopy());
+}
+
+SectionCreateInfoExtended
+BfBladeBody::lastInfoCopy()
+{
    if (!m_children.empty())
    {
       auto last_raw = m_children.back();
       auto last = std::static_pointer_cast< section::BfBladeSection >(last_raw);
-      auto new_info = BfVar< SectionCreateInfoExtended >{last->info()};
-      // fmt::println(
-      //     "{}",
-      //     static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
-      // );
-      return addf< section::BfBladeSection >(std::move(new_info));
+      return SectionCreateInfoExtended(last->info().get());
    }
-   // auto new_info = BfVar< SectionCreateInfoExtended >{{}};
-   auto new_info = SectionCreateInfoExtended{};
-   // fmt::println(
-   //     "{}",
-   //     static_cast< BfVar< section::SectionCreateInfo > >(new_info).get()
-   // );
-   return addf< section::BfBladeSection >(std::move(new_info));
+   return SectionCreateInfoExtended{};
 }
 
 // INFO ITERATOR END

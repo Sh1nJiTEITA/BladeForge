@@ -1,8 +1,14 @@
 #include "bfGuiBody.h"
+#include "bfBladeBody.h"
+#include "bfBladeSection2.h"
+#include <algorithm>
 #include <bfGuiFileDialog.h>
+#include <cmath>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <imgui.h>
+#include <imgui_internal.h>
+#include <iterator>
 
 namespace gui
 {
@@ -393,6 +399,251 @@ presentBodyCreateWindow(pBody body)
    ImGui::End();
 
    return should_remake;
+}
+
+bool
+processPopen(bool& handle, ImGuiKey down_key, ImGuiKey press_key)
+{
+   if (ImGui::IsKeyDown(down_key) && ImGui::IsKeyPressed(press_key))
+   {
+      handle = !handle;
+   }
+   return handle;
+}
+
+void
+MainDock::buildMainDock(ImGuiID dock_id)
+{
+   // clang-format off
+   static bool is_build = false;
+   if (is_build && !(m_signal & RebuildDock)) return;
+
+   fmt::println("Building dock");
+
+   float ratio = 0.15f;
+   if (m_leftPartID.has_value() && m_rightPartID.has_value()) { 
+      auto left_node = ImGui::DockBuilderGetNode(m_leftPartID.value());
+      const float prev_left_x = left_node->Size.x;
+      const float win_x = ImGui::GetContentRegionAvail().x + ImGui::GetStyle().WindowPadding.x * 1.5;
+      ratio = prev_left_x / win_x;
+      fmt::println("Previous ratio={}", ratio);
+   }
+
+   ImGui::DockBuilderRemoveNode(dock_id);
+   ImGui::DockBuilderAddNode(dock_id, ImGuiDockNodeFlags_DockSpace);
+   ImGui::DockBuilderSetNodeSize(dock_id, ImGui::GetWindowSize());
+
+   // CREATE MAIN DOCK
+   m_leftPartID = ImGui::DockBuilderSplitNode(
+      dock_id, 
+      ImGuiDir_Left, 
+      ratio, 
+      nullptr, 
+      &dock_id
+   );
+   m_rightPartID = dock_id;
+
+   ImGui::DockBuilderDockWindow("Body manager", m_leftPartID.value());
+
+   auto fsections = formattingSections();
+   for (auto& sec : fsections) { 
+      const std::string window_name = genSectionWindowName(sec);
+      fmt::println("Docking window with title={} to right node", window_name);
+      ImGui::DockBuilderDockWindow(window_name.c_str(), m_rightPartID.value());
+   }
+   if (fsections.empty()) { 
+      ImGui::DockBuilderDockWindow("Sections home page", m_rightPartID.value());
+   }
+
+   ImGui::DockBuilderFinish(dock_id);
+   m_signal &= ~RebuildDock;
+   is_build = true;
+   // clang-format on
+};
+
+MainDock::MainDock()
+    : m_signal{0}
+{
+}
+
+MainDock::MainDock(pBody body)
+    : m_body{body}, m_signal{0}
+{
+}
+
+void
+MainDock::bindBody(pBody body)
+{
+   m_body = body;
+}
+
+pSection
+MainDock::addSection()
+{
+   auto guess = m_body->lastInfoCopy();
+   m_infos.push_back(SectionCreateInfoGui{std::move(guess)});
+   return m_body->addSection(&m_infos.back());
+}
+
+pSection
+MainDock::addSectionAndUpdateBuffer()
+{
+   auto sec = addSection();
+   sec->make();
+   sec->make();
+   sec->control().updateBuffer();
+   return sec;
+}
+
+void
+MainDock::draw()
+{
+   // clang-format off
+   const auto window_flags = 0
+      | ImGuiWindowFlags_MenuBar;
+      
+
+   static bool popen = true;
+   if (!processPopen(popen, ImGuiKey_LeftCtrl, ImGuiKey_E)) return;
+   // clang-format on
+
+   ImGui::SetNextWindowSize({700, 800}, ImGuiCond_FirstUseEver);
+   ImGui::SetWindowPos({1, 1}, ImGuiCond_FirstUseEver);
+   ImGui::Begin("Main create window", &popen, window_flags);
+   {
+      m_signal |= presentMainDockMenuBar();
+
+      ImGuiID dock_id = ImGui::GetID("## main-create-window-dock-space");
+      auto space = ImGui::DockSpace(dock_id);
+      buildMainDock(dock_id);
+      m_signal |= presentMainDockCurrentExistingSections();
+      presentCurrentFormattingSections();
+   }
+   ImGui::End();
+}
+
+void
+MainDock::kill()
+{
+   m_body.reset();
+   m_infos.clear();
+}
+
+MainDockSignal
+MainDock::presentMainDockMenuBar()
+{
+   MainDockSignal signal = 0;
+
+   if (ImGui::BeginMenuBar())
+   {
+      if (ImGui::BeginMenu("Dock"))
+      {
+         if (ImGui::MenuItem("Rebuild dock"))
+         {
+            signal |= MainDockSignalEnum::RebuildDock;
+         }
+         ImGui::EndMenu();
+      }
+
+      ImGui::EndMenuBar();
+   }
+
+   return signal;
+}
+
+void
+MainDock::presentCurrentFormattingSections()
+{
+   auto fsections = formattingSections();
+   for (auto sec : fsections)
+   {
+      const std::string sec_name = genSectionWindowName(sec);
+      ImGui::Begin(sec_name.c_str());
+      ImGui::End();
+   }
+   if (fsections.empty())
+   {
+      ImGui::Begin("Sections home page");
+      ImGui::End();
+   }
+}
+
+std::vector< pSection >
+MainDock::activeSections()
+{
+   std::vector< pSection > vec;
+   for (auto sec = m_body->beginSection(); sec != m_body->endSection(); ++sec)
+   {
+      auto info = sec->info().getp();
+      auto cinfo = static_cast< SectionCreateInfoGui* >(info);
+      if (cinfo->isActive)
+      {
+         vec.push_back(*sec);
+      }
+   }
+   return vec;
+}
+
+std::vector< pSection >
+MainDock::formattingSections()
+{
+   std::vector< pSection > vec;
+   for (auto sec = m_body->beginSection(); sec != m_body->endSection(); ++sec)
+   {
+      auto info = sec->info().getp();
+      auto cinfo = static_cast< SectionCreateInfoGui* >(info);
+      if (cinfo->isFormatting)
+      {
+         vec.push_back(*sec);
+      }
+   }
+   return vec;
+}
+
+std::string
+MainDock::genSectionWindowName(pSection sec)
+{
+   return fmt::format("Section {}##section-name-{}", sec->id(), sec->id());
+}
+
+MainDockSignal
+MainDock::presentMainDockCurrentExistingSections()
+{
+   MainDockSignal signal = 0;
+
+   ImGui::Begin("Body manager");
+   const float y = 25;
+   const float x = ImGui::GetContentRegionAvail().x;
+   ImGui::SeparatorText("Operate on sections");
+   if (ImGui::Button("New section", {x, y}))
+   {
+      addSectionAndUpdateBuffer();
+      signal |= MainDockSignalEnum::RebuildDock;
+   }
+   ImGui::SeparatorText("Current sections");
+
+   for (auto sec = m_body->beginSection(); sec != m_body->endSection(); ++sec)
+   {
+      auto ginfo = static_cast< SectionCreateInfoGui* >(sec->info().getp());
+
+      // clang-format off
+      const std::string check_name = fmt::format("##Section-check-{}", sec->id());
+      bool is_active = ginfo->isActive;
+      ImGui::Checkbox(check_name.c_str(), &ginfo->isActive);
+      ImGui::SetItemTooltip("Toggle item activity. Active sections will be used "
+                            "to generate 3D blade");
+      ImGui::SameLine();
+
+      const std::string select_name = fmt::format("Section-{}", sec->id());
+      if (ImGui::Selectable(select_name .c_str(), ginfo->isFormatting))
+      {
+         ginfo->isFormatting = !ginfo->isFormatting;
+         signal |= MainDockSignalEnum::RebuildDock;
+      }
+   }
+
+   ImGui::End();
+   return signal;
 }
 
 }; // namespace gui

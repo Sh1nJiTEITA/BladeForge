@@ -3,6 +3,7 @@
 
 // #define STB_IMAGE_IMPLEMENTATION
 #include "bfDrawObject2.h"
+#include "bfGuiBody.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include <stb_image.h>
 #include <stb_image_write.h>
@@ -29,6 +30,7 @@ private:
    BfHolder m_holder;
    BfGui m_gui;
    BfCamera m_cam;
+   gui::MainDock m_dock;
 
    void _processKeys();
    void _pollEvents();

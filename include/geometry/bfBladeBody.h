@@ -94,9 +94,12 @@ public:
    // clang-format off
    template < typename INFO >
    auto addSection(INFO&& info) -> section_t { 
-      return addf< section::BfBladeSection >(BfVar< INFO >(std::forward< INFO >(info)));
+      return addf< section::BfBladeSection >(std::forward< INFO >(info));
    }
+
    auto addSection() -> section_t;
+   auto lastInfoCopy() -> SectionCreateInfoExtended;
+   
    auto length() -> float& { return m_length; }
 
 public:

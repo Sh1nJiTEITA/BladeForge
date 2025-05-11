@@ -1,4 +1,6 @@
 #pragma once
+#include <cmath>
+#include <imgui.h>
 #ifndef BF_GUI_BODY_H
 #define BF_GUI_BODY_H
 
@@ -89,7 +91,6 @@ bool presentImageControlWindow(pImage img);
 
 // ---------------------------------------------------------- // 
 
-
 /**
  * @brief Presents body ...?
  *
@@ -98,7 +99,62 @@ bool presentImageControlWindow(pImage img);
  */
 bool presentBodyCreateWindow(pBody body);
 
+// ---------------------------------------------------------- // 
+
+struct SectionCreateInfoGui : public obj::body::SectionCreateInfoExtended { 
+   bool isRender = true;
+   bool isFormatting = false;
+};
+
+bool processPopen(bool& handle, ImGuiKey down_key, ImGuiKey press_key);
+
+using MainDockSignal = uint64_t;
+enum MainDockSignalEnum : MainDockSignal { 
+   RebuildDock = 1 << 1,
+   Idle = 1 << 2
+};
+
+class MainDock { 
+public:
+   MainDock();
+   MainDock(pBody body);
+   void bindBody(pBody body);
+
+   auto addSection() -> pSection;
+   auto addSectionAndUpdateBuffer() -> pSection;
+
+   /**
+    * @brief Presents main window (dock) of interactin
+    */
+   void draw();
+   void kill();
+
+public:
+
+   void buildMainDock(ImGuiID dock_id);
+   auto presentMainDockCurrentExistingSections() -> MainDockSignal;
+   auto presentMainDockMenuBar() -> MainDockSignal;
+   void presentCurrentFormattingSections();
+
+   auto activeSections() -> std::vector< pSection >;
+   auto formattingSections() -> std::vector< pSection >;
+   auto genSectionWindowName(pSection sec) -> std::string;
+
+private:
+   uint64_t m_signal;
+
+   std::optional<ImGuiID> m_leftPartID;
+   std::optional<ImGuiID> m_rightPartID;
+
+   pBody m_body;
+   std::list< SectionCreateInfoGui > m_infos;
+};
+
+
+
+
+
+
 
 }; // namespace gui
-
 #endif

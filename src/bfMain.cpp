@@ -15,6 +15,7 @@
 #include "bfDescriptorStructs.h"
 #include "bfDrawObject2.h"
 #include "bfDrawObjectManager.h"
+#include "bfGuiBody.h"
 #include "bfHandle.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
@@ -236,6 +237,8 @@ BfMain::_kill()
 {
    obj::BfDrawManager::inst().kill();
 
+   m_dock.kill();
+
    bfDestroyImGUI(m_base);
    bfDestorySyncObjects(m_base);
    bfDestroyGUICommandBuffers(m_base);
@@ -337,6 +340,8 @@ BfMain::_loop()
    mainRoot->control().updateBuffer();
    textRoot->control().updateBuffer();
 
+   m_dock.bindBody(body);
+
    // auto top = std::make_shared< obj::BfDrawRootLayer >(3000, 30);
    // top->addf< obj::curves::BfSingleLineWH >(BfVertex3{}, BfVertex3{});
    // auto other_buf = top->addf< obj::BfDrawRootLayer >(2000, 5);
@@ -379,6 +384,7 @@ BfMain::_loop()
       //    mainRoot->control().updateBuffer();
       // }
       ImGui::ShowDemoWindow();
+      m_dock.draw();
 
       // ImGui::Begin("Choose image");
       // {
