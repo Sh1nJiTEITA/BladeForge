@@ -1,5 +1,6 @@
 #include "bfDescriptor.h"
 #include "bfVariative.hpp"
+#include <algorithm>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -75,30 +76,6 @@ BfDescriptorPool::~BfDescriptorPool()
 
 /* DESCRIPTOR */
 
-void
-BfDescriptor::createBuffer()
-{
-   throw std::runtime_error(
-       "base::desc::BfDescriptor::createBuffer must be implemented"
-   );
-}
-
-void
-BfDescriptor::createImage()
-{
-   throw std::runtime_error(
-       "base::desc::BfDescriptor::createImage must be implemented"
-   );
-}
-
-void
-BfDescriptor::createView()
-{
-   throw std::runtime_error(
-       "base::desc::BfDescriptor::createView must be implemented"
-   );
-}
-
 VkDescriptorSetLayoutBinding
 BfDescriptor::layoutBinding()
 {
@@ -143,17 +120,29 @@ BfDescriptor::imageInfo()
 /* DESCRIPTOR SET */
 
 BfDescriptorSet::BfDescriptorSet(
-    std::vector< std::unique_ptr< BfDescriptor > >&& desc
+    std::unordered_map< uint8_t, FramePack >&& packs
 )
-    : m_desc{std::move(desc)}
+    : m_packs{std::move(packs)}
 {
    std::vector< VkDescriptorSetLayoutBinding > bindings;
-   std::transform(
-       m_desc.begin(),
-       m_desc.end(),
-       std::back_inserter(bindings),
-       [](const auto& d) { return d->layoutBinding(); }
-   );
+   std::set< uint32_t > unique;
+   for (auto& [frame, pack] : m_packs)
+   {
+      for (auto& desc : pack.desc)
+      {
+         auto info = desc->layoutBinding();
+         auto [it, success] = unique.insert(info.binding);
+         if (success)
+         {
+            bindings.push_back(std::move(info));
+         }
+      }
+   }
+
+   fmt::println("Unique bingings: ");
+   std::for_each(bindings.begin(), bindings.end(), [](const auto& info) {
+      fmt::println("Binging {}", info.binding);
+   });
 
    VkDescriptorSetLayoutCreateInfo l{
        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
@@ -173,16 +162,14 @@ BfDescriptorSet::BfDescriptorSet(
 BfDescriptorSet::~BfDescriptorSet()
 {
    vkDestroyDescriptorSetLayout(base::g::device(), m_layout, nullptr);
-   m_desc.clear();
+   m_packs.clear();
 }
 
 void
 BfDescriptorSet::allocate(const VkDescriptorPool& pool)
 {
-   m_sets.clear();
-   m_sets.resize(base::g::frames());
-   auto frames = base::g::frames();
-   for (int i = 0; i < frames; ++i)
+   int i = 0;
+   for (auto& [frame, pack] : m_packs)
    {
       VkDescriptorSetAllocateInfo info{
           .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -191,12 +178,12 @@ BfDescriptorSet::allocate(const VkDescriptorPool& pool)
           .descriptorSetCount = 1,
           .pSetLayouts = &m_layout
       };
-      if (vkAllocateDescriptorSets(base::g::device(), &info, &m_sets[i]) !=
+      if (vkAllocateDescriptorSets(base::g::device(), &info, &pack.set) !=
           VK_SUCCESS)
       {
          throw std::runtime_error("Cant allocate descriptor set");
       }
-      fmt::println("Allocated set for frame={}", i);
+      fmt::println("Allocated set for frame={}", i++);
    }
 }
 
@@ -208,15 +195,15 @@ BfDescriptorSet::write(
 )
 {
    std::vector< VkWriteDescriptorSet > writes;
-   auto& set = m_sets[frame];
-   for (auto& desc : m_desc)
+   auto& pack = m_packs[frame];
+   for (auto& desc : pack.desc)
    {
       auto& buffer_info = *binfos.insert(binfos.end(), desc->bufferInfo());
       auto& image_info = *iinfos.insert(iinfos.end(), desc->imageInfo());
       VkWriteDescriptorSet w{
           .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
           .pNext = nullptr,
-          .dstSet = set,
+          .dstSet = pack.set,
           .dstBinding = desc->binding,
           .descriptorCount = 1,
           .descriptorType = desc->vkType,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #ifndef BF_DESCRIPTOR_STRUCTS_H
 #define BF_DESCRIPTOR_STRUCTS_H
 
@@ -52,6 +53,7 @@ struct BfDescriptorUBO : public BfDescriptor
 
    virtual void createImage() override { }
    virtual void createView() override { }
+
    // clang-format on
 
    void map(const BfUniformView& ubo)
@@ -117,10 +119,11 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
       return m;
    }
 
+   // FIXME: HERE MUST BE PROVIDED FRAME INDEX AS INPUT ARGUMENT
    static BfDescriptorTextureTest& getTextureDescriptor()
    {
       auto& man = manager();
-      auto& td = man.get< BfDescriptorTextureTest >(SetType::Texture, 0);
+      auto& td = man.get< BfDescriptorTextureTest >(0, SetType::Texture, 0);
       return td;
    };
 

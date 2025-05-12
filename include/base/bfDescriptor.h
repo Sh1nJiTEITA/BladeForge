@@ -87,12 +87,13 @@ struct BfDescriptor
        , hasBuffer{has_buffer}
    {
    }
+   virtual ~BfDescriptor() {};
 
    // clang-format off
    // MUST BE IMPLEMENTED TO MAKE DESCIPTORS WORK CORRECTLY
-   virtual void createBuffer();
-   virtual void createImage();
-   virtual void createView();
+   virtual void createBuffer() = 0;
+   virtual void createImage() = 0;
+   virtual void createView() = 0;
 
    VkDescriptorSetLayoutBinding layoutBinding();
    virtual VkDescriptorBufferInfo bufferInfo();
@@ -120,13 +121,20 @@ protected:
 //
 struct BfDescriptorSet
 {
+   using pDesc_t = std::unique_ptr< BfDescriptor >;
+   struct FramePack { 
+      VkDescriptorSet set;
+      std::vector< pDesc_t > desc;
+   };
+   using packs_t = std::unordered_map< uint8_t, FramePack >;
+
    /**
     * @brief Для того, чтобы создать дескриптор сет (лейаут)
     * нужно знать, что будет к нему прикреплено, чтобы это было
     * доступно внутри шейдера. То есть при создании нужно указать
     * все дескрипторы, которые связаны с ним.
     */
-   BfDescriptorSet(std::vector< std::unique_ptr< BfDescriptor >>&& desc);
+   BfDescriptorSet(std::unordered_map< uint8_t, FramePack >&& packs);
    ~BfDescriptorSet();
 
    void allocate(const VkDescriptorPool& pool);
@@ -138,17 +146,16 @@ struct BfDescriptorSet
    );
 
    VkDescriptorSetLayout& layoutHandle() noexcept { return m_layout; }
-   VkDescriptorSet& setHandle(int frame) noexcept { return m_sets[frame]; }
+   VkDescriptorSet& setHandle(int frame) noexcept { return m_packs[frame].set; }
    
    template <typename T>
-   T& get(uint8_t binding) { 
-      return static_cast<T&>(*m_desc[binding]);
+   T& get(uint8_t frame, uint8_t binding) { 
+      return static_cast<T&>(*m_packs[frame].desc[binding]);
    }
 
 private:
-   std::vector< std::unique_ptr< BfDescriptor > > m_desc;
    VkDescriptorSetLayout m_layout;
-   std::vector< VkDescriptorSet > m_sets;
+   packs_t m_packs;
 };
 
 //
@@ -219,18 +226,38 @@ protected:
 template < typename E >
 struct BfDescriptorManager {
    BfDescriptorManager() {}
+   
+   struct descTempStorage { 
+      const uint8_t binding;
+      const uint8_t layout;
+      // for each frame
+      std::vector<BfDescriptorSet::pDesc_t> descPerFrame;
+   };
 
    template < typename T, typename... Args >
    void add(Args&&... args)
    {
-      auto new_desc = std::make_unique< T >(std::forward< Args >(args)...);
-      new_desc->createBuffer();
-      new_desc->createImage();
-      new_desc->createView();
-      fmt::println("New descriptor with layout={} binding={} added",
-                   static_cast<int>(new_desc->layout),
-                   static_cast<int>(new_desc->binding));
-      m_descStack.push(std::move(new_desc));
+      const auto frames = base::g::frames();
+      assert(frames > 0 && "Frames count cant be <= 0");
+      std::vector<BfDescriptorSet::pDesc_t> desc;
+      for (size_t i = 0; i < frames; ++i) { 
+         auto new_desc = std::make_unique< T >(std::forward< Args >(args)...);
+         new_desc->createBuffer();
+         new_desc->createImage();
+         new_desc->createView();
+         fmt::println("New descriptor with layout={} binding={} added for frame={}",
+                      static_cast<int>(new_desc->layout),
+                      static_cast<int>(new_desc->binding),
+                      i);   
+         desc.push_back(std::move(new_desc));
+      }
+      m_descStack.push({ 
+         descTempStorage{ 
+            .binding = desc[0]->binding,
+            .layout = desc[0]->layout,
+            .descPerFrame = std::move(desc)
+         }
+      });
    }
 
    void createPool(const std::vector< VkDescriptorPoolSize >& sz) { 
@@ -239,20 +266,22 @@ struct BfDescriptorManager {
    }
 
    void createLayouts() { 
-      using set_index = uint8_t; 
+      using layout_index = uint8_t; 
       using binding_index = uint8_t;
 
-      std::unordered_map<set_index, 
+   
+      std::unordered_map<layout_index, 
                          std::unordered_map< binding_index, 
-                                             std::unique_ptr< BfDescriptor > > 
+                                             descTempStorage > 
                         > m;
 
+      //! Тут будет парситься все добавленные дескрипторы по лейаутам и байдингам
       while (!m_descStack.empty()) { 
          auto desc = std::move(m_descStack.top());
          m_descStack.pop();
 
-         uint8_t layout = desc->layout;
-         uint8_t binding = desc->binding;
+         uint8_t layout = desc.layout;
+         uint8_t binding = desc.binding;
 
          auto& set = m[layout];
          if (set.empty()) {
@@ -269,17 +298,37 @@ struct BfDescriptorManager {
          }
       }
 
+      // для каждого сета (лейаута) имеем несколько байдингов, где каждый баиндинг 
+      // - это descTempStorage, внутри которого лежат дескрипторы для каждого из кадров.
+      // Так как BfDescriptorSet принимает мапу, где для каждого кадра лежат свои
+      // дескрипторы. С учетом того, что количество паков всегда РАВНО количеству кадров,
+      // то идем по каждому сету (леауту), ищем для него descTesmStorage и добавляем внутрь
       for (auto& [set_i, bindings_map] : m) { 
          fmt::println("Creating descriptor-set-layout with index={} and descriptors count={}", set_i, bindings_map.size());
-         std::vector< std::unique_ptr< BfDescriptor > > current_set_descriptors; 
-         std::transform(
-            bindings_map.begin(), 
-            bindings_map.end(),
-            std::back_inserter(current_set_descriptors),
-            [](auto&& pair) { return std::move(pair.second); }
-         );
+         
+         // Добавляем для каждого сета пак
+         std::unordered_map< uint8_t, BfDescriptorSet::FramePack > current_packs;
+         const auto frames = base::g::frames();
+         for (size_t i = 0; i < frames; ++i) { 
+            current_packs[i] = {};
+         }
+         
+         // Идем теперь по баидингам
+         for (auto& [binding, tmpStorage] : bindings_map) { 
+            const size_t packs_count = tmpStorage.descPerFrame.size();
+            assert(packs_count == frames && 
+                   "Descriptor count must be the same as frames on flight count");
+            // Помним, что внутри баиндинга лежит массив с дескрипторами, где 
+            // для каждого кажра лежат свой unique_ptr
+            for (size_t pack_index = 0; pack_index < packs_count; ++pack_index) { 
+               current_packs[pack_index].desc.push_back(
+                  std::move(tmpStorage.descPerFrame[pack_index])
+               );
+            }
+         }
+
          auto set_name = static_cast< E >( set_i );
-         auto complete_set = std::make_unique<BfDescriptorSet>( std::move(current_set_descriptors) );
+         auto complete_set = std::make_unique<BfDescriptorSet>( std::move(current_packs) );
          m_set.insert_or_assign(set_name, std::move(complete_set) );
       }
    }
@@ -348,16 +397,18 @@ struct BfDescriptorManager {
    }
 
    template< typename T> 
-   T& get(E layout, uint8_t binding) { 
+   T& get(uint8_t frame, E layout, uint8_t binding) { 
       auto& ptr = m_set[layout];
-      return ptr->template get<T&>(binding);
+      return ptr->template get<T&>(frame, binding);
    }
 
    ~BfDescriptorManager() { cleanup(); }
 
 private:
    std::unordered_map< E, std::unique_ptr< BfDescriptorSet > > m_set;
-   std::stack< std::unique_ptr<BfDescriptor> > m_descStack;
+   
+   std::stack< descTempStorage > m_descStack;
+
    std::unique_ptr< BfDescriptorPool > m_pool;
 };
 

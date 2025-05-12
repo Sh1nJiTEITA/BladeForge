@@ -3208,6 +3208,7 @@ bfUpdateUniformViewNew(BfBase& base)
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
    auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
+       base.current_frame,
        base::desc::own::SetType::Main,
        0
    );
@@ -3229,6 +3230,7 @@ bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext)
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
    auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
+       base.current_frame,
        base::desc::own::SetType::Main,
        0
    );

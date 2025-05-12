@@ -340,13 +340,15 @@ presentImageControlWindow(pImage img)
          fmt::println("Found path: {}", file_path.string());
          if (fs::exists(file_path))
          {
-            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-            auto& texture = man.get< base::desc::own::BfDescriptorTextureTest >(
-                base::desc::own::SetType::Texture,
-                0
-            );
-            texture.reload(file_path);
-            man.updateSets();
+            // FIXME: NEED TO PROVIDE FRAME INDEX
+            // auto& man =
+            // base::desc::own::BfDescriptorPipelineDefault::manager(); auto&
+            // texture = man.get< base::desc::own::BfDescriptorTextureTest >(
+            //     base::desc::own::SetType::Texture,
+            //     0
+            // );
+            // texture.reload(file_path);
+            // man.updateSets();
          }
       }
    }
