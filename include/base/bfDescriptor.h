@@ -397,7 +397,13 @@ struct BfDescriptorManager {
    }
 
    template< typename T> 
-   T& get(uint8_t frame, E layout, uint8_t binding) { 
+   T& get(E layout, uint8_t binding) { 
+      auto& ptr = m_set[layout];
+      return ptr->template get<T&>(base::g::currentFrame(), binding);
+   }
+   
+   template< typename T> 
+   T& getForFrame(uint8_t frame, E layout, uint8_t binding) { 
       auto& ptr = m_set[layout];
       return ptr->template get<T&>(frame, binding);
    }

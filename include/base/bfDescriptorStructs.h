@@ -123,7 +123,7 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
    static BfDescriptorTextureTest& getTextureDescriptor()
    {
       auto& man = manager();
-      auto& td = man.get< BfDescriptorTextureTest >(0, SetType::Texture, 0);
+      auto& td = man.get< BfDescriptorTextureTest >(SetType::Texture, 0);
       return td;
    };
 

@@ -16,6 +16,7 @@
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
 // #include "bfTexture.h"
+#include "bfViewport.h"
 #include "implot.h"
 
 #define IMGUI_ENABLE_DOCKING
@@ -2581,6 +2582,8 @@ bfaRecreateSwapchain(BfBase& base)
       );
    }
 
+   base::viewport::ViewportManager::update();
+
    return BfEvent();
 }
 
@@ -2827,6 +2830,7 @@ void
 bfRenderDefault(
     BfBase& base,
     VkCommandBuffer& command_buffer,
+    bool is_left,
     float x,
     float y,
     float w,
@@ -2852,7 +2856,7 @@ bfRenderDefault(
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
    man.bindSets(
        base::desc::own::SetType::Main,
-       base.current_frame,
+       is_left ? 0 : 1,
        command_buffer,
        *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
    );
@@ -3017,12 +3021,12 @@ bfMainRecordCommandBuffer(BfBase& base)
       float right_width = extent.width - left_width;
 
       // Left side
-      bfUpdateUniformViewExt(base, {left_width, extent.height});
-      bfRenderDefault(base, local_buffer, 0.0f, 0.0f, left_width, extent.height);
+      bfUpdateUniformViewExt(base, 0, {left_width, extent.height});
+      bfRenderDefault(base, local_buffer, 0, 0.0f, 0.0f, left_width, extent.height);
 
       // Right side
-      bfUpdateUniformViewExt(base, {right_width, extent.height});
-      bfRenderDefault(base, local_buffer, left_width, 0.0f, right_width, extent.height);
+      bfUpdateUniformViewExt(base, 1, {right_width, extent.height});
+      bfRenderDefault(base, local_buffer, 1, left_width, 0.0f, right_width, extent.height);
       // clang-format on
    }
    vkCmdEndRenderPass(local_buffer);
@@ -3208,7 +3212,6 @@ bfUpdateUniformViewNew(BfBase& base)
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
    auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
-       base.current_frame,
        base::desc::own::SetType::Main,
        0
    );
@@ -3216,7 +3219,7 @@ bfUpdateUniformViewNew(BfBase& base)
 }
 
 void
-bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext)
+bfUpdateUniformViewExt(BfBase& base, bool is_left, const glm::vec2& ext)
 {
    BfUniformView ubo{};
 
@@ -3229,8 +3232,8 @@ bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext)
    ubo.model = BfCamera::instance()->m_scale;
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-   auto& desc = man.get< base::desc::own::BfDescriptorUBO >(
-       base.current_frame,
+   auto& desc = man.getForFrame< base::desc::own::BfDescriptorUBO >(
+       is_left ? 0 : 1,
        base::desc::own::SetType::Main,
        0
    );
@@ -3240,7 +3243,7 @@ bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext)
 void
 bfUpdateUniformBuffer(BfBase& base)
 {
-   bfUpdateUniformViewNew(base);
+   // bfUpdateUniformViewNew(base);
    obj::BfDrawManager::inst().mapModels(base.current_frame);
 }
 

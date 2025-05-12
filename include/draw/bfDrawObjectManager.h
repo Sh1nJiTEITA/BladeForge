@@ -115,7 +115,7 @@ public:
       // clang-format off
       auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
       auto& desc = man.get<base::desc::own::BfDescriptorModel>(
-         frame_index, base::desc::own::SetType::Global, 0
+        base::desc::own::SetType::Global, 0
       );
       
       void* ndata = desc.map();

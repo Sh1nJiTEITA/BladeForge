@@ -17,6 +17,7 @@ class g
 public:
    static void create(
        int frames,
+       uint32_t* pcurrent_frame,
        VkInstance* vkinst,
        BfPhysicalDevice* bfphdevice,
        VkDevice* vkdevice,
@@ -30,6 +31,7 @@ public:
       base.m_bfphdevice = bfphdevice;
       base.m_vkdevice = vkdevice;
       base.m_vkcmpool = vkcmpool;
+      base.m_currentframe = pcurrent_frame;
       // base.m_vksampler = vksampler;
    }
 
@@ -67,6 +69,8 @@ public:
    static VkSampler& sampler() { return *g::inst().m_vksampler; }
    static VkPhysicalDeviceProperties& phdeviceprop() { return g::inst().m_bfphdevice->properties; }
    static int frames() noexcept { return g::inst().m_frames; }
+   static uint32_t currentFrame() noexcept { return *g::inst().m_currentframe; }
+   
    static std::stack< std::function< void() > >& intrstack() { return *g::inst().m_intrstack; }
    // clang-format on
 
@@ -115,6 +119,7 @@ public:
 
 private:
    int m_frames;
+   uint32_t* m_currentframe;
    std::stack< std::function< void() > >* m_intrstack;
 
    VkInstance* m_vkinst;

@@ -19,6 +19,7 @@
 #include "bfHandle.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
+#include "bfViewport.h"
 #include "bfWindow.h"
 #include "imgui.h"
 
@@ -99,6 +100,8 @@ BfMain::_pollEvents()
 
    // TODO: REMAKE !
    obj::BfGuiIntegration::runtimeID = 0;
+
+   base::viewport::ViewportManager::update();
 }
 
 void
@@ -140,6 +143,7 @@ BfMain::_init()
 
    base::g::create(
        MAX_FRAMES_IN_FLIGHT,
+       &m_base.current_frame,
        &m_base.instance,
        m_base.physical_device,
        &m_base.device,
@@ -350,6 +354,11 @@ BfMain::_loop()
    // top->make();
    // top->control().updateBuffer();
 
+   base::viewport::ViewportManager::init(m_base.window->pWindow);
+   auto& root = base::viewport::ViewportManager::root();
+   root.split(base::viewport::SplitDirection::V);
+   root.right().split(base::viewport::SplitDirection::H);
+
    while (!glfwWindowShouldClose(m_base.window->pWindow))
    {
       _pollEvents();
@@ -359,6 +368,24 @@ BfMain::_loop()
       ImGui::NewFrame();
 
       _processSelfInteraction();
+
+      auto& root = base::viewport::ViewportManager::root();
+      auto it = root.iter();
+      glm::vec2 cursor_pos = {ImGui::GetMousePos().x, ImGui::GetMousePos().y};
+      int i = 0;
+      while (it.hasNext())
+      {
+         auto node = it.next();
+         fmt::println(
+             "{}|Node.isHovered={} | mpos={} | npos={} | next={}",
+             i++,
+             node->isHovered(cursor_pos),
+             cursor_pos,
+             node->pos(),
+             node->ext()
+         );
+      }
+      fmt::println("");
 
       m_gui.presentMenuBar();
       m_gui.presentEventLog();

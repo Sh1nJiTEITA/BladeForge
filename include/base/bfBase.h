@@ -198,6 +198,7 @@ void bfDrawFrame(BfBase& base);
 void bfRenderDefault(
     BfBase& base,
     VkCommandBuffer& command_buffer,
+    bool is_left,
     float x,
     float y,
     float w,
@@ -238,7 +239,7 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 BfEvent bfCleanUpSwapchain(BfBase& base);
 
 void bfUpdateUniformViewNew(BfBase& base);
-void bfUpdateUniformViewExt(BfBase& base, const glm::vec2& ext);
+void bfUpdateUniformViewExt(BfBase& base, bool is_left, const glm::vec2& ext);
 void bfUpdateUniformBuffer(BfBase& base);
 
 void bfCreateSampler(BfBase& base);

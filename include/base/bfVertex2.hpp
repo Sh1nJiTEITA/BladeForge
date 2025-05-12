@@ -203,6 +203,21 @@ struct fmt::formatter< glm::vec3 >
    }
 };
 
+template <>
+struct fmt::formatter< glm::vec2 >
+{
+   constexpr auto parse(format_parse_context& ctx)
+   {
+      return ctx.begin(); // no format spec
+   }
+
+   template < typename FormatContext >
+   auto format(const glm::vec2& v, FormatContext& ctx) const
+   {
+      return fmt::format_to(ctx.out(), "({:.2f}, {:.2f})", v.x, v.y);
+   }
+};
+
 // Formatter for BfVertex3
 template <>
 struct fmt::formatter< BfVertex3 >
