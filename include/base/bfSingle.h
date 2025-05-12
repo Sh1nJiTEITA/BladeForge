@@ -1,4 +1,5 @@
 #pragma once
+#include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
 #ifndef BF_SINGLE_H
 #define BF_SINGLE_H
@@ -18,6 +19,7 @@ public:
    static void create(
        int frames,
        uint32_t* pcurrent_frame,
+       GLFWwindow* glfwwin,
        VkInstance* vkinst,
        BfPhysicalDevice* bfphdevice,
        VkDevice* vkdevice,
@@ -27,6 +29,7 @@ public:
    {
       auto& base = g::inst();
       base.m_frames = frames;
+      base.m_glfwwindow = glfwwin;
       base.m_vkinst = vkinst;
       base.m_bfphdevice = bfphdevice;
       base.m_vkdevice = vkdevice;
@@ -70,6 +73,7 @@ public:
    static VkPhysicalDeviceProperties& phdeviceprop() { return g::inst().m_bfphdevice->properties; }
    static int frames() noexcept { return g::inst().m_frames; }
    static uint32_t currentFrame() noexcept { return *g::inst().m_currentframe; }
+   static GLFWwindow* glfwwin() noexcept { return g::inst().m_glfwwindow; }
    
    static std::stack< std::function< void() > >& intrstack() { return *g::inst().m_intrstack; }
    // clang-format on
@@ -122,6 +126,7 @@ private:
    uint32_t* m_currentframe;
    std::stack< std::function< void() > >* m_intrstack;
 
+   GLFWwindow* m_glfwwindow;
    VkInstance* m_vkinst;
    BfPhysicalDevice* m_bfphdevice;
    VkDevice* m_vkdevice;

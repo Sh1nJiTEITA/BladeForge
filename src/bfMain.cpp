@@ -144,6 +144,7 @@ BfMain::_init()
    base::g::create(
        MAX_FRAMES_IN_FLIGHT,
        &m_base.current_frame,
+       m_base.window->pWindow,
        &m_base.instance,
        m_base.physical_device,
        &m_base.device,
@@ -354,10 +355,7 @@ BfMain::_loop()
    // top->make();
    // top->control().updateBuffer();
 
-   base::viewport::ViewportManager::init(m_base.window->pWindow);
-   auto& root = base::viewport::ViewportManager::root();
-   root.split(base::viewport::SplitDirection::V);
-   root.right().split(base::viewport::SplitDirection::H);
+   base::viewport::bfCreateViewports();
 
    while (!glfwWindowShouldClose(m_base.window->pWindow))
    {

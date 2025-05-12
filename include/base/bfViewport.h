@@ -1,4 +1,6 @@
 #pragma once
+#include "bfCamera.h"
+#include "bfSingle.h"
 #include <cmath>
 #include <imgui.h>
 #include <stack>
@@ -120,7 +122,7 @@ public: // PUBLIC METHODS
       m_ratio = ratio;
    }
 
-   auto updateNodes() -> void { 
+   auto update() -> void { 
       if (m_isLeaf) return;
 
       auto newpos = calcNewPos(m_splitType, m_ratio);
@@ -131,6 +133,8 @@ public: // PUBLIC METHODS
 
       m_SNode->pos() = newpos.second;
       m_SNode->ext() = newext.second;
+
+      m_camera.setExtent(m_extent.x, m_extent.y);
    }
    
    auto isHovered(const glm::vec2& mouse_pos) -> bool { 
@@ -141,6 +145,7 @@ public: // PUBLIC METHODS
    auto pos() -> glm::vec2& { return m_pos; }
    auto ext() -> glm::vec2& { return m_extent; }
    auto ratio() -> float& { return m_ratio; }
+   auto camera() -> BfCamera&  { return m_camera; }
 
    auto presentRect() -> void { 
       auto list = ImGui::GetBackgroundDrawList();   
@@ -216,12 +221,11 @@ public: // PUBLIC METHODS
             ? io.MouseDelta.x / extent.x
             : io.MouseDelta.y / extent.y;
          
-         fmt::println("{}", m_ratio);
          
          m_ratio += delta;
          m_ratio = std::clamp(m_ratio, 0.05f, 0.95f);
 
-         updateNodes();
+         update();
       }
 
       ImGui::End();
@@ -252,11 +256,11 @@ public: // PUBLIC METHODS
        std::stack<ViewPortNode*> stack;
    };
    
-   auto iter() -> ViewPortNodeIterator { 
-      return ViewPortNodeIterator(this);
-   }
+   auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
 private:
+   BfCamera m_camera;
+
    SplitDirection m_splitType;
 
    bool m_isLeaf;
@@ -310,9 +314,24 @@ public:
       
       while (it.hasNext()) { 
          auto next = it.next();
-         next->updateNodes();
+         next->update();
       }
 
+   }
+   static auto currentHoveredNode() -> std::optional<std::reference_wrapper<ViewPortNode>> 
+   { 
+      auto& self = ViewportManager::inst();
+      auto& root = self.root();
+      auto it = root.iter();
+      const ImVec2 _mouse_pos = ImGui::GetMousePos();
+      const glm::vec2 mouse_pos = { _mouse_pos.x, _mouse_pos.y };
+      while (it.hasNext()) { 
+         auto node = it.next();
+         if (node->isHovered(mouse_pos) && node->isLeaf()) { 
+            return {*node};
+         }
+      }
+      return {}; 
    }
 
 private:
@@ -328,44 +347,12 @@ private:
 };
 
 inline auto bfCreateViewports() -> void { 
+   base::viewport::ViewportManager::init(base::g::glfwwin());
+   auto& root = base::viewport::ViewportManager::root();
+   root.split(base::viewport::SplitDirection::V);
+   root.right().split(base::viewport::SplitDirection::H);
 
 }
-
-
-// class CameraManager
-// {
-// public:
-//    using CameraType = uint8_t;
-//    enum CameraTypeEnum : CameraType
-//    {
-//       Single,
-//       Left,
-//       Right,
-//    };
-//
-// public:
-//    CameraManager()
-//    {
-//       m_cameras[Single] = {};
-//       m_cameras[Left] = {};
-//       m_cameras[Right] = {};
-//    }
-//
-//    static CameraManager& inst()
-//    {
-//       static CameraManager c{};
-//       return c;
-//    }
-//
-//    template < CameraTypeEnum E >
-//    static BfCamera& get()
-//    {
-//       return inst().m_cameras[E];
-//    }
-//
-// private:
-//    std::unordered_map< CameraType, BfCamera > m_cameras;
-// };
 
 }; // namespace viewport
 }; // namespace base
