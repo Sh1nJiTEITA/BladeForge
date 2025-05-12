@@ -384,6 +384,8 @@ BfMain::_loop()
              node->pos(),
              node->ext()
          );
+         node->presentButton();
+         node->presentRect();
       }
       fmt::println("");
 
@@ -393,7 +395,7 @@ BfMain::_loop()
       m_gui.presentSettings();
       m_gui.presentFileDialog();
       m_gui.presentCameraWindow();
-      m_gui.presentViewportRatioButton(m_base);
+      // m_gui.presentViewportRatioButton(m_base);
 
       // ImGui::ShowDemoWindow();
       m_dock.draw();

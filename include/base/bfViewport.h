@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <imgui.h>
 #include <stack>
 #ifndef BF_VIEWPORT_CUSTOM_H
 #define BF_VIEWPORT_CUSTOM_J
@@ -76,14 +77,22 @@ public: // PUBLIC METHODS
       const glm::vec2 half = m_extent * ratio;
       switch (dir)
       {
-         case SplitDirection::H: return {
-            glm::vec2(m_extent.x, half.y), 
-            glm::vec2(m_extent.x, half.y)
-         };
-         case SplitDirection::V: return {
-            glm::vec2(half.x, m_extent.y),
-            glm::vec2(half.x, m_extent.y)
-         };
+         case SplitDirection::H: {
+            const float top_h = m_extent.y * ratio;
+            const float bot_h = m_extent.y - top_h;
+            return {
+               glm::vec2(m_extent.x, top_h), 
+               glm::vec2(m_extent.x, bot_h)
+            };
+         }
+         case SplitDirection::V: {
+            const float left_w = m_extent.x * ratio;
+            const float right_w = m_extent.x - left_w;
+            return {
+               glm::vec2(left_w, m_extent.y),
+               glm::vec2(right_w, m_extent.y)
+            };
+         }
          case SplitDirection::None: throw std::runtime_error(
             "Cant calc position for None split type"
          );
@@ -132,6 +141,92 @@ public: // PUBLIC METHODS
    auto pos() -> glm::vec2& { return m_pos; }
    auto ext() -> glm::vec2& { return m_extent; }
    auto ratio() -> float& { return m_ratio; }
+
+   auto presentRect() -> void { 
+      auto list = ImGui::GetBackgroundDrawList();   
+      const float padding = 20.f;
+      list->AddRect(
+         { m_pos.x + padding, m_pos.y + padding },
+         { m_pos.x + m_extent.x - padding, m_pos.y + m_extent.y - padding},
+         IM_COL32(140, 140, 140, 100)
+      );
+   }
+
+   auto presentButton() -> void { 
+      if (m_isLeaf || m_splitType == SplitDirection::None) {
+      return; 
+      }
+
+      const auto extent = m_extent;
+      const float button_w = 8.f;
+
+      
+      ImVec2 button_pos{};
+      ImVec2 button_sz{};
+
+      switch (m_splitType) {
+      case SplitDirection::V: { 
+         float center_x = m_pos.x + m_extent.x * m_ratio; 
+         button_pos = ImVec2(center_x - button_w * 0.5f, m_pos.y);
+         button_sz = ImVec2(button_w, m_extent.y);
+         break;
+      }
+      case SplitDirection::H: { 
+         float center_y = m_pos.y + m_extent.y * m_ratio;
+         button_pos = ImVec2(m_pos.x, center_y - button_w * 0.5f);
+         button_sz = ImVec2(m_extent.x, button_w);
+         break;
+      }
+      default: return;
+      }
+
+      const auto flags =
+         ImGuiWindowFlags_NoTitleBar |
+         ImGuiWindowFlags_NoDecoration |
+         ImGuiWindowFlags_NoBackground |
+         ImGuiWindowFlags_NoMove |
+         ImGuiWindowFlags_NoCollapse |
+         ImGuiWindowFlags_NoResize |
+         ImGuiWindowFlags_NoScrollWithMouse |
+         ImGuiWindowFlags_NoNavInputs |
+         ImGuiWindowFlags_NoNavFocus |
+         ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+      ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0, 0});
+
+      ImGui::SetNextWindowPos(button_pos, ImGuiCond_Always);
+      ImGui::SetNextWindowSize(button_sz, ImGuiCond_Always);
+
+      const std::string title = 
+         std::string("##splitter_button") + 
+         std::to_string(reinterpret_cast<std::uintptr_t>(this));
+      ImGui::Begin(title.c_str(), nullptr, flags);
+      
+      const std::string button_title = 
+         std::string("##splitter_button_inner") + 
+         std::to_string(reinterpret_cast<std::uintptr_t>(this));
+      if (ImGui::Button(button_title.c_str(), button_sz)) {
+         
+      }
+
+      if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+         const auto& io = ImGui::GetIO();
+         float delta = (m_splitType == SplitDirection::V)
+            ? io.MouseDelta.x / extent.x
+            : io.MouseDelta.y / extent.y;
+         
+         fmt::println("{}", m_ratio);
+         
+         m_ratio += delta;
+         m_ratio = std::clamp(m_ratio, 0.05f, 0.95f);
+
+         updateNodes();
+      }
+
+      ImGui::End();
+      ImGui::PopStyleVar(2); 
+   }
 
    class ViewPortNodeIterator {
    public:
@@ -209,7 +304,10 @@ public:
    }
    static auto update() -> void { 
       auto& self = ViewportManager::inst();
-      auto it = self.root().iter();
+      auto& root = self.root();
+      root.ext() = rootWindowExtent();
+      auto it = root.iter();
+      
       while (it.hasNext()) { 
          auto next = it.next();
          next->updateNodes();

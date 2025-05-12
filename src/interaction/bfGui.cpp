@@ -891,8 +891,6 @@ BfGui::presentViewportRatioButton(BfBase& base)
    const ImVec2 button_sz = { button_w,
                               static_cast<float>(extent.height) };
    
-   // fmt::println("{},{} | {},{} | {},{}", extent.width, extent.height, button_pos.x, button_pos.y, button_sz.x, button_sz.y);
-   
    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0, 0});
 

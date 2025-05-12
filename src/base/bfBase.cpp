@@ -3013,20 +3013,22 @@ bfMainRecordCommandBuffer(BfBase& base)
    );
    {
       // clang-format off
-      // bfRenderDefault(base, local_buffer);
+      //
       auto& extent = base.swap_chain_extent;
+      bfUpdateUniformViewExt(base, base.current_frame, {extent.width, extent.height});
+      bfRenderDefault(base, local_buffer, base.current_frame, 0.0f, 0.0f, extent.width, extent.height);
       // Compute left/right widths based on ratio
       float ratio = std::clamp(base.viewport_ratio, 0.0f, 1.0f);
       float left_width = extent.width * ratio;
       float right_width = extent.width - left_width;
 
-      // Left side
-      bfUpdateUniformViewExt(base, 0, {left_width, extent.height});
-      bfRenderDefault(base, local_buffer, 0, 0.0f, 0.0f, left_width, extent.height);
-
-      // Right side
-      bfUpdateUniformViewExt(base, 1, {right_width, extent.height});
-      bfRenderDefault(base, local_buffer, 1, left_width, 0.0f, right_width, extent.height);
+      // // Left side
+      // bfUpdateUniformViewExt(base, 0, {left_width, extent.height});
+      // bfRenderDefault(base, local_buffer, 0, 0.0f, 0.0f, left_width, extent.height);
+      //
+      // // Right side
+      // bfUpdateUniformViewExt(base, 1, {right_width, extent.height});
+      // bfRenderDefault(base, local_buffer, 1, left_width, 0.0f, right_width, extent.height);
       // clang-format on
    }
    vkCmdEndRenderPass(local_buffer);
