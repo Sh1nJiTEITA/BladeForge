@@ -374,19 +374,19 @@ BfMain::_loop()
       while (it.hasNext())
       {
          auto node = it.next();
-         fmt::println(
-             "{}|Node.isHovered={} | mpos={} | npos={} | next={}",
-             i++,
-             node->isHovered(cursor_pos),
-             cursor_pos,
-             node->pos(),
-             node->ext()
-         );
+         // fmt::println(
+         //     "{}|Node.isHovered={} | mpos={} | npos={} | next={}",
+         //     i++,
+         //     node->isHovered(cursor_pos),
+         //     cursor_pos,
+         //     node->pos(),
+         //     node->ext()
+         // );
          node->presentButton();
          node->presentRect();
       }
-      fmt::println("");
 
+      m_gui.presentInfo();
       m_gui.presentMenuBar();
       m_gui.presentEventLog();
       m_gui.presentTooltip();

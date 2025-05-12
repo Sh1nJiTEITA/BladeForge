@@ -21,4 +21,12 @@ struct BfObjectData
    alignas(4) uint32_t id = 999999;
    alignas(4) float line_thickness;
 };
+
+// PC -> push constant
+struct BfViewPC
+{
+   alignas(16) glm::mat4 scale;
+   alignas(16) glm::mat4 proj;
+};
+
 #endif

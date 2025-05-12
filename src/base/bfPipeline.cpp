@@ -31,12 +31,18 @@ BfPipelineHandler::createLayout(
       throw std::runtime_error("Cant insert new pipeline to pipeline-storage");
    }
 
+   auto rangePC = VkPushConstantRange { 
+      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      .offset = 0,
+      .size = sizeof(BfViewPC)
+   };
+
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
    pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descSetLayouts.size());
    pipelineLayoutCreateInfo.pSetLayouts = descSetLayouts.data();
-   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+   pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+   pipelineLayoutCreateInfo.pPushConstantRanges = &rangePC;
    // clang-format on
    if (vkCreatePipelineLayout(
            bfGetBase()->device,
@@ -365,15 +371,15 @@ BfPipelineInterfaceStd::genVertexInputState()
    // clang-format off
    vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-   __bindingDescription = BfVertex3::getBindingDescription();
-   __attributeDescriptions = BfVertex3::getAttributeDescriptions();
+   m_bindingDescription = BfVertex3::getBindingDescription();
+   m_attributeDescriptions = BfVertex3::getAttributeDescriptions();
 
    vertexInputState.vertexBindingDescriptionCount = 1;
    vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(
-      __attributeDescriptions.size()
+      m_attributeDescriptions.size()
    );
-   vertexInputState.pVertexBindingDescriptions = &__bindingDescription;
-   vertexInputState.pVertexAttributeDescriptions = __attributeDescriptions.data();
+   vertexInputState.pVertexBindingDescriptions = &m_bindingDescription;
+   vertexInputState.pVertexAttributeDescriptions = m_attributeDescriptions.data();
    // clang-format on
    return vertexInputState;
 }
@@ -381,7 +387,7 @@ BfPipelineInterfaceStd::genVertexInputState()
 BfPipelineInterface::D_t
 BfPipelineInterfaceStd::genDynamicState()
 {
-   __dynamicStates = {
+   m_dynamicStates = {
        VK_DYNAMIC_STATE_VIEWPORT,
        VK_DYNAMIC_STATE_SCISSOR,
        // VK_DYNAMIC_STATE_BLEND_CONSTANTS // Было ранее включено
@@ -391,8 +397,8 @@ BfPipelineInterfaceStd::genDynamicState()
 
    // clang-format off
    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-   dynamicState.dynamicStateCount = static_cast<uint32_t>(__dynamicStates.size());
-   dynamicState.pDynamicStates = __dynamicStates.data();
+   dynamicState.dynamicStateCount = static_cast<uint32_t>(m_dynamicStates.size());
+   dynamicState.pDynamicStates = m_dynamicStates.data();
    // clang-format on
 
    return dynamicState;
@@ -469,14 +475,14 @@ BfPipelineInterfaceStd::genColorBlendAttachmentState()
    idBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
    idBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
 
-   __colorBlendAttachments = {colorBlendAttachment, idBlendAttachment};
+   m_colorBlendAttachments = {colorBlendAttachment, idBlendAttachment};
 
    VkPipelineColorBlendStateCreateInfo colorBlending{};
    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
    colorBlending.logicOpEnable = VK_FALSE;
    colorBlending.logicOp = VK_LOGIC_OP_COPY;  // Optional
-   colorBlending.attachmentCount = __colorBlendAttachments.size();
-   colorBlending.pAttachments = __colorBlendAttachments.data();
+   colorBlending.attachmentCount = m_colorBlendAttachments.size();
+   colorBlending.pAttachments = m_colorBlendAttachments.data();
    colorBlending.blendConstants[0] = 0.0f;  // Optional
    colorBlending.blendConstants[1] = 0.0f;  // Optional
    colorBlending.blendConstants[2] = 0.0f;  // Optional
@@ -509,15 +515,21 @@ BfPipelineInterface::L_t
 BfPipelineInterfaceStd::genLayout(const VkDevice& device)
 {
    // clang-format off
-   // __descriptorSetLayouts = std::move(desc.getAllLayouts());
+   
+   m_pushConstantRange = { 
+      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      .offset = 0,
+      .size = sizeof(BfViewPC)
+   };
+
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-   __descriptorSetLayouts = man.getAllLayouts();
+   m_descriptorSetLayouts = man.getAllLayouts();
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-   pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(__descriptorSetLayouts.size());
-   pipelineLayoutCreateInfo.pSetLayouts = __descriptorSetLayouts.data();
-   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+   pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(m_descriptorSetLayouts.size());
+   pipelineLayoutCreateInfo.pSetLayouts = m_descriptorSetLayouts.data();
+   pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+   pipelineLayoutCreateInfo.pPushConstantRanges = &m_pushConstantRange;
    // clang-format on
    return pipelineLayoutCreateInfo;
 }

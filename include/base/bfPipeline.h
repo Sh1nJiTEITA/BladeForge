@@ -316,11 +316,12 @@ struct BfPipelineInterface
 
 class BfPipelineInterfaceStd : public BfPipelineInterface
 {
-   VkVertexInputBindingDescription __bindingDescription;
-   std::array< VkVertexInputAttributeDescription, 3 > __attributeDescriptions;
-   std::vector< VkDynamicState > __dynamicStates;
-   std::vector< VkPipelineColorBlendAttachmentState > __colorBlendAttachments;
-   std::vector< VkDescriptorSetLayout > __descriptorSetLayouts;
+   VkVertexInputBindingDescription m_bindingDescription;
+   std::array< VkVertexInputAttributeDescription, 3 > m_attributeDescriptions;
+   std::vector< VkDynamicState > m_dynamicStates;
+   std::vector< VkPipelineColorBlendAttachmentState > m_colorBlendAttachments;
+   std::vector< VkDescriptorSetLayout > m_descriptorSetLayouts;
+   VkPushConstantRange m_pushConstantRange;
 
 public:
    // clang-format off

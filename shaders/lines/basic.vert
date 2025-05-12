@@ -14,6 +14,11 @@ struct ObjectData {
     float line_thickness;
 };
 
+layout(push_constant) uniform PushConstants {
+    mat4 scale;
+    mat4 proj;
+} pc;
+
 // Layouts
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 model;
@@ -52,61 +57,19 @@ void print_mat4(mat4 matrix) {
     debugPrintfEXT("matrix[3] = %f, %f, %f, %f", matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]);
 };
 
-//uint read_id_map(ivec2 texCoord) {
-//    uvec4 value = imageLoad(id_map, texCoord);
-//    return value.x;
-//}
-//
-//void write_id_map(ivec2 texCoord, uint id)  {
-//    imageStore(id_map, texCoord, uvec4(id));
-//};
 
 void main() {
-
-    //    //print_mat4(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix );
-    //    debugPrintfEXT("pos = %f, %f. %f", inPosition[0], inPosition[1], inPosition[2]);
-    //    debugPrintfEXT("col = %f, %f. %f", inColor[0], inColor[1], inColor[2]);
-    //    debugPrintfEXT("nor = %f, %f. %f", inNormals[0], inNormals[1], inNormals[2]);
-
-    vec4 coo = ubo.model * ubo.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
+    vec4 coo = pc.scale * pc.proj * ubo.view * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
     outNormals = inNormals;
     gl_Position = coo;
     obj_index = gl_BaseInstance;
 
-    //pos_distance = length(inPosition);
-    //for (int i = 0; i < DEPTH_ARRAY_SCALE+1; i++) {
-
-    //    if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[DEPTH_ARRAY_SCALE-1]) {
-    //        cp.data[DEPTH_ARRAY_SCALE-1] = 0;
-    //        fragColor = vec3(0.0, 1.0, 0.5);
-    //    }
-    //    else {
-    //        fragColor = inColor;
-    //    }
-    //debugPrintfEXT("%f %f", ubo.cursor_pos.x, ubo.cursor_pos.y);
-    //uvec4 pixel_value = imageLoad(id_map, ivec2(ubo.cursor_pos));
-    //debugPrintfEXT("%i, %i, %i, %i", pixel_value.x, pixel_value.y, pixel_value.z, pixel_value.w);
     if (obj_data_buffer.obj_data[gl_BaseInstance].id == ubo.id_on_cursor) {
         fragColor = vec3(0.0, 1.0, 0.5);
-        // debugPrintfEXT("COLOR: %f, %f, %f", inColor.x, inColor.y, inColor.z);
     }
     else {
         fragColor = inColor;
     }
-
-    //    for (int i = DEPTH_ARRAY_SCALE-1; i >= 0; i--) {
-    //        if (obj_data_buffer.obj_data[gl_BaseInstance].id == cp.data[i]) {
-    //            //cp.data[i] = 0;
-    //            fragColor = vec3(0.0, 1.0, 0.5);
-    //            break;
-    //        }
-    //        else {
-    //            fragColor = inColor;
-    //        }
-    //    }
-    //    for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
-    //        cp.data[i] = 0;
-    //    }
 }
 

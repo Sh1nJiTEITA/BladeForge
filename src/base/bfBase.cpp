@@ -16,6 +16,7 @@
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
 // #include "bfTexture.h"
+#include "bfUniforms.h"
 #include "bfViewport.h"
 #include "implot.h"
 
@@ -3014,9 +3015,15 @@ bfMainRecordCommandBuffer(BfBase& base)
    {
       // clang-format off
       //
+      //
+   
       auto& extent = base.swap_chain_extent;
-      bfUpdateUniformViewExt(base, base.current_frame, {extent.width, extent.height});
+      bfPushConstants(base, local_buffer);
+      // bfUpdateUniformViewExt(base, base.current_frame, {extent.width, extent.height});
       bfRenderDefault(base, local_buffer, base.current_frame, 0.0f, 0.0f, extent.width, extent.height);
+
+
+
       // Compute left/right widths based on ratio
       float ratio = std::clamp(base.viewport_ratio, 0.0f, 1.0f);
       float left_width = extent.width * ratio;
@@ -3200,6 +3207,24 @@ bfCleanUpSwapchain(BfBase& base)
 }
 
 void
+bfPushConstants(BfBase& base, VkCommandBuffer commandBuffer)
+{
+   BfViewPC c{
+       .scale = BfCamera::instance()->m_scale,
+       .proj = BfCamera::instance()->projection()
+   };
+
+   vkCmdPushConstants(
+       commandBuffer,
+       *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+       0,
+       sizeof(BfViewPC),
+       &c
+   );
+}
+
+void
 bfUpdateUniformViewNew(BfBase& base)
 {
    BfUniformView ubo{};
@@ -3245,7 +3270,7 @@ bfUpdateUniformViewExt(BfBase& base, bool is_left, const glm::vec2& ext)
 void
 bfUpdateUniformBuffer(BfBase& base)
 {
-   // bfUpdateUniformViewNew(base);
+   bfUpdateUniformViewNew(base);
    obj::BfDrawManager::inst().mapModels(base.current_frame);
 }
 

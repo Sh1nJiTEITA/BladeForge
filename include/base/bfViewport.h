@@ -49,7 +49,6 @@ public: // ASSIGMENT
    {
    }
 
-public: // PUBLIC VARS
 public: // PUBLIC METHODS
    auto up() -> ViewPortNode& { return *m_FNode; }
    auto left() -> ViewPortNode& { return *m_FNode; }
@@ -135,6 +134,9 @@ public: // PUBLIC METHODS
       m_SNode->ext() = newext.second;
 
       m_camera.setExtent(m_extent.x, m_extent.y);
+      // FIXME: REMOVE SINGLETON FROM HERE
+      m_camera.bindWindow(base::g::glfwwin());
+      m_camera.update();
    }
    
    auto isHovered(const glm::vec2& mouse_pos) -> bool { 

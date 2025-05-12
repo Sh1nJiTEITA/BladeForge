@@ -1,6 +1,12 @@
 #version 460
 #extension GL_EXT_debug_printf : enable
 
+layout(push_constant) uniform PushConstants {
+    mat4 scale;
+    mat4 proj;
+} pc;
+
+
 struct ObjectData {
     mat4 model_matrix;
     vec3 select_color;
@@ -36,10 +42,9 @@ layout(location = 4) flat out uint obj_index;
 void main() {
     // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z);
 
-    vec4 coo = ubo.model * 
-               ubo.proj * 
+    vec4 coo = pc.scale * 
+               pc.proj * 
                ubo.view * 
-
     obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
 
 

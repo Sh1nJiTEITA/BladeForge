@@ -238,6 +238,7 @@ VkPipelineDepthStencilStateCreateInfo bfPopulateDepthStencilStateCreateInfo(
 // CleanUp's
 BfEvent bfCleanUpSwapchain(BfBase& base);
 
+void bfPushConstants(BfBase& base, VkCommandBuffer commandBuffer);
 void bfUpdateUniformViewNew(BfBase& base);
 void bfUpdateUniformViewExt(BfBase& base, bool is_left, const glm::vec2& ext);
 void bfUpdateUniformBuffer(BfBase& base);
