@@ -527,7 +527,7 @@ bfCreateViewports() -> void
    base::viewport::ViewportManager::init(base::g::glfwwin());
    auto& root = base::viewport::ViewportManager::root();
    root.split(base::viewport::SplitDirection::V);
-   root.right().split(base::viewport::SplitDirection::H);
+   // root.right().split(base::viewport::SplitDirection::H);
    // root.right().right().split(base::viewport::SplitDirection::V);
 }
 

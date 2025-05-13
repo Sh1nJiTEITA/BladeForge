@@ -353,90 +353,7 @@ void BfBladeSection::_processAverageInitialCurve() {
    for (auto& v : *curve) { v.pos().z = z; }
 }
 
-void BfBladeSection::_createCenterCircles() {
-   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   auto circleLayer = _addPartF<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>(
-      "Center circles layer"
-   );
-   std::shared_ptr< curves::BfCirclePack > last { nullptr };
-   for (auto& circleInfo : m_info.get().centerCircles) { 
-      auto circle_pack = std::make_shared<curves::BfCirclePack>(
-         BfVar<float>(&circleInfo.relativePos),
-         BfVar<float>(&circleInfo.radius), 
-         initCurve->curve()->weak_from_this()
-      );
-      circleLayer->add(circle_pack);
-      if (last.get()) { 
-         last->bindNext(circle_pack);
-         circle_pack->bindPrevious(last);
-      }
-      last = circle_pack;
-   }
-}
-
-void BfBladeSection::_processCenterCircles() { 
-   auto initCurve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
-   auto circleLayer = _part<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>();
-   using pack_t = std::shared_ptr< curves::BfCirclePack >;
-
-   const size_t current_circles_count = circleLayer->children().size();
-   const size_t needed_circles_count = m_info.get().centerCircles.size();
-   
-   if (current_circles_count < needed_circles_count) { 
-      auto it = m_info.get().centerCircles.begin();
-      std::advance(it, current_circles_count);
-
-      for (size_t i = current_circles_count; i < needed_circles_count; ++i, ++it) { 
-         auto& info = *it;
-         auto circle_pack = std::make_shared<curves::BfCirclePack>(
-            BfVar<float>(&info.relativePos),
-            BfVar<float>(&info.radius), 
-            initCurve->curve()->weak_from_this()
-         );
-         circle_pack->make();
-         circleLayer->add(circle_pack);   
-      }
-   } else { 
-      circleLayer->children().erase(
-         std::remove_if(circleLayer->children().begin(),
-                        circleLayer->children().end(),
-                        [](const std::shared_ptr<obj::BfDrawObjectBase>& p) { 
-                           auto casted = std::static_pointer_cast<curves::BfCirclePack>(p);
-                           return std::isnan(casted->radius().get()) && std::isnan(casted->relativePos().get());
-                        }), 
-         circleLayer->children().end()
-      );
-      m_info.get().centerCircles.remove_if([](const section::CenterCircle& circle) { 
-         return std::isnan(circle.radius) && std::isnan(circle.relativePos);
-      });
-   }
-
-   std::vector<pack_t> packs;
-   std::transform(circleLayer->children().begin(), 
-                  circleLayer->children().end(), 
-                  std::back_inserter(packs),
-                  [](std::shared_ptr< obj::BfDrawObjectBase >& o) { 
-                     return std::static_pointer_cast<curves::BfCirclePack>(o);                  
-                  });
-   
-   std::sort(packs.begin(), packs.end(), [](const pack_t& lhs, const pack_t& rhs) { 
-      return lhs->relativePos().get() < rhs->relativePos().get();
-   });
-   
-   packs.front()->bindPrevious(std::weak_ptr<obj::BfDrawObjectBase>{});
-   packs.back()->bindNext(std::weak_ptr<obj::BfDrawObjectBase>{});
-   
-   pack_t prev{};
-   for (auto& pack : packs) { 
-      if (prev) { 
-         pack->bindPrevious(prev);
-         prev->bindNext(pack);
-      }
-      prev = pack;
-   }
-}
-
-void BfBladeSection::_createCenterCircles2() { 
+void BfBladeSection::_createCenterCircles() { 
    auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles2, obj::BfDrawLayer>("Circles layer 2");
    for (auto& circ : m_info.get().centerCircles) { 
       circ_layer->addf<curves::BfCirclePackWH>(
@@ -451,7 +368,7 @@ void BfBladeSection::_createCenterCircles2() {
    circ_layer->make();
 }
 
-void BfBladeSection::_processCenterCircles2() {
+void BfBladeSection::_processCenterCircles() {
    // clang-format on
    auto& c = m_info.get().centerCircles;
    auto circ_layer = _part< E::CenterCircles2, obj::BfDrawLayer >();
@@ -500,42 +417,6 @@ void BfBladeSection::_processCenterCircles2() {
 void
 BfBladeSection::_createIOCircles()
 {
-   auto circles =
-       _part< BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer >();
-
-   auto inlet_circle =
-       _part< BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH >();
-   auto inlet_dir =
-       _part< BfBladeSectionEnum::InletDirection, curves::BfSingleLineWH >();
-   auto ipack =
-       _addPartF< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(
-           inlet_circle,
-           inlet_dir,
-           circles,
-           curves::BfIOCirclePack::Inlet
-       );
-
-   auto outlet_circle =
-       _part< BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH >();
-   auto outlet_dir =
-       _part< BfBladeSectionEnum::OutletDirection, curves::BfSingleLineWH >();
-   auto opack =
-       _addPartF< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >(
-           outlet_circle,
-           outlet_dir,
-           circles,
-           curves::BfIOCirclePack::Outlet
-       );
-}
-
-void
-BfBladeSection::_processIOCircles()
-{
-}
-
-void
-BfBladeSection::_createIOCircles2()
-{
    _addPartF< E::InletEdge, curves::BfEdge >(
        BfVar< float >(90.f),
        BfVar< float >(90.f),
@@ -555,39 +436,12 @@ BfBladeSection::_createIOCircles2()
 }
 
 void
-BfBladeSection::_processIOCircles2()
+BfBladeSection::_processIOCircles()
 {
 }
 
 void
-BfBladeSection::_createFrontCurves()
-{
-   // _toggleRender<BfBladeSectionEnum::CenterCircles>();
-   // _toggleRender<BfBladeSectionEnum::InletPack>();
-   // _toggleRender<BfBladeSectionEnum::OutletPack>();
-
-   _addPartF< BfBladeSectionEnum::FrontCurveChain, curves::BfBezierChain >(
-       curves::BfBezierChain::Type::Front,
-       _part< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(),
-       _part< BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack >(),
-       _part< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >()
-   );
-
-   _addPartF< BfBladeSectionEnum::BackCurveChain, curves::BfBezierChain >(
-       curves::BfBezierChain::Type::Back,
-       _part< BfBladeSectionEnum::InletPack, curves::BfIOCirclePack >(),
-       _part< BfBladeSectionEnum::CenterCircles, curves::BfIOCirclePack >(),
-       _part< BfBladeSectionEnum::OutletPack, curves::BfIOCirclePack >()
-   );
-}
-
-void
-BfBladeSection::_processFrontCurves()
-{
-}
-
-void
-BfBladeSection::_createFrontCurves2()
+BfBladeSection::_createChain()
 {
    auto chain = _addPartF< E::Chain, curves::BfChain >(
        _part< E::CenterCircles2, obj::BfDrawLayer >(),
@@ -597,7 +451,7 @@ BfBladeSection::_createFrontCurves2()
 }
 
 void
-BfBladeSection::_processFrontCurves2()
+BfBladeSection::_processChain()
 {
    auto chain = _part< E::Chain, curves::BfChain >();
    chain->z() = m_info.get().z;

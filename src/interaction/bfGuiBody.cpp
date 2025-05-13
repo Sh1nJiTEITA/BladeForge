@@ -594,7 +594,7 @@ MainDock::presentSectionParameters(pSection sec)
 
    const auto dock_flags = 0
       | ImGuiDockNodeFlags_NoUndocking
-      | ImGuiDockNodeFlags_NoTabBar
+      // | ImGuiDockNodeFlags_NoTabBar
    ;
    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dock_flags);
 
@@ -614,7 +614,7 @@ MainDock::presentSectionParameters(pSection sec)
       ImGuiID right_id = dockspace_id;
       ImGui::DockBuilderDockWindow(param_title.c_str(), left_id);
       ImGui::DockBuilderDockWindow(circles_title.c_str(), right_id);
-      ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
+      // ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
       ImGui::DockBuilderFinish(dockspace_id);
       info->isParametersDockBuild = true;
    }

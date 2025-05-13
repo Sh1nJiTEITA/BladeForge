@@ -381,6 +381,7 @@ BfMain::_loop()
       m_gui.presentCameraWindow();
       // m_gui.presentViewportRatioButton(m_base);
 
+      ImGui::ShowMetricsWindow();
       // ImGui::ShowDemoWindow();
       m_dock.draw();
 

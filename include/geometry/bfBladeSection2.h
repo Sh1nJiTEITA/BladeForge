@@ -89,43 +89,21 @@ public:
       _createCircleEdges();
       _createIOAngles();
       _createAverageInitialCurve();
-      // FRONTIER 
-      
-      _createCenterCircles2();
-      _createIOCircles2();
-      _createFrontCurves2();
-
-      
-      
-      // _createCenterCircles();
-      // _createIOCircles();
-      // _createFrontCurves();
-      // _createCCLines();
-      // _createFrontIntersectionLines();
-      // _createFrontCurves();
+      _createCenterCircles();
+      _createIOCircles();
+      _createChain();
    }
 
    virtual void make() override
    {
       _assignRoots();
-      
-      // fmt::println("z={}", m_info.get().z);
-      //
-      
-
       if (!m_children.empty()) premake(); 
       {
          int i = 0;
          for (auto& child : m_children) {
             child->make();
          }
-         
-         // applyRenderToggle();
       }
-      // _part<E::InletEdge, curves::BfEdge>()->make();
-      // _part<E::OutletEdge, curves::BfEdge>()->make();
-      // _part<E::Chain, curves::BfChain>()->make();
-
       postmake();    
    }
 
@@ -135,13 +113,8 @@ public:
       _processCircleEdges();
       _processIOAngles();
       _processAverageInitialCurve();
-      _processCenterCircles2();
-      _processFrontCurves2();
-      // FRONTIER 
-
-      // _processCenterCircles();
-      // _processCCLines();
-      // _processFrontIntersectionLines();
+      _processCenterCircles();
+      _processChain();
    }
 
    virtual void postmake() 
@@ -150,8 +123,6 @@ public:
       m_lastChordL = oChord->left().get();
       m_lastChordR = oChord->right().get();
    }
-
-   
 
    // struct ToggleProxy { 
    //    ToggleProxy(BfBladeSection& bs) : m_bs{ bs } {}
@@ -172,7 +143,6 @@ public: // EXPORT
    auto inletCircle() { return _part<E::InletEdge, curves::BfEdge>(); }
    auto outletCircle() { return _part<E::OutletEdge, curves::BfEdge>(); }
    auto chain() { return _part<E::Chain, curves::BfChain>(); }
-
 
 private:
 
@@ -231,23 +201,17 @@ private:
    void _createCenterCircles();
    void _processCenterCircles();
 
-   void _createCenterCircles2();
-   void _processCenterCircles2();
-
    /**
     * @brief Создание пакетов входных и выходных кромок
     */
    void _createIOCircles();
    void _processIOCircles();
 
-   void _createIOCircles2();
-   void _processIOCircles2();
-
-   void _createFrontCurves();
-   void _processFrontCurves();
-
-   void _createFrontCurves2();
-   void _processFrontCurves2();
+   /**
+    * @brief Создание цепочек (поверхностей спинки / корыта)
+    */
+   void _createChain();
+   void _processChain();
    
    /** @} */ // End of MathFunctions group
 
