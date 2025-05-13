@@ -8,10 +8,12 @@ struct BezierPoints {
 
 struct ObjectData {
     mat4 model_matrix;
-    vec3 select_color;
+    vec4 select_color;
+    vec4 center;
     int index;
     int id;
     float line_thickness;
+    float _pad;
 };
 
 layout(push_constant) uniform PushConstants {

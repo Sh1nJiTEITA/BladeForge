@@ -16,11 +16,12 @@ struct BfUniformView
 struct BfObjectData
 {
    alignas(16) glm::mat4 model_matrix;
-   alignas(16) glm::vec3 select_color;
+   alignas(16) glm::vec4 select_color;
+   alignas(16) glm::vec4 center;
    alignas(4) uint32_t index;
    alignas(4) uint32_t id = 999999;
    alignas(4) float line_thickness;
-   // alignas(16) glm::vec3 center;
+   alignas(4) float _pad;
 };
 
 // PC -> push constant

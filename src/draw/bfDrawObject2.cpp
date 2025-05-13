@@ -410,7 +410,7 @@ BfDrawObjectBase::_objectData()
 {
    return {
        .model_matrix = m_modelMatrix,
-       .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
+       .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
        .index = 0,
        .id = id(),
        .line_thickness = 0.00025f

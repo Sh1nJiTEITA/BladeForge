@@ -87,9 +87,9 @@ BfDrawObj::genObjData()
    data.line_thickness = __line_thickness;
 
    if (is_hovered)
-      data.select_color = glm::vec3(1.0f, 0.5f, 0.0f);
+      data.select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f);
    else
-      data.select_color = glm::vec3(1.0f, 1.0f, 1.0f);
+      data.select_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
    return data;
 }
 

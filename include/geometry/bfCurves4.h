@@ -134,11 +134,11 @@ protected:
             glm::scale(glm::vec3(950.0f / BfCamera::instance()->m_extent.y)) * 
             glm::translate(-center().pos())
          ,
-          .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
+          .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+          .center = glm::vec4(center().pos(), 1.0f),
           // .index = 0,
           .id = id(),
           .line_thickness = 0.00025f,
-          // .center = center().pos()
       };
    }
 
@@ -176,11 +176,11 @@ protected:
             glm::scale(glm::vec3(950.f / BfCamera::instance()->m_extent.y)) * 
             glm::translate(-center().pos())
          ,
-          .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
+          .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+          .center = glm::vec4(center().pos(), 1.0f),
           .index = 0,
           .id = id(),
           .line_thickness = 0.00025f,
-          // .center = center().pos()
       };
    }
 
@@ -914,7 +914,7 @@ public:
    {
       return {
           .model_matrix = m_modelMatrix,
-          .select_color = glm::vec3(m_transp, 0.5f, 0.0f),
+          .select_color = glm::vec4(m_transp, 0.5f, 0.0f, 1.0f),
           .index = static_cast< uint32_t >(m_isLocked ? 1 : 0),
           .id = id(),
           .line_thickness = 0.00025f

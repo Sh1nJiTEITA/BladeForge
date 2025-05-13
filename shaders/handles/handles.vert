@@ -4,20 +4,19 @@
 layout(push_constant) uniform PushConstants {
     mat4 scale;
     mat4 proj;
+    mat4 handle_scale;
+    mat4 handle_invScale;
 } pc;
-
-layout(push_constant) uniform ViewHandlesPC {
-    mat4 scale;
-    mat4 invScale;
-} ViewPC;
 
 
 struct ObjectData {
     mat4 model_matrix;
-    vec3 select_color;
+    vec4 select_color;
+    vec4 center;
     int index;
     int id;
     float line_thickness;
+    float _pad;
 };
 
 // Layouts 

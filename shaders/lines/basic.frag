@@ -3,9 +3,13 @@
 
 struct ObjectData {
     mat4 model_matrix;
-    vec3 select_color;
+    vec4 select_color;
+    vec4 center;
+
     uint index;
     uint id;
+    float line_thickness;
+    float _pad;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
