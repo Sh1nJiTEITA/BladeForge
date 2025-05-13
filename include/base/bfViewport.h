@@ -141,7 +141,7 @@ public: // PUBLIC METHODS
       m_SNode->pos() = newpos.second;
       m_SNode->ext() = newext.second;
 
-      // m_camera.setExtent(m_extent.x, m_extent.y);
+      m_camera.setExtent(m_extent.x, m_extent.y);
       // FIXME: REMOVE SINGLETON FROM HERE
    }
 
@@ -271,6 +271,11 @@ public: // PUBLIC METHODS
    auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
    auto pushViewConstants(VkCommandBuffer command_buffer) { 
+      // const float scrollSen = 0.05f;
+      // m_camera.m_scale = glm::scale(
+      //     glm::mat4(1.0f),
+      //     glm::vec3((m_camera.m_yScroll - m_camera.m_yScrollOld) * scrollSen)
+      // );
       BfViewPC c{
           .scale = m_camera.m_scale,
           .proj = m_camera.projection(m_extent)
@@ -283,6 +288,11 @@ public: // PUBLIC METHODS
           sizeof(BfViewPC),
           &c
       );
+      fmt::println("{} | {} | {} | {} ", 
+                   m_camera.m_scale[3][0], 
+                   m_camera.m_scale[3][1], 
+                   m_camera.m_scale[3][2], 
+                   m_camera.m_scale[3][3]);
 
       // BfViewHandlesPC ch { 
       //    .scale = m_camera.m_scale,
@@ -296,7 +306,6 @@ public: // PUBLIC METHODS
       //     sizeof(BfViewHandlesPC),
       //     &c
       // );
-
       
       // fmt::println("Pushing constant: {} | {}", m_camera.m_yScroll, m_camera.m_yScrollOld);
    }
@@ -443,8 +452,8 @@ private:
 inline auto bfCreateViewports() -> void { 
    base::viewport::ViewportManager::init(base::g::glfwwin());
    auto& root = base::viewport::ViewportManager::root();
-   // root.split(base::viewport::SplitDirection::V);
-   // root.right().split(base::viewport::SplitDirection::H);
+   root.split(base::viewport::SplitDirection::V);
+   root.right().split(base::viewport::SplitDirection::H);
    // root.right().right().split(base::viewport::SplitDirection::V);
 
 }

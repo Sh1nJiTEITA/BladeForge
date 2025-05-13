@@ -8,7 +8,6 @@ layout(push_constant) uniform PushConstants {
     mat4 handle_invScale;
 } pc;
 
-
 struct ObjectData {
     mat4 model_matrix;
     vec4 select_color;
@@ -43,8 +42,26 @@ layout(location = 3) out vec3 fragPos;
 
 layout(location = 4) flat out uint obj_index;
 
+mat4 translate(vec3 delta) {
+    return mat4(
+        vec4(1.0, 0.0, 0.0, 0.0),
+        vec4(0.0, 1.0, 0.0, 0.0),
+        vec4(0.0, 0.0, 1.0, 0.0),
+        vec4(delta, 1.0));
+}
+
 void main() {
     // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z);
+
+    ObjectData data  = obj_data_buffer.obj_data[gl_BaseInstance];
+
+    vec4 scaled_pos =
+          translate(data.center.xyz)
+        * pc.handle_invScale
+        * pc.handle_scale
+        * translate(-data.center.xyz)
+        * vec4(inPosition, 1.0);
+
 
     vec4 coo = pc.scale * 
                pc.proj * 
@@ -52,6 +69,7 @@ void main() {
                // ViewPC.scale * 
     obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
     vec4(inPosition, 1.0);
+    // scaled_pos;
 
 
     outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 

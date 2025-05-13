@@ -19,6 +19,8 @@ struct ObjectData {
 layout(push_constant) uniform PushConstants {
     mat4 scale;
     mat4 proj;
+    // mat4 handle_scale;
+    // mat4 handle_invScale;
 } pc;
 
 // Layouts

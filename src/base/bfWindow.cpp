@@ -384,6 +384,7 @@ bfCreateWindow(BfWindow* window)
           auto current = base::viewport::ViewportManager::currentHoveredNode();
           if (current.has_value())
           {
+             current->get().camera().m_yScroll += yoffset;
              current->get().updateCam();
           }
 
