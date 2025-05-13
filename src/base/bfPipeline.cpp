@@ -8,6 +8,7 @@
 
 #include "bfBase.h"
 #include "bfDescriptorStructs.h"
+#include "bfUniforms.h"
 
 std::unique_ptr< BfPipelineHandler > BfPipelineHandler::__instance =
     std::unique_ptr< BfPipelineHandler >(new BfPipelineHandler);
@@ -37,12 +38,22 @@ BfPipelineHandler::createLayout(
       .size = sizeof(BfViewPC)
    };
 
+   auto handlesPC = VkPushConstantRange { 
+      .stageFlags =  VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      .offset = 128,
+      .size = sizeof(BfViewHandlesPC)
+   };
+
+   std::vector< VkPushConstantRange > PC { 
+      rangePC//, handlesPC
+   };
+
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
    pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descSetLayouts.size());
    pipelineLayoutCreateInfo.pSetLayouts = descSetLayouts.data();
-   pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-   pipelineLayoutCreateInfo.pPushConstantRanges = &rangePC;
+   pipelineLayoutCreateInfo.pushConstantRangeCount = PC.size();
+   pipelineLayoutCreateInfo.pPushConstantRanges = PC.data();
    // clang-format on
    if (vkCreatePipelineLayout(
            bfGetBase()->device,

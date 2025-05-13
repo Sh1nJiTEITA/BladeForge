@@ -1,6 +1,7 @@
 #include "bfWindow.h"
 
 #include "bfCamera.h"
+#include "bfViewport.h"
 /*
 GLFWwindow* BfWindow::pWindow = nullptr;
 std::string BfWindow::name = "";
@@ -365,8 +366,26 @@ bfCreateWindow(BfWindow* window)
           // std::cout << "xoffset = " << xoffset << "; yoffset = << " <<
           // yoffset << "soffset = " << thisWindow->scroll_xoffset << "\n";
           thisWindow->is_scroll = true;
-          bfCalculateViewPartsS(thisWindow);
+          // bfCalculateViewPartsS(thisWindow);
           BfCamera::instance()->m_yScroll += yoffset;
+
+          // auto& root = base::viewport::ViewportManager::root();
+          // auto mouse_pos = base::viewport::ViewportManager::mousePos();
+          // auto it = root.iter();
+          // while (it.hasNext())
+          // {
+          //    auto next = it.next();
+          //    if (next->isLeaf() && next->isHovered(mouse_pos))
+          //    {
+          //       next->camera().m_yScroll += yoffset;
+          //    }
+          // }
+
+          auto current = base::viewport::ViewportManager::currentHoveredNode();
+          if (current.has_value())
+          {
+             current->get().updateCam();
+          }
 
           ////thisWindow->scroll_xoffset = xoffset;
           // if (thisWindow->scroll_yoffset != 0) {

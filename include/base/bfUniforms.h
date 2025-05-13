@@ -20,6 +20,7 @@ struct BfObjectData
    alignas(4) uint32_t index;
    alignas(4) uint32_t id = 999999;
    alignas(4) float line_thickness;
+   // alignas(16) glm::vec3 center;
 };
 
 // PC -> push constant
@@ -27,6 +28,12 @@ struct BfViewPC
 {
    alignas(16) glm::mat4 scale;
    alignas(16) glm::mat4 proj;
+};
+
+struct BfViewHandlesPC
+{
+   alignas(16) glm::mat4 scale;
+   alignas(16) glm::mat4 invScale;
 };
 
 #endif

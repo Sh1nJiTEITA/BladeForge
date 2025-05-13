@@ -6,6 +6,11 @@ layout(push_constant) uniform PushConstants {
     mat4 proj;
 } pc;
 
+layout(push_constant) uniform ViewHandlesPC {
+    mat4 scale;
+    mat4 invScale;
+} ViewPC;
+
 
 struct ObjectData {
     mat4 model_matrix;
@@ -45,7 +50,9 @@ void main() {
     vec4 coo = pc.scale * 
                pc.proj * 
                ubo.view * 
-    obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * vec4(inPosition, 1.0);
+               // ViewPC.scale * 
+    obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
+    vec4(inPosition, 1.0);
 
 
     outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 

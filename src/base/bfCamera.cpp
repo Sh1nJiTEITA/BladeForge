@@ -3,7 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 
+#include "bfVertex2.hpp"
 #include <algorithm>
+#include <fmt/base.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
@@ -215,6 +217,7 @@ BfCamera::update()
          m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
       }
       m_yScrollOld = m_yScroll;
+      break;
    }
    case BfCameraMode_PerspectiveCentered: {
       if (m_yScroll != m_yScrollOld)
@@ -224,6 +227,7 @@ BfCamera::update()
          m_pos += (m_yScroll - m_yScrollOld) * to_target * scrollSen;
       }
       m_yScrollOld = m_yScroll;
+      break;
    }
    case BfCameraMode_Ortho: {
       if (m_yScroll != m_yScrollOld)
@@ -233,11 +237,18 @@ BfCamera::update()
              glm::mat4(1.0f),
              glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
          );
-         m_descale = glm::scale(
-             glm::mat4(1.0f),
-             1.f / glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
+         // m_descale = glm::scale(
+         //     glm::mat4(1.0f),
+         //     1.f / glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
+         // );
+         fmt::println(
+             "{} -> {} |{}",
+             m_yScroll,
+             m_yScrollOld,
+             glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
          );
       }
+      break;
    }
    case BfCameraMode_OrthoCentered: {
       if (m_yScroll != m_yScrollOld)
@@ -248,6 +259,7 @@ BfCamera::update()
          glm::vec3 zoom = glm::vec3(nonlinearZoomFactor);
          m_scale = glm::scale(glm::mat4(1.0f), zoom);
       }
+      break;
    }
    };
 

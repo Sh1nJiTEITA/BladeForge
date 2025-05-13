@@ -1,18 +1,19 @@
 #pragma once
-#include "bfCamera.h"
-#include "bfSingle.h"
-#include <cmath>
-#include <imgui.h>
-#include <stack>
+
+#include "bfUniforms.h"
+#include <glm/matrix.hpp>
 #ifndef BF_VIEWPORT_CUSTOM_H
 #define BF_VIEWPORT_CUSTOM_J
 
-#include <fmt/base.h>
-#include <memory>
-#include <stdexcept>
-
+#include "bfCamera.h"
+#include "bfDescriptorStructs.h"
+#include "bfPipeline.h"
+#include "bfSingle.h"
 #include <GLFW/glfw3.h>
 #include <bfVertex2.hpp>
+#include <cmath>
+#include <fmt/base.h>
+#include <functional>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
@@ -21,6 +22,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec2.hpp>
+#include <imgui.h>
+#include <memory>
+#include <stack>
+#include <stdexcept>
+#include <vulkan/vulkan_core.h>
 
 namespace base
 {
@@ -46,7 +52,9 @@ public: // ASSIGMENT
        , m_extent{extent}
        , m_splitType{SplitDirection::None}
        , m_isLeaf{ true } 
+       , m_camera(BfCameraMode_Ortho)
    {
+      m_camera.bindWindow(base::g::glfwwin());
    }
 
 public: // PUBLIC METHODS
@@ -133,9 +141,11 @@ public: // PUBLIC METHODS
       m_SNode->pos() = newpos.second;
       m_SNode->ext() = newext.second;
 
-      m_camera.setExtent(m_extent.x, m_extent.y);
+      // m_camera.setExtent(m_extent.x, m_extent.y);
       // FIXME: REMOVE SINGLETON FROM HERE
-      m_camera.bindWindow(base::g::glfwwin());
+   }
+
+   auto updateCam() -> void { 
       m_camera.update();
    }
    
@@ -260,6 +270,77 @@ public: // PUBLIC METHODS
    
    auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
+   auto pushViewConstants(VkCommandBuffer command_buffer) { 
+      BfViewPC c{
+          .scale = m_camera.m_scale,
+          .proj = m_camera.projection(m_extent)
+      };
+      vkCmdPushConstants(
+          command_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          0,
+          sizeof(BfViewPC),
+          &c
+      );
+
+      // BfViewHandlesPC ch { 
+      //    .scale = m_camera.m_scale,
+      //    .invScale = glm::inverse(m_camera.m_scale)
+      // };
+      // vkCmdPushConstants(
+      //     command_buffer,
+      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+      //     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      //     128,
+      //     sizeof(BfViewHandlesPC),
+      //     &c
+      // );
+
+      
+      // fmt::println("Pushing constant: {} | {}", m_camera.m_yScroll, m_camera.m_yScrollOld);
+   }
+   //! FIXME: Uses for each node separate vkCmdSetViewport, but can be refractored to use 
+   //! Single command call
+   auto appRender(VkCommandBuffer command_buffer, std::function<void()> func) -> void { 
+      VkDeviceSize offsets[] = {0};
+      VkViewport viewport{};
+      viewport.x = m_pos.x;
+      viewport.y = m_pos.y;
+      viewport.width = m_extent.x;
+      viewport.height = m_extent.y;
+      viewport.minDepth = 0.0f;
+      viewport.maxDepth = 1.0f;
+      vkCmdSetViewport(command_buffer, 0, 1, &viewport);
+
+      VkRect2D scissor{};
+      scissor.offset = {static_cast< int32_t >(m_pos.x), static_cast< int32_t >(m_pos.y)};
+      scissor.extent = {static_cast< uint32_t >(m_extent.x), static_cast< uint32_t >(m_extent.y)};
+      vkCmdSetScissor(command_buffer, 0, 1, &scissor); 
+
+      auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+      man.bindSets(
+          base::desc::own::SetType::Main,
+          base::g::currentFrame(),
+          command_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+      );
+      man.bindSets(
+          base::desc::own::SetType::Global,
+          base::g::currentFrame(),
+          command_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+      );
+      man.bindSets(
+          base::desc::own::SetType::Texture,
+          base::g::currentFrame(),
+          command_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
+      );
+      this->pushViewConstants(command_buffer);
+      func();
+   };
+
 private:
    BfCamera m_camera;
 
@@ -318,6 +399,10 @@ public:
          auto next = it.next();
          next->update();
       }
+      auto current =  currentHoveredNode();
+      if (current.has_value()) { 
+         current->get().updateCam();
+      }
 
    }
    static auto currentHoveredNode() -> std::optional<std::reference_wrapper<ViewPortNode>> 
@@ -336,6 +421,12 @@ public:
       return {}; 
    }
 
+   static auto mousePos() -> glm::vec2 { 
+      auto& self = ViewportManager::inst();
+      glfwGetCursorPos(self.m_pGLFWwindow, &self.m_lastMousePos.x, &self.m_lastMousePos.y);
+      return static_cast< glm::vec2 >(self.m_lastMousePos);
+   }
+
 private:
    auto _makeScreenViewportNode() -> std::unique_ptr< ViewPortNode >
    {
@@ -346,13 +437,15 @@ private:
 private:
    std::unique_ptr< ViewPortNode > m_root;
    GLFWwindow* m_pGLFWwindow;
+   glm::dvec2 m_lastMousePos;
 };
 
 inline auto bfCreateViewports() -> void { 
    base::viewport::ViewportManager::init(base::g::glfwwin());
    auto& root = base::viewport::ViewportManager::root();
-   root.split(base::viewport::SplitDirection::V);
-   root.right().split(base::viewport::SplitDirection::H);
+   // root.split(base::viewport::SplitDirection::V);
+   // root.right().split(base::viewport::SplitDirection::H);
+   // root.right().right().split(base::viewport::SplitDirection::V);
 
 }
 

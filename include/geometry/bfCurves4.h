@@ -126,7 +126,7 @@ public:
 
 protected:
 
-   virtual BfObjectData _objectData()override { 
+   virtual BfObjectData _objectData() override { 
       return {
           .model_matrix = /*  */
             glm::translate(center().pos()) * 
@@ -135,9 +135,10 @@ protected:
             glm::translate(-center().pos())
          ,
           .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
-          .index = 0,
+          // .index = 0,
           .id = id(),
-          .line_thickness = 0.00025f
+          .line_thickness = 0.00025f,
+          // .center = center().pos()
       };
    }
 
@@ -178,7 +179,8 @@ protected:
           .select_color = glm::vec3(1.0f, 0.5f, 0.0f),
           .index = 0,
           .id = id(),
-          .line_thickness = 0.00025f
+          .line_thickness = 0.00025f,
+          // .center = center().pos()
       };
    }
 
