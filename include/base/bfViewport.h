@@ -449,17 +449,16 @@ public:
          case BfCameraMode_Perspective: return glm::vec3(0.0f);
          case BfCameraMode_PerspectiveCentered: return glm::vec3(0.0f);
          case BfCameraMode_Ortho: {
-            auto extent = BfCamera::instance()->m_extent;
             // TODO: CHANGE getting mouse pos from imgui to glfw
             ImVec2 mousePos = ImGui::GetMousePos();
             glm::vec2 worldMousePos;
-            worldMousePos.x = (2.0f * mousePos.x) / extent.x - 1.0f;
-            worldMousePos.y = (2.0f * mousePos.y) / extent.y - 1.0f;
+            worldMousePos.x = (2.0f * mousePos.x) / current.ext().x - 1.0f;
+            worldMousePos.y = (2.0f * mousePos.y) / current.ext().y - 1.0f;
             glm::vec4 ndcPos(worldMousePos.x, worldMousePos.y, 0.0f, 1.0f);
             glm::mat4 invProj = glm::inverse(current.camera().projection(current.ext()));
             glm::mat4 invView = glm::inverse(current.camera().view());
             glm::mat4 invModel = glm::inverse(current.camera().m_scale);
-            glm::vec4 worldPos = invModel * invView * invProj * ndcPos;
+            glm::vec4 worldPos = invView * invProj * invModel * ndcPos;
             glm::vec2 finalWorldPos(worldPos.x, worldPos.y);
             return {finalWorldPos, 0.0f};
          }

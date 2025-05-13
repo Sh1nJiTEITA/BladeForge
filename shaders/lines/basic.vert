@@ -64,7 +64,6 @@ void main() {
              * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix 
              * vec4(inPosition, 1.0);
 
-
     outNormals = inNormals;
     gl_Position = coo;
     obj_index = gl_BaseInstance;

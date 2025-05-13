@@ -34,41 +34,6 @@
 void
 BfMain::_processKeys()
 {
-   if (glfwGetKey(m_base.window->pWindow, GLFW_KEY_C) == GLFW_PRESS)
-   {
-      bfToggleCamParts(m_base.window, 0, true);
-      return;
-   }
-   else
-   {
-      bfToggleCamParts(m_base.window, 0, false);
-   }
-
-   if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
-       (glfwGetMouseButton(m_base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
-        GLFW_PRESS) &&
-       (glfwGetKey(m_base.window->pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS))
-   {
-      bfToggleCamParts(m_base.window, 1, true);
-      return;
-   }
-   else
-   {
-      bfToggleCamParts(m_base.window, 1, false);
-   }
-
-   if (  //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
-       glfwGetMouseButton(m_base.window->pWindow, GLFW_MOUSE_BUTTON_3) ==
-       GLFW_PRESS)
-   {
-      bfToggleCamParts(m_base.window, 2, true);
-      return;
-   }
-   else
-   {
-      bfToggleCamParts(m_base.window, 2, false);
-   }
-
    if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
         ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
        ImGui::IsKeyPressed(ImGuiKey_E, false))

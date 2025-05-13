@@ -35,8 +35,8 @@ layout(location = 1) out uint outId;
 
 layout(location = 4) flat in uint obj_index;
 
-vec3 uLightPosition = vec3(0.0, 1.0, 2.0); // Позиция источника света
-vec3 uLightColor = vec3(1.0, 1.0, 1.0);    // Цвет источника света
+vec3 uLightPosition = vec3(0.0, 1.0, 2.0);
+vec3 uLightColor = vec3(1.0, 1.0, 1.0); 
 
 void main() {
     float ambientStrength = 0.050505050505050505;
