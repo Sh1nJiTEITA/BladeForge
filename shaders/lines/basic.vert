@@ -46,8 +46,6 @@ layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
 } obj_data_buffer;
 
 
-
-
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec3 inNormals;
@@ -58,9 +56,6 @@ layout(location = 4) flat out uint obj_index;
 
 
 void main() {
-
-    debugPrintfEXT("index=%u", pc.viewport_index);
-
     ViewData view_data = MVUBO.view_data[pc.viewport_index];
 
     vec4 coo = view_data.scale 

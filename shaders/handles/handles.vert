@@ -2,10 +2,7 @@
 #extension GL_EXT_debug_printf : enable
 
 layout(push_constant) uniform PushConstants {
-    mat4 scale;
-    mat4 proj;
-    mat4 handle_scale;
-    mat4 handle_invScale;
+    int viewport_index;
 } pc;
 
 struct ObjectData {
@@ -18,6 +15,16 @@ struct ObjectData {
     float _pad;
 };
 
+struct ViewData { 
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+    mat4 scale;
+    vec2 cursor_pos;
+    vec3 camera_pos;
+    uint id_on_cursor;
+};
+
 // Layouts 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 model;
@@ -27,6 +34,10 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     vec3 camera_pos;
     uint id_on_cursor;
 } ubo;
+
+layout(std140, set = 0, binding = 1) buffer MultiportViewUBO {
+    ViewData view_data[];
+} MVUBO;
 
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
@@ -51,23 +62,18 @@ mat4 translate(vec3 delta) {
 }
 
 void main() {
-    // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z); 
-
+    ViewData view_data = MVUBO.view_data[pc.viewport_index];
     ObjectData data  = obj_data_buffer.obj_data[gl_BaseInstance];
-    vec4 scaled_pos =
-          translate(data.center.xyz)
-        * inverse(pc.scale) 
-        * translate(-data.center.xyz)
-        * vec4(inPosition, 1.0);
 
+    vec4 scaled_pos = translate(data.center.xyz)
+                    * inverse(view_data.scale) 
+                    * translate(-data.center.xyz)
+                    * vec4(inPosition, 1.0);
 
-    vec4 coo = pc.scale * 
-               pc.proj * 
-               ubo.view * 
-               // ViewPC.scale * 
-    // obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
-    // vec4(inPosition, 1.0);
-    scaled_pos;
+    vec4 coo = view_data.scale 
+             * view_data.proj 
+             * view_data.view 
+             * scaled_pos;
 
 
     outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 
