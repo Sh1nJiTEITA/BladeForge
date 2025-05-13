@@ -565,12 +565,15 @@ MainDock::presentCurrentFormattingSections()
          | ImGuiWindowFlags_NoTitleBar
       ;
 
+      ImGui::SetNextWindowSize({700, 800}, ImGuiCond_Appearing);
       ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
+      presentSectionDock(sec);
       if (presentSectionParameters(sec)) { 
          sec->make();
          sec->control().updateBuffer();
       }
       ImGui::End();
+      
    }
    if (fsections.empty())
    {
@@ -580,10 +583,8 @@ MainDock::presentCurrentFormattingSections()
    }
 }
 
-bool
-MainDock::presentSectionParameters(pSection sec)
-{
-   // clang-format off
+
+void MainDock::presentSectionDock(pSection sec) { 
    const auto id = sec->id(); 
    const std::string param_title = fmt::format("Parameters##sec-{}", id);
    const std::string preview_title = fmt::format("Preview##sec-{}", id);
@@ -604,21 +605,35 @@ MainDock::presentSectionParameters(pSection sec)
       ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
       ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetWindowSize());
 
-      ImGuiID left_id = ImGui::DockBuilderSplitNode(
+      ImGuiID left_id;
+      ImGuiID right_id;
+      ImGui::DockBuilderSplitNode(
           dockspace_id,
           ImGuiDir_Left,
-          0.35f,
-          nullptr,
-          &dockspace_id
+          0.43f,
+          &left_id,
+          &right_id
       );
-      ImGuiID right_id = dockspace_id;
+      // ImGuiID right_id = dockspace_id;
       ImGui::DockBuilderDockWindow(param_title.c_str(), left_id);
       ImGui::DockBuilderDockWindow(circles_title.c_str(), right_id);
       // ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
       ImGui::DockBuilderFinish(dockspace_id);
       info->isParametersDockBuild = true;
    }
+}
 
+bool
+MainDock::presentSectionParameters(pSection sec)
+{
+   // clang-format off
+   const auto id = sec->id(); 
+   const std::string param_title = fmt::format("Parameters##sec-{}", id);
+   const std::string preview_title = fmt::format("Preview##sec-{}", id);
+   const std::string circles_title = fmt::format("Circles##sec-{}", id);
+   const std::string pdock_title = fmt::format("##sec-dock-{}", id);
+
+   auto info = static_cast< SectionCreateInfoGui* >(sec->info().getp());
    
    const auto param_flags = 0
       | ImGuiWindowFlags_NoTitleBar

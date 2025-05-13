@@ -138,7 +138,9 @@ public:
    auto presentMainDockMenuBar() -> MainDockSignal;
    void presentCurrentFormattingSections();
    
-   bool presentSectionParameters(pSection sec);
+   auto presentSectionDock(pSection sec) -> void;
+   auto presentSectionParameters(pSection sec) -> bool;
+   
 
    auto activeSections() -> std::vector< pSection >;
    auto formattingSections() -> std::vector< pSection >;
