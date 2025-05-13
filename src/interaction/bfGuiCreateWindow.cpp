@@ -59,8 +59,8 @@ BfGuiCreateWindow::instance() noexcept
 
 BfGuiCreateWindow::foundContainer
 BfGuiCreateWindow::__findContainer(
-    std::list<ptrContainer>::iterator begin,
-    std::list<ptrContainer>::iterator end,
+    std::list< ptrContainer >::iterator begin,
+    std::list< ptrContainer >::iterator end,
     const std::string& name
 )
 {
@@ -68,7 +68,7 @@ BfGuiCreateWindow::__findContainer(
    {
       if ((*it)->name() == name)
       {
-         return it;  // Found the container, return iterator
+         return it; // Found the container, return iterator
       }
       if (!(*it)->isEmpty())
       {
@@ -76,11 +76,11 @@ BfGuiCreateWindow::__findContainer(
              __findContainer((*it)->begin(), (*it)->end(), name);
          if (nested_result)
          {
-            return nested_result;  // Found in nested container
+            return nested_result; // Found in nested container
          }
       }
    }
-   return std::nullopt;  // Not found
+   return std::nullopt; // Not found
 }
 
 BfGuiCreateWindow::ptrPair
@@ -99,7 +99,7 @@ BfGuiCreateWindow::__findAndCheckPair(const pair& name)
       ss << "; ";
       ss << "b " << (b ? " was found" : " was not found");
 
-      std::cout << ss.str() << "\n";
+      // std::cout << ss.str() << "\n";
 
       throw std::runtime_error(ss.str());
    }
@@ -123,7 +123,7 @@ BfGuiCreateWindow::__renderManagePanel()
          BfConfigManager::loadContainers(__containers, path);
          for (auto& c : __containers)
          {
-            std::cout << bfCastAndGetUpperContainerStr(c) << "\n";
+            // std::cout << bfCastAndGetUpperContainerStr(c) << "\n";
          }
       }
       ImGui::EndChild();
@@ -134,28 +134,28 @@ BfGuiCreateWindow::__renderManagePanel()
          {
             if (ImGui::Button("Container"))
             {
-               __addContainerT<BfGuiCreateWindowContainer>();
+               __addContainerT< BfGuiCreateWindowContainer >();
             }
             ImGui::SameLine();
             if (ImGui::Button("ContainerObj"))
             {
-               __addContainerT<BfGuiCreateWindowContainerObj>();
+               __addContainerT< BfGuiCreateWindowContainerObj >();
             }
             ImGui::SameLine();
             if (ImGui::Button("BladeSection"))
             {
-               __addContainerT<BfGuiCreateWindowBladeSection>();
+               __addContainerT< BfGuiCreateWindowBladeSection >();
             }
             ImGui::SameLine();
             if (ImGui::Button("BladeSection2"))
             {
-               __addContainerT<BfGuiCreateWindowBladeSection2>();
+               __addContainerT< BfGuiCreateWindowBladeSection2 >();
             }
             ImGui::SameLine();
 
             if (ImGui::Button("BladeBase"))
             {
-               __addContainerT<BfGuiCreateWindowBladeBase>();
+               __addContainerT< BfGuiCreateWindowBladeBase >();
             }
             ImGui::SameLine();
             if (ImGui::Button("SingleLine"))
@@ -165,7 +165,7 @@ BfGuiCreateWindow::__renderManagePanel()
             ImGui::SameLine();
             if (ImGui::Button("CircleFilledWithHandles"))
             {
-               __addContainerT<BfGuiCreateWindowCircleFilledWithHandles>();
+               __addContainerT< BfGuiCreateWindowCircleFilledWithHandles >();
             }
             ImGui::SameLine();
          }
@@ -179,7 +179,7 @@ BfGuiCreateWindow::__renderManagePanel()
 }
 
 void
-BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
+BfGetWindowsUnderMouse(std::vector< ImGuiWindow* >& www)
 {
    ImVec2 mouse_pos = ImGui::GetMousePos();
 
@@ -206,8 +206,8 @@ BfGetWindowsUnderMouse(std::vector<ImGuiWindow*>& www)
 void
 BfGuiCreateWindow::__renderContainers()
 {
-   std::stack<ptrContainer> render_stack;
-   std::list<std::pair<std::string, int>> l;
+   std::stack< ptrContainer > render_stack;
+   std::list< std::pair< std::string, int > > l;
 
    BfGuiCreateWindowContainer::resetResizeHover();
    int level = 0;
@@ -236,7 +236,8 @@ BfGuiCreateWindow::__renderContainers()
          {
             if (current_window->isCollapsed())
             {
-               if (!child->get()->isForceRender()) continue;
+               if (!child->get()->isForceRender())
+                  continue;
             }
 
             render_stack.push(*child);
@@ -249,11 +250,11 @@ BfGuiCreateWindow::__renderContainers()
       }
    }
 
-   l.sort([](std::pair<std::string, int> a, std::pair<std::string, int> b) {
+   l.sort([](std::pair< std::string, int > a, std::pair< std::string, int > b) {
       return a.second < b.second;
    });
 
-   std::vector<ImGuiWindow*> windows_under_mouse;
+   std::vector< ImGuiWindow* > windows_under_mouse;
    BfGetWindowsUnderMouse(windows_under_mouse);
 
    ImGuiWindow* last = nullptr;
@@ -269,7 +270,8 @@ BfGuiCreateWindow::__renderContainers()
             break;
          }
       }
-      if (is_found) break;
+      if (is_found)
+         break;
    }
 }
 
@@ -286,8 +288,8 @@ BfGuiCreateWindow::__renderDragDropZone()
          /*
             Получаем указатель на окошко которое было сюда перемещено
          */
-         std::shared_ptr<BfGuiCreateWindowContainerObj> dropped_container =
-             *(std::shared_ptr<BfGuiCreateWindowContainerObj>*)payload->Data;
+         std::shared_ptr< BfGuiCreateWindowContainerObj > dropped_container =
+             *(std::shared_ptr< BfGuiCreateWindowContainerObj >*)payload->Data;
 
          /*
             Добавляем его к другим окошками в ДАННОМ ОКНЕ (куда было
@@ -323,12 +325,12 @@ BfGuiCreateWindow::__renderDragDropZone()
             Меняем перемещенному окну 'root'-указатель и 'root'-имя
          */
          (*__containers.rbegin())->root() =
-             std::weak_ptr<BfGuiCreateWindowContainer>();
+             std::weak_ptr< BfGuiCreateWindowContainer >();
 
          // Меняем режим отображения для 'BladeSection'-контейнера после
          // дропа
          if (auto casted =
-                 std::dynamic_pointer_cast<BfGuiCreateWindowBladeSection>(
+                 std::dynamic_pointer_cast< BfGuiCreateWindowBladeSection >(
                      dropped_container
                  ))
          {
@@ -378,7 +380,7 @@ BfGuiCreateWindow::__processMoves()
 {
    while (!__move_pairs.empty())
    {
-      std::cout << "MOVE__1\n";
+      // std::cout << "MOVE__1\n";
       auto pair = __move_pairs.top();
       //
       auto optPair = __findAndCheckPair(pair);

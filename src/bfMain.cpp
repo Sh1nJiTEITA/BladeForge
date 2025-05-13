@@ -1,6 +1,7 @@
 ﻿#include <imgui_impl_vulkan.h>
 
 #include <cassert>
+#include <imgui_internal.h>
 #include <memory>
 
 #include "bfAllocator.h"
@@ -34,12 +35,31 @@
 void
 BfMain::_processKeys()
 {
-   if ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
-        ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-       ImGui::IsKeyPressed(ImGuiKey_E, false))
+   // clang-format off
+   bool is_ctrl_down = 0
+      || ImGui::IsKeyDown(ImGuiKey_LeftCtrl) 
+      || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+
+   if (is_ctrl_down && ImGui::IsKeyPressed(ImGuiKey_E, false))
    {
       m_gui.toggleRenderCreateWindow();
    }
+
+   if (is_ctrl_down && ImGui::IsKeyPressed(ImGuiKey_V, false)) { 
+      auto node = base::viewport::ViewportManager::currentHoveredNode();
+      if (node.has_value()) { 
+         node.value().get().split(base::viewport::SplitDirection::V);
+      }
+   }
+
+   if (is_ctrl_down && ImGui::IsKeyPressed(ImGuiKey_H, false)) { 
+      auto node = base::viewport::ViewportManager::currentHoveredNode();
+      if (node.has_value()) { 
+         node.value().get().split(base::viewport::SplitDirection::H);
+      }
+   }
+
+   // clang-format on
 }
 
 void

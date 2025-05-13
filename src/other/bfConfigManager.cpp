@@ -17,7 +17,7 @@
 #include <windows.h>
 #endif
 
-std::shared_ptr<BfConfigManager> BfConfigManager::__instance = nullptr;
+std::shared_ptr< BfConfigManager > BfConfigManager::__instance = nullptr;
 //
 // BfLuaValue& BfLuaTable::operator[](BfLuaValue t) { return v[t]; }
 //
@@ -32,24 +32,24 @@ BfLuaTable::convert(const BfLuaValue& v)
    std::string o;
    std::visit(
        [&o](auto&& arg) {
-          using T = std::decay_t<decltype(arg)>;
-          if constexpr (std::is_same_v<T, std::string>)
+          using T = std::decay_t< decltype(arg) >;
+          if constexpr (std::is_same_v< T, std::string >)
           {
              o = arg;
           }
-          else if constexpr (std::is_same_v<T, int>)
+          else if constexpr (std::is_same_v< T, int >)
           {
              o = std::to_string(arg);
           }
-          else if constexpr (std::is_same_v<T, float>)
+          else if constexpr (std::is_same_v< T, float >)
           {
              o = std::to_string(arg);
           }
-          else if constexpr (std::is_same_v<T, double>)
+          else if constexpr (std::is_same_v< T, double >)
           {
              o = std::to_string(arg);
           }
-          else if constexpr (std::is_same_v<T, bool>)
+          else if constexpr (std::is_same_v< T, bool >)
           {
              o = std::to_string(arg);
           }
@@ -63,7 +63,7 @@ void
 BfConfigManager::__findFilesInDir(
     std::filesystem::path root,
     std::string ext,
-    std::vector<std::filesystem::path>& out
+    std::vector< std::filesystem::path >& out
 )
 {
    for (const auto& entry : std::filesystem::directory_iterator(root))
@@ -134,7 +134,7 @@ BfConfigManager::createInstance()
 {
    if (!__instance)
    {
-      __instance = std::shared_ptr<BfConfigManager>(new BfConfigManager());
+      __instance = std::shared_ptr< BfConfigManager >(new BfConfigManager());
       // __instance->__lua.open_libraries(sol::lib::base,
       //                                  sol::lib::package,
       //                                  sol::lib::table);
@@ -166,7 +166,7 @@ BfConfigManager::getInstance()
 BfEvent
 BfConfigManager::loadStdLibrary(sol::lib lib)
 {
-   static std::map<sol::lib, std::string> std_lib_names = {
+   static std::map< sol::lib, std::string > std_lib_names = {
        {sol::lib::base, "base"},
        {sol::lib::package, "package"},
        {sol::lib::coroutine, "coroutine"},
@@ -237,10 +237,9 @@ BfConfigManager::addPackagePath(std::filesystem::path path)
       std::string lua_path = tmp_path.string();
       std::replace(lua_path.begin(), lua_path.end(), '\\', '/');
 
-      std::string command_msg =
-          "package.path = package.path .. "
-          "\";" +
-          lua_path + "?.lua\"";
+      std::string command_msg = "package.path = package.path .. "
+                                "\";" +
+                                lua_path + "?.lua\"";
 
       BfConfigManager::getInstance()->__lua.script(command_msg);
 
@@ -369,34 +368,35 @@ BfConfigManager::getLuaTableStr(sol::table table, int level)
 
       std::string indent(level * __indent_separator.size(), ' ');
 
-      if (value.is<sol::table>())
+      if (value.is< sol::table >())
       {
          str += indent;
-         str += (key.is<int>() ? "" : key.as<std::string>() + " = ");
+         str += (key.is< int >() ? "" : key.as< std::string >() + " = ");
          str += getLuaTableStr(value, level + 1);
       }
       else
       {
-         str += indent + (key.is<int>() ? "" : key.as<std::string>() + " = ");
-         if (value.is<std::string>())
+         str +=
+             indent + (key.is< int >() ? "" : key.as< std::string >() + " = ");
+         if (value.is< std::string >())
          {
-            str += value.as<std::string>();
+            str += value.as< std::string >();
          }
-         else if (value.is<int>())
+         else if (value.is< int >())
          {
-            str += std::to_string(value.as<int>());
+            str += std::to_string(value.as< int >());
          }
-         else if (value.is<float>())
+         else if (value.is< float >())
          {
-            str += std::to_string(value.as<float>());
+            str += std::to_string(value.as< float >());
          }
-         else if (value.is<double>())
+         else if (value.is< double >())
          {
-            str += std::to_string(value.as<double>());
+            str += std::to_string(value.as< double >());
          }
-         else if (value.is<bool>())
+         else if (value.is< bool >())
          {
-            str += value.as<bool>() ? "true" : "false";
+            str += value.as< bool >() ? "true" : "false";
          }
 
          str += ",\n";
@@ -422,41 +422,41 @@ BfConfigManager::convertLuaTable(sol::table* obj)
       sol::object value = pair.second;
       std::string key_str;
 
-      if (key.is<std::string>())
+      if (key.is< std::string >())
       {
-         key_str = key.as<std::string>();
+         key_str = key.as< std::string >();
       }
-      else if (key.is<int>())  // для массивов
+      else if (key.is< int >()) // для массивов
       {
-         key_str = std::to_string(key.as<int>());
+         key_str = std::to_string(key.as< int >());
       }
 
-      if (value.is<sol::table>())
+      if (value.is< sol::table >())
       {
          sol::table t = value;
-         table[key_str] = std::make_shared<BfLuaTable>(convertLuaTable(&t));
+         table[key_str] = std::make_shared< BfLuaTable >(convertLuaTable(&t));
       }
       else
       {
-         if (value.is<std::string>())
+         if (value.is< std::string >())
          {
-            table[key_str] = value.as<std::string>();
+            table[key_str] = value.as< std::string >();
          }
-         else if (value.is<int>())
+         else if (value.is< int >())
          {
-            table[key_str] = std::to_string(value.as<int>());
+            table[key_str] = std::to_string(value.as< int >());
          }
-         else if (value.is<float>())
+         else if (value.is< float >())
          {
-            table[key_str] = std::to_string(value.as<float>());
+            table[key_str] = std::to_string(value.as< float >());
          }
-         else if (value.is<double>())
+         else if (value.is< double >())
          {
-            table[key_str] = std::to_string(value.as<double>());
+            table[key_str] = std::to_string(value.as< double >());
          }
-         else if (value.is<bool>())
+         else if (value.is< bool >())
          {
-            table[key_str] = value.as<bool>() ? "true" : "false";
+            table[key_str] = value.as< bool >() ? "true" : "false";
          }
       }
    }
@@ -476,15 +476,15 @@ BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
       }
       if (obj["name"].get_type() == sol::type::table)
       {
-         sol::table font_names = obj.get<sol::table>("name");
+         sol::table font_names = obj.get< sol::table >("name");
          for (const auto& font_name : font_names)
          {
-            form->name.push_back(font_name.second.as<std::string>());
+            form->name.push_back(font_name.second.as< std::string >());
          }
       }
       else if (obj["name"].get_type() == sol::type::string)
       {
-         form->name.push_back(obj.get<std::string>("name"));
+         form->name.push_back(obj.get< std::string >("name"));
       }
       else if (std::filesystem::exists(
                    exePath() / "./resources/fonts/Cousine-Regular.ttf"
@@ -498,10 +498,10 @@ BfConfigManager::fillFormFont(sol::table obj, BfFormFont* form)
          return event;
       }
       form->current = obj.get_or("current", 0);
-      form->size = obj.get<int>("size");
+      form->size = obj.get< int >("size");
       form->glypth_offset = {
-          obj.get<sol::table>("glypth_offset")[1],
-          obj.get<sol::table>("glypth_offset")[2]
+          obj.get< sol::table >("glypth_offset")[1],
+          obj.get< sol::table >("glypth_offset")[2]
       };
       form->glypth_min_advance_x = obj.get_or("glypth_offset", 0.0f);
    }
@@ -520,7 +520,7 @@ BfConfigManager::fillFormFontSettings(sol::table obj, BfFormFontSettings* form)
       for (const auto& font_path : font_paths)
       {
          form->font_directory_paths.push_back(
-             exePath() / fs::path(font_path.second.as<std::string>())
+             exePath() / fs::path(font_path.second.as< std::string >())
          );
       }
       BfConfigManager::fillFormFont(obj["standart_font"], &form->standart_font);
@@ -529,7 +529,7 @@ BfConfigManager::fillFormFontSettings(sol::table obj, BfFormFontSettings* form)
 
       for (const auto& font_root_path : form->font_directory_paths)
       {
-         std::vector<std::filesystem::path> file_paths;
+         std::vector< std::filesystem::path > file_paths;
          BfConfigManager::__findFilesInDir(font_root_path, "", file_paths);
 
          for (const auto& found_font_root_path : file_paths)
@@ -591,7 +591,7 @@ BfConfigManager::getConfigPath()
    {
       throw std::runtime_error("Failed to get HOME environment variable");
    }
-#else  // Linux/Unix
+#else // Linux/Unix
    const char* home = std::getenv("HOME");
    if (home)
    {
@@ -658,7 +658,7 @@ BfConfigManager::createSavedFilesDir()
 */
 std::string
 BfConfigManager::createContainersSaveFileString(
-    const std::list<ptrContainer>& cs
+    const std::list< ptrContainer >& cs
 )
 {
    std::stringstream ss;
@@ -695,7 +695,7 @@ BfConfigManager::createContainersSaveFileString(
 
 BfEvent
 BfConfigManager::saveContainers(
-    const std::list<ptrContainer>& cs, fs::path path
+    const std::list< ptrContainer >& cs, fs::path path
 )
 {
    BfSingleEvent event{};
@@ -722,15 +722,15 @@ BfConfigManager::saveContainers(
    // Check for writing errors (optional)
    if (!s.good())
    {
-      std::cerr << "NOT GOOD\n";
+      // std::cerr << "NOT GOOD\n";
    }
 
-   s.close();  // Explicitly close the file (optional)
+   s.close(); // Explicitly close the file (optional)
    return event;
 }
 
 BfEvent
-BfConfigManager::loadContainers(std::list<ptrContainer>& cs, fs::path path)
+BfConfigManager::loadContainers(std::list< ptrContainer >& cs, fs::path path)
 {
    BfConfigManager::recreateInstance();
    BfConfigManager::loadStdLibrary(sol::lib::base);
@@ -741,8 +741,8 @@ BfConfigManager::loadContainers(std::list<ptrContainer>& cs, fs::path path)
 
    for (auto elem : sol::table(table))
    {
-      std::cout << "Loading "
-                << sol::table(elem.second).get<std::string>("type") << "\n";
+      // std::cout << "Loading "
+      //           << sol::table(elem.second).get<std::string>("type") << "\n";
       auto c = BfConfigManager::loadBfGuiCreateWindowContainerSmart(
           sol::table(elem.second)
       );

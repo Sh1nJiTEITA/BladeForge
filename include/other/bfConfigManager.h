@@ -19,10 +19,10 @@
 
 class BfLuaTable;
 
-using BfLuaValue =
-    std::variant<int, double, std::string, bool, std::shared_ptr<BfLuaTable>>;
+using BfLuaValue = std::
+    variant< int, double, std::string, bool, std::shared_ptr< BfLuaTable > >;
 
-class BfLuaTable : public std::map<BfLuaValue, BfLuaValue>
+class BfLuaTable : public std::map< BfLuaValue, BfLuaValue >
 {
 public:
    static std::string convert(const BfLuaValue&);
@@ -32,7 +32,7 @@ class BfConfigManager
 {
    using BFCM = BfConfigManager;
 
-   static std::shared_ptr<BfConfigManager> __instance;
+   static std::shared_ptr< BfConfigManager > __instance;
    static std::string __indent_separator;
    sol::state __lua;
 
@@ -40,7 +40,7 @@ public:
    static void __findFilesInDir(
        std::filesystem::path root,
        std::string ext,
-       std::vector<std::filesystem::path>& out
+       std::vector< std::filesystem::path >& out
    );
 
    BfConfigManager();
@@ -61,9 +61,8 @@ public:
    static BfEvent addPackagePath(std::filesystem::path path);
    static BfEvent loadScriptStr(const std::string& script);
    static BfEvent loadScript(std::filesystem::path path);
-   static BfEvent loadRequireScript(
-       std::filesystem::path path, std::string varname = ""
-   );
+   static BfEvent
+   loadRequireScript(std::filesystem::path path, std::string varname = "");
 
    static std::string getLuaTableStr(sol::table table, int indent_level = 0);
    static sol::object getLuaObj(const std::string& key);
@@ -71,27 +70,23 @@ public:
    static BfLuaTable convertLuaTable(sol::table* obj);
 
    static BfEvent fillFormFont(sol::table obj, BfFormFont* form);
-   static BfEvent fillFormFontSettings(
-       sol::table obs, BfFormFontSettings* form
-   );
+   static BfEvent
+   fillFormFontSettings(sol::table obs, BfFormFontSettings* form);
 
    static std::filesystem::path getConfigPath();
    static std::filesystem::path getSavePath();
    static BfEvent createConfigData();
    static BfEvent createSavedFilesDir();
 
-   static std::string createContainersSaveFileString(
-       const std::list<ptrContainer>& cs
-   );
-   static BfEvent saveContainers(
-       const std::list<ptrContainer>& cs, fs::path path
-   );
-   static BfEvent loadContainers(std::list<ptrContainer>& cs, fs::path path);
+   static std::string
+   createContainersSaveFileString(const std::list< ptrContainer >& cs);
+   static BfEvent
+   saveContainers(const std::list< ptrContainer >& cs, fs::path path);
+   static BfEvent loadContainers(std::list< ptrContainer >& cs, fs::path path);
 
-   template <class T>
-   static BfEvent assertLoadingContainerParent(
-       sol::table obj, std::shared_ptr<T> c
-   )
+   template < class T >
+   static BfEvent
+   assertLoadingContainerParent(sol::table obj, std::shared_ptr< T > c)
    {
       // clang-format off
       static std::map<std::type_index, std::string> s{
@@ -105,11 +100,11 @@ public:
       auto found = s.find(std::type_index(typeid(T)));
       if (found != s.end())
       {
-         assert(obj.get<std::string>("type") == found->second);
+         assert(obj.get< std::string >("type") == found->second);
       }
       else
       {
-         std::cout << obj.get<std::string>("type") << "\n";
+         // std::cout << obj.get<std::string>("type") << "\n";
          throw std::runtime_error(
              "Input data type is invalid (input type is not supposed to be "
              "here)"
@@ -118,10 +113,9 @@ public:
       return BfEvent();
    }
 
-   template <class T>
-   static BfEvent assertLoadingContainerType(
-       sol::table obj, std::shared_ptr<T> c
-   )
+   template < class T >
+   static BfEvent
+   assertLoadingContainerType(sol::table obj, std::shared_ptr< T > c)
    {
       static auto s = BfGuiCreateWindowTypeRegistry::instance().get();
       // clang-format on
@@ -129,11 +123,11 @@ public:
       auto found = s.find(std::type_index(typeid(T)));
       if (found != s.end())
       {
-         assert(obj.get<std::string>("type") == found->second.name);
+         assert(obj.get< std::string >("type") == found->second.name);
       }
       else
       {
-         std::cout << obj.get<std::string>("type") << "\n";
+         // std::cout << obj.get<std::string>("type") << "\n";
          throw std::runtime_error(
              "Input data type is invalid (input type is not supposed to be "
              "here)"
@@ -143,18 +137,18 @@ public:
       return BfEvent();
    }
 
-#define BFCONFIG_MAKE_NEEDED(T, OBJ) \
-   {#T, [&OBJ]() { return make(std::make_shared<T>(wptr())); }}
+#define BFCONFIG_MAKE_NEEDED(T, OBJ)                                           \
+   {#T, [&OBJ]() { return make(std::make_shared< T >(wptr())); }}
 
-   template <class T>
-   static std::shared_ptr<T> makeNeededWindowByLuaTable(sol::table obj)
+   template < class T >
+   static std::shared_ptr< T > makeNeededWindowByLuaTable(sol::table obj)
    {
       static auto make = [&obj](auto ptr) {
          loadBfGuiCreateWindowContainer(obj, ptr);
-         return std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr);
+         return std::dynamic_pointer_cast< BfGuiCreateWindowContainer >(ptr);
       };
 
-      using wptr = std::weak_ptr<BfGuiCreateWindowContainer>;
+      using wptr = std::weak_ptr< BfGuiCreateWindowContainer >;
       // clang-format off
       static std::map<std::string, std::function<std::shared_ptr<BfGuiCreateWindowContainer>()>> s
       {
@@ -165,32 +159,32 @@ public:
             BFCONFIG_MAKE_NEEDED(BfGuiCreateWindowBladeSection, obj),
       };
       // clang-format on
-      auto key = obj.get<std::string>("type");
+      auto key = obj.get< std::string >("type");
       auto found = s.find(key);
 
       if (found != s.end())
       {
-         return std::dynamic_pointer_cast<T>(found->second());
+         return std::dynamic_pointer_cast< T >(found->second());
       }
       else
       {
-         std::cout << "Invalid type: " << key << "\n";
+         // std::cout << "Invalid type: " << key << "\n";
          throw std::runtime_error("Input data type is invalid");
       }
    }
 
-#define BFCONFIG_MAKE_NEEDED_NULL(TT, OBJ) \
-   {#TT, [&OBJ]() { return make(std::make_shared<TT>(wptr())); }}
+#define BFCONFIG_MAKE_NEEDED_NULL(TT, OBJ)                                     \
+   {#TT, [&OBJ]() { return make(std::make_shared< TT >(wptr())); }}
 
-   template <class T>
-   static std::shared_ptr<T> makeNeededNullWindowByLuaTable(sol::table obj)
+   template < class T >
+   static std::shared_ptr< T > makeNeededNullWindowByLuaTable(sol::table obj)
    {
       static auto make = [&obj](auto ptr) {
          loadBfGuiCreateWindowContainer(obj, ptr);
-         return std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(ptr);
+         return std::dynamic_pointer_cast< BfGuiCreateWindowContainer >(ptr);
       };
 
-      using wptr = std::weak_ptr<BfGuiCreateWindowContainer>;
+      using wptr = std::weak_ptr< BfGuiCreateWindowContainer >;
       // clang-format off
       static std::map<std::string, std::function<std::shared_ptr<BfGuiCreateWindowContainer>()>> s
       {
@@ -201,48 +195,48 @@ public:
             BFCONFIG_MAKE_NEEDED_NULL(BfGuiCreateWindowBladeSection, obj),
       };
       // clang-format on
-      auto key = obj.get<std::string>("type");
+      auto key = obj.get< std::string >("type");
       auto found = s.find(key);
 
       if (found != s.end())
       {
-         return std::dynamic_pointer_cast<T>(found->second());
+         return std::dynamic_pointer_cast< T >(found->second());
       }
       else
       {
-         std::cout << "Invalid type: " << key << "\n";
+         // std::cout << "Invalid type: " << key << "\n";
          throw std::runtime_error("Input data type is invalid");
       }
    }
 
-   template <class T>
-   static BfEvent loadBfGuiCreateWindowContainer(
-       sol::table obj, std::shared_ptr<T> c
-   )
+   template < class T >
+   static BfEvent
+   loadBfGuiCreateWindowContainer(sol::table obj, std::shared_ptr< T > c)
    {
-      std::cout << "Loading inner" << sol::table(obj).get<std::string>("type")
-                << "\n";
+      // std::cout << "Loading inner" <<
+      // sol::table(obj).get<std::string>("type")
+      //           << "\n";
 
-      using dT = std::decay_t<T>;
+      using dT = std::decay_t< T >;
 
-      if constexpr (std::is_same_v<dT, BfGuiCreateWindowContainerPopup>)
+      if constexpr (std::is_same_v< dT, BfGuiCreateWindowContainerPopup >)
       {
          BfConfigManager::assertLoadingContainerType(obj, c);
          return BfEvent();
       }
-      else if constexpr (std::is_same_v<dT, BfGuiCreateWindowBladeBase>)
+      else if constexpr (std::is_same_v< dT, BfGuiCreateWindowBladeBase >)
       {
          BfConfigManager::assertLoadingContainerType(obj, c);
          sol::table base = sol::table(obj["base"]);
          BfConfigManager::assertLoadingContainerParent(base, c);
          BfConfigManager::loadBfGuiCreateWindowContainer(
              base,
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(c)
+             std::dynamic_pointer_cast< BfGuiCreateWindowContainerObj >(c)
          );
          //
          // return BfEvent();
       }
-      else if constexpr (std::is_same_v<dT, BfGuiCreateWindowBladeSection>)
+      else if constexpr (std::is_same_v< dT, BfGuiCreateWindowBladeSection >)
       {
          // clang-format off
          BfConfigManager::assertLoadingContainerType(obj, c);
@@ -289,12 +283,12 @@ public:
 
          BfConfigManager::loadBfGuiCreateWindowContainer(
              base,
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainerObj>(c)
+             std::dynamic_pointer_cast< BfGuiCreateWindowContainerObj >(c)
          );
 
          // return BfEvent();
       }
-      else if constexpr (std::is_same_v<dT, BfGuiCreateWindowContainerObj>)
+      else if constexpr (std::is_same_v< dT, BfGuiCreateWindowContainerObj >)
       {
          BfConfigManager::assertLoadingContainerType(obj, c);
          sol::table base = sol::table(obj["base"]);
@@ -310,11 +304,11 @@ public:
          // clang-format on
          BfConfigManager::loadBfGuiCreateWindowContainer(
              base,
-             std::dynamic_pointer_cast<BfGuiCreateWindowContainer>(c)
+             std::dynamic_pointer_cast< BfGuiCreateWindowContainer >(c)
          );
          // return BfEvent();
       }
-      else if constexpr (std::is_same_v<dT, BfGuiCreateWindowContainer>)
+      else if constexpr (std::is_same_v< dT, BfGuiCreateWindowContainer >)
       {
          BfConfigManager::assertLoadingContainerType(obj, c);
 
@@ -335,24 +329,26 @@ public:
          c->__window_size.y = sol::table(obj["__window_size"])[2].get_or<float>(0.0);
          // clang-format on
 
-         sol::table inner = obj.get<sol::table>("__containers");
+         sol::table inner = obj.get< sol::table >("__containers");
          assert(inner.valid());
          for (auto& it : inner)
          {
             sol::object v = it.second;
-            if (v.is<sol::table>())
+            if (v.is< sol::table >())
             {
-               sol::table table = v.as<sol::table>();
+               sol::table table = v.as< sol::table >();
                auto newPtr =
-                   makeNeededWindowByLuaTable<BfGuiCreateWindowContainer>(table
+                   makeNeededWindowByLuaTable< BfGuiCreateWindowContainer >(
+                       table
                    );
                newPtr->__root_container = c;
 
                if (auto casted_bladebase =
-                       std::dynamic_pointer_cast<BfGuiCreateWindowBladeBase>(c))
+                       std::dynamic_pointer_cast< BfGuiCreateWindowBladeBase >(c
+                       ))
                {
                   if (auto casted_bladesection = std::dynamic_pointer_cast<
-                          BfGuiCreateWindowBladeSection>(newPtr))
+                          BfGuiCreateWindowBladeSection >(newPtr))
                   {
                      casted_bladebase->addHeightPopup(casted_bladesection);
                   }
@@ -379,7 +375,7 @@ public:
       return c;
    }
 
-   static BfEvent loadContainers(sol::table obj, std::list<ptrContainer>& c);
+   static BfEvent loadContainers(sol::table obj, std::list< ptrContainer >& c);
 };
 
 #endif
