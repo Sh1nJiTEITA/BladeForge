@@ -354,7 +354,7 @@ void BfBladeSection::_processAverageInitialCurve() {
 }
 
 void BfBladeSection::_createCenterCircles() { 
-   auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles2, obj::BfDrawLayer>("Circles layer 2");
+   auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>("Circles layer 2");
    for (auto& circ : m_info.get().centerCircles) { 
       circ_layer->addf<curves::BfCirclePackWH>(
          BfVar< float >(&circ.relativePos),
@@ -371,7 +371,7 @@ void BfBladeSection::_createCenterCircles() {
 void BfBladeSection::_processCenterCircles() {
    // clang-format on
    auto& c = m_info.get().centerCircles;
-   auto circ_layer = _part< E::CenterCircles2, obj::BfDrawLayer >();
+   auto circ_layer = _part< E::CenterCircles, obj::BfDrawLayer >();
 
    if (c.size() > circ_layer->children().size())
    {
@@ -444,7 +444,7 @@ void
 BfBladeSection::_createChain()
 {
    auto chain = _addPartF< E::Chain, curves::BfChain >(
-       _part< E::CenterCircles2, obj::BfDrawLayer >(),
+       _part< E::CenterCircles, obj::BfDrawLayer >(),
        _part< E::InletEdge, curves::BfEdge >(),
        _part< E::OutletEdge, curves::BfEdge >()
    );

@@ -43,7 +43,7 @@ struct SectionCreateInfo
    };
    int initialBezierCurveOrder = 5;
 
-   uint32_t renderBitSet = INT32_MAX;
+   uint32_t renderBitSet = UINT32_MAX;
 };
 
 // clang-format off
@@ -58,19 +58,10 @@ enum class BfBladeSectionEnum : uint32_t
    OutletDirection	= 1 << 7,
    AverageInitialCurve	= 1 << 8,
    CenterCircles	= 1 << 9,
-   InletPack	        = 1 << 10,
-   OutletPack	        = 1 << 11,
-   FrontCurveChain	= 1 << 12,
-   BackCurveChain	= 1 << 13,
-   
-   CenterCircles2	= 1 << 14,
-   InletEdge            = 1 << 15,
-   OutletEdge           = 1 << 16,
-   
-   Chain                = 1 << 17,
-
-
-   End                  = 1 << 18
+   InletEdge            = 1 << 10,
+   OutletEdge           = 1 << 11,
+   Chain                = 1 << 12,
+   End                  = 1 << 13
 };
 // clang-format on
 
@@ -144,6 +135,34 @@ public: // EXPORT
    auto outletCircle() { return _part<E::OutletEdge, curves::BfEdge>(); }
    auto chain() { return _part<E::Chain, curves::BfChain>(); }
 
+   auto applyRenderToggle() -> void { 
+      for (uint32_t v = static_cast<uint32_t>(BfBladeSectionEnum::Chord);
+           v < static_cast<uint32_t>(BfBladeSectionEnum::End);
+           v <<= 1) 
+      {
+          auto section = static_cast<BfBladeSectionEnum>(v);
+          _toggleRender(section, m_info.get().renderBitSet & static_cast<uint32_t>(section));
+      }
+   };
+
+   auto toggleAllHandles(int sts = -1) -> void { 
+      std::stack< std::shared_ptr< BfDrawObjectBase > > stack;
+      for (auto ch : m_children) { 
+         stack.push(ch);
+      }
+      
+      while (!stack.empty()) { 
+         auto top = stack.top();
+         stack.pop();
+         for (auto ch : top->children()) { 
+            stack.push(ch);
+         }
+         if (auto cast = std::dynamic_pointer_cast<curves::BfHandleCircle>(top)) { 
+            top->toggleRender(sts);
+         }
+      }
+   }
+
 private:
 
    auto _isChordChanged() -> bool;
@@ -154,16 +173,6 @@ private:
    auto _ioIntersection() -> glm::vec3;
 
 private:
-
-   void applyRenderToggle() { 
-      for (uint32_t v = static_cast<uint32_t>(BfBladeSectionEnum::Chord);
-           v < static_cast<uint32_t>(BfBladeSectionEnum::End);
-           v <<= 1) 
-      {
-          auto section = static_cast<BfBladeSectionEnum>(v);
-          _toggleRender(section, m_info.get().renderBitSet & static_cast<uint32_t>(section));
-      }
-   };
 
    /** 
     * @defgroup Группа построения и конроля частей 2Д сечения

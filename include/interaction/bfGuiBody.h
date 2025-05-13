@@ -105,6 +105,7 @@ struct SectionCreateInfoGui : public obj::body::SectionCreateInfoExtended {
    bool isRender = true;
    bool isFormatting = false;
    bool isParametersDockBuild = false;
+   bool isHandlesEnabled = true;
    float relZ = 0.0f;
 };
 
@@ -136,12 +137,12 @@ public:
    void buildMainDock(ImGuiID dock_id);
    auto presentMainDockCurrentExistingSections() -> MainDockSignal;
    auto presentMainDockMenuBar() -> MainDockSignal;
+
    void presentCurrentFormattingSections();
-   
    auto presentSectionDock(pSection sec) -> void;
    auto presentSectionParameters(pSection sec) -> bool;
+   auto presentSectionToggleView(pSection sec) -> void; 
    
-
    auto activeSections() -> std::vector< pSection >;
    auto formattingSections() -> std::vector< pSection >;
    auto genSectionWindowName(pSection sec) -> std::string;

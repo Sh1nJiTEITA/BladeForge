@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <bfGuiFileDialog.h>
 #include <cmath>
+#include <cstdint>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <imgui.h>
@@ -617,7 +618,7 @@ void MainDock::presentSectionDock(pSection sec) {
       // ImGuiID right_id = dockspace_id;
       ImGui::DockBuilderDockWindow(param_title.c_str(), left_id);
       ImGui::DockBuilderDockWindow(circles_title.c_str(), right_id);
-      // ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
+      ImGui::DockBuilderDockWindow(preview_title.c_str(), right_id);
       ImGui::DockBuilderFinish(dockspace_id);
       info->isParametersDockBuild = true;
    }
@@ -670,7 +671,76 @@ MainDock::presentSectionParameters(pSection sec)
       is_changed = is_changed || presentCenterCirclesEditor(info->centerCircles);
    }
    ImGui::End();
+
+   ImGui::Begin(preview_title.c_str());
+   { 
+      presentSectionToggleView(sec);
+   }
+   ImGui::End();
+
    return is_changed;
+}
+
+bool
+renderBitCheckbox(const char* label, uint32_t bit, uint32_t* bitfield)
+{
+   bool checked = (*bitfield & bit) != 0;
+   if (ImGui::Checkbox(label, &checked))
+   {
+      if (checked)
+         *bitfield |= bit; // set the bit
+      else
+         *bitfield &= ~bit; // clear the bit
+      return true;
+   }
+   return false;
+}
+
+void
+MainDock::presentSectionToggleView(pSection sec) { 
+   // clang-format off
+   using namespace obj::section;
+   bool no_remake = true;
+   auto info = static_cast< SectionCreateInfoGui* >(sec->info().getp());
+
+   const ImVec2 avail = ImGui::GetContentRegionAvail();
+
+   ImGui::SeparatorText("Views");
+   if (ImGui::Button("All", {avail.x, 0} )) { 
+      info->renderBitSet = UINT32_MAX;
+      no_remake = false;
+   }
+   if (ImGui::Button("Show/Hide handles")) { 
+      sec->toggleAllHandles(!info->isHandlesEnabled);
+      info->isHandlesEnabled = !info->isHandlesEnabled;
+   }
+
+   ImGui::SeparatorText("Chord");
+   no_remake *= !renderBitCheckbox("Chord",             static_cast<uint32_t>(BfBladeSectionEnum::Chord), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("_ChordLeftBorder",  static_cast<uint32_t>(BfBladeSectionEnum::_ChordLeftBorder), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("_ChordRightBorder", static_cast<uint32_t>(BfBladeSectionEnum::_ChordRightBorder), &info->renderBitSet);
+
+   ImGui::SeparatorText("Circles");
+   no_remake *= !renderBitCheckbox("InletCircle",       static_cast<uint32_t>(BfBladeSectionEnum::InletCircle), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("OutletCircle",      static_cast<uint32_t>(BfBladeSectionEnum::OutletCircle), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("CentralCircles", static_cast<uint32_t>(BfBladeSectionEnum::CenterCircles), &info->renderBitSet);
+
+   ImGui::SeparatorText("Directions");
+   no_remake *= !renderBitCheckbox("InletDirection",    static_cast<uint32_t>(BfBladeSectionEnum::InletDirection), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("OutletDirection",   static_cast<uint32_t>(BfBladeSectionEnum::OutletDirection), &info->renderBitSet);
+
+   ImGui::SeparatorText("Misc");
+   no_remake *= !renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("InletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::InletEdge), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("OutletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::OutletEdge), &info->renderBitSet);
+   
+   ImGui::SeparatorText("Output");
+   no_remake *= !renderBitCheckbox("Chain",     static_cast<uint32_t>(BfBladeSectionEnum::Chain), &info->renderBitSet);
+   if (!no_remake) { 
+      fmt::println("Changing view of section with id={}", sec->id());
+      sec->applyRenderToggle();
+   }
+   // clang-format on
 }
 
 std::vector< pSection >
@@ -719,16 +789,15 @@ MainDock::presentMainDockCurrentExistingSections()
    ImGui::Begin("Body manager");
    const float y = 25;
    const float x = ImGui::GetContentRegionAvail().x;
-   const std::string blade_height_title = fmt::format(
-      "Total blade height##sec-{}", 
-      m_body->id()
-   );
+   const std::string blade_height_title =
+       fmt::format("Total blade height##sec-{}", m_body->id());
    ImGui::SetNextItemWidth(x * 0.35f);
    bool is_height_changed = ImGui::DragFloat(
-      blade_height_title.c_str(), 
-      &m_body->length(), 
-      0.01f, 
-      0.f, FLT_MAX
+       blade_height_title.c_str(),
+       &m_body->length(),
+       0.01f,
+       0.f,
+       FLT_MAX
    );
    if (ImGui::Button("New section", {x, y}))
    {
