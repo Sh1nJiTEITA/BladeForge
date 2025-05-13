@@ -3014,13 +3014,13 @@ bfMainRecordCommandBuffer(BfBase& base)
    );
    {
       // clang-format off
-      // bfPushConstants(base, local_buffer);
       auto& root = base::viewport::ViewportManager::root();
       auto it = root.iter();
+      uint8_t viewport_index = 0;
       while (it.hasNext()) { 
          auto viewport = it.next();
          if (viewport->isLeaf()) { 
-            // viewport->pushViewConstants(local_buffer);
+            bfPushConstants(local_buffer, viewport_index++);
             viewport->appRender(local_buffer, [&local_buffer]() { 
                obj::BfDrawManager::inst().draw(local_buffer);
             });
@@ -3198,19 +3198,15 @@ bfCleanUpSwapchain(BfBase& base)
 }
 
 void
-bfPushConstants(BfBase& base, VkCommandBuffer commandBuffer)
+bfPushConstants(VkCommandBuffer commandBuffer, uint8_t viewport_index)
 {
-   BfViewPC c{
-       .scale = BfCamera::instance()->m_scale,
-       .proj = BfCamera::instance()->projection()
-   };
-
+   BfPushConstants c{.viewport_index = viewport_index};
    vkCmdPushConstants(
        commandBuffer,
        *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
        0,
-       sizeof(BfViewPC),
+       sizeof(BfPushConstants),
        &c
    );
 }
@@ -3263,6 +3259,7 @@ bfUpdateUniformBuffer(BfBase& base)
 {
    bfUpdateUniformViewNew(base);
    obj::BfDrawManager::inst().mapModels(base.current_frame);
+   base::viewport::ViewportManager::mapUBO();
 }
 
 void

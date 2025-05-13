@@ -105,7 +105,6 @@ struct BfDescriptorModel : public BfDescriptor
 
 struct BfDescriptorMupltiViewportUBO : public BfDescriptor
 {
-
    BfDescriptorMupltiViewportUBO()
        : BfDescriptor(
              static_cast< uint8_t >(SetType::Main),
@@ -160,6 +159,13 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
       auto& man = manager();
       auto& td = man.get< BfDescriptorTextureTest >(SetType::Texture, 0);
       return td;
+   };
+
+   static BfDescriptorMupltiViewportUBO& getMultiViewportUBO()
+   {
+      auto& man = manager();
+      auto& desc = man.get< BfDescriptorMupltiViewportUBO >(SetType::Main, 1);
+      return desc;
    };
 
    virtual void create() override

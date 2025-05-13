@@ -90,6 +90,7 @@ BfMain::_pollEvents()
    {
       auto hovered = bfGetCurrentObjectId(m_base);
       obj::BfDrawManager::inst().setHovered(hovered);
+      base::viewport::ViewportManager::setHoveredID(hovered);
    }
 
    _processKeys();

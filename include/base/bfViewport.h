@@ -1,7 +1,5 @@
 #pragma once
 
-#include "bfUniforms.h"
-#include <glm/matrix.hpp>
 #ifndef BF_VIEWPORT_CUSTOM_H
 #define BF_VIEWPORT_CUSTOM_J
 
@@ -9,6 +7,8 @@
 #include "bfDescriptorStructs.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
+#include "bfUniforms.h"
+
 #include <GLFW/glfw3.h>
 #include <bfVertex2.hpp>
 #include <cmath>
@@ -21,11 +21,13 @@
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/matrix.hpp>
 #include <glm/vec2.hpp>
 #include <imgui.h>
 #include <memory>
 #include <stack>
 #include <stdexcept>
+#include <strings.h>
 #include <vulkan/vulkan_core.h>
 
 namespace base
@@ -45,10 +47,12 @@ class ViewPortNode
 public: // ASSIGMENT
         // clang-format off
    ViewPortNode(
+       uint8_t index,
        const glm::vec2& pos,
        const glm::vec2& extent
    )
        : m_pos{pos}
+       , m_index{index}
        , m_extent{extent}
        , m_splitType{SplitDirection::None}
        , m_isLeaf{ true } 
@@ -123,8 +127,8 @@ public: // PUBLIC METHODS
       auto newpos = calcNewPos(dir, ratio);
       auto newext = calcNewExtent(dir, ratio);
       
-      m_FNode = std::make_unique<ViewPortNode>(newpos.first, newext.first);
-      m_SNode = std::make_unique<ViewPortNode>(newpos.second, newext.second);
+      m_FNode = std::make_unique<ViewPortNode>(2 * m_index + 1, newpos.first, newext.first);
+      m_SNode = std::make_unique<ViewPortNode>(2 * m_index + 2, newpos.second, newext.second);
       
       m_ratio = ratio;
    }
@@ -160,6 +164,7 @@ public: // PUBLIC METHODS
    auto ext() -> glm::vec2& { return m_extent; }
    auto ratio() -> float& { return m_ratio; }
    auto camera() -> BfCamera&  { return m_camera; }
+   auto index() -> uint8_t { return m_index; }
 
    auto presentRect() -> void { 
       auto list = ImGui::GetBackgroundDrawList();   
@@ -273,33 +278,30 @@ public: // PUBLIC METHODS
    auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
    auto pushViewConstants(VkCommandBuffer command_buffer) { 
-      BfViewPC c{
-          .scale = m_camera.m_scale,
-          .proj = m_camera.projection(m_extent)
-      };
+      BfPushConstants c{ .viewport_index = m_index };
       vkCmdPushConstants(
           command_buffer,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
           0,
-          sizeof(BfViewPC),
+          sizeof(BfPushConstants),
           &c
       );
       
 
-      BfViewHandlesPC ch { 
-         .scale = glm::mat4(1.0f),
-         .invScale = glm::inverse(m_camera.m_scale)
-      };
-
-      vkCmdPushConstants(
-          command_buffer,
-          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-          128,
-          sizeof(BfViewHandlesPC),
-          &c
-      );
+      // BfViewHandlesPC ch { 
+      //    .scale = glm::mat4(1.0f),
+      //    .invScale = glm::inverse(m_camera.m_scale)
+      // };
+      //
+      // vkCmdPushConstants(
+      //     command_buffer,
+      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+      //     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      //     128,
+      //     sizeof(BfViewHandlesPC),
+      //     &c
+      // );
       
       // fmt::println("Pushing constant: {} | {}", m_camera.m_yScroll, m_camera.m_yScrollOld);
    }
@@ -340,7 +342,7 @@ public: // PUBLIC METHODS
           command_buffer,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
       );
-      this->pushViewConstants(command_buffer);
+      // this->pushViewConstants(command_buffer);
       func();
    };
 
@@ -350,6 +352,7 @@ private:
    SplitDirection m_splitType;
 
    bool m_isLeaf;
+   uint8_t m_index;
    glm::vec2 m_pos;
    glm::vec2 m_extent;
 
@@ -464,18 +467,59 @@ public:
       } // clang-format on
       throw std::runtime_error("Underfined camera mode");
    }
+   static auto mapUBO() -> void
+   { // clang-format off
+      auto& self = ViewportManager::inst();
+      auto& desc = base::desc::own::BfDescriptorPipelineDefault::getMultiViewportUBO();
+      auto it = self.root().iter(); 
+      void* data = desc.map();
+      size_t offset = 0;
+      while (it.hasNext()) { 
+         auto viewport = it.next();
+         if (viewport->isLeaf()) { 
+            auto& cam = viewport->camera();
+
+            BfUniformView ubo { 
+               .model = glm::mat4(1.0f),
+               .view = cam.view(),
+               .proj = cam.projection(viewport->ext()),
+               .scale = cam.m_scale,
+               .cursor_pos = self.m_lastMousePos,
+               .camera_pos = cam.m_pos,
+               .id_on_cursor = self.m_hoveredID
+            };
+
+            memcpy(
+               reinterpret_cast< char* >(data) + offset,
+               &ubo,
+               sizeof(BfUniformView )
+            );
+            offset += sizeof(BfUniformView );
+         }
+      }
+      desc.unmap();
+   }
+
+   // FIXME: This method must be locate at Draw manager (it does)
+   // but if BfDrawManager import exists -> recursive error, 
+   // should be fullt refractored 
+   static auto setHoveredID(uint32_t ID) -> void { 
+      auto& self = ViewportManager::inst();
+      self.m_hoveredID = ID;
+   }
 
 private:
    auto _makeScreenViewportNode() -> std::unique_ptr< ViewPortNode >
-   {
+   { // clang-format off
       const glm::vec2 main_extent = rootWindowExtent();
-      return std::make_unique< ViewPortNode >(glm::vec2(0.f, 0.f), main_extent);
-   }
+      return std::make_unique< ViewPortNode >(0, glm::vec2(0.f, 0.f), main_extent);
+   } // clang-format on
 
 private:
    std::unique_ptr< ViewPortNode > m_root;
    GLFWwindow* m_pGLFWwindow;
    glm::dvec2 m_lastMousePos;
+   uint32_t m_hoveredID;
 };
 
 inline auto

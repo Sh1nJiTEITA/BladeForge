@@ -35,17 +35,11 @@ BfPipelineHandler::createLayout(
    auto rangePC = VkPushConstantRange { 
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
       .offset = 0,
-      .size = sizeof(BfViewPC)
-   };
-
-   auto handlesPC = VkPushConstantRange { 
-      .stageFlags =  VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      .offset = 128,
-      .size = sizeof(BfViewHandlesPC)
+      .size = sizeof(BfPushConstants)
    };
 
    std::vector< VkPushConstantRange > PC { 
-      rangePC, handlesPC
+      rangePC
    };
 
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
@@ -530,7 +524,7 @@ BfPipelineInterfaceStd::genLayout(const VkDevice& device)
    m_pushConstantRange = { 
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
       .offset = 0,
-      .size = sizeof(BfViewPC)
+      .size = sizeof(BfPushConstants)
    };
 
    auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
