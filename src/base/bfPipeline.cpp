@@ -45,7 +45,7 @@ BfPipelineHandler::createLayout(
    };
 
    std::vector< VkPushConstantRange > PC { 
-      rangePC//, handlesPC
+      rangePC, handlesPC
    };
 
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};

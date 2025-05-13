@@ -147,6 +147,8 @@ public: // PUBLIC METHODS
 
    auto updateCam() -> void { 
       m_camera.update();
+
+      // m_camera.m_yScrollOld = m_camera.m_yScroll;
    }
    
    auto isHovered(const glm::vec2& mouse_pos) -> bool { 
@@ -271,11 +273,6 @@ public: // PUBLIC METHODS
    auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
    auto pushViewConstants(VkCommandBuffer command_buffer) { 
-      // const float scrollSen = 0.05f;
-      // m_camera.m_scale = glm::scale(
-      //     glm::mat4(1.0f),
-      //     glm::vec3((m_camera.m_yScroll - m_camera.m_yScrollOld) * scrollSen)
-      // );
       BfViewPC c{
           .scale = m_camera.m_scale,
           .proj = m_camera.projection(m_extent)
@@ -288,24 +285,21 @@ public: // PUBLIC METHODS
           sizeof(BfViewPC),
           &c
       );
-      fmt::println("{} | {} | {} | {} ", 
-                   m_camera.m_scale[3][0], 
-                   m_camera.m_scale[3][1], 
-                   m_camera.m_scale[3][2], 
-                   m_camera.m_scale[3][3]);
+      
 
-      // BfViewHandlesPC ch { 
-      //    .scale = m_camera.m_scale,
-      //    .invScale = glm::inverse(m_camera.m_scale)
-      // };
-      // vkCmdPushConstants(
-      //     command_buffer,
-      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-      //     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      //     128,
-      //     sizeof(BfViewHandlesPC),
-      //     &c
-      // );
+      BfViewHandlesPC ch { 
+         .scale = glm::mat4(1.0f),
+         .invScale = glm::inverse(m_camera.m_scale)
+      };
+
+      vkCmdPushConstants(
+          command_buffer,
+          *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
+          VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+          128,
+          sizeof(BfViewHandlesPC),
+          &c
+      );
       
       // fmt::println("Pushing constant: {} | {}", m_camera.m_yScroll, m_camera.m_yScrollOld);
    }
@@ -411,6 +405,14 @@ public:
       auto current =  currentHoveredNode();
       if (current.has_value()) { 
          current->get().updateCam();
+         auto& cam = current->get().camera();
+         const float scrollSen = 0.05f;
+         fmt::println(
+             "{} -> {} |{}",
+             cam.m_yScroll,
+             cam.m_yScrollOld,
+             glm::vec3((cam.m_yScroll - cam.m_yScrollOld) * scrollSen)
+         );
       }
 
    }
@@ -429,11 +431,38 @@ public:
       }
       return {}; 
    }
-
    static auto mousePos() -> glm::vec2 { 
       auto& self = ViewportManager::inst();
       glfwGetCursorPos(self.m_pGLFWwindow, &self.m_lastMousePos.x, &self.m_lastMousePos.y);
       return static_cast< glm::vec2 >(self.m_lastMousePos);
+   }
+   static auto mouseWorldPos() -> glm::vec3 { 
+      auto& self = ViewportManager::inst();
+      auto _current = self.currentHoveredNode();
+      if (!_current.has_value()) return glm::vec3{0,0,0}; 
+      auto& current = _current.value().get();
+      switch (current.camera().m_mode)
+      { // clang-format off
+         case BfCameraMode_Perspective: return glm::vec3(0.0f);
+         case BfCameraMode_PerspectiveCentered: return glm::vec3(0.0f);
+         case BfCameraMode_Ortho: {
+            auto extent = BfCamera::instance()->m_extent;
+            // TODO: CHANGE getting mouse pos from imgui to glfw
+            ImVec2 mousePos = ImGui::GetMousePos();
+            glm::vec2 worldMousePos;
+            worldMousePos.x = (2.0f * mousePos.x) / extent.x - 1.0f;
+            worldMousePos.y = (2.0f * mousePos.y) / extent.y - 1.0f;
+            glm::vec4 ndcPos(worldMousePos.x, worldMousePos.y, 0.0f, 1.0f);
+            glm::mat4 invProj = glm::inverse(current.camera().projection(current.ext()));
+            glm::mat4 invView = glm::inverse(current.camera().view());
+            glm::mat4 invModel = glm::inverse(current.camera().m_scale);
+            glm::vec4 worldPos = invModel * invView * invProj * ndcPos;
+            glm::vec2 finalWorldPos(worldPos.x, worldPos.y);
+            return {finalWorldPos, 0.0f};
+         }
+         case BfCameraMode_OrthoCentered: return glm::vec3(0.0f);
+      } // clang-format on
+      throw std::runtime_error("Underfined camera mode");
    }
 
 private:
@@ -449,13 +478,14 @@ private:
    glm::dvec2 m_lastMousePos;
 };
 
-inline auto bfCreateViewports() -> void { 
+inline auto
+bfCreateViewports() -> void
+{
    base::viewport::ViewportManager::init(base::g::glfwwin());
    auto& root = base::viewport::ViewportManager::root();
    root.split(base::viewport::SplitDirection::V);
    root.right().split(base::viewport::SplitDirection::H);
    // root.right().right().split(base::viewport::SplitDirection::V);
-
 }
 
 }; // namespace viewport

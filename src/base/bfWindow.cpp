@@ -2,6 +2,7 @@
 
 #include "bfCamera.h"
 #include "bfViewport.h"
+#include <glm/common.hpp>
 /*
 GLFWwindow* BfWindow::pWindow = nullptr;
 std::string BfWindow::name = "";
@@ -384,8 +385,9 @@ bfCreateWindow(BfWindow* window)
           auto current = base::viewport::ViewportManager::currentHoveredNode();
           if (current.has_value())
           {
-             current->get().camera().m_yScroll += yoffset;
-             current->get().updateCam();
+             current->get().camera().m_yScroll +=
+                 glm::clamp(-1.0, 1.0, yoffset);
+             // current->get().updateCam();
           }
 
           ////thisWindow->scroll_xoffset = xoffset;

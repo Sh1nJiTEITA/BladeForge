@@ -1,4 +1,5 @@
 #pragma once
+#include "bfViewport.h"
 #include <fmt/format.h>
 #ifndef BF_HANDLE_H
 #define BF_HANDLE_H
@@ -70,14 +71,17 @@ protected:
       {
          if (m_isPressed)
          {
-            m_initialMousePos = BfCamera::instance()->mouseWorldCoordinates();
+            const glm::vec3 world =
+                base::viewport::ViewportManager::mouseWorldPos();
+            m_initialMousePos = world;
          }
       }
    }
 
    glm::vec3 delta3D()
    {
-      return BfCamera::instance()->mouseWorldCoordinates() - m_initialMousePos;
+      const glm::vec3 world = base::viewport::ViewportManager::mouseWorldPos();
+      return world - m_initialMousePos;
    }
 
    virtual void processInteraction() override

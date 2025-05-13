@@ -51,14 +51,12 @@ mat4 translate(vec3 delta) {
 }
 
 void main() {
-    // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z);
+    // debugPrintfEXT("Vertex Position: (%.2f, %.2f, %.2f)\n", inPosition.x, inPosition.y, inPosition.z); 
 
     ObjectData data  = obj_data_buffer.obj_data[gl_BaseInstance];
-
     vec4 scaled_pos =
           translate(data.center.xyz)
-        * pc.handle_invScale
-        * pc.handle_scale
+        * inverse(pc.scale)
         * translate(-data.center.xyz)
         * vec4(inPosition, 1.0);
 
@@ -67,9 +65,9 @@ void main() {
                pc.proj * 
                ubo.view * 
                // ViewPC.scale * 
-    obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
-    vec4(inPosition, 1.0);
-    // scaled_pos;
+    // obj_data_buffer.obj_data[gl_BaseInstance].model_matrix * 
+    // vec4(inPosition, 1.0);
+    scaled_pos;
 
 
     outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 

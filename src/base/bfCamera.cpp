@@ -233,20 +233,12 @@ BfCamera::update()
       if (m_yScroll != m_yScrollOld)
       {
          const float scrollSen = 0.05f;
-         m_scale = glm::scale(
-             glm::mat4(1.0f),
-             glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
-         );
+         m_scale =
+             glm::scale(glm::mat4(1.0f), glm::vec3((m_yScroll)*scrollSen));
          // m_descale = glm::scale(
          //     glm::mat4(1.0f),
          //     1.f / glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
          // );
-         fmt::println(
-             "{} -> {} |{}",
-             m_yScroll,
-             m_yScrollOld,
-             glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
-         );
       }
       break;
    }
