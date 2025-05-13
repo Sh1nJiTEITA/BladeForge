@@ -103,6 +103,41 @@ struct BfDescriptorModel : public BfDescriptor
    inline static const uint32_t maxUniqueObjects = 10000;
 };
 
+struct BfDescriptorMupltiViewportUBO : public BfDescriptor
+{
+
+   BfDescriptorMupltiViewportUBO()
+       : BfDescriptor(
+             static_cast< uint8_t >(SetType::Main),
+             1,
+             VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+             true,
+             false,
+             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
+                 VK_SHADER_STAGE_FRAGMENT_BIT
+         )
+   {
+      fmt::println("Creating descriptor MultiViewportUBO");
+   }
+
+   virtual void createBuffer() override
+   {
+      m_buffer = std::make_unique< obj::BfBuffer >(
+          sizeof(BfUniformView) * MaxUniqueViewports,
+          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+          VMA_MEMORY_USAGE_CPU_TO_GPU
+      );
+   }
+
+   virtual void createImage() override {}
+   virtual void createView() override {}
+
+   void* map() { return m_buffer->map(); }
+   void unmap() { m_buffer->unmap(); }
+
+   inline static const size_t MaxUniqueViewports = 50;
+};
+
 struct BfDescriptorTextureTest : public BfDescriptorTexture
 {
    BfDescriptorTextureTest()
@@ -136,9 +171,9 @@ struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
       { 
          auto& man = this->manager();
          man.add< BfDescriptorUBO >();
+         man.add< BfDescriptorMupltiViewportUBO >();
          man.add< BfDescriptorModel >();
          man.add< BfDescriptorTextureTest >();
-
 
          std::vector< VkDescriptorPoolSize > sizes = {
              {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10},

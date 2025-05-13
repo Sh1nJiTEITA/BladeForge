@@ -407,12 +407,12 @@ public:
          current->get().updateCam();
          auto& cam = current->get().camera();
          const float scrollSen = 0.05f;
-         fmt::println(
-             "{} -> {} |{}",
-             cam.m_yScroll,
-             cam.m_yScrollOld,
-             glm::vec3((cam.m_yScroll - cam.m_yScrollOld) * scrollSen)
-         );
+         // fmt::println(
+         //     "{} -> {} |{}",
+         //     cam.m_yScroll,
+         //     cam.m_yScrollOld,
+         //     glm::vec3((cam.m_yScroll - cam.m_yScrollOld) * scrollSen)
+         // );
       }
 
    }

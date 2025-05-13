@@ -56,7 +56,7 @@ void main() {
     ObjectData data  = obj_data_buffer.obj_data[gl_BaseInstance];
     vec4 scaled_pos =
           translate(data.center.xyz)
-        * inverse(pc.scale)
+        * inverse(pc.scale) 
         * translate(-data.center.xyz)
         * vec4(inPosition, 1.0);
 
