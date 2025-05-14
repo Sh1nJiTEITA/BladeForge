@@ -45,6 +45,92 @@ calcCircleVertices(
    return v;
 }
 
+std::vector< BfVertex3 >
+calcArcVertices(
+    const glm::vec3& p0,
+    const glm::vec3& p1,
+    const glm::vec3& p2,
+    uint32_t segments,
+    const glm::vec3& color
+)
+{
+   std::vector< BfVertex3 > arc;
+   if (segments < 2)
+      return arc;
+
+   // Compute plane normal
+   glm::vec3 v1 = p1 - p0;
+   glm::vec3 v2 = p2 - p0;
+   glm::vec3 normal = glm::normalize(glm::cross(v1, v2));
+
+   // Calculate circle center from three points
+   glm::vec3 u = p1 - p0;
+   glm::vec3 v = p2 - p0;
+
+   float a = glm::length(u);
+   float b = glm::length(p2 - p1);
+   float c = glm::length(v);
+
+   glm::vec3 mid_ab = 0.5f * (p0 + p1);
+   glm::vec3 mid_ac = 0.5f * (p0 + p2);
+
+   glm::vec3 dir_ab = glm::normalize(glm::cross(normal, u));
+   glm::vec3 dir_ac = glm::normalize(glm::cross(normal, v));
+
+   // Solve intersection of two planes (mid_ab + t*dir_ab == mid_ac + s*dir_ac)
+   glm::vec3 n = glm::cross(dir_ab, dir_ac);
+   float denom = glm::dot(n, n);
+   if (denom < 1e-6f)
+      return arc; // degenerate
+
+   glm::mat2 A{
+       glm::dot(dir_ab, dir_ab),
+       glm::dot(dir_ab, dir_ac),
+       glm::dot(dir_ab, dir_ac),
+       glm::dot(dir_ac, dir_ac)
+   };
+
+   glm::vec2 rhs{
+       glm::dot(mid_ac - mid_ab, dir_ab),
+       glm::dot(mid_ac - mid_ab, dir_ac)
+   };
+
+   float det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+   if (std::abs(det) < 1e-6f)
+      return arc;
+
+   float t = (rhs[0] * A[1][1] - rhs[1] * A[0][1]) / det;
+
+   glm::vec3 center = mid_ab + t * dir_ab;
+   float radius = glm::length(p0 - center);
+
+   // Create orthonormal basis in the arc plane
+   glm::vec3 x_axis = glm::normalize(p0 - center);
+   glm::vec3 y_axis = glm::normalize(glm::cross(normal, x_axis));
+
+   // Compute angles
+   float angle0 = 0.0f;
+   float angle1 =
+       std::atan2(glm::dot(p2 - center, y_axis), glm::dot(p2 - center, x_axis));
+
+   // Normalize angle direction
+   if (angle1 < angle0)
+      angle1 += 2 * glm::pi< float >();
+
+   // Generate vertices
+   for (uint32_t i = 0; i <= segments; ++i)
+   {
+      float t = static_cast< float >(i) / static_cast< float >(segments);
+      float theta = angle0 + t * (angle1 - angle0);
+      float ct = static_cast< float >(std::cos(theta));
+      float st = static_cast< float >(std::sin(theta));
+      glm::vec3 pos = center + radius * (ct * x_axis + st * y_axis);
+      arc.emplace_back(pos, color, normal);
+   }
+
+   return arc;
+}
+
 uint32_t
 factorial(uint32_t n)
 {

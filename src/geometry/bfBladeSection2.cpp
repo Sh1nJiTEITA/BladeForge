@@ -423,7 +423,6 @@ BfBladeSection::_createIOCircles()
        _part< E::InletDirection, curves::BfSingleLineWH >(),
        _part< E::InletCircle, curves::BfCircle2LinesWH >(),
        curves::BfEdge::Type::Inlet
-
    );
 
    _addPartF< E::OutletEdge, curves::BfEdge >(
@@ -448,6 +447,54 @@ BfBladeSection::_createChain()
        _part< E::InletEdge, curves::BfEdge >(),
        _part< E::OutletEdge, curves::BfEdge >()
    );
+}
+
+void
+BfBladeSection::_createIOArc()
+{
+}
+
+void
+BfBladeSection::_processIOArc()
+{
+   if (!_isPart< E::InletArc >() && _isPart< E::InletEdge >())
+   {
+      auto iedge = _part< E::InletEdge, curves::BfEdge >();
+      iedge->make();
+
+      auto iarcv = iedge->arcVertices();
+      _addPartF< E::InletArc, curves::BfArcCenter >(
+          iarcv[0],
+          iarcv[1],
+          iarcv[2]
+      );
+
+      auto oedge = _part< E::OutletEdge, curves::BfEdge >();
+      oedge->make();
+
+      auto oarcv = oedge->arcVertices();
+      _addPartF< E::OutletArc, curves::BfArcCenter >(
+          oarcv[0],
+          oarcv[1],
+          oarcv[2]
+      );
+   }
+   else
+   {
+      auto iedge = _part< E::InletEdge, curves::BfEdge >();
+      auto iarcv = iedge->arcVertices();
+      auto iarc = _part< E::InletArc, curves::BfArcCenter >();
+      iarc->begin() = iarcv[0];
+      iarc->middle() = iarcv[1];
+      iarc->end() = iarcv[2];
+
+      auto oedge = _part< E::OutletEdge, curves::BfEdge >();
+      auto oarcv = oedge->arcVertices();
+      auto oarc = _part< E::OutletArc, curves::BfArcCenter >();
+      oarc->begin() = oarcv[0];
+      oarc->middle() = oarcv[1];
+      oarc->end() = oarcv[2];
+   }
 }
 
 void

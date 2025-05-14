@@ -736,6 +736,8 @@ MainDock::presentSectionToggleView(pSection sec) {
    
    ImGui::SeparatorText("Output");
    no_remake *= !renderBitCheckbox("Chain",     static_cast<uint32_t>(BfBladeSectionEnum::Chain), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("InletArc",     static_cast<uint32_t>(BfBladeSectionEnum::InletArc), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("OutletArc",     static_cast<uint32_t>(BfBladeSectionEnum::OutletArc), &info->renderBitSet);
    if (!no_remake) { 
       fmt::println("Changing view of section with id={}", sec->id());
       sec->applyRenderToggle();

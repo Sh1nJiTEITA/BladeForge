@@ -61,7 +61,9 @@ enum class BfBladeSectionEnum : uint32_t
    InletEdge            = 1 << 10,
    OutletEdge           = 1 << 11,
    Chain                = 1 << 12,
-   End                  = 1 << 13
+   InletArc             = 1 << 13,
+   OutletArc            = 1 << 14,
+   End                  = 1 << 15
 };
 // clang-format on
 
@@ -83,6 +85,7 @@ public:
       _createCenterCircles();
       _createIOCircles();
       _createChain();
+      _createIOArc();
    }
 
    virtual void make() override
@@ -106,6 +109,7 @@ public:
       _processAverageInitialCurve();
       _processCenterCircles();
       _processChain();
+      _processIOArc();
    }
 
    virtual void postmake() 
@@ -114,18 +118,6 @@ public:
       m_lastChordL = oChord->left().get();
       m_lastChordR = oChord->right().get();
    }
-
-   // struct ToggleProxy { 
-   //    ToggleProxy(BfBladeSection& bs) : m_bs{ bs } {}
-   //    
-   //    bool toggleBack(int sts = -1) { return m_bs._toggleRender<BfBladeSectionEnum::BackCurveChain>(); }
-   //    bool toggleFront(int sts = -1) { return m_bs._toggleRender<BfBladeSectionEnum::FrontCurveChain>(); }
-   //
-   // private:
-   //    BfBladeSection& m_bs;
-   // };
-   //
-   // ToggleProxy toggle() { return ToggleProxy(*this); };
 
 public: // EXPORT
 
@@ -223,6 +215,8 @@ private:
    void _processChain();
    
    /** @} */ // End of MathFunctions group
+   void _createIOArc();
+   void _processIOArc();
 
 private:
    BfVertex3 m_lastChordL; 

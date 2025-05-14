@@ -499,6 +499,42 @@ private:
    BfVar< float > m_radius;
 };
 
+class BfArcCenter : public obj::BfDrawObject
+{
+public:
+   template < typename T >
+   BfArcCenter(T&& begin, T&& middle, T&& end)
+       : obj::BfDrawObject("Arc", BF_PIPELINE(BfPipelineType_Lines), 100)
+       , m_begin{std::forward< T >(begin)}
+       , m_middle{std::forward< T >(middle)}
+       , m_end{std::forward< T >(end)}
+   {
+   }
+
+   void make() override
+   {
+      m_indices.clear();
+      m_vertices.clear();
+      m_vertices = math::calcArcVertices(
+          m_begin.pos(),
+          m_middle.pos(),
+          m_end.pos(),
+          m_discretization,
+          m_color
+      );
+      _genIndicesStandart();
+   };
+
+   BfVertex3Uni& begin() { return m_begin; }
+   BfVertex3Uni& middle() { return m_middle; }
+   BfVertex3Uni& end() { return m_end; }
+
+private:
+   BfVertex3Uni m_begin;
+   BfVertex3Uni m_middle;
+   BfVertex3Uni m_end;
+};
+
 class BfCirclePack : public obj::BfDrawLayer
 {
 public:
