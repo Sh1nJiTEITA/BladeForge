@@ -3,9 +3,12 @@
 
 struct ObjectData {
     mat4 model_matrix;
-    vec3 select_color;
+    vec4 select_color;
+    vec4 center;
     uint index;
     uint id;
+    float line_thickness;
+    float _pad;
 };
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
@@ -36,16 +39,16 @@ vec3 uLightPosition = vec3(0.0, 1.0, 2.0); // Позиция источника 
 vec3 uLightColor = vec3(1.0, 1.0, 1.0);    // Цвет источника света
 
 void main() {
-    float ambientStrength = 0.050505050505050505;
-    vec3 ambient = ambientStrength * uLightColor;
-    // diffuse 
-    vec3 norm = normalize(fragNormal);
-    vec3 lightDir = normalize(uLightPosition - fragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * uLightColor;
-            
-    vec3 result = (ambient + diffuse) * fragColor;
-
+    // float ambientStrength = 0.050505050505050505;
+    // vec3 ambient = ambientStrength * uLightColor;
+    // // diffuse 
+    // vec3 norm = normalize(fragNormal);
+    // vec3 lightDir = normalize(uLightPosition - fragPos);
+    // float diff = max(dot(norm, lightDir), 0.0);
+    // vec3 diffuse = diff * uLightColor;
+    //         
+    // vec3 result = (ambient + diffuse) * fragColor;
+    //
     outId = obj_data_buffer.obj_data[obj_index].id;
-    outColor = vec4(result * obj_data_buffer.obj_data[obj_index].select_color, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }

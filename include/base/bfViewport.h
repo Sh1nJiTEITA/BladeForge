@@ -507,7 +507,7 @@ public:
       if (ImGui::BeginPopup("ViewportContextMenu"))
       {
          if (ImGui::BeginMenu("Change camera projection"))
-          {
+         {
               const bool is_pers = cam.m_mode == BfCameraMode_Perspective;
               if (ImGui::RadioButton("Perspective", is_pers))
               {
@@ -533,11 +533,11 @@ public:
               }
 
               ImGui::EndMenu();
-          }
-         if (ImGui::MenuItem("Delete Selected"))
-         {
-            // your logic
          }
+         // if (ImGui::MenuItem("Delete Selected"))
+         // {
+         //    // your logic
+         // }
          ImGui::EndPopup();
       }
       // clang-format off

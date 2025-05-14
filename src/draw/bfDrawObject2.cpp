@@ -54,7 +54,7 @@ BfDrawControlProxy::mapModel(
           obj_data.data(),
           sizeof(BfObjectData) * obj_data.size()
       );
-      offset += sizeof(BfObjectData);
+      offset += sizeof(BfObjectData) * obj_data.size();
    }
    else
    {

@@ -708,11 +708,11 @@ BfBladeSection::_processMassCenter()
       auto shape = _part< E::OutputShape, curves::BfSectionOutputShape >();
       auto chord = _part< E::Chord, curves::BfSingleLineWH >();
       const glm::vec3 mass_center = curves::math::centerOfMass(shape->vertices());
-      _addPartF< E::MassCenter, curves::BfCircleCenterFilled >(
+      auto obj = _addPartF< E::MassCenter, curves::BfCircleCenterFilled >(
           BfVertex3(mass_center, glm::vec3(0.0f, 0.0f, 0.8f), chord->line()->first().normals()),
-          1.0f
+          0.015f
       );
-      fmt::println("InitialMassCenter={} | {}", mass_center, chord->line()->first().normals());
+      obj->color() = glm::vec3(0.0f, 0.0f, 0.8f);
    }
    else
    {
@@ -720,8 +720,6 @@ BfBladeSection::_processMassCenter()
       const glm::vec3 mass_center = curves::math::centerOfMass(shape->vertices());
       auto center =_part< E::MassCenter, curves::BfCircleCenterFilled >();
       center->center().pos() = mass_center;
-      fmt::println("MassCenter={} | {}", mass_center, center->isRender());
-      // center->make();
       // center->debug().printVertices();
    }
    // clang-format on

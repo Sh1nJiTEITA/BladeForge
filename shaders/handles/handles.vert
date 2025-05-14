@@ -64,7 +64,7 @@ mat4 translate(vec3 delta) {
 
 void main() {
     ViewData view_data = MVUBO.view_data[pc.viewport_index];
-    ObjectData data  = obj_data_buffer.obj_data[pc.object_index];
+    ObjectData data  = obj_data_buffer.obj_data[pc.object_index + gl_InstanceIndex];
 
     vec4 scaled_pos = translate(data.center.xyz)
                     * inverse(view_data.scale) 

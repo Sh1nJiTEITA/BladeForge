@@ -130,7 +130,7 @@ BfCircleCenterFilled::make()
        math::calcCircleVertices(center(), m_radius, m_discretization, m_color)
    );
    m_indices.reserve(m_vertices.size());
-   for (size_t i = 1; i < m_vertices.size() - 2; ++i)
+   for (size_t i = 1; i < m_vertices.size() - 1; ++i)
    {
       m_indices.emplace_back(0);
       m_indices.emplace_back(i);

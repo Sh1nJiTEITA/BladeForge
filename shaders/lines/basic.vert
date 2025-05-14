@@ -41,7 +41,6 @@ layout(std140, set = 0, binding = 1) buffer MultiportViewUBO {
     ViewData view_data[];
 } MVUBO;
 
-
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];
 } obj_data_buffer;
@@ -62,7 +61,6 @@ void main() {
     vec4 coo = view_data.scale 
              * view_data.proj 
              * view_data.view 
-             // * obj_data_buffer.obj_data[gl_BaseInstance + gl_InstanceIndex].model_matrix 
              * obj_data_buffer.obj_data[pc.object_index + gl_InstanceIndex].model_matrix 
              * vec4(inPosition, 1.0);
 
