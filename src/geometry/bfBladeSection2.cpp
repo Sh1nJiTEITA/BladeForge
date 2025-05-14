@@ -695,5 +695,38 @@ BfBladeSection::_processOutputShape()
    // clang-format on
 }
 
+void
+BfBladeSection::viewOutputShapeOnly()
+{
+   // clang-format off
+   //
+   fmt::println("new view");
+   m_lastRenderBitSet = m_info.get().renderBitSet;
+   m_info.get().renderBitSet = 0;
+   m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
+   applyRenderToggle();
+   m_isOutputShapeWasEnabled = true;
+}
+
+void
+BfBladeSection::viewFormattingShapeOnly()
+{
+   // clang-format off
+   m_lastRenderBitSet = m_info.get().renderBitSet;
+   // m_info.get().renderBitSet = UINT32_MAX;
+   
+   applyRenderToggle();
+}
+
+void BfBladeSection::revertView() 
+{ 
+   fmt::println("Reverting view");
+   if (m_isOutputShapeWasEnabled) { 
+      m_info.get().renderBitSet = m_lastRenderBitSet;
+      applyRenderToggle();
+      m_isOutputShapeWasEnabled = false;
+   }
+}
+
 }; // namespace section
 }; // namespace obj

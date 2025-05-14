@@ -49,6 +49,7 @@ class BfDrawObjectBase;
 using BfIndex = uint32_t;
 using BfObj = std::shared_ptr< BfDrawObjectBase >;
 using BfObjWeak = std::weak_ptr< BfDrawObjectBase >;
+using BfRenderObjFunc = std::function< void(BfObj) >;
 
 /**
  * @class BfDrawControlProxy
@@ -148,13 +149,18 @@ public:
     * @note Используется gля LAYER & OBJECT
     *
     * @param combuffer командный буффер открытый для рендер пасса
+    * @param viewport_index не обязятельно индекс вьюпорта, может быть
+    * какое-то определенный режим отображения для конкретного кола,
+    * в рамках проекта BF предполагается, что с помощью этого параметра
+    * будет меняться способ отображения, в зависимости от viewport'а
     * @param offset оффсет, то же самое что рендер-айди
     * @param index_offset оффсет для индексов для конкретного буффера
     * @param vertex_offset оффсет для точек для конкретного буффера
     */
    void draw(
        VkCommandBuffer combuffer,
-       std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
+       size_t viewport_index,
+       std::queue< BfObj >* q,
        size_t* offset,
        size_t* index_offset,
        size_t* vertex_offset,
@@ -281,6 +287,8 @@ public:
 
    friend BfDrawControlProxy;
    BfDrawControlProxy control() { return BfDrawControlProxy(*this); };
+   virtual void prerender(size_t viewport_index) {};
+   virtual void postrender(size_t viewport_index) {};
 
    friend BfDrawDebugProxy;
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
@@ -323,6 +331,7 @@ private:
    std::unique_ptr< BfObjectBuffer > m_buffer;
    Type m_type;
    bool m_isrender;
+   mutable bool wasQueuedThisFrame = false;
 };
 
 /**

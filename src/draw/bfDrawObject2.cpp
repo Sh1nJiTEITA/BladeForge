@@ -1,5 +1,6 @@
 #include "bfDrawObject2.h"
 
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 
@@ -168,6 +169,7 @@ BfDrawControlProxy::updateBuffer(
 void
 BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
+    size_t viewport_index,
     std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
     size_t* offset,
     size_t* index_offset,
@@ -176,10 +178,10 @@ BfDrawControlProxy::draw(
 ) const
 {
    auto& g = m_obj;
+   g.prerender(viewport_index);
 
    if (g.m_type == BfDrawObjectBase::OBJECT)
    {
-      // DRAW SINGLE OBJECT
       if (g.m_isrender)
       {
          vkCmdBindPipeline(
@@ -187,6 +189,7 @@ BfDrawControlProxy::draw(
              VK_PIPELINE_BIND_POINT_GRAPHICS,
              g.m_pipeline
          );
+
          vkCmdDrawIndexed(
              combuffer,
              g.indices().size(),
@@ -195,8 +198,8 @@ BfDrawControlProxy::draw(
              *vertex_offset,
              *offset
          );
-         g.updateHoveredStatus(g.id() == hovered_id);
 
+         g.updateHoveredStatus(g.id() == hovered_id);
          auto ptr = &m_obj;
          base::g::intrstack().push([ptr]() { ptr->processInteraction(); });
       }
@@ -205,50 +208,50 @@ BfDrawControlProxy::draw(
       *index_offset += g.indices().size();
       *vertex_offset += g.vertices().size();
    }
-   else // IF LAYER
+   else // LAYER
    {
-
       std::queue< std::shared_ptr< BfDrawObjectBase > > inner_q;
+      const bool defer_render = isBuffer() && q != nullptr;
 
-      if (isBuffer() && q)
+      if (defer_render)
       {
          q->push(m_obj.shared_from_this());
-         return;
       }
-
-      if (isBuffer())
+      else
       {
-         std::vector< VkDeviceSize > vert_offset = {0};
-         // Local elements
-         vkCmdBindVertexBuffers(
-             combuffer,
-             0,
-             1,
-             &g.m_buffer.get()->vertex().raw(),
-             vert_offset.data()
-         );
+         if (isBuffer())
+         {
+            std::vector< VkDeviceSize > vert_offset = {0};
+            vkCmdBindVertexBuffers(
+                combuffer,
+                0,
+                1,
+                &g.m_buffer.get()->vertex().raw(),
+                vert_offset.data()
+            );
+            vkCmdBindIndexBuffer(
+                combuffer,
+                g.m_buffer.get()->index().raw(),
+                0,
+                VK_INDEX_TYPE_UINT32
+            );
+         }
 
-         vkCmdBindIndexBuffer(
-             combuffer,
-             g.m_buffer.get()->index().raw(),
-             0,
-             VK_INDEX_TYPE_UINT32
-         );
+         for (auto& child : g.m_children)
+         {
+            child->control().draw(
+                combuffer,
+                viewport_index,
+                q == nullptr ? &inner_q : q,
+                offset,
+                index_offset,
+                vertex_offset,
+                hovered_id
+            );
+         }
       }
 
-      for (size_t i = 0; i < g.m_children.size(); ++i)
-      {
-         // clang-format off
-          g.m_children.at(i)->control().draw(
-              combuffer,
-              q == nullptr ? &inner_q : q,
-              offset,
-              index_offset,
-              vertex_offset,
-              hovered_id
-          );
-      }
-
+      // Deferred render
       if (q == nullptr)
       {
          while (!inner_q.empty())
@@ -256,19 +259,23 @@ BfDrawControlProxy::draw(
             auto v = inner_q.front();
             inner_q.pop();
 
-            // size_t offset = 0;
             size_t ioffset = 0;
             size_t voffset = 0;
 
-            v->control().draw(combuffer,
-                              nullptr,
-                              offset,
-                              &ioffset,
-                              &voffset, 
-                              hovered_id);
+            v->control().draw(
+                combuffer,
+                viewport_index,
+                nullptr,
+                offset,
+                &ioffset,
+                &voffset,
+                hovered_id
+            );
          }
       }
    }
+
+   g.postrender(viewport_index);
 }
 
 void
@@ -280,7 +287,7 @@ BfDrawControlProxy::toggleHover(int status)
    }
    else
    {
-      m_obj.m_isHovered = static_cast<bool>(status);
+      m_obj.m_isHovered = static_cast< bool >(status);
    }
 }
 
@@ -295,7 +302,7 @@ BfDrawDebugProxy::printVertices()
    fmt::println("[DEBUG] PRINTING VERTICES BEGIN");
    for (auto v : m_obj.m_vertices)
    {
-        fmt::println("{}", v);
+      fmt::println("{}", v);
    }
    fmt::println("[DEBUG] PRINTING VERTICES END");
 }
@@ -322,11 +329,11 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_modelMatrix{1.0f}
     , m_type{type}
     , m_root{}
-    , m_isrender { true } 
+    , m_isrender{true}
 {
-   if ( type == BfDrawObjectBase::BUFFER_LAYER )
+   if (type == BfDrawObjectBase::BUFFER_LAYER)
    {
-      m_buffer = std::make_unique<BfObjectBuffer>(
+      m_buffer = std::make_unique< BfObjectBuffer >(
           sizeof(BfVertex3),
           max_vertex,
           max_obj
@@ -340,8 +347,6 @@ BfDrawObjectBase::BfDrawObjectBase(
    //    );
    // }
 }
-
-
 
 void
 BfDrawObjectBase::add(BfObj n)
@@ -442,8 +447,6 @@ BfDrawObject::make()
    throw std::runtime_error("[BfDrawObject] make() method must be implemented");
 }
 
-
-
 void
 BfDrawObject::_genIndicesStandart()
 {
@@ -458,9 +461,13 @@ BfDrawObject::_genIndicesStandart()
 
 /* BfDrawLayer */
 BfDrawLayer::BfDrawLayer(BfOTypeName typeName, Type type)
-    : BfDrawObjectBase(typeName, nullptr, type, 
-                       type == BUFFER_LAYER ? 3000 : 0, 
-                       type == BUFFER_LAYER ? 30 : 0)
+    : BfDrawObjectBase(
+          typeName,
+          nullptr,
+          type,
+          type == BUFFER_LAYER ? 3000 : 0,
+          type == BUFFER_LAYER ? 30 : 0
+      )
 {
 }
 
@@ -474,20 +481,24 @@ BfDrawLayer::make()
    }
 }
 
-std::vector< BfObj >& BfDrawObjectBase::children() { 
+std::vector< BfObj >&
+BfDrawObjectBase::children()
+{
    return m_children;
 }
 
-
 // FIXME: No idea how this should be implemented
 // For now it tries to toggle each individual nested element
-// recursivly. If some object has been already toggled -> 
+// recursivly. If some object has been already toggled ->
 // last call will switch render for it, but not for other objects
 // in single layout.
-bool BfDrawLayer::toggleRender(int sts) { 
+bool
+BfDrawLayer::toggleRender(int sts)
+{
    // BUG: segmentation fault (no idea why)
    // bool current = toggleRender(sts);
-   for (auto& child : m_children) { 
+   for (auto& child : m_children)
+   {
       child->toggleRender(sts);
    }
    return BfDrawObjectBase::toggleRender(sts);
@@ -507,5 +518,5 @@ BfDrawRootLayer::make()
       child->make();
    }
 }
-};  // namespace obj
+}; // namespace obj
 //

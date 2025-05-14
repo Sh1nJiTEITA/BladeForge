@@ -287,23 +287,7 @@ public: // PUBLIC METHODS
           sizeof(BfPushConstants),
           &c
       );
-      
 
-      // BfViewHandlesPC ch { 
-      //    .scale = glm::mat4(1.0f),
-      //    .invScale = glm::inverse(m_camera.m_scale)
-      // };
-      //
-      // vkCmdPushConstants(
-      //     command_buffer,
-      //     *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main),
-      //     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-      //     128,
-      //     sizeof(BfViewHandlesPC),
-      //     &c
-      // );
-      
-      // fmt::println("Pushing constant: {} | {}", m_camera.m_yScroll, m_camera.m_yScrollOld);
    }
    //! FIXME: Uses for each node separate vkCmdSetViewport, but can be refractored to use 
    //! Single command call

@@ -2,6 +2,7 @@
 #define BF_DRAW_OBJECT_MANAGER_H
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <queue>
@@ -131,9 +132,18 @@ public:
       // clang-format on
    }
 
-   void draw(VkCommandBuffer command_buffer)
+   void draw(VkCommandBuffer command_buffer, size_t viewport_index)
    {
       size_t obj_data_offset = 0;
+
+      if (m_prerenderVec.size() > 1000)
+      {
+         throw std::runtime_error("Prerender vector is overfulled > 1000");
+      }
+      if (m_postrenderVec.size() > 1000)
+      {
+         throw std::runtime_error("Postrender vector is overfulled > 1000");
+      }
 
       for (const auto& [type, l] : m_rootObjects)
       {
@@ -142,6 +152,7 @@ public:
 
          l->control().draw(
              command_buffer,
+             viewport_index,
              nullptr,
              &obj_data_offset,
              &index_offset,
@@ -160,9 +171,33 @@ public:
       m_rootObjects.clear();
    }
 
+   void pushPrerenderFunc(BfRenderObjFunc func)
+   {
+      m_prerenderVec.push_back(std::move(func));
+   }
+
+   void popPrerenderFunc(size_t count)
+   {
+      for (size_t i = 0; i < count; i++)
+         m_prerenderVec.pop_back();
+   }
+
+   void pushPostrenderFunc(BfRenderObjFunc func)
+   {
+      m_postrenderVec.push_back(std::move(func));
+   }
+
+   void popPostrenderFunc(size_t count)
+   {
+      for (size_t i = 0; i < count; i++)
+         m_postrenderVec.pop_back();
+   }
+
 private:
    uint32_t m_hoveredID;
    std::unordered_map< RootType, BfObj > m_rootObjects;
+   std::vector< BfRenderObjFunc > m_prerenderVec;
+   std::vector< BfRenderObjFunc > m_postrenderVec;
 };
 
 }; // namespace obj

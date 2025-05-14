@@ -726,7 +726,6 @@ MainDock::presentSectionToggleView(pSection sec) {
       sec->make();
       sec->control().updateBuffer();
    }
-   
 
    ImGui::SeparatorText("Chord");
    no_remake *= !renderBitCheckbox("Chord",             static_cast<uint32_t>(BfBladeSectionEnum::Chord), &info->renderBitSet);
