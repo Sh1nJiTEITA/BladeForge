@@ -478,6 +478,8 @@ closestPointOnLine(F&& free, L1&& line1, L2&& line2)
    return a.pos + abNorm * t;
 }
 
+glm::vec3 centerOfMass(const std::vector< BfVertex3 >& points);
+
 xt::xarray< double > bernsteinRow(int degree, double t);
 
 /**

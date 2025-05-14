@@ -176,6 +176,8 @@ public: // PUBLIC METHODS
       );
    }
 
+   
+
    auto presentButton() -> void { 
       if (m_isLeaf || m_splitType == SplitDirection::None) {
       return; 
@@ -490,6 +492,56 @@ public:
       auto& self = ViewportManager::inst();
       self.m_hoveredID = ID;
    }
+   
+   static auto presentContextMenu() -> void { 
+      auto& self = ViewportManager::inst();
+      auto current = self.currentHoveredNode() ;
+      if (!current.has_value()) return;
+
+      auto& cam = current.value().get().camera();
+
+      if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+         ImGui::OpenPopup("ViewportContextMenu");
+      }
+
+      if (ImGui::BeginPopup("ViewportContextMenu"))
+      {
+         if (ImGui::BeginMenu("Change camera projection"))
+          {
+              const bool is_pers = cam.m_mode == BfCameraMode_Perspective;
+              if (ImGui::RadioButton("Perspective", is_pers))
+              {
+                  cam.m_mode = BfCameraMode_Perspective;
+              }
+
+              const bool is_persc = cam.m_mode == BfCameraMode_PerspectiveCentered;
+              if (ImGui::RadioButton("Perspective centered", is_persc))
+              {
+                  cam.m_mode = BfCameraMode_PerspectiveCentered;
+              }
+
+              const bool is_ortho = cam.m_mode == BfCameraMode_Ortho;
+              if (ImGui::RadioButton("Orthographic", is_ortho))
+              {
+                  cam.m_mode = BfCameraMode_Ortho;
+              }
+
+              const bool is_orthoc = cam.m_mode == BfCameraMode_OrthoCentered;
+              if (ImGui::RadioButton("Orthographic centered", is_orthoc))
+              {
+                  cam.m_mode = BfCameraMode_OrthoCentered;
+              }
+
+              ImGui::EndMenu();
+          }
+         if (ImGui::MenuItem("Delete Selected"))
+         {
+            // your logic
+         }
+         ImGui::EndPopup();
+      }
+      // clang-format off
+   };
 
 private:
    auto _makeScreenViewportNode() -> std::unique_ptr< ViewPortNode >

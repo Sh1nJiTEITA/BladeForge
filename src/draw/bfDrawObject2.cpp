@@ -213,7 +213,6 @@ BfDrawControlProxy::draw(
              *index_offset,
              *vertex_offset,
              0
-             // *offset
          );
 
          g.updateHoveredStatus(g.id() == hovered_id);
@@ -221,7 +220,7 @@ BfDrawControlProxy::draw(
          base::g::intrstack().push([ptr]() { ptr->processInteraction(); });
       }
 
-      *offset += 1;
+      *offset += g.instanceCount();
       *index_offset += g.indices().size();
       *vertex_offset += g.vertices().size();
    }

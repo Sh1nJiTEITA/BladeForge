@@ -167,6 +167,21 @@ binomial(uint32_t n, uint32_t k)
    return math::factorial(n) / math::factorial(k) / math::factorial(n - k);
 }
 
+glm::vec3
+centerOfMass(const std::vector< BfVertex3 >& points)
+{
+   glm::vec3 center(0.0f);
+   if (points.empty())
+      return center;
+
+   for (const auto& p : points)
+   {
+      center += p.pos;
+   }
+   center /= static_cast< float >(points.size());
+   return center;
+};
+
 xt::xarray< double >
 bernsteinRow(int degree, double t)
 {

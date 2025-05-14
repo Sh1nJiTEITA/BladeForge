@@ -67,7 +67,8 @@ enum class BfBladeSectionEnum : uint32_t
    InletArc             = 1 << 13,
    OutletArc            = 1 << 14,
    OutputShape          = 1 << 15,
-   End                  = 1 << 16
+   MassCenter           = 1 << 16,
+   End                  = 1 << 17
 };
 // clang-format on
 
@@ -115,6 +116,7 @@ public:
       _processChain();
       _processIOArc();
       _processOutputShape();
+      _processMassCenter();
    }
 
    virtual void postmake() 
@@ -227,6 +229,8 @@ private:
 
    void _createOutputShape();
    void _processOutputShape();
+
+   void _processMassCenter();
 
 private:
    int m_outputShapeSegments = std::nanf("");

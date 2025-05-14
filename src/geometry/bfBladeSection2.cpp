@@ -690,11 +690,39 @@ BfBladeSection::_processOutputShape()
       if (std::isnan(outputShapeSegments()) || outputShapeSegments() == 0) { 
          outputShapeSegments() = v.size();
       }
-      if ( outputShapeSegments() == v.size()) { 
+      if (outputShapeSegments() == v.size()) { 
          shape->setVertices(std::move(v));
       } else { 
          shape->setVertices(curves::math::resampleCurve(v, outputShapeSegments()));
       }
+   }
+   // clang-format on
+}
+
+void
+BfBladeSection::_processMassCenter()
+{
+   // clang-format off
+   if (!_isPart< E::MassCenter >())
+   {
+      auto shape = _part< E::OutputShape, curves::BfSectionOutputShape >();
+      auto chord = _part< E::Chord, curves::BfSingleLineWH >();
+      const glm::vec3 mass_center = curves::math::centerOfMass(shape->vertices());
+      _addPartF< E::MassCenter, curves::BfCircleCenterFilled >(
+          BfVertex3(mass_center, glm::vec3(0.0f, 0.0f, 0.8f), chord->line()->first().normals()),
+          1.0f
+      );
+      fmt::println("InitialMassCenter={} | {}", mass_center, chord->line()->first().normals());
+   }
+   else
+   {
+      auto shape = _part< E::OutputShape, curves::BfSectionOutputShape >();
+      const glm::vec3 mass_center = curves::math::centerOfMass(shape->vertices());
+      auto center =_part< E::MassCenter, curves::BfCircleCenterFilled >();
+      center->center().pos() = mass_center;
+      fmt::println("MassCenter={} | {}", mass_center, center->isRender());
+      // center->make();
+      // center->debug().printVertices();
    }
    // clang-format on
 }

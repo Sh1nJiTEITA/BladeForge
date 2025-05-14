@@ -372,6 +372,7 @@ BfMain::_loop()
          node->presentRect();
       }
 
+      base::viewport::ViewportManager::presentContextMenu();
       m_gui.presentInfo();
       m_gui.presentMenuBar();
       m_gui.presentEventLog();

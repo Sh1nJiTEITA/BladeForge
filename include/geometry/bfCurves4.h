@@ -495,6 +495,8 @@ public:
       _genIndicesStandart();
    };
 
+   BfVertex3Uni& center() { return m_center; }
+
 private:
    BfVertex3Uni m_center;
    BfVar< float > m_radius;

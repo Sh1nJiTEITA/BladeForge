@@ -752,6 +752,7 @@ MainDock::presentSectionToggleView(pSection sec) {
    no_remake *= !renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
    no_remake *= !renderBitCheckbox("InletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::InletEdge), &info->renderBitSet);
    no_remake *= !renderBitCheckbox("OutletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::OutletEdge), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("MassCenter",     static_cast<uint32_t>(BfBladeSectionEnum::MassCenter), &info->renderBitSet);
    
    ImGui::SeparatorText("Output");
    no_remake *= !renderBitCheckbox("Chain",     static_cast<uint32_t>(BfBladeSectionEnum::Chain), &info->renderBitSet);
