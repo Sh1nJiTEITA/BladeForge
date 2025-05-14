@@ -331,7 +331,6 @@ private:
    std::unique_ptr< BfObjectBuffer > m_buffer;
    Type m_type;
    bool m_isrender;
-   mutable bool wasQueuedThisFrame = false;
 };
 
 /**

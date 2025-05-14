@@ -642,16 +642,16 @@ BfBladeSection::_processIOArc()
       auto iedge = _part< E::InletEdge, curves::BfEdge >();
       auto iarcv = iedge->arcVertices();
       auto iarc = _part< E::InletArc, curves::BfArcCenter >();
-      iarc->begin() = iarcv[0];
+      // iarc->begin() = iarcv[0];
       iarc->middle() = iarcv[1];
-      iarc->end() = iarcv[2];
+      // iarc->end() = iarcv[2];
 
       auto oedge = _part< E::OutletEdge, curves::BfEdge >();
       auto oarcv = oedge->arcVertices();
       auto oarc = _part< E::OutletArc, curves::BfArcCenter >();
-      oarc->begin() = oarcv[0];
+      // oarc->begin() = oarcv[0];
       oarc->middle() = oarcv[1];
-      oarc->end() = oarcv[2];
+      // oarc->end() = oarcv[2];
    }
 }
 
