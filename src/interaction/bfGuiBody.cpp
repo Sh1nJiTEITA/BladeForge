@@ -704,16 +704,23 @@ MainDock::presentSectionToggleView(pSection sec) {
    auto info = static_cast< SectionCreateInfoGui* >(sec->info().getp());
 
    const ImVec2 avail = ImGui::GetContentRegionAvail();
+   const ImVec2 bsz {avail.x, 0};
 
    ImGui::SeparatorText("Views");
-   if (ImGui::Button("All", {avail.x, 0} )) { 
+   if (ImGui::Button("All", bsz)) { 
       info->renderBitSet = UINT32_MAX;
       no_remake = false;
    }
-   if (ImGui::Button("Show/Hide handles")) { 
+   if (ImGui::Button("Show/Hide handles", bsz)) { 
       sec->toggleAllHandles(!info->isHandlesEnabled);
       info->isHandlesEnabled = !info->isHandlesEnabled;
    }
+   if (ImGui::Button("Show output shape", bsz)) { 
+      info->renderBitSet = 0;
+      info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::OutputShape);
+      no_remake = false;
+   }
+   
 
    ImGui::SeparatorText("Chord");
    no_remake *= !renderBitCheckbox("Chord",             static_cast<uint32_t>(BfBladeSectionEnum::Chord), &info->renderBitSet);

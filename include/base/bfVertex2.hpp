@@ -115,6 +115,12 @@ struct BfVertex3
       return BfVertex3{std::forward< POS >(pos), this->color, this->normals};
    }
 
+   template < typename COLOR >
+   BfVertex3 otherColor(COLOR&& color) const
+   {
+      return BfVertex3{this->pos, std::forward< COLOR >(color), this->normals};
+   }
+
    BfVertex3 otherZ(float z) const
    {
       return BfVertex3{

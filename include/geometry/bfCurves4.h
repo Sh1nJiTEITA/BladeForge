@@ -1124,6 +1124,25 @@ public:
    // clang-format on
 };
 
+class BfFree2DShape : public obj::BfDrawObject
+{
+public:
+   BfFree2DShape(std::vector< BfVertex3 >&& vert)
+       : obj::BfDrawObject{"Free 2D shape", BF_PIPELINE(BfPipelineType_Lines)}
+   {
+      setVertices(std::move(vert));
+      _genIndicesStandart();
+   }
+
+   void setVertices(std::vector< BfVertex3 >&& vert)
+   {
+      m_vertices = std::move(vert);
+      _genIndicesStandart();
+   }
+
+   virtual void make() override {}
+};
+
 }; // namespace curves
 
 } // namespace obj

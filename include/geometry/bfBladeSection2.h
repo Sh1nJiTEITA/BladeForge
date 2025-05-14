@@ -63,7 +63,8 @@ enum class BfBladeSectionEnum : uint32_t
    Chain                = 1 << 12,
    InletArc             = 1 << 13,
    OutletArc            = 1 << 14,
-   End                  = 1 << 15
+   OutputShape          = 1 << 15,
+   End                  = 1 << 16
 };
 // clang-format on
 
@@ -110,6 +111,7 @@ public:
       _processCenterCircles();
       _processChain();
       _processIOArc();
+      _processOutputShape();
    }
 
    virtual void postmake() 
@@ -126,34 +128,9 @@ public: // EXPORT
    auto inletCircle() { return _part<E::InletEdge, curves::BfEdge>(); }
    auto outletCircle() { return _part<E::OutletEdge, curves::BfEdge>(); }
    auto chain() { return _part<E::Chain, curves::BfChain>(); }
-
-   auto applyRenderToggle() -> void { 
-      for (uint32_t v = static_cast<uint32_t>(BfBladeSectionEnum::Chord);
-           v < static_cast<uint32_t>(BfBladeSectionEnum::End);
-           v <<= 1) 
-      {
-          auto section = static_cast<BfBladeSectionEnum>(v);
-          _toggleRender(section, m_info.get().renderBitSet & static_cast<uint32_t>(section));
-      }
-   };
-
-   auto toggleAllHandles(int sts = -1) -> void { 
-      std::stack< std::shared_ptr< BfDrawObjectBase > > stack;
-      for (auto ch : m_children) { 
-         stack.push(ch);
-      }
-      
-      while (!stack.empty()) { 
-         auto top = stack.top();
-         stack.pop();
-         for (auto ch : top->children()) { 
-            stack.push(ch);
-         }
-         if (auto cast = std::dynamic_pointer_cast<curves::BfHandleCircle>(top)) { 
-            top->toggleRender(sts);
-         }
-      }
-   }
+   auto applyRenderToggle() -> void;
+   auto toggleAllHandles(int sts = -1) -> void;
+   auto genOutputShape() -> std::vector<BfVertex3>;
 
 private:
 
@@ -217,6 +194,9 @@ private:
    /** @} */ // End of MathFunctions group
    void _createIOArc();
    void _processIOArc();
+
+   void _createOutputShape();
+   void _processOutputShape();
 
 private:
    BfVertex3 m_lastChordL; 

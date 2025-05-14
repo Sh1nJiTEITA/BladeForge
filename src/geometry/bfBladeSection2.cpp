@@ -17,11 +17,169 @@
 #include <glm/vector_relational.hpp>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 
 namespace obj
 {
 namespace section
 {
+void
+BfBladeSection::applyRenderToggle()
+{
+   for (uint32_t v = static_cast< uint32_t >(BfBladeSectionEnum::Chord);
+        v < static_cast< uint32_t >(BfBladeSectionEnum::End);
+        v <<= 1)
+   {
+      auto section = static_cast< BfBladeSectionEnum >(v);
+      _toggleRender(
+          section,
+          m_info.get().renderBitSet & static_cast< uint32_t >(section)
+      );
+   }
+};
+
+void
+BfBladeSection::toggleAllHandles(int sts)
+{
+   std::stack< std::shared_ptr< BfDrawObjectBase > > stack;
+   for (auto ch : m_children)
+   {
+      stack.push(ch);
+   }
+
+   while (!stack.empty())
+   {
+      auto top = stack.top();
+      stack.pop();
+      for (auto ch : top->children())
+      {
+         stack.push(ch);
+      }
+      if (auto cast = std::dynamic_pointer_cast< curves::BfHandleCircle >(top))
+      {
+         top->toggleRender(sts);
+      }
+   }
+}
+
+std::vector< BfVertex3 >
+BfBladeSection::genOutputShape()
+{
+   // clang-format off
+   if (!_isPart< E::InletArc >()) {
+      throw std::runtime_error("Cant gen output shape from blade section: No inlet arc"); 
+   }
+   if (!_isPart< E::OutletArc >()) {
+      throw std::runtime_error("Cant gen output shape from blade section: No outlet arc");
+   }
+   if (!_isPart< E::Chain >()) {
+      throw std::runtime_error("Cant gen output shape from blade section: No chain layer");
+   }
+
+   auto iarc = _part< E::InletArc, curves::BfArcCenter >();
+   auto oarc = _part< E::OutletArc, curves::BfArcCenter >();
+   auto chain = _part< E::Chain, curves::BfChain >();
+
+   if (iarc->vertices().empty()) {
+      fmt::println("No vertices in inlet arc");
+      return {};
+   }
+   if (oarc->vertices().empty()) {
+      fmt::println("No vertices in outlet arc");
+   }
+
+   size_t size = iarc->vertices().size() + oarc->vertices().size();
+   for (auto back : chain->bezierCurveChain(curves::BfChain::Back))
+   {
+      if (back->vertices().empty())
+      {
+         fmt::println("No vertices in part of back chain");
+      }
+      size += back->vertices().size();
+   }
+   for (auto front : chain->bezierCurveChain(curves::BfChain::Front))
+   {
+      if (front->vertices().empty())
+      {
+         fmt::println("No vertices in part of front chain");
+      }
+      size += front->vertices().size();
+   }
+   fmt::println("Total output vertices count={}", size);
+
+   std::vector< BfVertex3 > v;
+   v.reserve(size);
+   size_t counter = 0;
+
+   size = iarc->vertices().size();
+   for (auto vert = iarc->vertices().begin(); vert != iarc->vertices().end(); ++vert)
+   {
+      const float t = static_cast< float >(counter) / size;
+      glm::vec3 color{
+          t,
+          1 - t,
+          0,
+      };
+      v.push_back(vert->otherColor(std::move(color)));
+      counter++;
+   }
+
+   
+   //
+   
+   //
+   for (auto front : chain->bezierCurveChain(curves::BfChain::Front))
+   {
+      size = front->vertices().size();
+      counter = 0;
+      for (const auto& vert : front->vertices())
+      {
+         const float t = static_cast< float >(counter) / size;
+         glm::vec3 color{
+             t,
+             1 - t,
+             0,
+         };
+         v.push_back(vert.otherColor(std::move(color)));
+         counter++;
+      }
+   }
+
+   
+   for (const auto& vert : oarc->vertices())
+   {
+      const float t = static_cast< float >(counter) / size;
+      glm::vec3 color{
+          t,
+          1 - t,
+          0,
+      };
+      v.push_back(vert.otherColor(std::move(color)));
+      counter++;
+   }
+
+   auto back_chain = chain->bezierCurveChain(curves::BfChain::Back);
+   for (auto back = back_chain.rbegin(); back != back_chain.rend(); ++back) {
+      size = (*back)->vertices().size();
+      counter = 0;
+      for (auto vert = (*back)->vertices().rbegin(); vert != (*back)->vertices().rend(); ++vert)
+      {
+         const float t = static_cast< float >(counter) / size;
+         glm::vec3 color{
+             t,
+             1 - t,
+             0,
+         };
+         v.push_back(vert->otherColor(std::move(color)));
+         counter++;
+      }
+   }
+
+   // fmt::println("Done {}/{}", counter, size);
+
+   return v;
+}
+
 bool
 BfBladeSection::_isChordChanged()
 {
@@ -504,6 +662,27 @@ BfBladeSection::_processChain()
    chain->z() = m_info.get().z;
    // chain->addUpdateLines();
    // chain->addUpdateLines();
+}
+
+void
+BfBladeSection::_createOutputShape()
+{
+}
+
+void
+BfBladeSection::_processOutputShape()
+{
+   if (!_isPart< E::OutputShape >())
+   {
+      std::vector< BfVertex3 > v = genOutputShape();
+      _addPartF< E::OutputShape, curves::BfFree2DShape >(std::move(v));
+   }
+   else
+   {
+      std::vector< BfVertex3 > v = genOutputShape();
+      auto oshape = _part< E::OutputShape, curves::BfFree2DShape >();
+      oshape->setVertices(std::move(v));
+   }
 }
 
 }; // namespace section
