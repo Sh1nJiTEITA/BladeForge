@@ -3022,99 +3022,10 @@ bfMainRecordCommandBuffer(BfBase& base)
          auto viewport = it.next();
          if (viewport->isLeaf()) { 
             bfPushConstants(local_buffer, viewport_index);
-            fmt::println("{} | render", viewport_index);
-            // FIXME: Using pre/post render push/pop function logic 
-            // can not be cheap, so mb it is a good idea to move this
-            // BfDrawObjectBase virtual method to override for individual
-            // object usage
-            // if (viewport_index == 0) { 
-            //    auto& dman = obj::BfDrawManager::inst();
-            //    // dman.pushPrerenderFunc([](obj::BfObj obj){
-            //    //    if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //    //       section->viewFormattingShapeOnly(); 
-            //    //    }
-            //    // });
-            //    // dman.pushPostrenderFunc([](obj::BfObj obj){
-            //    //    if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //    //       section->revertView();
-            //    //    }
-            //    // });
-            //    viewport->appRender(local_buffer, [&local_buffer]() {
-            //       obj::BfDrawManager::inst().draw(local_buffer);
-            //    });
-            //    // dman.popPostrenderFunc(1);
-            //    // dman.popPrerenderFunc(1);
-            //
-            // } else if (viewport_index == 1) { 
-            //    auto& dman = obj::BfDrawManager::inst();
-            //    dman.pushPrerenderFunc([&viewport_index](obj::BfObj obj){
-            //       if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //          fmt::println("{} | {} | Applying", viewport_index, base::g::currentFrame());
-            //          section->viewOutputShapeOnly(); 
-            //       }
-            //    });
-            //    dman.pushPostrenderFunc([&viewport_index](obj::BfObj obj){
-            //       if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //          section->revertView();
-            //          fmt::println("{} | {} | Applying back", viewport_index, base::g::currentFrame());
-            //       }
-            //    });
-            //    viewport->appRender(local_buffer, [&local_buffer]() {
-            //       obj::BfDrawManager::inst().draw(local_buffer);
-            //    });
-            //    fmt::println("");
-            //    dman.popPostrenderFunc(1);
-            //    dman.popPrerenderFunc(1);
-            // }
             viewport->appRender(local_buffer, [&]() {
                obj::BfDrawManager::inst().draw(local_buffer, viewport_index);
             });
             viewport_index++;
-
-
-
-
-            // bfPushConstants(local_buffer, viewport_index++);
-            // if (viewport_index - 1 == 0) { 
-            //    viewport->appRender(local_buffer, [&local_buffer]() {
-            //       auto& dman = obj::BfDrawManager::inst();
-            //       dman.pushPrerenderFunc([](obj::BfObj obj){
-            //          if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //             section->viewFormattingShapeOnly(); 
-            //          }
-            //       });
-            //       dman.pushPostrenderFunc([](obj::BfObj obj){
-            //          if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //             section->revertView();
-            //          }
-            //       });
-            //       dman.draw(local_buffer);
-            //       dman.popPostrenderFunc(1);
-            //       dman.popPrerenderFunc(1);
-            //    });
-            // } else if (viewport_index - 1 == 1) { 
-            //    auto& dman = obj::BfDrawManager::inst();
-            //    dman.pushPrerenderFunc([](obj::BfObj obj){
-            //       if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //          section->viewOutputShapeOnly(); 
-            //       }
-            //    });
-            //    dman.pushPostrenderFunc([](obj::BfObj obj){
-            //       if (auto section = std::dynamic_pointer_cast<obj::section::BfBladeSection>(obj)) {
-            //          section->revertView();
-            //       }
-            //    });
-            //    dman.draw(local_buffer);
-            //    dman.popPostrenderFunc(1);
-            //    dman.popPrerenderFunc(1);
-            // }
-
-
-
-
-
-
-
          }
       }
 

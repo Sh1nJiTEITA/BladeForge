@@ -37,9 +37,15 @@ BfPipelineHandler::createLayout(
       .offset = 0,
       .size = sizeof(BfPushConstants)
    };
+   auto rangePCPerObject = VkPushConstantRange { 
+      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+      .offset = sizeof(BfPushConstants),
+      .size = sizeof(BfPushConstantsPerObject)
+   };
 
    std::vector< VkPushConstantRange > PC { 
-      rangePC
+      rangePC,
+      rangePCPerObject
    };
 
    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};

@@ -3,6 +3,7 @@
 
 layout(push_constant) uniform PushConstants {
     int viewport_index;
+    int object_index;
 } pc;
 
 struct ObjectData {
@@ -63,7 +64,7 @@ mat4 translate(vec3 delta) {
 
 void main() {
     ViewData view_data = MVUBO.view_data[pc.viewport_index];
-    ObjectData data  = obj_data_buffer.obj_data[gl_BaseInstance];
+    ObjectData data  = obj_data_buffer.obj_data[pc.object_index];
 
     vec4 scaled_pos = translate(data.center.xyz)
                     * inverse(view_data.scale) 
@@ -76,11 +77,11 @@ void main() {
              * scaled_pos;
 
 
-    outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[gl_BaseInstance].model_matrix))) * inNormals; 
+    outNormals = mat3(transpose(inverse(obj_data_buffer.obj_data[pc.object_index].model_matrix))) * inNormals; 
     gl_Position = coo;
-    obj_index = gl_BaseInstance;
+    obj_index = pc.object_index;
  
-    if (obj_data_buffer.obj_data[gl_BaseInstance].id == ubo.id_on_cursor) {                
+    if (obj_data_buffer.obj_data[pc.object_index].id == ubo.id_on_cursor) {                
         fragColor = vec3(0.0, 1.0, 0.5);
     }
     else {

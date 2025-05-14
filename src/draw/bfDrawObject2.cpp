@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "bfTypeManager.h"
+#include "bfUniforms.h"
 
 namespace obj
 {
@@ -43,11 +44,15 @@ BfDrawControlProxy::mapModel(
    // to descriptor and add offset
    if (g.m_type == BfDrawObjectBase::OBJECT)
    {
-      BfObjectData obj_data = g._objectData();
+      std::vector< BfObjectData > obj_data = g._objectData();
+      assert(
+          obj_data.size() == g.instanceCount() &&
+          "Instance count and return of _objectData are not the same"
+      );
       memcpy(
           reinterpret_cast< char* >(data) + offset,
-          &obj_data,
-          sizeof(BfObjectData)
+          obj_data.data(),
+          sizeof(BfObjectData) * obj_data.size()
       );
       offset += sizeof(BfObjectData);
    }
@@ -190,13 +195,25 @@ BfDrawControlProxy::draw(
              g.m_pipeline
          );
 
+         vkCmdPushConstants(
+             combuffer,
+             *BfPipelineHandler::instance()->getLayout(
+                 BfPipelineLayoutType_Main
+             ),
+             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+             sizeof(BfPushConstants),
+             sizeof(BfPushConstantsPerObject),
+             offset
+         );
+
          vkCmdDrawIndexed(
              combuffer,
              g.indices().size(),
-             1,
+             g.instanceCount(),
              *index_offset,
              *vertex_offset,
-             *offset
+             0
+             // *offset
          );
 
          g.updateHoveredStatus(g.id() == hovered_id);
@@ -330,6 +347,7 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_type{type}
     , m_root{}
     , m_isrender{true}
+    , m_instanceCount{1}
 {
    if (type == BfDrawObjectBase::BUFFER_LAYER)
    {
@@ -410,15 +428,15 @@ BfDrawObjectBase::root()
    throw std::runtime_error("Reached top of tree but no buffer found.");
 }
 
-BfObjectData
+std::vector< BfObjectData >
 BfDrawObjectBase::_objectData()
 {
    return {
-       .model_matrix = m_modelMatrix,
-       .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
-       .index = 0,
-       .id = id(),
-       .line_thickness = 0.00025f
+       {.model_matrix = m_modelMatrix,
+        .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+        .index = 0,
+        .id = id(),
+        .line_thickness = 0.00025f}
    };
 }
 

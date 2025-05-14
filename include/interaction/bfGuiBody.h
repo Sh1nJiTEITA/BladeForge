@@ -16,6 +16,7 @@ namespace gui
 
 
 using inputTableField = std::variant< int*, float* >;
+using inputTableFieldSpeed = std::variant< int, float >;
 using pSection = std::shared_ptr< obj::section::BfBladeSection >;
 using pImage = std::shared_ptr< obj::curves::BfTexturePlane >;
 using pBody = std::shared_ptr< obj::body::BfBladeBody >;
@@ -33,6 +34,7 @@ using pBody = std::shared_ptr< obj::body::BfBladeBody >;
 bool presentBladeSectionTable(
    const char* label, 
    inputTableField values[], 
+   inputTableFieldSpeed speeds[],
    const char* names[], 
    int count
 );

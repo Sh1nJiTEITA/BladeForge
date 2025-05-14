@@ -4,6 +4,7 @@
 
 layout(push_constant) uniform PushConstants {
     int viewport_index;
+    int object_index;
 } pc;
 
 struct ObjectData {
@@ -61,14 +62,15 @@ void main() {
     vec4 coo = view_data.scale 
              * view_data.proj 
              * view_data.view 
-             * obj_data_buffer.obj_data[gl_BaseInstance].model_matrix 
+             // * obj_data_buffer.obj_data[gl_BaseInstance + gl_InstanceIndex].model_matrix 
+             * obj_data_buffer.obj_data[pc.object_index + gl_InstanceIndex].model_matrix 
              * vec4(inPosition, 1.0);
 
     outNormals = inNormals;
     gl_Position = coo;
-    obj_index = gl_BaseInstance;
+    obj_index = pc.object_index;
 
-    if (obj_data_buffer.obj_data[gl_BaseInstance].id == ubo.id_on_cursor) {
+    if (obj_data_buffer.obj_data[pc.object_index].id == ubo.id_on_cursor) {
         fragColor = vec3(0.0, 1.0, 0.5);
     }
     else {

@@ -216,7 +216,7 @@ BfChain::addUpdateLines()
    auto lit = m_list.begin();
    auto rit = std::next(lit);
 
-   fmt::println("-------------------------------");
+   // fmt::println("-------------------------------");
    while (rit != m_list.end())
    {
       auto l = upgrade(*lit);
@@ -258,16 +258,16 @@ BfChain::addUpdateLines()
       auto rback_con = r->backConnections();
       rback_con.first.pos() = back_intersection;
 
-      fmt::println(
-          "z={}|tf={}, \t tb={}, \t f={} \t b={}",
-          z,
-          lfront_tang.get().pos,
-          lback_tang.get().pos,
-          // lfront_dir,
-          // lback_dir,
-          front_intersection,
-          back_intersection
-      );
+      // fmt::println(
+      //     "z={}|tf={}, \t tb={}, \t f={} \t b={}",
+      //     z,
+      //     lfront_tang.get().pos,
+      //     lback_tang.get().pos,
+      //     // lfront_dir,
+      //     // lback_dir,
+      //     front_intersection,
+      //     back_intersection
+      // );
 
       // FRONT
       auto lfront_con = l->frontConnections();

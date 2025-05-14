@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iterator>
+#include <type_traits>
 
 namespace gui
 {
@@ -19,6 +20,7 @@ bool
 presentBladeSectionTable(
    const char* label, 
    inputTableField values[], 
+   inputTableFieldSpeed speeds[],
    const char* names[], 
    int count
 )
@@ -47,22 +49,23 @@ presentBladeSectionTable(
          );
 
          is_changed = is_changed || std::visit(
-             [&field_name](auto&& arg) {
+             [&field_name](auto&& arg, auto&& speed) {
                 using T = std::remove_reference_t< decltype(arg) >;
-                if constexpr (std::is_same_v< T, int* >)
+                using S = std::decay_t< decltype(speed) >;
+                if constexpr (std::is_same_v< T, int* > && std::is_same_v<S, int>)
                 {
-                   return ImGui::InputInt(field_name.c_str(), arg);
+                   return ImGui::InputInt(field_name.c_str(), arg, speed);
                 }
-                else if constexpr (std::is_same_v< T, float* >)
+                else if constexpr (std::is_same_v< T, float* > && std::is_same_v<S, float>)
                 {
-                   return ImGui::InputFloat(field_name.c_str(), arg);
+                   return ImGui::DragFloat(field_name.c_str(), arg, speed);
                 }
                 else
                 {
                    return false;
                 }
              },
-             values[i]
+             values[i], speeds[i]
          );
          ImGui::PopStyleColor();
       }
@@ -269,25 +272,25 @@ presentBladeSectionCreateWindow(pSection sec)
    if (ImGui::Begin(makeTitle("Parameters", index).c_str()))
    {
       // clang-format off
-      inputTableField outer_values[] = { &info->chord, &info->installAngle };
-      const char* outer_names[] = {"Chord", "Install Angle"};
-      no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
-
-      ImGui::SeparatorText("Average curve");
-      inputTableField ave_values[] = {&info->initialBezierCurveOrder};
-      const char* ave_names[] = {"Average curve order" };
-      no_remake *= !presentBladeSectionTable("Ave", ave_values, ave_names, 1);
-
-      ImGui::SeparatorText("Inlet");
-      inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
-      const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
-      no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
-
-      ImGui::SeparatorText("Outlet");
-      inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
-      const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
-      no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
-      no_remake *= !presentCenterCirclesEditor(info->centerCircles);
+      // inputTableField outer_values[] = { &info->chord, &info->installAngle };
+      // const char* outer_names[] = {"Chord", "Install Angle"};
+      // no_remake *= !presentBladeSectionTable("Outer", outer_values, outer_names, 2);
+      //
+      // ImGui::SeparatorText("Average curve");
+      // inputTableField ave_values[] = {&info->initialBezierCurveOrder};
+      // const char* ave_names[] = {"Average curve order" };
+      // no_remake *= !presentBladeSectionTable("Ave", ave_values, ave_names, 1);
+      //
+      // ImGui::SeparatorText("Inlet");
+      // inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
+      // const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
+      // no_remake *= !presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
+      //
+      // ImGui::SeparatorText("Outlet");
+      // inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
+      // const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
+      // no_remake *= !presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
+      // no_remake *= !presentCenterCirclesEditor(info->centerCircles);
       // clang-format on
    }
    ImGui::End();
@@ -645,24 +648,28 @@ MainDock::presentSectionParameters(pSection sec)
    if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
    {
       // clang-format off
-      inputTableField outer_values[] = { &info->chord, &info->installAngle };
-      const char* outer_names[] = {"Chord", "Install Angle"};
-      is_changed = is_changed || presentBladeSectionTable("Outer", outer_values, outer_names, 2);
+      inputTableField outer_values[] = { &info->chord, &info->installAngle, &info->step };
+      inputTableFieldSpeed outer_speeds[] = { 0.001f, 0.5f, 0.01f };
+      const char* outer_names[] = {"Chord", "Install Angle", "Step"};
+      is_changed = is_changed || presentBladeSectionTable("Outer", outer_values, outer_speeds, outer_names, 3);
 
       ImGui::SeparatorText("Average curve");
       inputTableField ave_values[] = {&info->initialBezierCurveOrder};
+      inputTableFieldSpeed ave_speeds[] = { 1 };
       const char* ave_names[] = {"Average curve order" };
-      is_changed = is_changed || presentBladeSectionTable("Ave", ave_values, ave_names, 1);
+      is_changed = is_changed || presentBladeSectionTable("Ave", ave_values, ave_speeds, ave_names, 1);
 
       ImGui::SeparatorText("Inlet");
       inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
+      inputTableFieldSpeed inlet_speeds[] = { 0.5f, 0.001f };
       const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Inlet", inlet_values, inlet_names, 2);
+      is_changed = is_changed || presentBladeSectionTable("Inlet", inlet_values, inlet_speeds, inlet_names, 2);
 
       ImGui::SeparatorText("Outlet");
       inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
+      inputTableFieldSpeed outlet_speeds[] = { 0.5f, 0.001f };
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Outlet", outlet_values, outlet_names, 2);
+      is_changed = is_changed || presentBladeSectionTable("Outlet", outlet_values, outlet_speeds, outlet_names, 2);
    }
    ImGui::End();
 

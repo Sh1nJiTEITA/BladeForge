@@ -32,6 +32,7 @@ struct SectionCreateInfo
 
    float chord = 1.0f;
    float installAngle = 80.0f;
+   float step = 0.4f;
 
    bool isEqMode = false;
    float inletAngle = 180.0f - 66.0f - 30.f;
@@ -142,6 +143,7 @@ public: // EXPORT
    virtual void prerender(size_t viewport_index) override { 
       switch (viewport_index) {
       case 0: 
+         viewFormattingShapeOnly();
          break;
       case 1:
          viewOutputShapeOnly(); 
@@ -151,6 +153,7 @@ public: // EXPORT
    virtual void postrender(size_t viewport_index) override { 
       switch (viewport_index) {
       case 0: 
+         revertView();
          break;
       case 1:
          revertView();

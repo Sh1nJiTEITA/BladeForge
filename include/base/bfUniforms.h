@@ -30,5 +30,9 @@ struct BfPushConstants
 {
    alignas(4) uint32_t viewport_index;
 };
+struct BfPushConstantsPerObject
+{
+   alignas(4) uint32_t object_index;
+};
 
 #endif

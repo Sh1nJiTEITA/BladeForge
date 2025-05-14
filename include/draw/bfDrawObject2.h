@@ -110,7 +110,7 @@ public:
     *
     * @note Используется для LAYER & OBJECT
     *
-    * @param frame_index  TODO: deprecate
+    * @param frame_index
     * @param offset ...
     * @param data указатель на открытую для мапа память
     */
@@ -310,11 +310,12 @@ public:
    }
 
    bool isRender() { return m_isrender; }
+   uint32_t instanceCount() { return m_instanceCount; }
 
    std::vector< BfObj >& children();
 
 protected:
-   virtual BfObjectData _objectData();
+   virtual std::vector< BfObjectData > _objectData();
    void _assignRoots();
 
 protected:
@@ -323,6 +324,7 @@ protected:
 
    std::vector< BfVertex3 > m_vertices;
    std::vector< BfIndex > m_indices;
+   uint32_t m_instanceCount;
 
    BfObjWeak m_root;
    std::vector< BfObj > m_children;

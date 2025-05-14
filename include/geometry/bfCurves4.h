@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fmt/base.h>
 #include <glm/common.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/fwd.hpp>
@@ -126,8 +127,8 @@ public:
 
 protected:
 
-   virtual BfObjectData _objectData() override { 
-      return {
+   virtual std::vector<BfObjectData> _objectData() override { 
+      return {{
           .model_matrix = /*  */
             glm::translate(center().pos()) * 
             glm::inverse(BfCamera::instance()->m_scale) * 
@@ -139,7 +140,7 @@ protected:
           // .index = 0,
           .id = id(),
           .line_thickness = 0.00025f,
-      };
+      }};
    }
 
 private:
@@ -168,8 +169,8 @@ public:
    void resetPos();
 
 protected:
-   virtual BfObjectData _objectData()override { 
-      return {
+   virtual std::vector<BfObjectData> _objectData()override { 
+      return {{
           .model_matrix = /*  */
             glm::translate(center().pos()) * 
             glm::inverse(BfCamera::instance()->m_scale) * 
@@ -181,7 +182,7 @@ protected:
           .index = 0,
           .id = id(),
           .line_thickness = 0.00025f,
-      };
+      }};
    }
 
 private:
@@ -946,14 +947,14 @@ public:
       m_indices = {0, 1, 2, 2, 0, 3};
    }
 
-   virtual BfObjectData _objectData() override
+   virtual std::vector< BfObjectData > _objectData() override
    {
       return {
-          .model_matrix = m_modelMatrix,
-          .select_color = glm::vec4(m_transp, 0.5f, 0.0f, 1.0f),
-          .index = static_cast< uint32_t >(m_isLocked ? 1 : 0),
-          .id = id(),
-          .line_thickness = 0.00025f
+          {.model_matrix = m_modelMatrix,
+           .select_color = glm::vec4(m_transp, 0.5f, 0.0f, 1.0f),
+           .index = static_cast< uint32_t >(m_isLocked ? 1 : 0),
+           .id = id(),
+           .line_thickness = 0.00025f}
       };
    }
 
@@ -1141,6 +1142,65 @@ public:
    }
 
    virtual void make() override {}
+};
+
+class BfSectionOutputShape : public BfFree2DShape
+{
+public:
+   BfSectionOutputShape(
+       std::vector< BfVertex3 >&& vert,
+       BfVar< float > installAngle,
+       BfVar< float > step
+
+   )
+       : BfFree2DShape{std::move(vert)}
+       , m_installAngle(std::move(installAngle))
+       , m_sectionStep(std::move(step))
+   {
+      m_instanceCount = 2;
+   }
+
+protected:
+   virtual std::vector< BfObjectData > _objectData() override
+   {
+      // clang-format off
+      const glm::vec3 normal = m_vertices.front().normals;
+      const float angle_degrees = 90.f - m_installAngle.get();
+      const float angle_rad = glm::radians(angle_degrees);
+      const glm::mat4 installAngleRotation = glm::rotate(
+         glm::mat4(1.0f),
+         angle_rad,
+         normal
+      );
+      const glm::mat4 stepTranslation = glm::translate(glm::vec3(
+         0.0f, 
+         -m_sectionStep.get(),
+         0.0f 
+      ));
+
+      return {
+          {.model_matrix = installAngleRotation,
+           .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+           .index = 0,
+           .id = id(),
+           .line_thickness = 0.00025f},
+
+          {.model_matrix = installAngleRotation * stepTranslation,
+           .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+           .index = 0,
+           .id = id(),
+           .line_thickness = 0.00025f}
+      };
+
+      // clang-format on
+   }
+
+   BfVar< float >& step() { return m_sectionStep; }
+   BfVar< float >& installAngle() { return m_installAngle; }
+
+private:
+   BfVar< float > m_installAngle;
+   BfVar< float > m_sectionStep;
 };
 
 }; // namespace curves

@@ -105,7 +105,7 @@ BfBladeSection::genOutputShape()
       }
       size += front->vertices().size();
    }
-   fmt::println("Total output vertices count={}", size);
+   // fmt::println("Total output vertices count={}", size);
 
    std::vector< BfVertex3 > v;
    v.reserve(size);
@@ -676,12 +676,16 @@ BfBladeSection::_processOutputShape()
    if (!_isPart< E::OutputShape >())
    {
       std::vector< BfVertex3 > v = genOutputShape();
-      auto shape = _addPartF< E::OutputShape, curves::BfFree2DShape >(std::move(v));
+      auto shape = _addPartF< E::OutputShape, curves::BfSectionOutputShape  >(
+         std::move(v),
+         BfVar< float >(&m_info.get().installAngle),
+         BfVar< float >(&m_info.get().step)
+      );
       outputShapeSegments() = v.size();
    }
    else
    {
-      auto shape = _part< E::OutputShape, curves::BfFree2DShape >();
+      auto shape = _part< E::OutputShape, curves::BfSectionOutputShape >();
       std::vector< BfVertex3 > v = genOutputShape();
       if (std::isnan(outputShapeSegments()) || outputShapeSegments() == 0) { 
          outputShapeSegments() = v.size();
@@ -700,7 +704,6 @@ BfBladeSection::viewOutputShapeOnly()
 {
    // clang-format off
    //
-   fmt::println("new view");
    m_lastRenderBitSet = m_info.get().renderBitSet;
    m_info.get().renderBitSet = 0;
    m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
@@ -713,14 +716,13 @@ BfBladeSection::viewFormattingShapeOnly()
 {
    // clang-format off
    m_lastRenderBitSet = m_info.get().renderBitSet;
-   // m_info.get().renderBitSet = UINT32_MAX;
+   m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
    
    applyRenderToggle();
 }
 
 void BfBladeSection::revertView() 
 { 
-   fmt::println("Reverting view");
    if (m_isOutputShapeWasEnabled) { 
       m_info.get().renderBitSet = m_lastRenderBitSet;
       applyRenderToggle();
