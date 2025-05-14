@@ -720,6 +720,12 @@ MainDock::presentSectionToggleView(pSection sec) {
       info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::OutputShape);
       no_remake = false;
    }
+   ImGui::SetNextItemWidth(avail.x * 0.25f);
+   if (ImGui::DragInt("Output shape segments", &sec->outputShapeSegments())) { 
+      sec->outputShapeSegments() = glm::abs(sec->outputShapeSegments());
+      sec->make();
+      sec->control().updateBuffer();
+   }
    
 
    ImGui::SeparatorText("Chord");

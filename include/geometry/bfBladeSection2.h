@@ -1,6 +1,7 @@
 #ifndef BF_NEW_BLADESECTION2_H
 #define BF_NEW_BLADESECTION2_H
 
+#include <cmath>
 #include <fmt/base.h>
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
@@ -131,6 +132,9 @@ public: // EXPORT
    auto applyRenderToggle() -> void;
    auto toggleAllHandles(int sts = -1) -> void;
    auto genOutputShape() -> std::vector<BfVertex3>;
+   auto outputShapeSegments() -> int& { 
+      return m_outputShapeSegments;
+   }
 
 private:
 
@@ -199,6 +203,8 @@ private:
    void _processOutputShape();
 
 private:
+   int m_outputShapeSegments = std::nanf("");
+
    BfVertex3 m_lastChordL; 
    BfVertex3 m_lastChordR; 
 

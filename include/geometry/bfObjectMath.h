@@ -711,6 +711,9 @@ public:
 };
 
 
+std::vector<BfVertex3> resampleCurve(const std::vector<BfVertex3>& originalVertices, size_t targetCount);
+
+
 
 }  // namespace math
 }  // namespace curves

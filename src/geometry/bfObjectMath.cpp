@@ -179,6 +179,57 @@ bernsteinRow(int degree, double t)
    return row;
 }
 
+std::vector< BfVertex3 >
+resampleCurve(
+    const std::vector< BfVertex3 >& originalVertices, size_t targetCount
+)
+{
+   using glm::distance;
+   if (originalVertices.size() < 2 || targetCount < 2)
+      return originalVertices;
+
+   // Step 1: Compute cumulative arc length
+   std::vector< float > arcLengths;
+   arcLengths.push_back(0.0f);
+   for (size_t i = 1; i < originalVertices.size(); ++i)
+   {
+      float d =
+          glm::distance(originalVertices[i - 1].pos, originalVertices[i].pos);
+      arcLengths.push_back(arcLengths.back() + d);
+   }
+
+   float totalLength = arcLengths.back();
+
+   // Step 2: Create target samples evenly spaced in arc length
+   std::vector< BfVertex3 > result;
+   result.reserve(targetCount);
+
+   size_t j = 0;
+   for (size_t i = 0; i < targetCount; ++i)
+   {
+      float targetDist = (totalLength * i) / (targetCount - 1);
+
+      // Find segment [j, j+1] such that arcLengths[j] <= targetDist <
+      // arcLengths[j+1]
+      while (j + 1 < arcLengths.size() && arcLengths[j + 1] < targetDist)
+         ++j;
+
+      if (j + 1 == arcLengths.size())
+      {
+         result.push_back(originalVertices.back());
+         continue;
+      }
+
+      float t =
+          (targetDist - arcLengths[j]) / (arcLengths[j + 1] - arcLengths[j]);
+      const auto& p0 = originalVertices[j];
+      const auto& p1 = originalVertices[j + 1];
+      result.push_back(p0.otherPos(glm::mix(p0.pos, p1.pos, t)));
+   }
+
+   return result;
+}
+
 } // namespace math
 } // namespace curves
 } // namespace obj

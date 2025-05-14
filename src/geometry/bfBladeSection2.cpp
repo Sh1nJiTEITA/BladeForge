@@ -672,17 +672,27 @@ BfBladeSection::_createOutputShape()
 void
 BfBladeSection::_processOutputShape()
 {
+   // clang-format off
    if (!_isPart< E::OutputShape >())
    {
       std::vector< BfVertex3 > v = genOutputShape();
-      _addPartF< E::OutputShape, curves::BfFree2DShape >(std::move(v));
+      auto shape = _addPartF< E::OutputShape, curves::BfFree2DShape >(std::move(v));
+      outputShapeSegments() = v.size();
    }
    else
    {
+      auto shape = _part< E::OutputShape, curves::BfFree2DShape >();
       std::vector< BfVertex3 > v = genOutputShape();
-      auto oshape = _part< E::OutputShape, curves::BfFree2DShape >();
-      oshape->setVertices(std::move(v));
+      if (std::isnan(outputShapeSegments()) || outputShapeSegments() == 0) { 
+         outputShapeSegments() = v.size();
+      }
+      if ( outputShapeSegments() == v.size()) { 
+         shape->setVertices(std::move(v));
+      } else { 
+         shape->setVertices(curves::math::resampleCurve(v, outputShapeSegments()));
+      }
    }
+   // clang-format on
 }
 
 }; // namespace section
