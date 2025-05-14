@@ -720,7 +720,25 @@ BfBladeSection::_processMassCenter()
       const glm::vec3 mass_center = curves::math::centerOfMass(shape->vertices());
       auto center =_part< E::MassCenter, curves::BfCircleCenterFilled >();
       center->center().pos() = mass_center;
-      // center->debug().printVertices();
+   }
+   // clang-format on
+}
+
+void
+BfBladeSection::_processTriangularShape()
+{
+   // clang-format off
+   if (!_isPart< E::TriangularShape >())
+   {
+      auto l = _addPartF<E::TriangularShape, obj::BfDrawLayer>("Triangular shape");
+      auto t = triangulate();
+      l->children() = std::move(t);
+   }
+   else
+   {
+      auto l = _part<E::TriangularShape, obj::BfDrawLayer>();
+      auto t = triangulate();
+      l->children() = std::move(t);
    }
    // clang-format on
 }
@@ -754,6 +772,81 @@ void BfBladeSection::revertView()
       applyRenderToggle();
       m_isOutputShapeWasEnabled = false;
    }
+}
+
+// clang-format on
+void
+BfBladeSection::prerender(size_t viewport_index)
+{
+   switch (viewport_index)
+   {
+   case 0:
+      viewFormattingShapeOnly();
+      break;
+   case 1:
+      viewOutputShapeOnly();
+      break;
+   };
+};
+
+void
+BfBladeSection::postrender(size_t viewport_index)
+{
+   switch (viewport_index)
+   {
+   case 0:
+      revertView();
+      break;
+   case 1:
+      revertView();
+      break;
+   };
+};
+
+std::vector< BfObj >
+BfBladeSection::triangulate()
+{
+   // clang-format off
+   std::vector< BfObj > o;
+
+   auto iedge = _part< E::InletEdge, curves::BfEdge >();
+   const BfVertex3 ic = iedge->circle()->centerVertex();
+   auto iarc = _part< E::InletArc, curves::BfArcCenter >();
+   auto& iarcv = iarc->vertices();
+   
+   // FIXME: Fix if entire section logic of creation will 
+   // be refractored (multiple make initial calls)
+   if (iarcv.empty()) return {};
+   
+   for (size_t i = 0; i < iarcv.size() - 1; ++i)
+   {
+      auto t = std::make_shared< curves::BfTriangle >(
+          BfVertex3Uni(ic),
+          BfVertex3Uni(iarcv[i]),
+          BfVertex3Uni(iarcv[i + 1])
+      );
+      o.push_back(std::move(t));
+   }
+
+   auto oedge = _part< E::OutletEdge, curves::BfEdge >();
+   const BfVertex3 oc = oedge->circle()->centerVertex();
+   auto oarc = _part< E::OutletArc, curves::BfArcCenter >();
+   auto& oarcv = oarc->vertices();
+   
+   if (iarcv.empty()) return {};
+   
+   for (size_t i = 0; i < iarcv.size() - 1; ++i)
+   {
+      auto t = std::make_shared< curves::BfTriangle >(
+          BfVertex3Uni(oc),
+          BfVertex3Uni(oarcv[i]),
+          BfVertex3Uni(oarcv[i + 1])
+      );
+      o.push_back(std::move(t));
+   }
+
+   return o;
+   // clang-format on
 }
 
 }; // namespace section

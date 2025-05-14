@@ -68,7 +68,8 @@ enum class BfBladeSectionEnum : uint32_t
    OutletArc            = 1 << 14,
    OutputShape          = 1 << 15,
    MassCenter           = 1 << 16,
-   End                  = 1 << 17
+   TriangularShape      = 1 << 17,
+   End                  = 1 << 18
 };
 // clang-format on
 
@@ -117,6 +118,7 @@ public:
       _processIOArc();
       _processOutputShape();
       _processMassCenter();
+      _processTriangularShape();
    }
 
    virtual void postmake() 
@@ -142,27 +144,10 @@ public: // EXPORT
    auto viewFormattingShapeOnly() -> void; 
    auto revertView() -> void; 
 
-   virtual void prerender(size_t viewport_index) override { 
-      switch (viewport_index) {
-      case 0: 
-         viewFormattingShapeOnly();
-         break;
-      case 1:
-         viewOutputShapeOnly(); 
-         break;
-      };
-   };
-   virtual void postrender(size_t viewport_index) override { 
-      switch (viewport_index) {
-      case 0: 
-         revertView();
-         break;
-      case 1:
-         revertView();
-         break;
-      };
+   virtual void prerender(size_t viewport_index) override;
+   virtual void postrender(size_t viewport_index) override;
 
-   };
+   auto triangulate() -> std::vector< BfObj >;
 
 private:
 
@@ -231,6 +216,8 @@ private:
    void _processOutputShape();
 
    void _processMassCenter();
+   
+   void _processTriangularShape();
 
 private:
    int m_outputShapeSegments = std::nanf("");

@@ -149,6 +149,9 @@ private:
    bool m_isChanged = false;
 };
 
+
+
+
 class BfHandleRectangle : public BfDrawObject 
                         , public virtual BfHandleBehavior
 {
@@ -209,6 +212,58 @@ private:
 //
 //
 //
+
+class BfTriangle : public obj::BfDrawObject { 
+public:
+
+   BfTriangle(BfVertex3Uni v1, BfVertex3Uni v2, BfVertex3Uni v3)
+       : obj:: BfDrawObject{"Triangle", BF_PIPELINE(BfPipelineType_Lines), 10}
+       , m_first(std::move(v1))
+       , m_second(std::move(v2))
+       , m_third(std::move(v3))
+   {
+   }
+   
+   virtual void make() override { 
+      m_vertices.clear();
+      m_indices.clear();
+
+      m_vertices = { 
+         m_first.get(),
+         m_second.get(),
+         m_third.get()
+      };
+      m_indices = { 
+         0, 1, 2, 0
+      };
+   }
+
+   BfVertex3Uni& first() { return m_first; }
+   BfVertex3Uni& second() { return m_second; }
+   BfVertex3Uni& third() { return m_third; }
+
+
+private:
+   BfVertex3Uni m_first;
+   BfVertex3Uni m_second;
+   BfVertex3Uni m_third;
+};
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 class BfBezierN : public obj::BfDrawObject, public std::vector<BfVertex3Uni>
 {
