@@ -1218,14 +1218,20 @@ public:
        std::vector< BfVertex3 >&& vert,
        BfVar< float > installAngle,
        BfVar< float > step
-
    )
        : BfFree2DShape{std::move(vert)}
        , m_installAngle(std::move(installAngle))
        , m_sectionStep(std::move(step))
    {
       m_instanceCount = 2;
+      m_geomCenter = BfVertex3Uni(
+          BfVertex3{glm::vec3{0.f}, glm::vec3{1.f}, glm::vec3{0.0f, 0.f, -1.f}}
+      );
    }
+
+   BfVar< float >& step() { return m_sectionStep; }
+   BfVar< float >& installAngle() { return m_installAngle; }
+   BfVertex3Uni& geomCenter() { return m_geomCenter; }
 
 protected:
    virtual std::vector< BfObjectData > _objectData() override
@@ -1234,25 +1240,27 @@ protected:
       const glm::vec3 normal = m_vertices.front().normals;
       const float angle_degrees = 90.f - m_installAngle.get();
       const float angle_rad = glm::radians(angle_degrees);
-      const glm::mat4 installAngleRotation = glm::rotate(
-         glm::mat4(1.0f),
-         angle_rad,
-         normal
-      );
+
+      const glm::mat4 toCenter = glm::translate(-m_geomCenter.pos());
+      const glm::mat4 fromCenter = glm::translate(m_geomCenter.pos());
+      const glm::mat4 installAngleRotation = glm::rotate(angle_rad, normal);
+
       const glm::mat4 stepTranslation = glm::translate(glm::vec3(
          0.0f, 
          -m_sectionStep.get(),
          0.0f 
       ));
+      
+      const glm::mat4 rotated = fromCenter * installAngleRotation * toCenter;
 
       return {
-          {.model_matrix = installAngleRotation,
+          {.model_matrix = rotated,
            .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
            .index = 0,
            .id = id(),
            .line_thickness = 0.00025f},
 
-          {.model_matrix = installAngleRotation * stepTranslation,
+          {.model_matrix = stepTranslation * rotated,
            .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
            .index = 0,
            .id = id(),
@@ -1262,12 +1270,10 @@ protected:
       // clang-format on
    }
 
-   BfVar< float >& step() { return m_sectionStep; }
-   BfVar< float >& installAngle() { return m_installAngle; }
-
 private:
    BfVar< float > m_installAngle;
    BfVar< float > m_sectionStep;
+   BfVertex3Uni m_geomCenter;
 };
 
 }; // namespace curves

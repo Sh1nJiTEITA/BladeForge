@@ -790,6 +790,11 @@ BfBladeSection::_processGeometricCenter()
           0.015f
       );
       obj->color() = glm::vec3(0.318f, 0.8f, 0.12f);
+       
+      auto tshape = _part<E::OutputShape, curves::BfSectionOutputShape>();
+      tshape->geomCenter() = BfVertex3Uni( 
+         obj->center().getp()
+      );
    }
    else
    {
@@ -809,6 +814,8 @@ BfBladeSection::viewOutputShapeOnly()
    m_lastRenderBitSet = m_info.get().renderBitSet;
    m_info.get().renderBitSet = 0;
    m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
+   m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
+   m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
    applyRenderToggle();
    m_isOutputShapeWasEnabled = true;
 }
@@ -819,8 +826,10 @@ BfBladeSection::viewFormattingShapeOnly()
    // clang-format off
    m_lastRenderBitSet = m_info.get().renderBitSet;
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
+   m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
+   m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
    
-   applyRenderToggle();
+   if (!m_children.empty()) applyRenderToggle();
 }
 
 void BfBladeSection::revertView() 

@@ -85,8 +85,7 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section", BUFFER_LAYER)
        , m_info{std::forward<T>(info)}
    {
-      m_info.get().renderBitSet = UINT32_MAX;
-      m_info.get().renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+      viewFormattingShapeOnly(); 
 
       _createChord(); 
       _createCircleEdges();
