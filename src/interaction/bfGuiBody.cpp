@@ -716,9 +716,10 @@ MainDock::presentSectionToggleView(pSection sec) {
    ImGui::SeparatorText("Views");
    if (ImGui::Button("All", bsz)) { 
       info->renderBitSet = UINT32_MAX;
+      info->renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
       no_remake = false;
    }
-   if (ImGui::Button("None", bsz)) { 
+   if (ImGui::Button("Triangular shape", bsz)) { 
       info->renderBitSet = 0;
       info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
 

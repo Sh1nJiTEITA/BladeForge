@@ -238,6 +238,16 @@ public:
       };
    }
 
+   glm::vec3 centroid() { 
+      return (m_first.pos() + m_second.pos() + m_third.pos()) / 3.f;
+   }
+   
+   float area() { 
+      glm::vec3 u = m_second.pos() - m_first.pos();
+      glm::vec3 v = m_third.pos() - m_first.pos();
+      return glm::length(glm::cross(u, v)) / 2.0f;
+   }
+
    BfVertex3Uni& first() { return m_first; }
    BfVertex3Uni& second() { return m_second; }
    BfVertex3Uni& third() { return m_third; }

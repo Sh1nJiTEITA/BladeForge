@@ -263,6 +263,24 @@ BfBladeSection::_ioIntersection()
    );
 }
 
+glm::vec3
+BfBladeSection::_calcGeometricCenter() { 
+   auto tshape = _part<E::TriangularShape, obj::BfDrawLayer>();
+   auto center_sum = glm::vec3{0.0f};
+   float total_area = 0;
+   for (auto& _t : tshape->children()) { 
+      auto t = std::static_pointer_cast<curves::BfTriangle>(_t);
+
+      const glm::vec3 centroid = t->centroid(); 
+      const float area = t->area();
+
+      total_area += area;
+      center_sum += area * centroid;
+   }
+   fmt::println("GeomCenter={}", center_sum / total_area);
+   return center_sum / total_area;
+}
+
 void
 BfBladeSection::_createChord()
 {
@@ -738,6 +756,7 @@ BfBladeSection::_processTriangularShape()
    {
       auto l = _part<E::TriangularShape, obj::BfDrawLayer>();
       auto t = triangulate();
+      fmt::println("{} ==? {}", t.size(), l->children().size());
       if (t.size() == l->children().size()) { 
          for (size_t i = 0; i < t.size(); ++i)  {
             auto tr = std::static_pointer_cast<curves::BfTriangle>(l->children()[i]);
@@ -750,6 +769,34 @@ BfBladeSection::_processTriangularShape()
       else { 
          l->children() = std::move(t);
       }
+   }
+   // clang-format on
+}
+
+void
+BfBladeSection::_processGeometricCenter()
+{
+   // clang-format off
+   if (!_isPart< E::GeometricCenter >())
+   {
+      auto chord = _part< E::Chord, curves::BfSingleLineWH >();
+
+      const glm::vec3 center = _calcGeometricCenter();
+
+      auto obj = _addPartF< E::GeometricCenter, curves::BfCircleCenterFilled >(
+          BfVertex3({ center.x, center.y, m_info.get().z }, 
+                    glm::vec3(0.0f, 0.0f, 0.8f), 
+                    chord->line()->first().normals()),
+          0.015f
+      );
+      obj->color() = glm::vec3(0.318f, 0.8f, 0.12f);
+   }
+   else
+   {
+      auto obj = _part< E::GeometricCenter, curves::BfCircleCenterFilled >();
+      const glm::vec3 center = _calcGeometricCenter();
+      obj->center().pos() = { center.x, center.y, m_info.get().z };
+      fmt::println("{}", center);
    }
    // clang-format on
 }
@@ -829,6 +876,8 @@ BfBladeSection::triangulate()
    // be refractored (multiple make initial calls)
    if (iarcv.empty()) return {};
    
+   const auto col = glm::vec3(0.21f, 0.345f, 0.7123f); 
+
    for (size_t i = 0; i < iarcv.size() - 1; ++i)
    {
       auto t = std::make_shared< curves::BfTriangle >(
@@ -836,6 +885,7 @@ BfBladeSection::triangulate()
           BfVertex3Uni(iarcv[i]),
           BfVertex3Uni(iarcv[i + 1])
       );
+      t->color() = col;
       o.push_back(std::move(t));
    }
 
@@ -853,6 +903,7 @@ BfBladeSection::triangulate()
           BfVertex3Uni(oarcv[i]),
           BfVertex3Uni(oarcv[i + 1])
       );
+      t->color() = col;
       o.push_back(std::move(t));
    }
 
@@ -879,6 +930,7 @@ BfBladeSection::triangulate()
             BfVertex3Uni(f[j]),
             BfVertex3Uni(f[j+1])
          );
+         t->color() = col;
          o.push_back(std::move(t));   
       }
 
@@ -891,6 +943,7 @@ BfBladeSection::triangulate()
             BfVertex3Uni(b[j]),
             BfVertex3Uni(b[j-1])
          );
+         t->color() = col;
          o.push_back(std::move(t));   
       }
    }

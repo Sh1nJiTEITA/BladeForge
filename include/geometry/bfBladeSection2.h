@@ -69,7 +69,8 @@ enum class BfBladeSectionEnum : uint32_t
    OutputShape          = 1 << 15,
    MassCenter           = 1 << 16,
    TriangularShape      = 1 << 17,
-   End                  = 1 << 18
+   GeometricCenter      = 1 << 18,
+   End                  = 1 << 19
 };
 // clang-format on
 
@@ -84,6 +85,9 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section", BUFFER_LAYER)
        , m_info{std::forward<T>(info)}
    {
+      m_info.get().renderBitSet = UINT32_MAX;
+      m_info.get().renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+
       _createChord(); 
       _createCircleEdges();
       _createIOAngles();
@@ -115,7 +119,6 @@ public:
       _processAverageInitialCurve();
       _processCenterCircles();
       _processChain();
-      
    }
 
    virtual void postmake() 
@@ -128,6 +131,7 @@ public:
       _processOutputShape();
       _processMassCenter();
       _processTriangularShape();
+      _processGeometricCenter();
    }
 
 public: // EXPORT
@@ -159,6 +163,7 @@ private:
    auto _eqInletDirection() -> glm::vec3; 
    auto _eqOutletDirection() -> glm::vec3; 
    auto _ioIntersection() -> glm::vec3;
+   auto _calcGeometricCenter() -> glm::vec3;
 
 private:
 
@@ -218,8 +223,8 @@ private:
    void _processOutputShape();
 
    void _processMassCenter();
-   
    void _processTriangularShape();
+   void _processGeometricCenter();
 
 private:
    int m_outputShapeSegments = std::nanf("");

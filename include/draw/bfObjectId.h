@@ -25,11 +25,11 @@ public:
    ~BfObjectId()
    {
       auto& inst = obj::BfTypeManager::inst();
-      fmt::print(
-          "Deleting object with id {} and typename {}\n",
-          this->id(),
-          inst.getTypeNameById(this->id())
-      );
+      // fmt::print(
+      //     "Deleting object with id {} and typename {}\n",
+      //     this->id(),
+      //     inst.getTypeNameById(this->id())
+      // );
       inst.remId(id());
    }
 
