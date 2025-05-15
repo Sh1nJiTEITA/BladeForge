@@ -115,10 +115,7 @@ public:
       _processAverageInitialCurve();
       _processCenterCircles();
       _processChain();
-      _processIOArc();
-      _processOutputShape();
-      _processMassCenter();
-      _processTriangularShape();
+      
    }
 
    virtual void postmake() 
@@ -126,6 +123,11 @@ public:
       auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
       m_lastChordL = oChord->left().get();
       m_lastChordR = oChord->right().get();
+
+      _processIOArc();
+      _processOutputShape();
+      _processMassCenter();
+      _processTriangularShape();
    }
 
 public: // EXPORT

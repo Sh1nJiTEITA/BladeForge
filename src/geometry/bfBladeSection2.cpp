@@ -615,7 +615,7 @@ BfBladeSection::_createIOArc()
 void
 BfBladeSection::_processIOArc()
 {
-   if (!_isPart< E::InletArc >() && _isPart< E::InletEdge >())
+   if (!_isPart< E::InletArc >())
    {
       auto iedge = _part< E::InletEdge, curves::BfEdge >();
       iedge->make();
@@ -642,16 +642,16 @@ BfBladeSection::_processIOArc()
       auto iedge = _part< E::InletEdge, curves::BfEdge >();
       auto iarcv = iedge->arcVertices();
       auto iarc = _part< E::InletArc, curves::BfArcCenter >();
-      // iarc->begin() = iarcv[0];
+      iarc->begin() = iarcv[0];
       iarc->middle() = iarcv[1];
-      // iarc->end() = iarcv[2];
+      iarc->end() = iarcv[2];
 
       auto oedge = _part< E::OutletEdge, curves::BfEdge >();
       auto oarcv = oedge->arcVertices();
       auto oarc = _part< E::OutletArc, curves::BfArcCenter >();
-      // oarc->begin() = oarcv[0];
+      oarc->begin() = oarcv[0];
       oarc->middle() = oarcv[1];
-      // oarc->end() = oarcv[2];
+      oarc->end() = oarcv[2];
    }
 }
 
@@ -738,7 +738,18 @@ BfBladeSection::_processTriangularShape()
    {
       auto l = _part<E::TriangularShape, obj::BfDrawLayer>();
       auto t = triangulate();
-      l->children() = std::move(t);
+      if (t.size() == l->children().size()) { 
+         for (size_t i = 0; i < t.size(); ++i)  {
+            auto tr = std::static_pointer_cast<curves::BfTriangle>(l->children()[i]);
+            auto ntr = std::static_pointer_cast< curves::BfTriangle >(t[i]);
+            tr->first().pos() = ntr->first().pos();
+            tr->second().pos() = ntr->second().pos();
+            tr->third().pos() = ntr->third().pos();
+         }
+      }
+      else { 
+         l->children() = std::move(t);
+      }
    }
    // clang-format on
 }
@@ -835,15 +846,73 @@ BfBladeSection::triangulate()
    
    if (iarcv.empty()) return {};
    
-   for (size_t i = 0; i < iarcv.size() - 1; ++i)
+   // for (size_t i = 0; i < iarcv.size() - 1; ++i)
+   // {
+   //    auto t = std::make_shared< curves::BfTriangle >(
+   //        BfVertex3Uni(oc),
+   //        BfVertex3Uni(oarcv[i]),
+   //        BfVertex3Uni(oarcv[i + 1])
+   //    );
+   //    o.push_back(std::move(t));
+   // }
+
+   auto chain = _part<E::Chain, curves::BfChain>();
+   auto front = chain->bezierCurveChain(curves::BfChain::Front);
+   auto back = chain->bezierCurveChain(curves::BfChain::Back);
+   if (front.empty()) return o;
+   
+   assert(front.size() == back.size() && "Chain back & front number of Bezier curves are not the same");
+   
+   for (size_t i = 0; i < front.size(); ++i) { 
+      auto& f = front[i]->vertices();
+      auto& b = back[i]->vertices();
+      
+      assert(f.size() == b.size() && "Chain back & front ELEMENTS do not have the same amount of vertices");
+      
+      
+      for (size_t j = 0 + (i == 0 ? 1 : 0); j < f.size() - 1; ++j) { 
+         auto t = std::make_shared< curves::BfTriangle >(
+            BfVertex3Uni(b[j]),
+            BfVertex3Uni(f[j]),
+            BfVertex3Uni(f[j+1])
+         );
+         o.push_back(std::move(t));   
+         break;
+      }
+
+      for (size_t j = 1 + (i == 0 ? 1 : 0); j < f.size() - 1; ++j) { 
+         auto t = std::make_shared< curves::BfTriangle >(
+            BfVertex3Uni(f[j]),
+            BfVertex3Uni(b[j]),
+            BfVertex3Uni(b[j-1])
+         );
+         o.push_back(std::move(t));   
+         break;
+      }
+   }
+
+   const glm::vec3 cc { 0.2, 0.1, 0.78 };
+   // CONNECTIONS
+   auto& fverts = front[0]->vertices();
    {
-      auto t = std::make_shared< curves::BfTriangle >(
-          BfVertex3Uni(oc),
-          BfVertex3Uni(oarcv[i]),
-          BfVertex3Uni(oarcv[i + 1])
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(ic),
+          BfVertex3Uni(*(front[0]->begin())),
+          BfVertex3Uni(iarcv.back())
       );
+      t->color() = cc;
       o.push_back(std::move(t));
    }
+   {
+      // auto t = std::make_shared<curves::BfTriangle>(
+      //     BfVertex3Uni(ic),
+      //     BfVertex3Uni(back.front()->front()),
+      //     BfVertex3Uni(iarcv.front())
+      // );
+      // t->color() = cc;
+      // o.push_back(std::move(t));
+   }
+
 
    return o;
    // clang-format on

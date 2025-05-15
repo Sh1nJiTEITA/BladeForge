@@ -97,6 +97,7 @@ void main() {
 
     outId = obj_data_buffer.obj_data[obj_index].id;
     // outColor = vec4(fragColor * obj_data_buffer.obj_data[obj_index].select_color, 1.0);
-    outColor = vec4(fragColor, 1.0);
+    
+    outColor = vec4(fragColor, 0.9);
 }
 

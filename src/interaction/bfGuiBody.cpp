@@ -718,6 +718,12 @@ MainDock::presentSectionToggleView(pSection sec) {
       info->renderBitSet = UINT32_MAX;
       no_remake = false;
    }
+   if (ImGui::Button("None", bsz)) { 
+      info->renderBitSet = 0;
+      info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+
+      no_remake = false;
+   }
    if (ImGui::Button("Show/Hide handles", bsz)) { 
       sec->toggleAllHandles(!info->isHandlesEnabled);
       info->isHandlesEnabled = !info->isHandlesEnabled;

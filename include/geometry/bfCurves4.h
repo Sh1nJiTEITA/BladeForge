@@ -229,9 +229,9 @@ public:
       m_indices.clear();
 
       m_vertices = { 
-         m_first.get(),
-         m_second.get(),
-         m_third.get()
+         m_first.get().otherColor(m_color),
+         m_second.get().otherColor(m_color),
+         m_third.get().otherColor(m_color)
       };
       m_indices = { 
          0, 1, 2, 0

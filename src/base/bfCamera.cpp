@@ -1,6 +1,8 @@
 #include "bfCamera.h"
 
 #include <GLFW/glfw3.h>
+#include <cmath>
+#include <glm/exponential.hpp>
 #include <imgui.h>
 
 #include "bfVertex2.hpp"
@@ -233,8 +235,9 @@ BfCamera::update()
       if (m_yScroll != m_yScrollOld)
       {
          const float scrollSen = 0.05f;
-         m_scale =
-             glm::scale(glm::mat4(1.0f), glm::vec3((m_yScroll)*scrollSen));
+         const float base = std::pow(1.1f, m_yScroll);
+         const auto result_scale = glm::vec3(base * scrollSen);
+         m_scale = glm::scale(glm::mat4(1.0f), result_scale);
          // m_descale = glm::scale(
          //     glm::mat4(1.0f),
          //     1.f / glm::vec3((m_yScroll - m_yScrollOld) * scrollSen)
@@ -266,10 +269,10 @@ BfCamera::update()
    }
    if (m_middleMouseState.isPressed)
    { // clang-format off
+      const float sen_x = 0.002 * std::pow(1.015f, m_yScroll / 10.f);
+      const float sen_y = 0.002 * std::pow(1.01f, m_yScroll / 10.f);
       switch (m_mode) { 
          case BfCameraMode_Perspective: { 
-            const float sen_x = 0.01;
-            const float sen_y = 0.005;
             m_mouseDelta = m_posMouse - m_posMouseOld;
             m_pos = m_posOld
                 + glm::vec3(1.0f, 0.0f, 0.0f) * m_mouseDelta.x * sen_x
@@ -278,8 +281,6 @@ BfCamera::update()
             break;
          }
          case BfCameraMode_PerspectiveCentered: { 
-            const float sen_x = 0.01f;
-            const float sen_y = 0.005f;
             m_mouseDelta = m_posMouse - m_posMouseOld;
 
             m_vAngle = m_vAngleOld - m_mouseDelta.y * sen_y;
@@ -294,18 +295,19 @@ BfCamera::update()
             break;
          }
          case BfCameraMode_Ortho: { 
-            const float sen_x = 0.01;
-            const float sen_y = 0.005;
             m_mouseDelta = -(m_posMouse - m_posMouseOld);
-            m_pos = m_posOld
-                + glm::vec3(1.0f, 0.0f, 0.0f) * m_mouseDelta.x * sen_x
-                - glm::vec3(0.0f, 1.0f, 0.0f) * m_mouseDelta.y * sen_y
-            ;
+
+            float zoomScale = std::clamp(std::pow(1.03f, m_yScroll), -5.0f, 5.0f);
+            float sensitivity = 0.002f * zoomScale;
+
+            glm::vec3 desiredMove =
+                glm::vec3(1.0f, 0.0f, 0.0f) * m_mouseDelta.x * sensitivity -
+                glm::vec3(0.0f, 1.0f, 0.0f) * m_mouseDelta.y * sensitivity;
+
+            m_pos = glm::mix(m_posOld, m_posOld + desiredMove, 0.2f);
             break;
          }
          case BfCameraMode_OrthoCentered: { 
-            const float sen_x = 0.01f;
-            const float sen_y = 0.005f;
             m_mouseDelta = m_posMouse - m_posMouseOld;
 
             m_vAngle = m_vAngleOld + m_mouseDelta.y * sen_y;

@@ -68,7 +68,7 @@ void main() {
     gl_Position = coo;
     obj_index = pc.object_index;
 
-    if (obj_data_buffer.obj_data[pc.object_index].id == ubo.id_on_cursor) {
+    if (obj_data_buffer.obj_data[pc.object_index].id == view_data.id_on_cursor) {
         fragColor = vec3(0.0, 1.0, 0.5);
     }
     else {
