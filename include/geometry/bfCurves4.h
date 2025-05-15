@@ -1227,11 +1227,19 @@ public:
       m_geomCenter = BfVertex3Uni(
           BfVertex3{glm::vec3{0.f}, glm::vec3{1.f}, glm::vec3{0.0f, 0.f, -1.f}}
       );
+      m_totalInstanceCount = 2;
    }
 
    BfVar< float >& step() { return m_sectionStep; }
    BfVar< float >& installAngle() { return m_installAngle; }
    BfVertex3Uni& geomCenter() { return m_geomCenter; }
+
+   virtual void prerender(uint32_t elem) override
+   {
+      m_instanceCount = 1;
+      m_baseInstance = 1;
+   };
+   // virtual void postrender(uint32_t elem) {};
 
 protected:
    virtual std::vector< BfObjectData > _objectData() override

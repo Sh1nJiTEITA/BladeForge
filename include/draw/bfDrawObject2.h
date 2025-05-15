@@ -312,7 +312,9 @@ public:
    }
 
    bool& isRender() { return m_isrender; }
-   uint32_t instanceCount() { return m_instanceCount; }
+   uint32_t& instanceCount() { return m_instanceCount; }
+   uint32_t& totalInstanceCount() { return m_totalInstanceCount; }
+   uint32_t& baseInstance() { return m_baseInstance; }
 
    std::vector< BfObj >& children();
 
@@ -326,7 +328,10 @@ protected:
 
    std::vector< BfVertex3 > m_vertices;
    std::vector< BfIndex > m_indices;
+
+   uint32_t m_totalInstanceCount;
    uint32_t m_instanceCount;
+   uint32_t m_baseInstance;
 
    BfObjWeak m_root;
    std::vector< BfObj > m_children;

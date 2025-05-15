@@ -46,7 +46,7 @@ BfDrawControlProxy::mapModel(
    {
       std::vector< BfObjectData > obj_data = g._objectData();
       assert(
-          obj_data.size() == g.instanceCount() &&
+          obj_data.size() == g.totalInstanceCount() &&
           "Instance count and return of _objectData are not the same"
       );
       memcpy(
@@ -213,7 +213,7 @@ BfDrawControlProxy::draw(
              g.instanceCount(),
              *index_offset,
              *vertex_offset,
-             0
+             g.baseInstance()
          );
 
          g.updateHoveredStatus(g.id() == hovered_id);
@@ -221,7 +221,7 @@ BfDrawControlProxy::draw(
          base::g::intrstack().push([ptr]() { ptr->processInteraction(); });
       }
 
-      *offset += g.instanceCount();
+      *offset += g.totalInstanceCount();
       *index_offset += g.indices().size();
       *vertex_offset += g.vertices().size();
    }
@@ -350,6 +350,8 @@ BfDrawObjectBase::BfDrawObjectBase(
     , m_root{}
     , m_isrender{true}
     , m_instanceCount{1}
+    , m_baseInstance{0}
+    , m_totalInstanceCount{1}
 {
    if (type == BfDrawObjectBase::BUFFER_LAYER)
    {
