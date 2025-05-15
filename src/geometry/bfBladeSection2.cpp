@@ -846,15 +846,15 @@ BfBladeSection::triangulate()
    
    if (iarcv.empty()) return {};
    
-   // for (size_t i = 0; i < iarcv.size() - 1; ++i)
-   // {
-   //    auto t = std::make_shared< curves::BfTriangle >(
-   //        BfVertex3Uni(oc),
-   //        BfVertex3Uni(oarcv[i]),
-   //        BfVertex3Uni(oarcv[i + 1])
-   //    );
-   //    o.push_back(std::move(t));
-   // }
+   for (size_t i = 0; i < iarcv.size() - 1; ++i)
+   {
+      auto t = std::make_shared< curves::BfTriangle >(
+          BfVertex3Uni(oc),
+          BfVertex3Uni(oarcv[i]),
+          BfVertex3Uni(oarcv[i + 1])
+      );
+      o.push_back(std::move(t));
+   }
 
    auto chain = _part<E::Chain, curves::BfChain>();
    auto front = chain->bezierCurveChain(curves::BfChain::Front);
@@ -870,49 +870,103 @@ BfBladeSection::triangulate()
       assert(f.size() == b.size() && "Chain back & front ELEMENTS do not have the same amount of vertices");
       
       
-      for (size_t j = 0 + (i == 0 ? 1 : 0); j < f.size() - 1; ++j) { 
+      for (size_t j = 0 + (i == 0 ? 1 : 0); 
+           j < f.size() - 1 - (i == front.size() - 1 ? 1 : 0); 
+           ++j) 
+      { 
          auto t = std::make_shared< curves::BfTriangle >(
             BfVertex3Uni(b[j]),
             BfVertex3Uni(f[j]),
             BfVertex3Uni(f[j+1])
          );
          o.push_back(std::move(t));   
-         break;
       }
 
-      for (size_t j = 1 + (i == 0 ? 1 : 0); j < f.size() - 1; ++j) { 
+      for (size_t j = 1 + (i == 0 ? 1 : 0); 
+           j < f.size()  - (i == front.size() - 1 ? 1 : 0); 
+           ++j) 
+      { 
          auto t = std::make_shared< curves::BfTriangle >(
             BfVertex3Uni(f[j]),
             BfVertex3Uni(b[j]),
             BfVertex3Uni(b[j-1])
          );
          o.push_back(std::move(t));   
-         break;
       }
    }
 
    const glm::vec3 cc { 0.2, 0.1, 0.78 };
    // CONNECTIONS
-   auto& fverts = front[0]->vertices();
+   
+   auto& front_iarc_v = *iarc->vertices().rbegin();
+   auto& front_ibez_v = *(front[0]->vertices().begin() + 1);
+
    {
       auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(front_iarc_v),
           BfVertex3Uni(ic),
-          BfVertex3Uni(*(front[0]->begin())),
-          BfVertex3Uni(iarcv.back())
+          BfVertex3Uni(front_ibez_v)
+      );
+      t->color() = cc;
+      o.push_back(std::move(t));
+   }
+
+   auto& back_iarc_v = *iarc->vertices().begin();
+   auto& back_ibez_v = *(back[0]->vertices().begin() + 1);
+   {
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(back_iarc_v ),
+          BfVertex3Uni(ic),
+          BfVertex3Uni(back_ibez_v)
       );
       t->color() = cc;
       o.push_back(std::move(t));
    }
    {
-      // auto t = std::make_shared<curves::BfTriangle>(
-      //     BfVertex3Uni(ic),
-      //     BfVertex3Uni(back.front()->front()),
-      //     BfVertex3Uni(iarcv.front())
-      // );
-      // t->color() = cc;
-      // o.push_back(std::move(t));
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(front_ibez_v),
+          BfVertex3Uni(ic),
+          BfVertex3Uni(back_ibez_v)
+      );
+      t->color() = cc;
+      o.push_back(std::move(t));
    }
 
+
+   // CONNECTIONS — OUTLET
+   auto& front_oarc_v = *oarc->vertices().begin();
+   auto& front_obez_v = *(front.back()->vertices().rbegin() + 1);
+
+   {
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(front_oarc_v),
+          BfVertex3Uni(oc),
+          BfVertex3Uni(front_obez_v)
+      );
+      t->color() = cc;
+      o.push_back(std::move(t));
+   }
+
+   auto& back_oarc_v = *oarc->vertices().rbegin();
+   auto& back_obez_v = *(back.back()->vertices().rbegin() + 1);
+   {
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(back_oarc_v),
+          BfVertex3Uni(oc),
+          BfVertex3Uni(back_obez_v)
+      );
+      t->color() = cc;
+      o.push_back(std::move(t));
+   }
+   {
+      auto t = std::make_shared<curves::BfTriangle>(
+          BfVertex3Uni(front_obez_v),
+          BfVertex3Uni(oc),
+          BfVertex3Uni(back_obez_v)
+      );
+      t->color() = cc;
+      o.push_back(std::move(t));
+   }
 
    return o;
    // clang-format on

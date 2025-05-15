@@ -297,7 +297,7 @@ BfCamera::update()
          case BfCameraMode_Ortho: { 
             m_mouseDelta = -(m_posMouse - m_posMouseOld);
 
-            float zoomScale = std::clamp(std::pow(1.03f, m_yScroll), -5.0f, 5.0f);
+            float zoomScale = std::clamp(std::pow(0.999f, m_yScroll), 0.7f, 5.0f);
             float sensitivity = 0.002f * zoomScale;
 
             glm::vec3 desiredMove =
