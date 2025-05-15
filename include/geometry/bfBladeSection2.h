@@ -14,6 +14,7 @@
 #include "bfCurves4.h"
 #include "bfDrawObject2.h"
 #include "bfEdge.h"
+#include "bfViewport.h"
 
 namespace obj
 {
@@ -95,6 +96,7 @@ public:
       _createIOCircles();
       _createChain();
       _createIOArc();
+
    }
 
    virtual void make() override
@@ -149,8 +151,8 @@ public: // EXPORT
    auto viewFormattingShapeOnly() -> void; 
    auto revertView() -> void; 
 
-   virtual void prerender(size_t viewport_index) override;
-   virtual void postrender(size_t viewport_index) override;
+   virtual void prerender(uint32_t elem) override;
+   virtual void postrender(uint32_t elem) override;
 
    auto triangulate() -> std::vector< BfObj >;
 

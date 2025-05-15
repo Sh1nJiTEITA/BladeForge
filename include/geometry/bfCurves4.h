@@ -1243,7 +1243,7 @@ protected:
 
       const glm::mat4 toCenter = glm::translate(-m_geomCenter.pos());
       const glm::mat4 fromCenter = glm::translate(m_geomCenter.pos());
-      const glm::mat4 installAngleRotation = glm::rotate(angle_rad, normal);
+      const glm::mat4 installAngleRotation = glm::rotate(-angle_rad, normal);
 
       const glm::mat4 stepTranslation = glm::translate(glm::vec3(
          0.0f, 

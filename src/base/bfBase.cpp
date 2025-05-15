@@ -16,7 +16,6 @@
 #include "bfLayerHandler.h"
 #include "bfPipeline.h"
 // #include "bfTexture.h"
-#include "bfBladeSection2.h"
 #include "bfUniforms.h"
 #include "bfViewport.h"
 #include "implot.h"
@@ -3022,8 +3021,10 @@ bfMainRecordCommandBuffer(BfBase& base)
          auto viewport = it.next();
          if (viewport->isLeaf()) { 
             bfPushConstants(local_buffer, viewport_index);
+            auto& cast = *static_cast< base::viewport::ViewPortNodeTyped*>(viewport);
             viewport->appRender(local_buffer, [&]() {
-               obj::BfDrawManager::inst().draw(local_buffer, viewport_index);
+               obj::BfDrawManager::inst().draw(local_buffer, 
+                                               static_cast<uint32_t>(cast.type()));
             });
             viewport_index++;
          }

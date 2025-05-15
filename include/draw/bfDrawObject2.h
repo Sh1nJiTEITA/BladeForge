@@ -15,6 +15,7 @@
 #include "bfTypeManager.h"
 #include "bfUniforms.h"
 #include "bfVertex2.hpp"
+#include "bfViewport.h"
 
 // clang-format off
 
@@ -159,7 +160,7 @@ public:
     */
    void draw(
        VkCommandBuffer combuffer,
-       size_t viewport_index,
+       uint32_t viewport_index,
        std::queue< BfObj >* q,
        size_t* offset,
        size_t* index_offset,
@@ -287,8 +288,8 @@ public:
 
    friend BfDrawControlProxy;
    BfDrawControlProxy control() { return BfDrawControlProxy(*this); };
-   virtual void prerender(size_t viewport_index) {};
-   virtual void postrender(size_t viewport_index) {};
+   virtual void prerender(uint32_t elem) {};
+   virtual void postrender(uint32_t elem) {};
 
    friend BfDrawDebugProxy;
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };

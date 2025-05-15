@@ -5,6 +5,7 @@
 #include "bfDrawObject2.h"
 #include "bfEdge.h"
 #include "bfObjectMath.h"
+#include "bfViewport.h"
 #include <algorithm>
 #include <bfChain.h>
 #include <cmath>
@@ -843,9 +844,9 @@ void BfBladeSection::revertView()
 
 // clang-format on
 void
-BfBladeSection::prerender(size_t viewport_index)
+BfBladeSection::prerender(uint32_t type)
 {
-   switch (viewport_index)
+   switch (type)
    {
    case 0:
       viewFormattingShapeOnly();
@@ -853,19 +854,23 @@ BfBladeSection::prerender(size_t viewport_index)
    case 1:
       viewOutputShapeOnly();
       break;
+   case 2:
+      break;
    };
 };
 
 void
-BfBladeSection::postrender(size_t viewport_index)
+BfBladeSection::postrender(uint32_t type)
 {
-   switch (viewport_index)
+   switch (type)
    {
    case 0:
       revertView();
       break;
    case 1:
       revertView();
+      break;
+   case 2:
       break;
    };
 };

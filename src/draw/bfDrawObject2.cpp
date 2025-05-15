@@ -174,7 +174,7 @@ BfDrawControlProxy::updateBuffer(
 void
 BfDrawControlProxy::draw(
     VkCommandBuffer combuffer,
-    size_t viewport_index,
+    uint32_t viewport_index,
     std::queue< std::shared_ptr< BfDrawObjectBase > >* q,
     size_t* offset,
     size_t* index_offset,

@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef BF_VIEWPORT_CUSTOM_H
-#define BF_VIEWPORT_CUSTOM_J
+#define BF_VIEWPORT_CUSTOM_H
 
 #include "bfCamera.h"
 #include "bfDescriptorStructs.h"
@@ -113,7 +113,7 @@ public: // PUBLIC METHODS
       return {};
    }
 
-   auto split(SplitDirection dir, float ratio = 0.5f) -> void { 
+   virtual auto split(SplitDirection dir, float ratio = 0.5f) -> void { 
       if (!m_isLeaf) throw std::runtime_error(
          "Can't split a non-leaf node"
       );
@@ -129,9 +129,33 @@ public: // PUBLIC METHODS
       
       m_FNode = std::make_unique<ViewPortNode>(2 * m_index + 1, newpos.first, newext.first);
       m_SNode = std::make_unique<ViewPortNode>(2 * m_index + 2, newpos.second, newext.second);
+
+      m_FNode->m_parent = this;
+      m_SNode->m_parent = this;
       
       m_ratio = ratio;
    }
+   
+   auto close() -> void { 
+      if (!m_isLeaf || !m_parent) {
+           // Can't close a non-leaf or root node
+           return;
+       }
+
+       ViewPortNode* parent = m_parent;
+       
+       // Check which child this node is
+       if (parent->m_FNode.get() == this || parent->m_SNode.get() == this) {
+           parent->m_FNode.reset();
+           parent->m_SNode.reset();
+           parent->m_isLeaf = true;
+           parent->m_splitType = SplitDirection::None;
+           parent->m_ratio = std::nanf("");
+
+           // Inherit camera or update parent if needed
+           parent->m_camera.setExtent(parent->m_extent.x, parent->m_extent.y);
+       }
+   };
 
    auto update() -> void { 
       if (m_isLeaf) return;
@@ -149,10 +173,8 @@ public: // PUBLIC METHODS
       // FIXME: REMOVE SINGLETON FROM HERE
    }
 
-   auto updateCam() -> void { 
+   virtual auto updateCam() -> void { 
       m_camera.update();
-
-      // m_camera.m_yScrollOld = m_camera.m_yScroll;
    }
    
    auto isHovered(const glm::vec2& mouse_pos) -> bool { 
@@ -165,6 +187,9 @@ public: // PUBLIC METHODS
    auto ratio() -> float& { return m_ratio; }
    auto camera() -> BfCamera&  { return m_camera; }
    auto index() -> uint8_t { return m_index; }
+   auto setParent(ViewPortNode* node) -> void { 
+      m_parent = node;
+   } 
 
    auto presentRect() -> void { 
       auto list = ImGui::GetBackgroundDrawList();   
@@ -279,7 +304,7 @@ public: // PUBLIC METHODS
    
    auto iter() -> ViewPortNodeIterator { return ViewPortNodeIterator(this); }
 
-   auto pushViewConstants(VkCommandBuffer command_buffer) { 
+   virtual auto pushViewConstants(VkCommandBuffer command_buffer) -> void { 
       BfPushConstants c{ .viewport_index = m_index };
       vkCmdPushConstants(
           command_buffer,
@@ -289,8 +314,8 @@ public: // PUBLIC METHODS
           sizeof(BfPushConstants),
           &c
       );
-
    }
+
    //! FIXME: Uses for each node separate vkCmdSetViewport, but can be refractored to use 
    //! Single command call
    auto appRender(VkCommandBuffer command_buffer, std::function<void()> func) -> void { 
@@ -328,11 +353,10 @@ public: // PUBLIC METHODS
           command_buffer,
           *BfPipelineHandler::instance()->getLayout(BfPipelineLayoutType_Main)
       );
-      // this->pushViewConstants(command_buffer);
       func();
    };
 
-private:
+protected:
    BfCamera m_camera;
 
    SplitDirection m_splitType;
@@ -344,9 +368,63 @@ private:
 
    float m_ratio = std::nanf("");
 
+   ViewPortNode* m_parent = nullptr;
    std::unique_ptr< ViewPortNode > m_FNode;
    std::unique_ptr< ViewPortNode > m_SNode;
 };
+
+enum class ViewportEnum : uint32_t { 
+   Formatting = 0,
+   Channel = 1,
+   Body = 2
+};
+
+class ViewPortNodeTyped : public ViewPortNode { 
+public:
+   ViewPortNodeTyped (
+       uint8_t index,
+       const glm::vec2& pos,
+       const glm::vec2& extent
+   )
+      : ViewPortNode(index, pos, extent)
+   {
+   }
+   
+   virtual auto split(SplitDirection dir, float ratio = 0.5f) -> void override { 
+      if (!m_isLeaf) throw std::runtime_error(
+         "Can't split a non-leaf node"
+      );
+      if (dir == SplitDirection::None) throw std::runtime_error(
+         "Can't use None direction for split"
+      );
+
+      m_splitType = dir;
+      m_isLeaf = false;
+      
+      auto newpos = calcNewPos(dir, ratio);
+      auto newext = calcNewExtent(dir, ratio);
+      
+      m_FNode = std::make_unique<ViewPortNodeTyped>(2 * m_index + 1, newpos.first, newext.first);
+      m_SNode = std::make_unique<ViewPortNodeTyped>(2 * m_index + 2, newpos.second, newext.second);
+
+      m_FNode->setParent(this);
+      m_SNode->setParent(this);
+      
+      m_ratio = ratio;
+   }  
+   
+   virtual auto updateCam() -> void override  { 
+      m_camera.update();
+   }
+
+
+   auto setType(ViewportEnum type) -> void { m_type = type; }
+   auto type() -> ViewportEnum& { return m_type; }
+
+private:
+   ViewportEnum m_type = ViewportEnum::Formatting; 
+};
+
 
 class ViewportManager
 {
@@ -377,35 +455,26 @@ public:
       glfwGetWindowSize(glfwwin(), &sz.x, &sz.y);
       return sz;
    };
-   static auto root() -> ViewPortNode& { 
+   static auto root() -> ViewPortNodeTyped& { 
       auto& self = ViewportManager::inst();
-      return *self.m_root;
+      return *static_cast<ViewPortNodeTyped*>(self.m_root.get());
    }
    static auto update() -> void { 
       auto& self = ViewportManager::inst();
       auto& root = self.root();
       root.ext() = rootWindowExtent();
       auto it = root.iter();
-      
       while (it.hasNext()) { 
          auto next = it.next();
          next->update();
       }
-      auto current =  currentHoveredNode();
+      auto current = currentHoveredNode();
       if (current.has_value()) { 
-         current->get().updateCam();
-         auto& cam = current->get().camera();
-         const float scrollSen = 0.05f;
-         // fmt::println(
-         //     "{} -> {} |{}",
-         //     cam.m_yScroll,
-         //     cam.m_yScrollOld,
-         //     glm::vec3((cam.m_yScroll - cam.m_yScrollOld) * scrollSen)
-         // );
+         current.value().get().updateCam();
       }
 
    }
-   static auto currentHoveredNode() -> std::optional<std::reference_wrapper<ViewPortNode>> 
+   static auto currentHoveredNode() -> std::optional<std::reference_wrapper<ViewPortNodeTyped>> 
    { 
       auto& self = ViewportManager::inst();
       auto& root = self.root();
@@ -414,8 +483,14 @@ public:
       const glm::vec2 mouse_pos = { _mouse_pos.x, _mouse_pos.y };
       while (it.hasNext()) { 
          auto node = it.next();
+         if (self.m_currentContextMenuOpenedIndex.has_value() && 
+            node->index() == self.m_currentContextMenuOpenedIndex.value()
+         ) { 
+            return {*static_cast<ViewPortNodeTyped*>(node)};
+         }
+
          if (node->isHovered(mouse_pos) && node->isLeaf()) { 
-            return {*node};
+            return {*static_cast<ViewPortNodeTyped*>(node)};
          }
       }
       return {}; 
@@ -506,6 +581,9 @@ public:
 
       if (ImGui::BeginPopup("ViewportContextMenu"))
       {
+         auto& node = current.value().get();
+         ImGui::Text("Extent: [%f.1f, %f.1f]", node.ext().x, node.ext().y);
+         ImGui::Text("Viewport index: %i", node.index());
          if (ImGui::BeginMenu("Change camera projection"))
          {
               const bool is_pers = cam.m_mode == BfCameraMode_Perspective;
@@ -534,11 +612,37 @@ public:
 
               ImGui::EndMenu();
          }
+
+         if (ImGui::BeginMenu("Viewport type"))
+         {
+              const bool is_formatting = (node.type() == ViewportEnum::Formatting);
+              if (ImGui::RadioButton("Formatting", is_formatting))
+              {
+                  node.type() = ViewportEnum::Formatting;
+              }
+
+              const bool is_channel = (node.type() == ViewportEnum::Channel);
+              if (ImGui::RadioButton("Channel", is_channel))
+              {
+                  node.type() = ViewportEnum::Channel;
+              }
+
+              const bool is_body = (node.type() == ViewportEnum::Body);
+              if (ImGui::RadioButton("Body", is_body))
+              {
+                  node.type() = ViewportEnum::Body;
+              }
+              ImGui::EndMenu();
+         }
          // if (ImGui::MenuItem("Delete Selected"))
          // {
          //    // your logic
          // }
          ImGui::EndPopup();
+         self.m_currentContextMenuOpenedIndex = node.index();
+      }
+      else { 
+         self.m_currentContextMenuOpenedIndex.reset();
       }
       // clang-format off
    };
@@ -547,7 +651,9 @@ private:
    auto _makeScreenViewportNode() -> std::unique_ptr< ViewPortNode >
    { // clang-format off
       const glm::vec2 main_extent = rootWindowExtent();
-      return std::make_unique< ViewPortNode >(0, glm::vec2(0.f, 0.f), main_extent);
+      auto node = std::make_unique< ViewPortNodeTyped >(0, glm::vec2(0.f, 0.f), main_extent);
+      node->type() = ViewportEnum::Formatting;
+      return std::move(node);
    } // clang-format on
 
 private:
@@ -555,6 +661,7 @@ private:
    GLFWwindow* m_pGLFWwindow;
    glm::dvec2 m_lastMousePos;
    uint32_t m_hoveredID;
+   std::optional< uint32_t > m_currentContextMenuOpenedIndex = {};
 };
 
 inline auto

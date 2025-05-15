@@ -59,6 +59,13 @@ BfMain::_processKeys()
       }
    }
 
+   if (is_ctrl_down && ImGui::IsKeyPressed(ImGuiKey_W, false)) { 
+      auto node = base::viewport::ViewportManager::currentHoveredNode();
+      if (node.has_value()) { 
+         node.value().get().close();
+      }
+   }
+
    // clang-format on
 }
 
