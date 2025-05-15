@@ -147,9 +147,13 @@ public: // EXPORT
    auto genOutputShape() -> std::vector<BfVertex3>;
    auto outputShapeSegments() -> int& { return m_outputShapeSegments; }
 
+   auto viewNone() -> void; 
    auto viewOutputShapeOnly() -> void; 
    auto viewFormattingShapeOnly() -> void; 
-   auto revertView() -> void; 
+   auto viewRevert() -> void; 
+   
+   auto forceHide() -> void;
+
 
    virtual void prerender(uint32_t elem) override;
    virtual void postrender(uint32_t elem) override;
@@ -234,9 +238,11 @@ private:
    BfVertex3 m_lastChordR; 
    
    bool m_isOutputShapeWasEnabled = false;
+   bool m_isForceHide = false;
    uint32_t m_lastRenderBitSet = UINT32_MAX;
 
    BfVar<SectionCreateInfo> m_info;
+
 };
 
 }  // namespace section

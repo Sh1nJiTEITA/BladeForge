@@ -570,13 +570,21 @@ MainDock::presentCurrentFormattingSections()
       ;
 
       ImGui::SetNextWindowSize({700, 800}, ImGuiCond_Appearing);
-      ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
-      presentSectionDock(sec);
-      if (presentSectionParameters(sec)) { 
-         sec->make();
-         sec->control().updateBuffer();
+      sec->isRender() = ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
+      {
+         presentSectionDock(sec);
+         if (presentSectionParameters(sec)) { 
+            sec->make();
+            sec->control().updateBuffer();
+         }
       }
       ImGui::End();
+
+      // fmt::println("\"{}\": on top={}",sec_name, is_now);
+      
+     
+      // if (!is_window_on_top)  { 
+      // }
       
    }
    if (fsections.empty())

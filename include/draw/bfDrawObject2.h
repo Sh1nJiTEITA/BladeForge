@@ -165,6 +165,7 @@ public:
        size_t* offset,
        size_t* index_offset,
        size_t* vertex_offset,
+       bool is_render,
        uint32_t hovered_id
    ) const;
 
@@ -310,7 +311,7 @@ public:
       return current;
    }
 
-   bool isRender() { return m_isrender; }
+   bool& isRender() { return m_isrender; }
    uint32_t instanceCount() { return m_instanceCount; }
 
    std::vector< BfObj >& children();

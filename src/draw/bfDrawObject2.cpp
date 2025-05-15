@@ -179,6 +179,7 @@ BfDrawControlProxy::draw(
     size_t* offset,
     size_t* index_offset,
     size_t* vertex_offset,
+    bool is_render,
     uint32_t hovered_id
 ) const
 {
@@ -187,7 +188,7 @@ BfDrawControlProxy::draw(
 
    if (g.m_type == BfDrawObjectBase::OBJECT)
    {
-      if (g.m_isrender)
+      if (g.m_isrender && is_render)
       {
          vkCmdBindPipeline(
              combuffer,
@@ -262,6 +263,7 @@ BfDrawControlProxy::draw(
                 offset,
                 index_offset,
                 vertex_offset,
+                g.isRender() && is_render,
                 hovered_id
             );
          }
@@ -285,6 +287,7 @@ BfDrawControlProxy::draw(
                 offset,
                 &ioffset,
                 &voffset,
+                g.isRender() && is_render,
                 hovered_id
             );
          }

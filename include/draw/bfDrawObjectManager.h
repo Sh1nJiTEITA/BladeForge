@@ -157,6 +157,7 @@ public:
              &obj_data_offset,
              &index_offset,
              &vertex_offset,
+             l->isRender(),
              m_hoveredID
          );
       }

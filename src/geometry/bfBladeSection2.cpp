@@ -807,6 +807,14 @@ BfBladeSection::_processGeometricCenter()
    // clang-format on
 }
 
+auto
+BfBladeSection::viewNone() -> void
+{
+   m_lastRenderBitSet = m_info.get().renderBitSet;
+   m_info.get().renderBitSet = 0;
+   applyRenderToggle();
+};
+
 void
 BfBladeSection::viewOutputShapeOnly()
 {
@@ -833,19 +841,31 @@ BfBladeSection::viewFormattingShapeOnly()
    if (!m_children.empty()) applyRenderToggle();
 }
 
-void BfBladeSection::revertView() 
+void BfBladeSection::viewRevert() 
 { 
-   if (m_isOutputShapeWasEnabled) { 
+   // if (m_isOutputShapeWasEnabled) { 
       m_info.get().renderBitSet = m_lastRenderBitSet;
       applyRenderToggle();
       m_isOutputShapeWasEnabled = false;
-   }
+   // }
+}
+
+
+auto BfBladeSection::forceHide() -> void { 
+   m_isForceHide = true;
 }
 
 // clang-format on
 void
 BfBladeSection::prerender(uint32_t type)
 {
+   if (m_isForceHide)
+   {
+      fmt::println("PRE: {}", m_isForceHide);
+      viewNone();
+      return;
+   }
+
    switch (type)
    {
    case 0:
@@ -862,13 +882,21 @@ BfBladeSection::prerender(uint32_t type)
 void
 BfBladeSection::postrender(uint32_t type)
 {
+   if (m_isForceHide)
+   {
+      fmt::println("POST: {}", m_isForceHide);
+      m_isForceHide = false;
+      viewRevert();
+      return;
+   }
+
    switch (type)
    {
    case 0:
-      revertView();
+      viewRevert();
       break;
    case 1:
-      revertView();
+      viewRevert();
       break;
    case 2:
       break;
