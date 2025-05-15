@@ -245,6 +245,38 @@ resampleCurve(
    return result;
 }
 
+std::vector< SplineLib::cSpline3 >
+splineFitExternal3D(const std::vector< BfVertex3 >& v)
+{
+   std::vector< SplineLib::Vec3f > spl_df_v;
+   spl_df_v.reserve(v.size());
+
+   for (auto vert = v.begin(); vert != v.end(); ++vert)
+   {
+      spl_df_v.emplace_back(
+          SplineLib::Vec3f(vert->pos.x, vert->pos.y, vert->pos.z)
+      );
+   }
+
+   SplineLib::cSpline3 splines[v.size()];
+
+   size_t splines_count = SplineLib::SplinesFromPoints(
+       v.size(),
+       spl_df_v.data(),
+       v.size() + 1,
+       splines
+   );
+
+   std::vector< SplineLib::cSpline3 > o;
+   o.reserve(splines_count);
+
+   for (size_t i = 0; i < splines_count; ++i)
+   {
+      o.emplace_back(splines[i]);
+   }
+   return o;
+}
+
 } // namespace math
 } // namespace curves
 } // namespace obj

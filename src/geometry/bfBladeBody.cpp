@@ -2,13 +2,64 @@
 #include "bfBladeSection2.h"
 #include <algorithm>
 #include <fmt/base.h>
+#include <fmt/format.h>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 
 namespace obj
 {
 namespace body
 {
+
+BfBladeSurface::BfBladeSurface(std::vector< sectionw_t >&& sections)
+    : BfDrawObject("Blade surface", BF_PIPELINE(BfPipelineType_Lines), 0)
+    , m_sections{std::move(sections)}
+{
+}
+
+void
+BfBladeSurface::make()
+{
+   for (size_t i = 1; i < m_sections.size(); ++i)
+   {
+      size_t prev_c = _section(i - 1)->outputShape()->vertices().size();
+      size_t next_c = _section(i)->outputShape()->vertices().size();
+      if (prev_c != next_c)
+      {
+         const std::string msg = fmt::format(
+             "Cant create blade surface. "
+             "Section {} and {} has not equal "
+             "number of vertices -> {} | {}",
+             i - 1,
+             i,
+             prev_c,
+             next_c
+         );
+         throw std::runtime_error(msg);
+      }
+   }
+}
+
+auto
+BfBladeSurface::_section(uint32_t index) -> sections_t
+{
+   if (auto s = m_sections.at(index).lock())
+   {
+      return s;
+   }
+   else
+   {
+      const std::string msg = fmt::format(
+          "Cant lock section with index={} of total={}",
+          index,
+          m_sections.size()
+      );
+      throw std::runtime_error(msg);
+   }
+}
+
+/* ============================================================= */
 
 BfBladeBody::InfoIterator::InfoIterator(
     std::vector< base_pointer >::iterator begin

@@ -1,6 +1,7 @@
 #ifndef BF_OBJECT_MATH_H
 #define BF_OBJECT_MATH_H
 
+#include <Splines.h>
 #include <cassert>
 #include <cmath>
 #include <glm/ext/quaternion_geometric.hpp>
@@ -715,7 +716,7 @@ public:
 
 std::vector<BfVertex3> resampleCurve(const std::vector<BfVertex3>& originalVertices, size_t targetCount);
 
-
+std::vector<SplineLib::cSpline3> splineFitExternal3D(const std::vector<BfVertex3>& v);
 
 }  // namespace math
 }  // namespace curves

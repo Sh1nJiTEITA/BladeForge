@@ -1227,7 +1227,7 @@ public:
       m_geomCenter = BfVertex3Uni(
           BfVertex3{glm::vec3{0.f}, glm::vec3{1.f}, glm::vec3{0.0f, 0.f, -1.f}}
       );
-      m_totalInstanceCount = 2;
+      m_totalInstanceCount = 3;
    }
 
    BfVar< float >& step() { return m_sectionStep; }
@@ -1236,22 +1236,41 @@ public:
 
    virtual void prerender(uint32_t elem) override
    {
-      m_instanceCount = 1;
-      m_baseInstance = 1;
+
+      switch (elem)
+      {
+      case 0:
+         break;
+      case 1:
+         m_instanceCount = 2;
+         m_baseInstance = 0;
+         break;
+      case 2:
+         m_instanceCount = 1;
+         m_baseInstance = 2;
+         break;
+      }
    };
-   // virtual void postrender(uint32_t elem) {};
+
+   glm::mat4 rotateMtx()
+   {
+      const glm::vec3 normal = m_vertices.front().normals;
+      const float angle_degrees = 90.f - m_installAngle.get();
+      const float angle_rad = glm::radians(angle_degrees);
+      return glm::rotate(-angle_rad, normal);
+   }
+
+   glm::mat4 toCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
+
+   glm::mat4 fromCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
 
 protected:
    virtual std::vector< BfObjectData > _objectData() override
    {
       // clang-format off
-      const glm::vec3 normal = m_vertices.front().normals;
-      const float angle_degrees = 90.f - m_installAngle.get();
-      const float angle_rad = glm::radians(angle_degrees);
-
-      const glm::mat4 toCenter = glm::translate(-m_geomCenter.pos());
-      const glm::mat4 fromCenter = glm::translate(m_geomCenter.pos());
-      const glm::mat4 installAngleRotation = glm::rotate(-angle_rad, normal);
+      const auto toCenter = toCenterMtx();
+      const auto fromCenter = fromCenterMtx();
+      const auto installAngleRotation = rotateMtx();
 
       const glm::mat4 stepTranslation = glm::translate(glm::vec3(
          0.0f, 
@@ -1269,6 +1288,12 @@ protected:
            .line_thickness = 0.00025f},
 
           {.model_matrix = stepTranslation * rotated,
+           .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+           .index = 0,
+           .id = id(),
+           .line_thickness = 0.00025f},
+
+          {.model_matrix = installAngleRotation * toCenter,
            .select_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
            .index = 0,
            .id = id(),

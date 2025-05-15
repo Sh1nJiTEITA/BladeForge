@@ -861,7 +861,6 @@ BfBladeSection::prerender(uint32_t type)
 {
    if (m_isForceHide)
    {
-      fmt::println("PRE: {}", m_isForceHide);
       viewNone();
       return;
    }
@@ -875,6 +874,7 @@ BfBladeSection::prerender(uint32_t type)
       viewOutputShapeOnly();
       break;
    case 2:
+      viewOutputShapeOnly();
       break;
    };
 };
@@ -884,7 +884,6 @@ BfBladeSection::postrender(uint32_t type)
 {
    if (m_isForceHide)
    {
-      fmt::println("POST: {}", m_isForceHide);
       m_isForceHide = false;
       viewRevert();
       return;
@@ -899,6 +898,7 @@ BfBladeSection::postrender(uint32_t type)
       viewRevert();
       break;
    case 2:
+      viewRevert();
       break;
    };
 };
@@ -1065,6 +1065,12 @@ BfBladeSection::triangulate()
 
    return o;
    // clang-format on
+}
+
+std::shared_ptr< curves::BfSectionOutputShape >
+BfBladeSection::outputShape()
+{
+   return _part< E::OutputShape, curves::BfSectionOutputShape >();
 }
 
 }; // namespace section

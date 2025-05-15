@@ -159,6 +159,7 @@ public: // EXPORT
    virtual void postrender(uint32_t elem) override;
 
    auto triangulate() -> std::vector< BfObj >;
+   auto outputShape() -> std::shared_ptr< curves::BfSectionOutputShape >;
 
 private:
 

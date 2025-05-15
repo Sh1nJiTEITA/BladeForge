@@ -15,10 +15,45 @@ namespace obj
 namespace body
 {
 
+class BfBladeSurface : public obj::BfDrawObject
+{
+public:
+   using sectionw_t = std::weak_ptr< section::BfBladeSection >;
+   using sections_t = std::shared_ptr< section::BfBladeSection >;
+
+public:
+   BfBladeSurface(std::vector< sectionw_t >&& sections);
+
+   auto make() -> void override;
+
+protected:
+   auto _section(uint32_t index) -> sections_t;
+   // auto _makeCascadeWire(uint32_t index) -> ...
+
+private:
+   std::vector< sectionw_t > m_sections;
+};
+
+//
+//
+//
+//
+//
+//
+//
+//
+
 struct SectionCreateInfoExtended : public section::SectionCreateInfo
 {
    bool isActive = true;
 };
+//
+//
+//
+//
+//
+//
+//
 
 class BfBladeBody : public BfDrawLayer
 {

@@ -1778,13 +1778,6 @@ BfBladeBaseSurface::createVertices()
          }
          // Triangulate across part
       }
-      // std::cout << "Slices: " << v_part.size() << "\n";
-      // for (size_t i = 0; i < v_part.size(); ++i) {
-      // 	std::cout << "V:" << v_part[i].size() << "\n";
-      // 	for (size_t j = 0; j < v_part[j].size(); ++j) {
-      // 		__vertices.push_back(v_part[i][j]);
-      // 	}
-      // }
 
       glm::vec3 color{1.0f, 1.0f, 1.0f};
 
@@ -1823,30 +1816,8 @@ BfBladeBaseSurface::createVertices()
             __vertices.emplace_back(
                 BfVertex3{{v_part[slice_index][v_index + 1]}, color, n_1}
             );
-            // __vertices.emplace_back(v_part[slice_index][v_index+1]);
-            // __vertices.emplace_back(v_part[slice_index + 1][v_index]);
-            // __vertices.emplace_back(v_part[slice_index + 1][v_index]);
-            // __vertices.emplace_back(v_part[slice_index + 1][v_index+1]);
-            // __vertices.emplace_back(v_part[slice_index][v_index+1]);
-
-            // if (v_index == v_part[slice_index].size() - 2 && slice_index
-            // == v_part.size() - 2) { 	con
-            // }
-            // 	__vertices.emplace_back(v_part[slice_index][v_index]);
-            // 	__vertices.emplace_back(v_part[slice_index][v_index+1]);
-            // 	__vertices.emplace_back(v_part[slice_index +
-            // 1][v_index]);
-            // 	__vertices.emplace_back(v_part[slice_index +
-            // 1][v_index]);
-            // 	__vertices.emplace_back(v_part[slice_index +
-            // 1][v_index+1]);
-            // 	__vertices.emplace_back(v_part[slice_index][v_index+1]);
-            // }
          }
       }
-      // __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1]);
-      // __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1+1]);
-      // __vertices.emplace_back(v_part[v_part.size()-1][v_part[0].size()-1]);
    }
 }
 
