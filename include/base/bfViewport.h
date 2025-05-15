@@ -138,7 +138,6 @@ public: // PUBLIC METHODS
    
    auto close() -> void { 
       if (!m_isLeaf || !m_parent) {
-           // Can't close a non-leaf or root node
            return;
        }
 
@@ -151,8 +150,6 @@ public: // PUBLIC METHODS
            parent->m_isLeaf = true;
            parent->m_splitType = SplitDirection::None;
            parent->m_ratio = std::nanf("");
-
-           // Inherit camera or update parent if needed
            parent->m_camera.setExtent(parent->m_extent.x, parent->m_extent.y);
        }
    };
@@ -404,12 +401,18 @@ public:
       auto newpos = calcNewPos(dir, ratio);
       auto newext = calcNewExtent(dir, ratio);
       
-      m_FNode = std::make_unique<ViewPortNodeTyped>(2 * m_index + 1, newpos.first, newext.first);
-      m_SNode = std::make_unique<ViewPortNodeTyped>(2 * m_index + 2, newpos.second, newext.second);
+      auto f = std::make_unique<ViewPortNodeTyped>(2 * m_index + 1, newpos.first, newext.first);
+      auto s = std::make_unique<ViewPortNodeTyped>(2 * m_index + 2, newpos.second, newext.second);
 
-      m_FNode->setParent(this);
-      m_SNode->setParent(this);
+      f->setParent(this);
+      s->setParent(this);
+
+      f->setType(m_type);
+      s->setType(m_type);
       
+      m_FNode = std::move(f);
+      m_SNode = std::move(s);
+
       m_ratio = ratio;
    }  
    
