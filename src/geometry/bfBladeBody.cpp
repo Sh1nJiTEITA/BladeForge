@@ -3,6 +3,7 @@
 #include "bfCascade.h"
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
+#include <BRepTools.hxx>
 #include <BRep_Tool.hxx>
 #include <Poly_Array1OfTriangle.hxx>
 #include <Poly_Triangle.hxx>
@@ -125,12 +126,16 @@ BfBladeSurface::_makeCascadeWire(uint32_t index)
    const glm::mat4 center = shape->toCenterMtx();
    const glm::mat4 rotate = shape->rotateMtx();
 
+   // fmt::println("_makeCascadeWire BEGIN");
+   float z = sec->info().get().z;
    for (const auto& vert : shape->vertices())
    {
-      translated.push_back(
-          vert.otherPos(rotate * center * glm::vec4(vert.pos, 1.0f))
-      );
+      glm::vec3 new_vert = rotate * center * glm::vec4(vert.pos, 1.0f);
+      new_vert.z = z;
+      // fmt::println("NewV={}", new_vert);
+      translated.push_back(vert.otherPos(new_vert));
    }
+   // fmt::println("_makeCascadeWire END");
 
    return cascade::wireFromBfPoints(translated);
 }
@@ -138,19 +143,66 @@ BfBladeSurface::_makeCascadeWire(uint32_t index)
 TopoDS_Shape
 BfBladeSurface::_loft()
 {
+
    std::vector< TopoDS_Wire > w;
+
    for (size_t i = 0; i < m_sections.size(); ++i)
    {
-      w.push_back(_makeCascadeWire(i));
+      TopoDS_Wire wire = _makeCascadeWire(i);
+
+      std::cerr << "Wire " << i << ": ";
+      if (wire.IsNull())
+      {
+         std::cerr << "Null. Skipping.\n";
+         continue;
+      }
+
+      if (!wire.Closed())
+      {
+         std::cerr << "Not closed. Skipping.\n";
+         continue;
+      }
+
+      std::cerr << "Valid and closed.\n";
+      w.push_back(wire);
+   }
+
+   if (w.size() < 2)
+   {
+      std::cerr << "Error: Not enough valid wires to build a loft (need at "
+                   "least 2, got "
+                << w.size() << ").\n";
+      return TopoDS_Shape();
    }
 
    BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
+
    for (const auto& wire : w)
    {
       builder.AddWire(wire);
    }
 
-   builder.Build();
+   try
+   {
+      builder.Build();
+
+      if (!builder.IsDone())
+      {
+         std::cerr << "Error: BRepOffsetAPI_ThruSections build failed.\n";
+         return TopoDS_Shape();
+      }
+   }
+   catch (const Standard_OutOfRange& e)
+   {
+      std::cerr << "Standard_OutOfRange: " << e.GetMessageString() << "\n";
+      return TopoDS_Shape();
+   }
+   catch (const Standard_Failure& e)
+   {
+      std::cerr << "OpenCascade Exception: " << e.GetMessageString() << "\n";
+      return TopoDS_Shape();
+   }
+
    return builder.Shape();
 }
 
