@@ -1,6 +1,8 @@
 #include "bfGuiBody.h"
 #include "bfBladeBody.h"
 #include "bfBladeSection2.h"
+#include "bfCascade.h"
+#include "bfStep.h"
 #include <algorithm>
 #include <bfGuiFileDialog.h>
 #include <cmath>
@@ -10,6 +12,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <iterator>
+#include <nfd.hpp>
 #include <type_traits>
 
 namespace gui
@@ -635,6 +638,74 @@ void MainDock::presentSectionDock(pSection sec) {
    }
 }
 
+void 
+MainDock::presentSaveButton(pSection sec) {
+   const ImVec2 avail = ImGui::GetContentRegionAvail();
+   static int selectedExportMode = -1;
+   static const char* exportModes[] = { "Vertices", "Default" };
+   static bool openSavePopup = false;
+
+   // Main "Save As" button
+   if (ImGui::Button("Save As", { avail.x, 20.f })) {
+       ImGui::OpenPopup("Choose Export Mode");
+       openSavePopup = true;
+   }
+
+   // Popup content
+   if (ImGui::BeginPopupModal("Choose Export Mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+       ImGui::Text("How do you want to export?");
+       ImGui::Separator();
+
+       for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i) {
+           if (ImGui::Button(exportModes[i], ImVec2(200, 0))) {
+               selectedExportMode = i;
+               ImGui::CloseCurrentPopup();
+           }
+       }
+
+       ImGui::EndPopup();
+   }
+
+   // After popup selection, show file dialog
+   if (selectedExportMode != -1) {
+       nfdu8char_t* outPath = nullptr;
+
+       nfdu8filteritem_t filters[] = {
+           { "STEP file", "step" },
+           { "All Files", "*" }
+       };
+
+       nfdsavedialogu8args_t args = {0};
+       args.filterList = filters;
+       args.filterCount = sizeof(filters) / sizeof(filters[0]);
+       args.defaultName = "section.step";
+
+       nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
+
+       if (result == NFD_OKAY) {
+           fmt::println("Saving as: {}", outPath);
+
+           std::vector<TopoDS_Shape> shapesToExport;
+           if (selectedExportMode == 0) {
+               auto& shape_v = sec->outputShape()->vertices();
+               shapesToExport.push_back(cascade::wireFromBfPoints(shape_v));
+           } else {
+               shapesToExport = std::move(cascade::createSection(sec));
+           }
+
+           saveas::exportToSTEP(shapesToExport, outPath);
+           NFD_FreePathU8(outPath);
+       } else if (result == NFD_CANCEL) {
+           fmt::println("User canceled");
+       } else {
+           fmt::println("NFD Error: {}", NFD_GetError());
+       }
+
+       // Reset selection for next time
+       selectedExportMode = -1;
+   }
+}
+
 bool
 MainDock::presentSectionParameters(pSection sec)
 {
@@ -655,6 +726,12 @@ MainDock::presentSectionParameters(pSection sec)
    bool is_changed = false;
    if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
    {
+
+      presentSaveButton(sec);
+
+      ImGui::Separator();
+
+
       // clang-format off
       inputTableField outer_values[] = { &info->chord, &info->installAngle, &info->step };
       inputTableFieldSpeed outer_speeds[] = { 0.001f, 0.5f, 0.01f };

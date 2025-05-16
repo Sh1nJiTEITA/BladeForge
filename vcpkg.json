@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "dependencies": [
     "boost-bimap",
+    "fmt",
     "glm",
     {
       "name": "imgui",
@@ -19,7 +20,7 @@
     "xtensor",
     "xtensor-blas",
     "xtl",
-    "fmt"
+    "nativefiledialog-extended"
   ],
   "overrides": [
     {

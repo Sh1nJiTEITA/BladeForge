@@ -16,6 +16,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(xtl CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
+find_package(nfd CONFIG REQUIRED)
 
 # Проблемы с MINGW laplas решаются так
 if(WIN32)
@@ -60,6 +61,7 @@ target_link_libraries(
             ${LUA_LIBRARIES}
             implot::implot
             imgui::imgui
+            nfd::nfd
             fmt::fmt
             OpenBLAS::OpenBLAS
             glm::glm

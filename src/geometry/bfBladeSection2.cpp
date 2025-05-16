@@ -278,7 +278,6 @@ BfBladeSection::_calcGeometricCenter() {
       total_area += area;
       center_sum += area * centroid;
    }
-   fmt::println("GeomCenter={}", center_sum / total_area);
    return center_sum / total_area;
 }
 
@@ -802,7 +801,6 @@ BfBladeSection::_processGeometricCenter()
       auto obj = _part< E::GeometricCenter, curves::BfCircleCenterFilled >();
       const glm::vec3 center = _calcGeometricCenter();
       obj->center().pos() = { center.x, center.y, m_info.get().z };
-      fmt::println("{}", center);
    }
    // clang-format on
 }

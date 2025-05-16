@@ -3,6 +3,7 @@
 #include <cassert>
 #include <imgui_internal.h>
 #include <memory>
+#include <nfd.h>
 
 #include "bfAllocator.h"
 #include "bfAxis.h"
@@ -110,6 +111,8 @@ BfMain::_processSelfInteraction()
 void
 BfMain::_init()
 {
+   NFD_Init();
+
    BfConfigManager::createInstance();
 
    bfBindBase(&m_base);
@@ -266,6 +269,8 @@ BfMain::_kill()
    bfDestroyLogicalDevice(m_base);
    bfDestroyDebufMessenger(m_base);
    bfDestroyInstance(m_base);
+
+   NFD_Quit();
 }
 
 /*

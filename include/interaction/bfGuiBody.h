@@ -143,6 +143,7 @@ public:
    void presentCurrentFormattingSections();
    auto presentSectionDock(pSection sec) -> void;
    auto presentSectionParameters(pSection sec) -> bool;
+   auto presentSaveButton(pSection sec) -> void;
    auto presentSectionToggleView(pSection sec) -> void; 
    
    auto activeSections() -> std::vector< pSection >;

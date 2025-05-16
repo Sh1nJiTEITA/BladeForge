@@ -254,6 +254,7 @@ set(BF_GEOMETRY
     "src/geometry/bfEdge.cpp"
     "src/geometry/bfChain.cpp"
     "src/geometry/bfCurves3_gui.cpp"
+    "src/geometry/bfCascade.cpp"
     "src/geometry/bfBladeSection.cpp"
     "src/geometry/bfBladeBody.cpp"
     "src/geometry/bfBladeSection2.cpp"
@@ -269,8 +270,12 @@ target_link_libraries(bfsaveaslib PUBLIC bfexternallib)
 
 set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
 find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
+
 target_link_libraries(bfsaveaslib PUBLIC ${OpenCASCADE_LIBRARIES})
 target_include_directories(bfsaveaslib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
+
+target_link_libraries(bfgeometrylib PUBLIC ${OpenCASCADE_LIBRARIES})
+target_include_directories(bfgeometrylib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
 
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"
