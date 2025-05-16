@@ -31,7 +31,8 @@ auto createArc(const BfVertex3CASCADE& begin,
 auto createBezierCurve(const std::vector< BfVertex3CASCADE >& control) -> TopoDS_Shape;
 
 auto toCascadePoints(const std::vector< BfVertex3Uni >& v) -> std::vector< gp_Pnt >;
-auto toCascadePoints(const std::vector< BfVertex3Uni >& v) -> std::vector< gp_Pnt >;
+auto toCascadePoints(const std::vector< BfVertex3 >& v) -> std::vector< gp_Pnt >;
+auto toCascadePoints(const std::vector< glm::vec3 >& v) -> std::vector< gp_Pnt >;
 
 auto toCascadeBfPoints(const std::vector< BfVertex3Uni >& v) -> std::vector< BfVertex3CASCADE  >;
 

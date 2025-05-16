@@ -1,10 +1,12 @@
 #pragma once
 
+#include "bfBladeSection.h"
 #ifndef BF_BLADE_BODY_H
 #define BF_BLADE_BODY_H
 
 #include "bfBladeSection2.h"
 #include "bfDrawObject2.h"
+#include <TopoDS_Wire.hxx>
 #include <fmt/base.h>
 #include <iterator>
 #include <memory>
@@ -25,10 +27,12 @@ public:
    BfBladeSurface(std::vector< sectionw_t >&& sections);
 
    auto make() -> void override;
+   auto setSections(const std::vector< sectionw_t >& sections) -> void;
 
 protected:
    auto _section(uint32_t index) -> sections_t;
-   // auto _makeCascadeWire(uint32_t index) -> ...
+   auto _makeCascadeWire(uint32_t index) -> TopoDS_Wire;
+   auto _loft() -> TopoDS_Shape;
 
 private:
    std::vector< sectionw_t > m_sections;
@@ -82,7 +86,8 @@ public: // ITERATOR
       using reference = BfVar< SectionCreateInfoExtended >;
       using base_pointer = std::shared_ptr< BfDrawObjectBase >;
 
-      InfoIterator(std::vector< base_pointer >::iterator begin);
+      InfoIterator(std::vector< base_pointer >::iterator begin,
+                   std::vector< base_pointer >::iterator end);
 
       reference operator*() const;
       pointer operator->() const;
@@ -93,6 +98,7 @@ public: // ITERATOR
 
    private:
       std::vector< base_pointer >::iterator m_begin;
+      std::vector< base_pointer >::iterator m_end;
    };
    auto beginInfo() -> InfoIterator;
    auto endInfo() -> InfoIterator;
@@ -107,7 +113,8 @@ public: // ITERATOR
       using reference = section_t;
 
       using base_pointer = std::shared_ptr< BfDrawObjectBase >;
-      SectionIterator(std::vector< base_pointer >::iterator begin);
+      SectionIterator(std::vector< base_pointer >::iterator begin,
+                      std::vector< base_pointer >::iterator end);
 
       reference operator*() const;
       pointer operator->() const;
@@ -118,9 +125,12 @@ public: // ITERATOR
 
    private:
       std::vector< base_pointer >::iterator m_begin;
+      std::vector<base_pointer>::iterator m_end;
    };
    auto beginSection() -> SectionIterator;
    auto endSection() -> SectionIterator;
+   
+   auto createSurface() -> std::shared_ptr< BfBladeSurface > ;
 
 public:
    void sortSections();

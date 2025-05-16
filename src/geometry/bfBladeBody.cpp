@@ -1,8 +1,22 @@
 #include "bfBladeBody.h"
 #include "bfBladeSection2.h"
+#include "bfCascade.h"
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepOffsetAPI_ThruSections.hxx>
+#include <BRep_Tool.hxx>
+#include <Poly_Array1OfTriangle.hxx>
+#include <Poly_Triangle.hxx>
+#include <Poly_Triangulation.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopLoc_Location.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Wire.hxx>
 #include <algorithm>
 #include <fmt/base.h>
 #include <fmt/format.h>
+#include <gp_Pnt.hxx>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -13,32 +27,72 @@ namespace body
 {
 
 BfBladeSurface::BfBladeSurface(std::vector< sectionw_t >&& sections)
-    : BfDrawObject("Blade surface", BF_PIPELINE(BfPipelineType_Lines), 0)
+    : BfDrawObject("Blade surface", BF_PIPELINE(BfPipelineType_Triangles), 0)
     , m_sections{std::move(sections)}
 {
 }
 
 void
+BfBladeSurface::setSections(const std::vector< sectionw_t >& sections)
+{
+   m_sections = sections;
+}
+
+void
 BfBladeSurface::make()
 {
-   for (size_t i = 1; i < m_sections.size(); ++i)
+   TopoDS_Shape loft = _loft(); // Assuming this returns a valid TopoDS_Shape
+
+   // Create the mesh with deflection 0.01
+   BRepMesh_IncrementalMesh mesh(loft, 0.01);
+   mesh.Perform();
+
+   m_vertices.clear();
+
+   const glm::vec3 col{1.0f};
+
+   for (TopExp_Explorer exp(loft, TopAbs_FACE); exp.More(); exp.Next())
    {
-      size_t prev_c = _section(i - 1)->outputShape()->vertices().size();
-      size_t next_c = _section(i)->outputShape()->vertices().size();
-      if (prev_c != next_c)
+      // Correct safe downcast to face
+      TopoDS_Face face = TopoDS::Face(exp.Current());
+
+      TopLoc_Location loc;
+      Handle(Poly_Triangulation) tri = BRep_Tool::Triangulation(face, loc);
+      if (tri.IsNull())
+         continue;
+
+      for (size_t i = 1; i < tri->NbTriangles(); ++i)
       {
-         const std::string msg = fmt::format(
-             "Cant create blade surface. "
-             "Section {} and {} has not equal "
-             "number of vertices -> {} | {}",
-             i - 1,
-             i,
-             prev_c,
-             next_c
+         const Poly_Triangle& t = tri->Triangle(i);
+         int n1, n2, n3;
+         t.Get(n1, n2, n3);
+
+         gp_Pnt _n1 = tri->Node(n1);
+         gp_Dir _nn1 = tri->Normal(n1);
+         m_vertices.push_back(
+             BfVertex3{/* position */ {_n1.X(), _n1.Y(), _n1.Z()},
+                       /* color    */ col,
+                       /* normals  */ {_nn1.X(), _nn1.Y(), _nn1.Z()}}
          );
-         throw std::runtime_error(msg);
+
+         gp_Pnt _n2 = tri->Node(n2);
+         gp_Dir _nn2 = tri->Normal(n2);
+         m_vertices.push_back(
+             BfVertex3{/* position */ {_n2.X(), _n2.Y(), _n2.Z()},
+                       /* color    */ col,
+                       /* normals  */ {_nn2.X(), _nn2.Y(), _nn2.Z()}}
+         );
+
+         gp_Pnt _n3 = tri->Node(n3);
+         gp_Dir _nn3 = tri->Normal(n3);
+         m_vertices.push_back(
+             BfVertex3{/* position */ {_n3.X(), _n3.Y(), _n3.Z()},
+                       /* color    */ col,
+                       /* normals  */ {_nn3.X(), _nn3.Y(), _nn3.Z()}}
+         );
       }
    }
+   _genIndicesStandart();
 }
 
 auto
@@ -59,13 +113,58 @@ BfBladeSurface::_section(uint32_t index) -> sections_t
    }
 }
 
+TopoDS_Wire
+BfBladeSurface::_makeCascadeWire(uint32_t index)
+{
+   auto sec = _section(index);
+   auto shape = sec->outputShape();
+
+   std::vector< BfVertex3 > translated;
+   translated.reserve(shape->vertices().size());
+
+   const glm::mat4 center = shape->toCenterMtx();
+   const glm::mat4 rotate = shape->rotateMtx();
+
+   for (const auto& vert : shape->vertices())
+   {
+      translated.push_back(
+          vert.otherPos(rotate * center * glm::vec4(vert.pos, 1.0f))
+      );
+   }
+
+   return cascade::wireFromBfPoints(translated);
+}
+
+TopoDS_Shape
+BfBladeSurface::_loft()
+{
+   std::vector< TopoDS_Wire > w;
+   for (size_t i = 0; i < m_sections.size(); ++i)
+   {
+      w.push_back(_makeCascadeWire(i));
+   }
+
+   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
+   for (const auto& wire : w)
+   {
+      builder.AddWire(wire);
+   }
+
+   builder.Build();
+   return builder.Shape();
+}
+
 /* ============================================================= */
 
 BfBladeBody::InfoIterator::InfoIterator(
-    std::vector< base_pointer >::iterator begin
+    std::vector< base_pointer >::iterator begin,
+    std::vector< base_pointer >::iterator end
 )
-    : m_begin(begin)
+    : m_begin(begin), m_end{end}
 {
+   while (m_begin != m_end &&
+          !std::dynamic_pointer_cast< section::BfBladeSection >(*m_begin))
+      ++m_begin;
 }
 
 BfBladeBody::InfoIterator::reference
@@ -85,7 +184,11 @@ BfBladeBody::InfoIterator::operator->() const
 BfBladeBody::InfoIterator&
 BfBladeBody::InfoIterator::operator++()
 {
-   m_begin++;
+   do
+   {
+      ++m_begin;
+   } while (m_begin != m_end &&
+            !std::dynamic_pointer_cast< section::BfBladeSection >(*m_begin));
    return *this;
 }
 
@@ -113,13 +216,13 @@ BfBladeBody::InfoIterator::operator!=(const BfBladeBody::InfoIterator& other
 BfBladeBody::InfoIterator
 BfBladeBody::beginInfo()
 {
-   return InfoIterator(this->m_children.begin());
+   return InfoIterator(m_children.begin(), m_children.end());
 }
 
 BfBladeBody::InfoIterator
 BfBladeBody::endInfo()
 {
-   return InfoIterator(this->m_children.end());
+   return InfoIterator(m_children.end(), m_children.end());
 }
 
 BfVar< SectionCreateInfoExtended >
@@ -151,10 +254,14 @@ BfBladeBody::lastInfoCopy()
 //
 
 BfBladeBody::SectionIterator::SectionIterator(
-    std::vector< base_pointer >::iterator begin
+    std::vector< base_pointer >::iterator begin,
+    std::vector< base_pointer >::iterator end
 )
-    : m_begin(begin)
+    : m_begin(begin), m_end{end}
 {
+   while (m_begin != m_end &&
+          !std::dynamic_pointer_cast< section::BfBladeSection >(*m_begin))
+      ++m_begin;
 }
 
 BfBladeBody::SectionIterator::reference
@@ -173,7 +280,11 @@ BfBladeBody::SectionIterator::operator->() const
 BfBladeBody::SectionIterator&
 BfBladeBody::SectionIterator::operator++()
 {
-   m_begin++;
+   do
+   {
+      ++m_begin;
+   } while (m_begin != m_end &&
+            !std::dynamic_pointer_cast< section::BfBladeSection >(*m_begin));
    return *this;
 }
 
@@ -203,13 +314,32 @@ BfBladeBody::SectionIterator::operator!=(
 BfBladeBody::SectionIterator
 BfBladeBody::beginSection()
 {
-   return SectionIterator(this->m_children.begin());
+   return SectionIterator(m_children.begin(), m_children.end());
 }
 
 BfBladeBody::SectionIterator
 BfBladeBody::endSection()
 {
-   return SectionIterator(this->m_children.end());
+   return SectionIterator(m_children.end(), m_children.end());
+}
+
+std::shared_ptr< BfBladeSurface >
+BfBladeBody::createSurface()
+{
+   // m_children.clear();
+   std::vector< std::weak_ptr< section::BfBladeSection > > s;
+   for (auto it = beginSection(); it != endSection(); ++it)
+   {
+      auto info = grabExtInfo(*it);
+      if (info.get().isActive)
+      {
+         s.push_back(*it);
+      }
+   }
+
+   auto sur = std::make_shared< BfBladeSurface >(std::move(s));
+   this->m_children.push_back(sur);
+   return sur;
 }
 
 void

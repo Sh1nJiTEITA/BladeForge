@@ -497,6 +497,7 @@ MainDock::addSectionAndUpdateBuffer()
    auto sec = addSection();
    sec->make();
    sec->make();
+   sec->make();
    sec->control().updateBuffer();
    return sec;
 }
@@ -913,6 +914,14 @@ MainDock::presentMainDockCurrentExistingSections()
        0.f,
        FLT_MAX
    );
+
+   if (ImGui::Button("Create 3D shape", {x, y}))
+   {
+      m_body->createSurface();
+      m_body->root()->make();
+      m_body->control().updateBuffer();
+   }
+
    if (ImGui::Button("New section", {x, y}))
    {
       addSectionAndUpdateBuffer();

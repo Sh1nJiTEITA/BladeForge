@@ -124,6 +124,20 @@ toCascadeBfPoints(const std::vector< BfVertex3Uni >& v)
    return transformed;
    // clang-format on
 }
+
+std::vector< gp_Pnt >
+toCascadePoints(const std::vector< glm::vec3 >& v)
+{
+   // clang-format off
+   std::vector< gp_Pnt > transformed;
+   std::transform(v.begin(), v.end(), std::back_inserter(transformed),
+                  [](const auto& vert) { 
+                     return static_cast< BfVertex3CASCADE >(vert);
+                  });
+   return transformed;
+   // clang-format on
+}
+
 TopoDS_Wire
 createWireFromShapes(const std::vector< TopoDS_Shape >& shapes)
 {
