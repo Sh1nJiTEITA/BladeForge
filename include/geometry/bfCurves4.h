@@ -1260,8 +1260,18 @@ public:
       return glm::rotate(-angle_rad, normal);
    }
 
-   glm::mat4 toCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
-   glm::mat4 fromCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
+   glm::mat4 toCenterMtx()
+   {
+      return glm::translate(
+          -glm::vec3{m_geomCenter.pos().x, m_geomCenter.pos().y, 0.f}
+      );
+   }
+   glm::mat4 fromCenterMtx()
+   {
+      return glm::translate(
+          glm::vec3{m_geomCenter.pos().x, m_geomCenter.pos().y, 0.f}
+      );
+   }
 
 protected:
    virtual std::vector< BfObjectData > _objectData() override

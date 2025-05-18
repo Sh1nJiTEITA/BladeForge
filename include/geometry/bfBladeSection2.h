@@ -86,7 +86,12 @@ public:
        : obj::BfDrawLayerWithAccess<BfBladeSectionEnum>("Blade section", BUFFER_LAYER)
        , m_info{std::forward<T>(info)}
    {
-      viewFormattingShapeOnly(); 
+
+      m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
+
+      // viewFormattingShapeOnly(); 
+
+      // m_lastRenderBitSet = m_info.get().renderBitSet;
 
       _createChord(); 
       _createCircleEdges();
@@ -148,11 +153,10 @@ public: // EXPORT
    auto outputShapeSegments() -> int& { return m_outputShapeSegments; }
 
    auto viewNone() -> void; 
-   auto viewOutputShapeOnly() -> void; 
-   auto viewFormattingShapeOnly() -> void; 
+   auto viewOutputShapeOnly(bool init = false) -> void; 
+   auto viewFormattingShapeOnly(bool init = false) -> void; 
    auto viewRevert() -> void; 
    
-   auto forceHide() -> void;
 
 
    virtual void prerender(uint32_t elem) override;
@@ -238,8 +242,8 @@ private:
    BfVertex3 m_lastChordL; 
    BfVertex3 m_lastChordR; 
    
-   bool m_isOutputShapeWasEnabled = false;
-   bool m_isForceHide = false;
+   
+   bool m_isRenderLast = false;
    uint32_t m_lastRenderBitSet = UINT32_MAX;
 
    BfVar<SectionCreateInfo> m_info;

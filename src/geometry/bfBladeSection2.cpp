@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <bfChain.h>
 #include <cmath>
+#include <cstdint>
 #include <fmt/base.h>
 #include <fmt/ranges.h>
 #include <glm/common.hpp>
@@ -813,55 +814,44 @@ BfBladeSection::viewNone() -> void
 };
 
 void
-BfBladeSection::viewOutputShapeOnly()
+BfBladeSection::viewOutputShapeOnly(bool init)
 {
    // clang-format off
    //
-   m_lastRenderBitSet = m_info.get().renderBitSet;
+   if (!init) m_lastRenderBitSet = m_info.get().renderBitSet;
    m_info.get().renderBitSet = 0;
    m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
    m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
    m_info.get().renderBitSet |= static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
-   applyRenderToggle();
-   m_isOutputShapeWasEnabled = true;
+   if (!m_children.empty()) applyRenderToggle();
 }
 
 void
-BfBladeSection::viewFormattingShapeOnly()
+BfBladeSection::viewFormattingShapeOnly(bool init)
 {
    // clang-format off
-   m_lastRenderBitSet = m_info.get().renderBitSet;
+   if (!init) m_lastRenderBitSet = m_info.get().renderBitSet; 
+   else m_info.get().renderBitSet = UINT32_MAX;
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
+   // m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
    
    if (!m_children.empty()) applyRenderToggle();
 }
 
+
+
 void BfBladeSection::viewRevert() 
 { 
-   // if (m_isOutputShapeWasEnabled) { 
-      m_info.get().renderBitSet = m_lastRenderBitSet;
-      applyRenderToggle();
-      m_isOutputShapeWasEnabled = false;
-   // }
-}
-
-
-auto BfBladeSection::forceHide() -> void { 
-   m_isForceHide = true;
+   m_info.get().renderBitSet = m_lastRenderBitSet;
+   applyRenderToggle();
 }
 
 // clang-format on
 void
 BfBladeSection::prerender(uint32_t type)
 {
-   if (m_isForceHide)
-   {
-      viewNone();
-      return;
-   }
-
    switch (type)
    {
    case 0:
@@ -871,6 +861,8 @@ BfBladeSection::prerender(uint32_t type)
       viewOutputShapeOnly();
       break;
    case 2:
+      m_isRenderLast = isRender();
+      isRender() = true;
       viewOutputShapeOnly();
       break;
    };
@@ -879,13 +871,6 @@ BfBladeSection::prerender(uint32_t type)
 void
 BfBladeSection::postrender(uint32_t type)
 {
-   if (m_isForceHide)
-   {
-      m_isForceHide = false;
-      viewRevert();
-      return;
-   }
-
    switch (type)
    {
    case 0:
@@ -895,6 +880,7 @@ BfBladeSection::postrender(uint32_t type)
       viewRevert();
       break;
    case 2:
+      isRender() = m_isRenderLast;
       viewRevert();
       break;
    };

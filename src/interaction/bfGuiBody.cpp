@@ -488,7 +488,9 @@ MainDock::addSection()
 {
    auto guess = m_body->lastInfoCopy();
    m_infos.push_back(SectionCreateInfoGui{std::move(guess)});
-   return m_body->addSection(&m_infos.back());
+   auto sec = m_body->addSection(&m_infos.back());
+   sec->isRender() = false;
+   return sec;
 }
 
 pSection
@@ -800,25 +802,27 @@ MainDock::presentSectionToggleView(pSection sec) {
 
    ImGui::SeparatorText("Views");
    if (ImGui::Button("All", bsz)) { 
-      info->renderBitSet = UINT32_MAX;
-      info->renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+      sec->viewFormattingShapeOnly(true);
+      // info->renderBitSet = UINT32_MAX;
+      // info->renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
       no_remake = false;
    }
-   if (ImGui::Button("Triangular shape", bsz)) { 
-      info->renderBitSet = 0;
-      info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
-
-      no_remake = false;
-   }
-   if (ImGui::Button("Show/Hide handles", bsz)) { 
-      sec->toggleAllHandles(!info->isHandlesEnabled);
-      info->isHandlesEnabled = !info->isHandlesEnabled;
-   }
-   if (ImGui::Button("Show output shape", bsz)) { 
-      info->renderBitSet = 0;
-      info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::OutputShape);
-      no_remake = false;
-   }
+   // if (ImGui::Button("Triangular shape", bsz)) { 
+   //    sec->viewOutputShapeOnly(true);
+   //    // info->renderBitSet = 0;
+   //    // info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+   //
+   //    no_remake = false;
+   // }
+   // if (ImGui::Button("Show/Hide handles", bsz)) { 
+   //    sec->toggleAllHandles(!info->isHandlesEnabled);
+   //    info->isHandlesEnabled = !info->isHandlesEnabled;
+   // }
+   // if (ImGui::Button("Show output shape", bsz)) { 
+   //    info->renderBitSet = 0;
+   //    info->renderBitSet |= static_cast<uint32_t>(BfBladeSectionEnum::OutputShape);
+   //    no_remake = false;
+   // }
    ImGui::SetNextItemWidth(avail.x * 0.25f);
    if (ImGui::DragInt("Output shape segments", &sec->outputShapeSegments())) { 
       sec->outputShapeSegments() = glm::abs(sec->outputShapeSegments());
@@ -844,7 +848,8 @@ MainDock::presentSectionToggleView(pSection sec) {
    no_remake *= !renderBitCheckbox("AverageInitialCurve", static_cast<uint32_t>(BfBladeSectionEnum::AverageInitialCurve), &info->renderBitSet);
    no_remake *= !renderBitCheckbox("InletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::InletEdge), &info->renderBitSet);
    no_remake *= !renderBitCheckbox("OutletEdge",     static_cast<uint32_t>(BfBladeSectionEnum::OutletEdge), &info->renderBitSet);
-   no_remake *= !renderBitCheckbox("MassCenter",     static_cast<uint32_t>(BfBladeSectionEnum::MassCenter), &info->renderBitSet);
+   // no_remake *= !renderBitCheckbox("MassCenter",     static_cast<uint32_t>(BfBladeSectionEnum::MassCenter), &info->renderBitSet);
+   no_remake *= !renderBitCheckbox("TriangularShape",     static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape), &info->renderBitSet);
    
    ImGui::SeparatorText("Output");
    no_remake *= !renderBitCheckbox("Chain",     static_cast<uint32_t>(BfBladeSectionEnum::Chain), &info->renderBitSet);
