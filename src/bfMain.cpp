@@ -191,6 +191,12 @@ BfMain::_init()
        BfPipelineLayoutType_Main,
        fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/triangle"
    );
+   BfPipelineHandler::instance()->create< BfPipelineBuilderTriangleFrame >(
+       BfPipelineType_TrianglesFramed,
+       BfPipelineLayoutType_Main,
+       fs::path(BfConfigManager::getInstance()->exePath()) / "shaders/triangle"
+   );
+
    BfPipelineHandler::instance()->create< BfPipelineBuilderTriangle >(
        BfPipelineType_Axis,
        BfPipelineLayoutType_Main,

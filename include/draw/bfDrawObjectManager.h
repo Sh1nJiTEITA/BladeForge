@@ -124,7 +124,7 @@ public:
          size_t offset = 0;
          for (const auto& [type, l] : m_rootObjects) 
          { 
-            l->control().mapModel(frame_index, offset, ndata);
+            l->control().mapModel(frame_index, offset, ndata, nullptr);
          }
       }
       desc.unmap();

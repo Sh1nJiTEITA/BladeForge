@@ -29,7 +29,9 @@ namespace body
 {
 
 BfBladeSurface::BfBladeSurface(std::vector< sectionw_t >&& sections)
-    : BfDrawObject("Blade surface", BF_PIPELINE(BfPipelineType_Triangles), 0)
+    : BfDrawObject(
+          "Blade surface", BF_PIPELINE(BfPipelineType_TrianglesFramed), 0
+      )
     , m_sections{std::move(sections)}
 {
 }
@@ -77,6 +79,7 @@ BfBladeSurface::make()
                        // /* normals  */ {_nn1.X(), _nn1.Y(), _nn1.Z()}}
                        /* normals  */ {0, 0, -1}}
          );
+         m_indices.push_back(n1);
 
          gp_Pnt _n2 = tri->Node(n2);
          // gp_Dir _nn2 = tri->Normal(n2);
@@ -147,7 +150,7 @@ BfBladeSurface::_makeCascadeWire(uint32_t index)
 TopoDS_Shape
 BfBladeSurface::_loft()
 {
-   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/true);
+   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
 
    for (size_t i = 0; i < m_sections.size(); ++i)
    {
@@ -406,11 +409,17 @@ BfBladeBody::sortSections()
 {
    // clang-format off
    std::sort(
-      this->m_children.begin(),
-      this->m_children.end(),
-      [this](const auto& lhs, const auto& rhs) {
-         return grabExtInfo(lhs).get().z < grabExtInfo(rhs).get().z;
-      }
+       this->m_children.begin(),
+       this->m_children.end(),
+       [this](const auto& lhs, const auto& rhs) {
+          auto lhs_blade = std::dynamic_pointer_cast< BfBladeSection >(lhs);
+          auto rhs_blade = std::dynamic_pointer_cast< BfBladeSection >(rhs);
+          if (lhs_blade && rhs_blade)
+          {
+             return grabExtInfo(lhs).get().z < grabExtInfo(rhs).get().z;
+          }
+          return lhs_blade && !rhs_blade; // lhs blade comes before non-blade
+       }
    );
    // clang-format on
 }
@@ -419,7 +428,12 @@ void
 BfBladeBody::eraseUnactiveSections()
 {
    std::erase_if(this->m_children, [this](const auto& base) {
-      return !grabExtInfo(base).get().isActive;
+      auto blade = std::dynamic_pointer_cast< BfBladeSection >(base);
+      if (blade)
+      {
+         return !grabExtInfo(base).get().isActive;
+      }
+      return false;
    });
 }
 

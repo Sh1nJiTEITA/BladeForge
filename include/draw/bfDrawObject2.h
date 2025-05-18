@@ -115,7 +115,12 @@ public:
     * @param offset ...
     * @param data указатель на открытую для мапа память
     */
-   void mapModel(size_t frame_index, size_t& offset, void* data) const;
+   void mapModel(
+       size_t frame_index,
+       size_t& offset,
+       void* data,
+       std::queue< std::shared_ptr< BfDrawObjectBase > >* q
+   ) const;
 
    /**
     * @brief Обновляет содержимое буфера.

@@ -35,7 +35,10 @@ BfDrawControlProxy::isBuffer() const
 
 void
 BfDrawControlProxy::mapModel(
-    size_t frame_index, size_t& offset, void* data
+    size_t frame_index,
+    size_t& offset,
+    void* data,
+    std::queue< std::shared_ptr< BfDrawObjectBase > >* q
 ) const
 {
    auto& g = m_obj;
@@ -58,9 +61,38 @@ BfDrawControlProxy::mapModel(
    }
    else
    {
-      for (size_t i = 0; i < g.m_children.size(); i++)
+      std::queue< std::shared_ptr< BfDrawObjectBase > > inner_q;
+      const bool defer_map = isBuffer() && q != nullptr;
+
+      if (defer_map)
       {
-         g.m_children[i]->control().mapModel(frame_index, offset, data);
+         q->push(m_obj.shared_from_this());
+      }
+      else
+      {
+         for (size_t i = 0; i < g.m_children.size(); i++)
+         {
+            g.m_children[i]->control().mapModel(
+                frame_index,
+                offset,
+                data,
+                q == nullptr ? &inner_q : q
+            );
+         }
+      }
+
+      if (q == nullptr)
+      {
+         while (!inner_q.empty())
+         {
+            auto v = inner_q.front();
+            inner_q.pop();
+
+            size_t ioffset = 0;
+            size_t voffset = 0;
+
+            v->control().mapModel(frame_index, offset, data, nullptr);
+         }
       }
    }
 }

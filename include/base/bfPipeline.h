@@ -27,6 +27,7 @@ enum BfPipelineType_ : BfPipelineType
 {
    BfPipelineType_Lines,
    BfPipelineType_Triangles,
+   BfPipelineType_TrianglesFramed,
    BfPipelineType_Axis,
    BfPipelineType_LoadedImage,
    BfPipelineType_Handles,
