@@ -532,6 +532,7 @@ BfDrawLayer::make()
    for (auto child : m_children)
    {
       child->make();
+      child->isChanged() = false;
    }
 }
 
@@ -570,6 +571,7 @@ BfDrawRootLayer::make()
    for (auto child : m_children)
    {
       child->make();
+      child->isChanged() = false;
    }
 }
 }; // namespace obj

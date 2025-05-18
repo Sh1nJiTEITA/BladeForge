@@ -31,6 +31,9 @@ public:
    auto setSections(const std::vector< sectionw_t >& sections) -> void;
    auto dumbSectionsToStep(const fs::path& path) -> void;
 
+   virtual void prerender(uint32_t elem) override;
+   virtual void postrender(uint32_t elem) override;
+
 protected:
    auto _section(uint32_t index) -> sections_t;
    auto _makeCascadeWire(uint32_t index) -> TopoDS_Wire;
@@ -133,6 +136,7 @@ public: // ITERATOR
    auto endSection() -> SectionIterator;
    
    auto createSurface() -> std::shared_ptr< BfBladeSurface > ;
+   auto getSurface() -> std::shared_ptr< BfBladeSurface > ;
 
 public:
    void sortSections();

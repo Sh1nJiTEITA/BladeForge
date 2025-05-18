@@ -142,7 +142,7 @@ public:
 
    auto presentMainDockMenuBar() -> MainDockSignal;
 
-   void presentCurrentFormattingSections();
+   auto presentCurrentFormattingSections() -> bool;
    auto presentSectionDock(pSection sec) -> void;
    auto presentSectionParameters(pSection sec) -> bool;
    auto presentSaveButton(pSection sec) -> void;

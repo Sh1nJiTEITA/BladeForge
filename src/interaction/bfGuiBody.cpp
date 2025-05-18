@@ -528,7 +528,18 @@ MainDock::draw()
       auto space = ImGui::DockSpace(dock_id);
       buildMainDock(dock_id);
       m_signal |= presentMainDockCurrentExistingSections();
-      presentCurrentFormattingSections();
+      if (presentCurrentFormattingSections())
+      {
+         // fmt::println("Changing 3D shape");
+         if (auto sur = m_body->getSurface())
+         {
+            fmt::println("Changing surface");
+            // sur->make();
+            // m_body->root()->make();
+            // m_body->getSurface()->make();
+            m_body->root()->control().updateBuffer();
+         }
+      }
    }
    ImGui::End();
 }
@@ -562,11 +573,12 @@ MainDock::presentMainDockMenuBar()
    return signal;
 }
 
-void
+bool
 MainDock::presentCurrentFormattingSections()
 {
    // clang-format off
    auto fsections = formattingSections();
+   bool should_remake = false;
    for (auto sec : fsections)
    {
       const std::string sec_name = genSectionWindowName(sec);
@@ -579,19 +591,16 @@ MainDock::presentCurrentFormattingSections()
       sec->isRender() = ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
       {
          presentSectionDock(sec);
-         if (presentSectionParameters(sec)) { 
+         if (presentSectionParameters(sec) || sec->isChanged()) { 
             sec->make();
             sec->control().updateBuffer();
+            sec->isChanged() = false;
+            should_remake = true;
+            // m_body->make();
+            // m_body->root()->control().updateBuffer();
          }
       }
       ImGui::End();
-
-      // fmt::println("\"{}\": on top={}",sec_name, is_now);
-      
-     
-      // if (!is_window_on_top)  { 
-      // }
-      
    }
    if (fsections.empty())
    {
@@ -599,6 +608,7 @@ MainDock::presentCurrentFormattingSections()
       ImGui::Text("Here will be present section parameters");
       ImGui::End();
    }
+   return should_remake;
 }
 
 
@@ -921,9 +931,17 @@ MainDock::presentMainDockCurrentExistingSections()
 
    if (ImGui::Button("Create 3D shape", {x, y}))
    {
-      m_body->createSurface();
-      m_body->root()->make();
-      m_body->root()->control().updateBuffer();
+      if (auto sur = m_body->getSurface())
+      {
+         sur->make();
+         m_body->root()->control().updateBuffer();
+      }
+      else
+      {
+         m_body->createSurface();
+         m_body->root()->make();
+         m_body->root()->control().updateBuffer();
+      }
    }
    ImGui::Separator();
 

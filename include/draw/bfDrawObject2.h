@@ -317,6 +317,8 @@ public:
    }
 
    bool& isRender() { return m_isrender; }
+   bool& isChanged() { return m_isChanged; }
+
    uint32_t& instanceCount() { return m_instanceCount; }
    uint32_t& totalInstanceCount() { return m_totalInstanceCount; }
    uint32_t& baseInstance() { return m_baseInstance; }
@@ -337,6 +339,7 @@ protected:
    uint32_t m_totalInstanceCount;
    uint32_t m_instanceCount;
    uint32_t m_baseInstance;
+   bool m_isChanged;
 
    BfObjWeak m_root;
    std::vector< BfObj > m_children;

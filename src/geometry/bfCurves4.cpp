@@ -150,8 +150,10 @@ BfHandleCircle::processDragging()
    {
       center().pos() = m_initialCenterPos + delta3D();
       m_isChanged = true;
-      this->root()->make();
-      this->root()->control().updateBuffer();
+      this->root()->isChanged() = true;
+      // NOTE: THIS LOGIC MOVED TO GUI
+      // this->root()->make();
+      // this->root()->control().updateBuffer();
    }
 }
 

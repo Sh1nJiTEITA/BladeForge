@@ -325,6 +325,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC bfotherlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfdrawlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfinteractionlib)
 target_link_libraries(${PROJECT_NAME} PUBLIC bfsaveaslib)
+target_link_libraries(${PROJECT_NAME} PRIVATE tbb)
 # target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
 
 file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/")

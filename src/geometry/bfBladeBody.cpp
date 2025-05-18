@@ -16,6 +16,7 @@
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Wire.hxx>
 #include <algorithm>
+#include <execution>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <gp_Pnt.hxx>
@@ -45,19 +46,25 @@ BfBladeSurface::setSections(const std::vector< sectionw_t >& sections)
 void
 BfBladeSurface::make()
 {
-   TopoDS_Shape loft = _loft(); // Assuming this returns a valid TopoDS_Shape
+   TopoDS_Shape loft = _loft();
 
-   // Create the mesh with deflection 0.01
    BRepMesh_IncrementalMesh mesh(loft, 0.01);
    mesh.Perform();
 
    m_vertices.clear();
+   m_indices.clear();
 
    const glm::vec3 col{1.0f};
 
+   // Maps OCCT node index (1-based) + triangulation pointer to our local index
+   std::unordered_map<
+       std::pair< const Poly_Triangulation*, int >,
+       uint32_t,
+       boost::hash< std::pair< const Poly_Triangulation*, int > > >
+       index_map;
+
    for (TopExp_Explorer exp(loft, TopAbs_FACE); exp.More(); exp.Next())
    {
-      // Correct safe downcast to face
       TopoDS_Face face = TopoDS::Face(exp.Current());
 
       TopLoc_Location loc;
@@ -65,42 +72,38 @@ BfBladeSurface::make()
       if (tri.IsNull())
          continue;
 
-      for (size_t i = 1; i < tri->NbTriangles(); ++i)
+      for (int i = 1; i <= tri->NbTriangles(); ++i)
       {
          const Poly_Triangle& t = tri->Triangle(i);
-         int n1, n2, n3;
-         t.Get(n1, n2, n3);
+         int ids[3];
+         t.Get(ids[0], ids[1], ids[2]);
 
-         gp_Pnt _n1 = tri->Node(n1);
-         // gp_Dir _nn1 = tri->Normal(n1);
-         m_vertices.push_back(
-             BfVertex3{/* position */ {_n1.X(), _n1.Y(), _n1.Z()},
-                       /* color    */ col,
-                       // /* normals  */ {_nn1.X(), _nn1.Y(), _nn1.Z()}}
-                       /* normals  */ {0, 0, -1}}
-         );
-         m_indices.push_back(n1);
+         for (int j = 0; j < 3; ++j)
+         {
+            int id = ids[j];
 
-         gp_Pnt _n2 = tri->Node(n2);
-         // gp_Dir _nn2 = tri->Normal(n2);
-         m_vertices.push_back(
-             BfVertex3{/* position */ {_n2.X(), _n2.Y(), _n2.Z()},
-                       /* color    */ col,
-                       // /* normals  */ {_nn2.X(), _nn2.Y(), _nn2.Z()}}
-                       /* normals  */ {0, 0, -1}}
-         );
+            // Unique key: triangulation pointer + index
+            auto key = std::make_pair(tri.get(), id);
+            auto it = index_map.find(key);
+            if (it != index_map.end())
+            {
+               m_indices.push_back(it->second);
+            }
+            else
+            {
+               const gp_Pnt& p = tri->Node(id);
 
-         gp_Pnt _n3 = tri->Node(n3);
-         // gp_Dir _nn3 = tri->Normal(n3);
-         m_vertices.push_back(
-             BfVertex3{/* position */ {_n3.X(), _n3.Y(), _n3.Z()},
-                       /* color    */ col,
-                       // /* normals  */ {_nn3.X(), _nn3.Y(), _nn3.Z()}}
-                       /* normals  */ {0, 0, -1}}
-         );
+               uint32_t new_index = static_cast< uint32_t >(m_vertices.size());
+               m_vertices.push_back(
+                   BfVertex3{{p.X(), p.Y(), p.Z()}, col, {0.0f, 0.0f, -1.0f}}
+               );
+
+               index_map[key] = new_index;
+               m_indices.push_back(new_index);
+            }
+         }
       }
    }
-   _genIndicesStandart();
 }
 
 auto
@@ -152,10 +155,30 @@ BfBladeSurface::_loft()
 {
    BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
 
-   for (size_t i = 0; i < m_sections.size(); ++i)
+   // for (size_t i = 0; i < m_sections.size(); ++i)
+   // {
+   //    auto wire = cascade::wireFromSection(_section(i));
+   //    fmt::println("Made wire from section with index={}", i);
+   //    builder.AddWire(std::move(wire));
+   //    // return TopoDS_Shape{};
+   // }
+
+   std::vector< TopoDS_Wire > wires(m_sections.size());
+
+   std::for_each(
+       std::execution::par,
+       m_sections.begin(),
+       m_sections.end(),
+       [&](auto& sec) {
+          size_t idx = &sec - &m_sections[0];
+          wires[idx] = cascade::wireFromSection(_section(idx));
+          fmt::println("Made wire from section with index={}", idx);
+       }
+   );
+
+   // Now add wires sequentially (assuming builder is NOT thread-safe)
+   for (auto& wire : wires)
    {
-      auto wire = cascade::wireFromSection(_section(i));
-      fmt::println("Made wire from section with index={}", i);
       builder.AddWire(std::move(wire));
    }
 
@@ -214,6 +237,40 @@ BfBladeSurface::dumbSectionsToStep(const fs::path& path)
    }
 
    saveas::exportToSTEP(w, path);
+}
+
+void
+BfBladeSurface::prerender(uint32_t elem)
+{
+   switch (elem)
+   {
+   case 0:
+      isRender() = false;
+      break;
+   case 1:
+      isRender() = false;
+      break;
+   case 2:
+      isRender() = true;
+      break;
+   };
+}
+
+void
+BfBladeSurface::postrender(uint32_t elem)
+{
+   switch (elem)
+   {
+   case 0:
+      isRender() = true;
+      break;
+   case 1:
+      isRender() = true;
+      break;
+   case 2:
+      isRender() = false;
+      break;
+   };
 }
 
 /* ============================================================= */
@@ -402,6 +459,19 @@ BfBladeBody::createSurface()
    auto sur = std::make_shared< BfBladeSurface >(std::move(s));
    this->m_children.push_back(sur);
    return sur;
+}
+
+std::shared_ptr< BfBladeSurface >
+BfBladeBody::getSurface()
+{
+   for (auto it : m_children)
+   {
+      if (auto sur = std::dynamic_pointer_cast< BfBladeSurface >(it))
+      {
+         return sur;
+      }
+   }
+   return nullptr;
 }
 
 void

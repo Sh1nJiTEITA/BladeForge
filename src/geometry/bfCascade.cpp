@@ -11,6 +11,7 @@
 #include <STEPControl_StepModelType.hxx>
 #include <STEPControl_Writer.hxx>
 #include <TColgp_HArray1OfPnt.hxx>
+#include <TopExp.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Wire.hxx>
@@ -104,12 +105,15 @@ std::vector< gp_Pnt >
 toCascadePoints(const std::vector< BfVertex3 >& v)
 {
    // clang-format off
-   std::vector< gp_Pnt > transformed;
-   std::transform(v.begin(), v.end(), std::back_inserter(transformed),
-                  [](const auto& vert) { 
-                     return static_cast< BfVertex3CASCADE >(vert);
-                  });
-   return transformed;
+   std::vector<gp_Pnt> transformed;
+    transformed.reserve(v.size()); // Reserve upfront
+
+    for (const auto& vert : v)
+    {
+        transformed.emplace_back(static_cast<BfVertex3CASCADE>(vert));
+    }
+
+    return transformed;
    // clang-format on
 }
 
@@ -220,24 +224,60 @@ TopoDS_Wire wireFromBfPoints(const std::vector< BfVertex3 >& v)
 
    // clang-format on
 
-   auto points = toCascadePoints(v);
-   if (points.size() < 2)
+   if (v.size() < 2)
       throw std::runtime_error("Not enough points");
-   if (points.front().Distance(points.back()) > 1e-6)
-      points.push_back(points.front()); // Close the loop
 
-   TColgp_Array1OfPnt arr(1, points.size());
-   for (int i = 0; i < points.size(); ++i)
-      arr.SetValue(i + 1, points[i]);
+   // Reserve and transform efficiently
+   std::vector< gp_Pnt > points;
+   points.reserve(v.size() + 1); // +1 in case we need to close the loop
+
+   for (const auto& vert : v)
+      points.emplace_back(static_cast< BfVertex3CASCADE >(vert));
+
+   // Close the loop if not already
+   if (points.front().Distance(points.back()) > 1e-6)
+      points.emplace_back(points.front());
+
+   const int n = static_cast< int >(points.size());
+   TColgp_Array1OfPnt arr(1, n);
+   for (int i = 0; i < n; ++i)
+      arr.SetValue(
+          i + 1,
+          points[i]
+      ); // No need for std::move (gp_Pnt is cheap here)
 
    Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
    TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
    TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
 
-   if (!wire.Closed())
-      throw std::runtime_error("Wire is still not closed");
+   // Optional but safer: recheck if wire is properly closed geometrically
+   if (!wire.Closed() &&
+       BRep_Tool::Pnt(TopExp::FirstVertex(edge))
+               .Distance(BRep_Tool::Pnt(TopExp::LastVertex(edge))) > 1e-6)
+   {
+      throw std::runtime_error("Wire is still not closed geometrically");
+   }
 
    return wire;
+
+   // auto points = toCascadePoints(v);
+   // if (points.size() < 2)
+   //    throw std::runtime_error("Not enough points");
+   // if (points.front().Distance(points.back()) > 1e-6)
+   //    points.push_back(points.front()); // Close the loop
+   //
+   // TColgp_Array1OfPnt arr(1, points.size());
+   // for (int i = 0; i < points.size(); ++i)
+   //    arr.SetValue(i + 1, std::move(points[i]));
+   //
+   // Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
+   // TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
+   // TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
+   //
+   // if (!wire.Closed())
+   //    throw std::runtime_error("Wire is still not closed");
+   //
+   // return wire;
 
    // auto points = toCascadePoints(v);
    // if (points.size() < 2)
@@ -278,24 +318,63 @@ TopoDS_Wire wireFromBfPoints(const std::vector< BfVertex3 >& v)
 TopoDS_Wire
 wireFromSection(std::shared_ptr< obj::section::BfBladeSection > sec)
 {
-   // clang-format on
-   auto shape = sec->outputShape();
+   // auto shape = sec->outputShape();
+   // const auto& verts = shape->vertices();
+   // if (verts.size() < 2)
+   //    throw std::runtime_error("Not enough vertices to form a wire");
    //
-   std::vector< BfVertex3 > translated;
-   translated.reserve(shape->vertices().size());
+   // std::vector<BfVertex3> translated;
+   // translated.reserve(verts.size());
+   //
+   // const glm::mat4 mtx = shape->rotateMtx() * shape->toCenterMtx();
+   // const float z = sec->info().get().z;
+   //
+   // for (const auto& vert : verts)
+   // {
+   //    glm::vec3 p = glm::vec3(mtx * glm::vec4(vert.pos, 1.0f));
+   //    p.z = z;
+   //    translated.push_back(vert.otherPos(p));
+   // }
+   //
+   // return cascade::wireFromBfPoints(translated);
+    auto shape = sec->outputShape();
+    const auto& verts = shape->vertices();
+    if (verts.size() < 2)
+        throw std::runtime_error("Not enough vertices to form a wire");
 
-   const glm::mat4 center = shape->toCenterMtx();
-   const glm::mat4 rotate = shape->rotateMtx();
+    std::vector<gp_Pnt> points;
+    points.reserve(verts.size() + 1);
 
-   float z = sec->info().get().z;
-   for (const auto& vert : shape->vertices())
-   {
-      glm::vec3 new_vert = rotate * center * glm::vec4(vert.pos, 1.0f);
-      new_vert.z = z;
-      translated.push_back(vert.otherPos(new_vert));
-   }
+    const glm::mat4 mtx = shape->rotateMtx() * shape->toCenterMtx();
+    const float z = sec->info().get().z;
 
-   return cascade::wireFromBfPoints(translated);
+    for (const auto& vert : verts)
+    {
+        glm::vec3 p = glm::vec3(mtx * glm::vec4(vert.pos, 1.0f));
+        p.z = z;
+        // Construct gp_Pnt directly from glm::vec3 (assuming BfVertex3CASCADE is basically gp_Pnt)
+        points.emplace_back(p.x, p.y, p.z);
+    }
+
+    if (points.front().Distance(points.back()) > 1e-6)
+        points.push_back(points.front());
+
+    const int n = static_cast<int>(points.size());
+    TColgp_Array1OfPnt arr(1, n);
+    for (int i = 0; i < n; ++i)
+        arr.SetValue(i + 1, points[i]);
+
+    Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
+    TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
+    TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
+
+    if (!wire.Closed() &&
+        BRep_Tool::Pnt(TopExp::FirstVertex(edge)).Distance(BRep_Tool::Pnt(TopExp::LastVertex(edge))) > 1e-6)
+    {
+        throw std::runtime_error("Wire is still not closed geometrically");
+    }
+
+    return wire;
 }
 
 }; // namespace cascade
