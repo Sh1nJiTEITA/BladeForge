@@ -1261,7 +1261,6 @@ public:
    }
 
    glm::mat4 toCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
-
    glm::mat4 fromCenterMtx() { return glm::translate(-m_geomCenter.pos()); }
 
 protected:

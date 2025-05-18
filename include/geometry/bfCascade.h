@@ -41,9 +41,9 @@ auto createWireFromShapes(const std::vector<TopoDS_Shape>& shapes) -> TopoDS_Wir
 auto createSection(std::shared_ptr< obj::section::BfBladeSection > section) -> std::vector<TopoDS_Shape>;
 
 auto wireFromBfPoints(const std::vector< BfVertex3 >& v) -> TopoDS_Wire;
+auto wireFromSection(std::shared_ptr< obj::section::BfBladeSection > sec) -> TopoDS_Wire;
 
 
-
-}
+} // namespace cascade
 
 #endif

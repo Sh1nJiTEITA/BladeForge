@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bfBladeSection.h"
+#include <filesystem>
 #ifndef BF_BLADE_BODY_H
 #define BF_BLADE_BODY_H
 
@@ -28,6 +29,7 @@ public:
 
    auto make() -> void override;
    auto setSections(const std::vector< sectionw_t >& sections) -> void;
+   auto dumbSectionsToStep(const fs::path& path) -> void;
 
 protected:
    auto _section(uint32_t index) -> sections_t;

@@ -685,11 +685,10 @@ MainDock::presentSaveButton(pSection sec) {
 
        if (result == NFD_OKAY) {
            fmt::println("Saving as: {}", outPath);
-
            std::vector<TopoDS_Shape> shapesToExport;
            if (selectedExportMode == 0) {
-               auto& shape_v = sec->outputShape()->vertices();
-               shapesToExport.push_back(cascade::wireFromBfPoints(shape_v));
+               auto shape = sec->outputShape();
+               shapesToExport.push_back(cascade::wireFromSection(sec));
            } else {
                shapesToExport = std::move(cascade::createSection(sec));
            }
@@ -919,8 +918,11 @@ MainDock::presentMainDockCurrentExistingSections()
    {
       m_body->createSurface();
       m_body->root()->make();
-      m_body->control().updateBuffer();
+      m_body->root()->control().updateBuffer();
    }
+   ImGui::Separator();
+
+   presentSaveButtonSectionsSeparatly();
 
    if (ImGui::Button("New section", {x, y}))
    {
@@ -961,5 +963,78 @@ MainDock::presentMainDockCurrentExistingSections()
    ImGui::End();
    return signal;
 }
+
+
+void MainDock::presentSaveButtonSectionsSeparatly()  { 
+   const ImVec2 avail = ImGui::GetContentRegionAvail();
+   static int selectedExportMode = -1;
+   static bool openSavePopup = false;
+   static const char* exportModes[] = { "Vertices", "Default" };
+
+   // Main "Save As" button
+   if (ImGui::Button("Save As", { avail.x, 25.f })) {
+       ImGui::OpenPopup("Choose Export Mode");
+       openSavePopup = true;
+   }
+
+   // Popup content
+   if (ImGui::BeginPopup("Choose Export Mode")) {
+       ImGui::Text("How do you want to export?");
+       ImGui::Separator();
+
+       for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i) {
+           if (ImGui::Button(exportModes[i], ImVec2(200, 0))) {
+               selectedExportMode = i;
+               ImGui::CloseCurrentPopup();
+           }
+       }
+
+       ImGui::EndPopup();
+   }
+
+   // After popup selection, show file dialog
+   if (selectedExportMode != -1) {
+       nfdu8char_t* outPath = nullptr;
+
+       nfdu8filteritem_t filters[] = {
+           { "STEP file", "step" },
+           { "All Files", "*" }
+       };
+
+       nfdsavedialogu8args_t args = {0};
+       args.filterList = filters;
+       args.filterCount = sizeof(filters) / sizeof(filters[0]);
+       args.defaultName = "section.step";
+
+       nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
+
+       if (result == NFD_OKAY) {
+           fmt::println("Saving as: {}", outPath);
+
+           std::vector<TopoDS_Shape> shapesToExport;
+           if (selectedExportMode == 0) {
+               for (auto it = m_body->beginSection(); it != m_body->endSection(); ++it) { 
+                  shapesToExport.push_back(cascade::wireFromSection(*it));
+               }
+               saveas::exportToSTEP(shapesToExport, outPath);
+           } else {
+               // shapesToExport = std::move(cascade::createSection(sec));
+           }
+
+           saveas::exportToSTEP(shapesToExport, outPath);
+           NFD_FreePathU8(outPath);
+       } else if (result == NFD_CANCEL) {
+           fmt::println("User canceled");
+       } else {
+           fmt::println("NFD Error: {}", NFD_GetError());
+       }
+
+       // Reset selection for next time
+       selectedExportMode = -1;
+   }
+
+}
+
+
 
 }; // namespace gui

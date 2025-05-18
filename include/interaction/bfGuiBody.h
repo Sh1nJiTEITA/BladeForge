@@ -138,6 +138,8 @@ public:
 
    void buildMainDock(ImGuiID dock_id);
    auto presentMainDockCurrentExistingSections() -> MainDockSignal;
+   auto presentSaveButtonSectionsSeparatly() -> void;
+
    auto presentMainDockMenuBar() -> MainDockSignal;
 
    void presentCurrentFormattingSections();
@@ -159,6 +161,7 @@ private:
    pBody m_body;
    std::list< SectionCreateInfoGui > m_infos;
 };
+
 
 
 

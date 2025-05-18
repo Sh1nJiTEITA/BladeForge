@@ -6,6 +6,7 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GeomAPI_Interpolate.hxx>
+#include <GeomAPI_PointsToBSpline.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <STEPControl_StepModelType.hxx>
 #include <STEPControl_Writer.hxx>
@@ -216,46 +217,85 @@ createSection(std::shared_ptr< obj::section::BfBladeSection > section)
 
 TopoDS_Wire wireFromBfPoints(const std::vector< BfVertex3 >& v) 
 {
-    auto points = toCascadePoints(v);
 
-    if (points.size() < 2) {
-        throw std::runtime_error("Not enough points");
-    }
+   // clang-format on
 
-    BRepBuilderAPI_MakeWire wireMaker;
-    int addedEdges = 0;
+   auto points = toCascadePoints(v);
+   if (points.size() < 2)
+      throw std::runtime_error("Not enough points");
+   if (points.front().Distance(points.back()) > 1e-6)
+      points.push_back(points.front()); // Close the loop
 
-    for (size_t i = 0; i < points.size() - 1; ++i) {
-        const gp_Pnt& p1 = points[i];
-        const gp_Pnt& p2 = points[i + 1];
+   TColgp_Array1OfPnt arr(1, points.size());
+   for (int i = 0; i < points.size(); ++i)
+      arr.SetValue(i + 1, points[i]);
 
-        Standard_Real dist = p1.Distance(p2);
+   Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
+   TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
+   TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
 
-        if (dist < 1e-6) {
-            fmt::println("Skipping degenerate edge between points {} nad {}", i, i+1);
-            continue;
-        }
+   if (!wire.Closed())
+      throw std::runtime_error("Wire is still not closed");
 
-        try {
-            TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(p1, p2);
-            wireMaker.Add(edge);
-            ++addedEdges;
-        } catch (Standard_Failure& e) {
-            fmt::println("Edge {} failed: {}", i, e.GetMessageString());
-        }
-    }
+   return wire;
 
-    if (addedEdges == 0) {
-        throw std::runtime_error("No valid edges were added to the wire.");
-    }
-
-    return wireMaker.Wire();
+   // auto points = toCascadePoints(v);
+   // if (points.size() < 2)
+   //    throw std::runtime_error("Not enough points");
+   //
+   // TColgp_Array1OfPnt arr(1, points.size());
+   // for (int i = 0; i < points.size(); ++i)
+   //    arr.SetValue(i + 1, points[i]);
+   //
+   // Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
+   // TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
+   // TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
+   //
+   // if (!wire.Closed())
+   // {
+   //    throw std::runtime_error("Wire is not closed");
+   // }
+   //
+   // return wire;
+   //
+   // clang-format off
 }
 
+// TopoDS_Edge
+// edgeFromBfPoints(const std::vector< BfVertex3 >& v)  { 
+//    auto wire = wireFromBfPoints(v);
+//
+//    if (BRep_Tool::IsClosed(wire)) {
+//       TopoDS_Face face = BRepBuilderAPI_MakeFace(wire);
+//       result.push_back(face);
+//    }
+//
+//
+// }
+//
 
 
+TopoDS_Wire
+wireFromSection(std::shared_ptr< obj::section::BfBladeSection > sec)
+{
+   // clang-format on
+   auto shape = sec->outputShape();
+   //
+   std::vector< BfVertex3 > translated;
+   translated.reserve(shape->vertices().size());
 
+   const glm::mat4 center = shape->toCenterMtx();
+   const glm::mat4 rotate = shape->rotateMtx();
 
+   float z = sec->info().get().z;
+   for (const auto& vert : shape->vertices())
+   {
+      glm::vec3 new_vert = rotate * center * glm::vec4(vert.pos, 1.0f);
+      new_vert.z = z;
+      translated.push_back(vert.otherPos(new_vert));
+   }
 
+   return cascade::wireFromBfPoints(translated);
+}
 
-};
+}; // namespace cascade

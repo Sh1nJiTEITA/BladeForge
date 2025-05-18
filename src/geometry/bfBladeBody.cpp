@@ -1,6 +1,7 @@
 #include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCascade.h"
+#include "bfStep.h"
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <BRepTools.hxx>
@@ -69,27 +70,30 @@ BfBladeSurface::make()
          t.Get(n1, n2, n3);
 
          gp_Pnt _n1 = tri->Node(n1);
-         gp_Dir _nn1 = tri->Normal(n1);
+         // gp_Dir _nn1 = tri->Normal(n1);
          m_vertices.push_back(
              BfVertex3{/* position */ {_n1.X(), _n1.Y(), _n1.Z()},
                        /* color    */ col,
-                       /* normals  */ {_nn1.X(), _nn1.Y(), _nn1.Z()}}
+                       // /* normals  */ {_nn1.X(), _nn1.Y(), _nn1.Z()}}
+                       /* normals  */ {0, 0, -1}}
          );
 
          gp_Pnt _n2 = tri->Node(n2);
-         gp_Dir _nn2 = tri->Normal(n2);
+         // gp_Dir _nn2 = tri->Normal(n2);
          m_vertices.push_back(
              BfVertex3{/* position */ {_n2.X(), _n2.Y(), _n2.Z()},
                        /* color    */ col,
-                       /* normals  */ {_nn2.X(), _nn2.Y(), _nn2.Z()}}
+                       // /* normals  */ {_nn2.X(), _nn2.Y(), _nn2.Z()}}
+                       /* normals  */ {0, 0, -1}}
          );
 
          gp_Pnt _n3 = tri->Node(n3);
-         gp_Dir _nn3 = tri->Normal(n3);
+         // gp_Dir _nn3 = tri->Normal(n3);
          m_vertices.push_back(
              BfVertex3{/* position */ {_n3.X(), _n3.Y(), _n3.Z()},
                        /* color    */ col,
-                       /* normals  */ {_nn3.X(), _nn3.Y(), _nn3.Z()}}
+                       // /* normals  */ {_nn3.X(), _nn3.Y(), _nn3.Z()}}
+                       /* normals  */ {0, 0, -1}}
          );
       }
    }
@@ -143,47 +147,18 @@ BfBladeSurface::_makeCascadeWire(uint32_t index)
 TopoDS_Shape
 BfBladeSurface::_loft()
 {
-
-   std::vector< TopoDS_Wire > w;
+   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/true);
 
    for (size_t i = 0; i < m_sections.size(); ++i)
    {
-      TopoDS_Wire wire = _makeCascadeWire(i);
-
-      std::cerr << "Wire " << i << ": ";
-      if (wire.IsNull())
-      {
-         std::cerr << "Null. Skipping.\n";
-         continue;
-      }
-
-      if (!wire.Closed())
-      {
-         std::cerr << "Not closed. Skipping.\n";
-         continue;
-      }
-
-      std::cerr << "Valid and closed.\n";
-      w.push_back(wire);
-   }
-
-   if (w.size() < 2)
-   {
-      std::cerr << "Error: Not enough valid wires to build a loft (need at "
-                   "least 2, got "
-                << w.size() << ").\n";
-      return TopoDS_Shape();
-   }
-
-   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
-
-   for (const auto& wire : w)
-   {
-      builder.AddWire(wire);
+      auto wire = cascade::wireFromSection(_section(i));
+      fmt::println("Made wire from section with index={}", i);
+      builder.AddWire(std::move(wire));
    }
 
    try
    {
+      builder.CheckCompatibility();
       builder.Build();
 
       if (!builder.IsDone())
@@ -203,7 +178,39 @@ BfBladeSurface::_loft()
       return TopoDS_Shape();
    }
 
+   fmt::println("Loft done");
    return builder.Shape();
+}
+
+void
+BfBladeSurface::dumbSectionsToStep(const fs::path& path)
+{
+   std::vector< TopoDS_Shape > w;
+   w.reserve(m_sections.size());
+
+   for (size_t i = 0; i < m_sections.size(); ++i)
+   {
+      // TopoDS_Wire wire = _makeCascadeWire(i);
+      TopoDS_Wire wire = cascade::wireFromSection(_section(i));
+
+      std::cerr << "Wire " << i << ": ";
+      if (wire.IsNull())
+      {
+         std::cerr << "Null. Skipping.\n";
+         continue;
+      }
+
+      if (!wire.Closed())
+      {
+         std::cerr << "Not closed. Skipping.\n";
+         continue;
+      }
+
+      std::cerr << "Valid and closed.\n";
+      w.push_back(wire);
+   }
+
+   saveas::exportToSTEP(w, path);
 }
 
 /* ============================================================= */

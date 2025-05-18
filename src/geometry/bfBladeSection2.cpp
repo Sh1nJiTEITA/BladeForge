@@ -756,7 +756,6 @@ BfBladeSection::_processTriangularShape()
    {
       auto l = _part<E::TriangularShape, obj::BfDrawLayer>();
       auto t = triangulate();
-      fmt::println("{} ==? {}", t.size(), l->children().size());
       if (t.size() == l->children().size()) { 
          for (size_t i = 0; i < t.size(); ++i)  {
             auto tr = std::static_pointer_cast<curves::BfTriangle>(l->children()[i]);
