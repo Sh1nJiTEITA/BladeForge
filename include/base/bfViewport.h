@@ -4,6 +4,7 @@
 #define BF_VIEWPORT_CUSTOM_H
 
 #include "bfCamera.h"
+// #include "bfDrawObjectManager.h"
 #include "bfDescriptorStructs.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
@@ -573,6 +574,12 @@ public:
    
    static auto presentContextMenu() -> void { 
       auto& self = ViewportManager::inst();
+      
+      // if (auto hovered_id = obj::BfDrawManager::getHovered()) { 
+      //    return;
+      // }
+      
+
       auto current = self.currentHoveredNode() ;
       if (!current.has_value()) return;
 

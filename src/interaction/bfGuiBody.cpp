@@ -348,14 +348,26 @@ presentImageControlWindow(pImage img)
          if (fs::exists(file_path))
          {
             // FIXME: NEED TO PROVIDE FRAME INDEX
-            // auto& man =
-            // base::desc::own::BfDescriptorPipelineDefault::manager(); auto&
-            // texture = man.get< base::desc::own::BfDescriptorTextureTest >(
-            //     base::desc::own::SetType::Texture,
-            //     0
-            // );
-            // texture.reload(file_path);
-            // man.updateSets();
+            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+            {
+               auto& texture =
+                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
+                       0,
+                       base::desc::own::SetType::Texture,
+                       0
+                   );
+               texture.reload(file_path);
+            }
+            {
+               auto& texture =
+                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
+                       1,
+                       base::desc::own::SetType::Texture,
+                       0
+                   );
+               texture.reload(file_path);
+            }
+            man.updateSets();
          }
       }
    }
@@ -592,10 +604,10 @@ MainDock::presentCurrentFormattingSections()
       {
          presentSectionDock(sec);
          if (presentSectionParameters(sec) || sec->isChanged()) { 
-            sec->make();
-            sec->control().updateBuffer();
-            sec->isChanged() = false;
-            should_remake = true;
+            // sec->make();
+            // sec->control().updateBuffer();
+            // sec->isChanged() = false;
+            // should_remake = true;
             // m_body->make();
             // m_body->root()->control().updateBuffer();
          }
@@ -1020,7 +1032,7 @@ void MainDock::presentSaveButtonSectionsSeparatly()  {
    const ImVec2 avail = ImGui::GetContentRegionAvail();
    static int selectedExportMode = -1;
    static bool openSavePopup = false;
-   static const char* exportModes[] = { "Vertices", "Default" };
+   static const char* exportModes[] = { "Separate sections", "Surface" };
 
    // Main "Save As" button
    if (ImGui::Button("Save As", { avail.x, 25.f })) {
@@ -1067,11 +1079,9 @@ void MainDock::presentSaveButtonSectionsSeparatly()  {
                for (auto it = m_body->beginSection(); it != m_body->endSection(); ++it) { 
                   shapesToExport.push_back(cascade::wireFromSection(*it));
                }
-               saveas::exportToSTEP(shapesToExport, outPath);
            } else {
-               // shapesToExport = std::move(cascade::createSection(sec));
+               shapesToExport.push_back(m_body->getSurface()->exportShape());
            }
-
            saveas::exportToSTEP(shapesToExport, outPath);
            NFD_FreePathU8(outPath);
        } else if (result == NFD_CANCEL) {

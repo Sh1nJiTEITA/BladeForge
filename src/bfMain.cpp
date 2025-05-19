@@ -390,7 +390,10 @@ BfMain::_loop()
          node->presentRect();
       }
 
-      base::viewport::ViewportManager::presentContextMenu();
+      if (!obj::BfDrawManager::getHovered())
+      {
+         base::viewport::ViewportManager::presentContextMenu();
+      }
       m_gui.presentInfo();
       m_gui.presentMenuBar();
       m_gui.presentEventLog();
@@ -398,6 +401,8 @@ BfMain::_loop()
       m_gui.presentSettings();
       m_gui.presentFileDialog();
       m_gui.presentCameraWindow();
+
+      gui::presentImageControlWindow(tp);
       // m_gui.presentViewportRatioButton(m_base);
 
       ImGui::ShowMetricsWindow();

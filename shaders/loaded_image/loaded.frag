@@ -1,15 +1,34 @@
 #version 460
 #extension GL_EXT_debug_printf : enable
 
+layout(push_constant) uniform PushConstants {
+    int viewport_index;
+    int object_index;
+} pc;
+
 struct ObjectData {
     mat4 model_matrix;
-    vec3 select_color;
-    uint index;
-    uint id;
+    vec4 select_color;
+    vec4 center;
+    int index;
+    int id;
+    float line_thickness;
+    float _pad;
 };
 
+struct ViewData { 
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+    mat4 scale;
+    vec2 cursor_pos;
+    vec3 camera_pos;
+    uint id_on_cursor;
+};
+
+// Layouts 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
-    mat4 model; 
+    mat4 model;
     mat4 view;
     mat4 proj;
     vec2 cursor_pos;
@@ -17,6 +36,9 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     uint id_on_cursor;
 } ubo;
 
+layout(std140, set = 0, binding = 1) buffer MultiportViewUBO {
+    ViewData view_data[];
+} MVUBO;
 
 layout(std140, set = 1, binding = 0) buffer ObjectDataBuffer {
     ObjectData obj_data[];

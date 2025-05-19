@@ -34,6 +34,8 @@ public:
    virtual void prerender(uint32_t elem) override;
    virtual void postrender(uint32_t elem) override;
 
+   auto exportShape() -> TopoDS_Shape { return m_loft; }
+
 protected:
    auto _section(uint32_t index) -> sections_t;
    auto _makeCascadeWire(uint32_t index) -> TopoDS_Wire;

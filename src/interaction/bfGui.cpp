@@ -355,25 +355,34 @@ BfGui::presentTooltip()
    auto hovered_id = obj::BfDrawManager::getHovered();
    if (hovered_id)
    {
-      auto o = obj::BfDrawManager::findObjectById(hovered_id);
-      if (auto tq = std::dynamic_pointer_cast< obj::curves::BfTextureQuad >(o))
+      try
       {
-         if (tq->isLocked())
-            return;
+         auto o = obj::BfDrawManager::findObjectById(hovered_id);
+
+         if (auto tq =
+                 std::dynamic_pointer_cast< obj::curves::BfTextureQuad >(o))
+         {
+            if (tq->isLocked())
+               return;
+         }
+
+         ImGui::BeginTooltip();
+
+         ImGui::Text(
+             "type=%s",
+             obj::BfTypeManager::inst().getTypeNameById(hovered_id)
+         );
+         ImGui::Text("id=%i", hovered_id);
+         ImGui::Separator();
+
+         o->presentTooltipInfo();
+
+         ImGui::EndTooltip();
       }
-
-      ImGui::BeginTooltip();
-
-      ImGui::Text(
-          "type=%s",
-          obj::BfTypeManager::inst().getTypeNameById(hovered_id)
-      );
-      ImGui::Text("id=%i", hovered_id);
-      ImGui::Separator();
-
-      o->presentTooltipInfo();
-
-      ImGui::EndTooltip();
+      catch (...)
+      {
+         return;
+      }
    }
 }
 

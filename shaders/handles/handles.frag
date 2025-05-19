@@ -50,5 +50,8 @@ void main() {
     vec3 result = (ambient + diffuse) * fragColor;
 
     outId = obj_data_buffer.obj_data[obj_index].id;
-    outColor = vec4(result * obj_data_buffer.obj_data[obj_index].select_color.xyz, 1.0);
+
+    // outColor = vec4(result * obj_data_buffer.obj_data[obj_index].select_color.xyz, 1.0);
+    // outColor = vec4(obj_data_buffer.obj_data[obj_index].select_color.xyz, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }

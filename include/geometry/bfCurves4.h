@@ -1080,6 +1080,37 @@ public:
       blHandle()->move({0, 0, blHandle()->center().pos().z});
    }
 
+   virtual void prerender(uint32_t elem) override
+   {
+      switch (elem)
+      {
+      case 0:
+         isRender() = true;
+         break;
+      case 1:
+         isRender() = false;
+         break;
+      case 2:
+         isRender() = false;
+         break;
+      };
+   }
+   virtual void postrender(uint32_t elem) override
+   {
+      switch (elem)
+      {
+      case 0:
+         isRender() = false;
+         break;
+      case 1:
+         isRender() = true;
+         break;
+      case 2:
+         isRender() = true;
+         break;
+      };
+   }
+
    void make() override
    {
       _assignRoots();

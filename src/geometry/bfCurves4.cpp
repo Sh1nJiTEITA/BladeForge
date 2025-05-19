@@ -152,8 +152,8 @@ BfHandleCircle::processDragging()
       m_isChanged = true;
       this->root()->isChanged() = true;
       // NOTE: THIS LOGIC MOVED TO GUI
-      // this->root()->make();
-      // this->root()->control().updateBuffer();
+      this->root()->make();
+      this->root()->control().updateBuffer();
    }
 }
 
