@@ -41,6 +41,7 @@ protected:
 
 private:
    std::vector< sectionw_t > m_sections;
+   TopoDS_Shape m_loft;
 };
 
 //
@@ -148,6 +149,7 @@ public:
       return addf< section::BfBladeSection >(std::forward< INFO >(info));
    }
 
+   auto activeSections() -> std::vector< std::weak_ptr< section::BfBladeSection > >;
    auto addSection() -> section_t;
    auto lastInfoCopy() -> SectionCreateInfoExtended;
    

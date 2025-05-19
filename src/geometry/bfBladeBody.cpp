@@ -46,9 +46,9 @@ BfBladeSurface::setSections(const std::vector< sectionw_t >& sections)
 void
 BfBladeSurface::make()
 {
-   TopoDS_Shape loft = _loft();
+   m_loft = _loft();
 
-   BRepMesh_IncrementalMesh mesh(loft, 0.01);
+   BRepMesh_IncrementalMesh mesh(m_loft, 0.01);
    mesh.Perform();
 
    m_vertices.clear();
@@ -63,7 +63,7 @@ BfBladeSurface::make()
        boost::hash< std::pair< const Poly_Triangulation*, int > > >
        index_map;
 
-   for (TopExp_Explorer exp(loft, TopAbs_FACE); exp.More(); exp.Next())
+   for (TopExp_Explorer exp(m_loft, TopAbs_FACE); exp.More(); exp.Next())
    {
       TopoDS_Face face = TopoDS::Face(exp.Current());
 
@@ -351,6 +351,21 @@ BfBladeBody::grabExtInfo(base_t base)
    return static_cast< BfVar< SectionCreateInfoExtended > >(sec->info());
 }
 
+std::vector< std::weak_ptr< section::BfBladeSection > >
+BfBladeBody::activeSections()
+{
+   std::vector< std::weak_ptr< section::BfBladeSection > > s;
+   for (auto it = beginSection(); it != endSection(); ++it)
+   {
+      auto info = grabExtInfo(*it);
+      if (info.get().isActive)
+      {
+         s.push_back(*it);
+      }
+   }
+   return s;
+}
+
 BfBladeBody::section_t
 BfBladeBody::addSection()
 {
@@ -446,16 +461,7 @@ std::shared_ptr< BfBladeSurface >
 BfBladeBody::createSurface()
 {
    // m_children.clear();
-   std::vector< std::weak_ptr< section::BfBladeSection > > s;
-   for (auto it = beginSection(); it != endSection(); ++it)
-   {
-      auto info = grabExtInfo(*it);
-      if (info.get().isActive)
-      {
-         s.push_back(*it);
-      }
-   }
-
+   auto s = activeSections();
    auto sur = std::make_shared< BfBladeSurface >(std::move(s));
    this->m_children.push_back(sur);
    return sur;
@@ -482,11 +488,12 @@ BfBladeBody::sortSections()
        this->m_children.begin(),
        this->m_children.end(),
        [this](const auto& lhs, const auto& rhs) {
-          auto lhs_blade = std::dynamic_pointer_cast< BfBladeSection >(lhs);
-          auto rhs_blade = std::dynamic_pointer_cast< BfBladeSection >(rhs);
+          auto lhs_blade = std::dynamic_pointer_cast< section::BfBladeSection >(lhs);
+          auto rhs_blade = std::dynamic_pointer_cast< section::BfBladeSection >(rhs);
           if (lhs_blade && rhs_blade)
           {
-             return grabExtInfo(lhs).get().z < grabExtInfo(rhs).get().z;
+             // return grabExtInfo(lhs).get().z < grabExtInfo(rhs).get().z;
+             return lhs_blade->info().get().z < rhs_blade->info().get().z;
           }
           return lhs_blade && !rhs_blade; // lhs blade comes before non-blade
        }

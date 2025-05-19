@@ -931,18 +931,46 @@ MainDock::presentMainDockCurrentExistingSections()
 
    if (ImGui::Button("Create 3D shape", {x, y}))
    {
+      auto active_sec = m_body->activeSections();
       if (auto sur = m_body->getSurface())
       {
-         sur->make();
-         m_body->root()->control().updateBuffer();
+         if (active_sec.size() < 2)
+         {
+            ImGui::OpenPopup("Panic!");
+         }
+         else
+         {
+            sur->setSections(std::move(active_sec));
+            sur->make();
+            m_body->root()->control().updateBuffer();
+         }
       }
       else
       {
-         m_body->createSurface();
-         m_body->root()->make();
-         m_body->root()->control().updateBuffer();
+         if (active_sec.size() < 2)
+         {
+            ImGui::OpenPopup("Panic!");
+         }
+         else
+         {
+            m_body->createSurface();
+            m_body->root()->make();
+            m_body->root()->control().updateBuffer();
+         }
       }
    }
+
+   if (ImGui::BeginPopupModal("Panic!"))
+   {
+      ImGui::Text("Cant create surface from < 2 sections");
+
+      if (ImGui::Button("OK", {ImGui::GetContentRegionAvail().x, 20.f}))
+      {
+         ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+   }
+
    ImGui::Separator();
 
    presentSaveButtonSectionsSeparatly();
