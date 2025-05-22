@@ -267,15 +267,6 @@ set(BF_SAVEAS "src/saveas/bfStep.cpp")
 add_library(bfsaveaslib STATIC ${BF_SAVEAS})
 target_link_libraries(bfsaveaslib PUBLIC bfexternallib)
 
-set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
-find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
-
-target_link_libraries(bfsaveaslib PUBLIC ${OpenCASCADE_LIBRARIES})
-target_include_directories(bfsaveaslib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
-
-target_link_libraries(bfgeometrylib PUBLIC ${OpenCASCADE_LIBRARIES})
-target_include_directories(bfgeometrylib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
-
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"
     "src/interaction/bfEvent.cpp"

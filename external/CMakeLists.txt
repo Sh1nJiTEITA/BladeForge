@@ -3,6 +3,13 @@ project(bfexternal)
 
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
 
+# opencascade ============================================================
+set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
+find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
+
+# sol2 ====================================================================
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sol2)
+
 # VMA =====================================================================
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vma)
 
@@ -73,7 +80,8 @@ if(WIN32)
 elseif(UNIX)
   find_package(Lua REQUIRED)
 endif()
-target_include_directories(bfexternallib INTERFACE ${LUA_INCLUDE_DIR})
+target_include_directories(bfexternallib INTERFACE ${LUA_INCLUDE_DIR}
+                                                   ${OpenCASCADE_INCLUDE_DIR})
 
 set(IMGUI_IMPL_VULKAN
     ON
@@ -83,6 +91,7 @@ target_link_libraries(
   bfexternallib
   INTERFACE xtl
             glfw
+            ${OpenCASCADE_LIBRARIES}
             # Boost::bimap
             ${Boost_LIBRARIES}
             ${LUA_LIBRARIES}
