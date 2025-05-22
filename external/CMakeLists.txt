@@ -59,7 +59,7 @@ endif()
 
 find_package(xtensor REQUIRED)
 find_package(xtensor-blas REQUIRED)
-find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+# find_package(VulkanMemoryAllocator REQUIRED)
 find_package(OpenMP REQUIRED)
 # find_package(Boost REQUIRED COMPONENTS bimap)
 find_package(Boost REQUIRED)
