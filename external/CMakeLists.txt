@@ -37,7 +37,7 @@ target_link_libraries(implot PUBLIC imgui)
 
 add_library(bfexternallib INTERFACE)
 
-target_include_directories(bfexternallib PUBLIC ${CMAKE_PREFIX_PATH}/include)
+target_include_directories(bfexternallib INTERFACE ${CMAKE_PREFIX_PATH}/include)
 
 # ==========================================================================
 target_link_libraries(bfexternallib INTERFACE implot)
