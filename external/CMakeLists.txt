@@ -71,6 +71,7 @@ else()
   find_package(OpenBLAS CONFIG REQUIRED)
 endif()
 
+find_package(xsimd REQUIRED)
 find_package(xtensor REQUIRED)
 find_package(xtensor-blas REQUIRED)
 # find_package(VulkanMemoryAllocator REQUIRED)
@@ -103,6 +104,7 @@ target_link_libraries(
             ${Boost_LIBRARIES}
             ${LUA_LIBRARIES}
             # implot::implot imgui::imgui
+            xsimd
             nfd::nfd
             fmt::fmt
             OpenBLAS::OpenBLAS
