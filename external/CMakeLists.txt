@@ -23,6 +23,7 @@ add_library(
   ./imgui/imgui_tables.cpp ./imgui/backends/imgui_impl_vulkan.cpp
   ./imgui/backends/imgui_impl_glfw.cpp)
 
+target_include_directories(imgui PUBLIC ./imgui/backends/)
 # target_sources(imgui STATIC ./imgui/backends/imgui_impl_vulkan.h
 # ./imgui/backends/imgui_impl_glfw.h)
 
