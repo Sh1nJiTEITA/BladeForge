@@ -3,6 +3,9 @@ project(bfexternal)
 
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
 
+# VMA =====================================================================
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vma)
+
 # NFD =====================================================================
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/nfd)
 
