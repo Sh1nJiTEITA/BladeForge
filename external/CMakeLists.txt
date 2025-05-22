@@ -31,8 +31,11 @@ target_include_directories(imgui PUBLIC ./imgui/)
 # IMPLOT ===================================================================
 add_library(implot STATIC ./implot/implot.cpp ./implot/implot_items.cpp)
 target_include_directories(implot PUBLIC ./implot/)
+target_link_libraries(implot PUBLIC imgui)
+
 add_library(bfexternallib INTERFACE)
 
+# ==========================================================================
 target_link_libraries(bfexternallib INTERFACE implot)
 target_link_libraries(bfexternallib INTERFACE imgui)
 
