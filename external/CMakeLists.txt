@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(bfexternal)
 
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
+list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local/share/cmake")
 
 # opencascade ============================================================
 set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
