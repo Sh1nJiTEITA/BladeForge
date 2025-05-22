@@ -3,6 +3,9 @@ project(bfexternal)
 
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
 
+# NFD =====================================================================
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/nfd)
+
 # IMGUI ===================================================================
 add_library(
   imgui STATIC
@@ -10,8 +13,8 @@ add_library(
   ./imgui/imgui_tables.cpp ./imgui/backends/imgui_impl_vulkan.cpp
   ./imgui/backends/imgui_impl_glfw.cpp)
 
-target_sources(imgui STATIC ./imgui/backends/imgui_impl_vulkan.h
-                     ./imgui/backends/imgui_impl_glfw.h)
+# target_sources(imgui STATIC ./imgui/backends/imgui_impl_vulkan.h
+# ./imgui/backends/imgui_impl_glfw.h)
 
 target_include_directories(imgui PUBLIC ./imgui/)
 
@@ -35,7 +38,6 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(xtl REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-find_package(nfd CONFIG REQUIRED)
 
 # Проблемы с MINGW laplas решаются так
 if(WIN32)
@@ -55,7 +57,9 @@ endif()
 find_package(xtensor REQUIRED)
 find_package(xtensor-blas REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS bimap)
+find_package(OpenMP REQUIRED)
+# find_package(Boost REQUIRED COMPONENTS bimap)
+find_package(Boost REQUIRED)
 find_path(SOL2_INCLUDE_DIRS "sol/abort.hpp")
 
 target_include_directories(bfexternallib INTERFACE ${SOL2_INCLUDE_DIRS})
@@ -76,7 +80,8 @@ target_link_libraries(
   bfexternallib
   INTERFACE xtl
             glfw
-            Boost::bimap
+            # Boost::bimap
+            ${Boost_LIBRARIES}
             ${LUA_LIBRARIES}
             # implot::implot imgui::imgui
             nfd::nfd
