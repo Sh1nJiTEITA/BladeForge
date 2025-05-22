@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(bfexternal)
 
+list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
+
+add_library(implot STATIC ./implot/implot.cpp ./implot/implot_items.cpp)
+target_include_directories(implot PUBLIC ./implot/)
+
 add_library(bfexternallib INTERFACE)
+
+target_link_libraries(bfexternallib INTERFACE implot)
 
 # Единственная non-vcpkg
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/splines-lib)
@@ -11,9 +18,9 @@ target_include_directories(bfexternallib
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
-find_package(implot CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(xtl CONFIG REQUIRED)
+# find_package(implot CONFIG REQUIRED)
+find_package(imgui REQUIRED)
+find_package(xtl REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(nfd CONFIG REQUIRED)
@@ -33,8 +40,8 @@ else()
   find_package(OpenBLAS CONFIG REQUIRED)
 endif()
 
-find_package(xtensor CONFIG REQUIRED)
-find_package(xtensor-blas CONFIG REQUIRED)
+find_package(xtensor REQUIRED)
+find_package(xtensor-blas REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS bimap)
 find_path(SOL2_INCLUDE_DIRS "sol/abort.hpp")
@@ -59,7 +66,7 @@ target_link_libraries(
             glfw
             Boost::bimap
             ${LUA_LIBRARIES}
-            implot::implot
+            # implot::implot
             imgui::imgui
             nfd::nfd
             fmt::fmt

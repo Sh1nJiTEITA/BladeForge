@@ -5,7 +5,7 @@ if(WIN32)
   # зависимости использовать именно его
 
   # TODO: добавить поддержку MSVC - это реально, но пока что не нужно
-  set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
+  # set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
 
   # Так как lapack не работает из коробки с MINGW, то используется OpenBLAS, но
   # так как в xtensor-blas - жестко прописан lapack - то таким образом можно
@@ -14,9 +14,8 @@ if(WIN32)
                         ${CMAKE_MODULE_PATH})
 endif()
 
-set(CMAKE_TOOLCHAIN_FILE
-    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
+# set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+# CACHE STRING "Vcpkg toolchain file")
 set(CMAKE_SUPPRESS_REGENERATION TRUE)
 
 set(CMAKE_CXX_FLAGS "-g -O0")
