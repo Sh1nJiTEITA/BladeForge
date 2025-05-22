@@ -10,7 +10,7 @@
 	url = https://github.com/epezent/implot.git
 [submodule "external/sol2"]
 	path = external/sol2
-	url = https://github.com/ThePhD/sol2
+	url = https://github.com/ThePhD/sol2.git
 [submodule "external/nfd"]
 	path = external/nfd
 	url = https://github.com/btzy/nativefiledialog-extended.git
