@@ -31,8 +31,7 @@ target_include_directories(bfexternallib
 
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
-# find_package(implot CONFIG REQUIRED)
-find_package(imgui REQUIRED)
+# find_package(implot CONFIG REQUIRED) find_package(imgui REQUIRED)
 find_package(xtl REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
@@ -79,8 +78,7 @@ target_link_libraries(
             glfw
             Boost::bimap
             ${LUA_LIBRARIES}
-            # implot::implot
-            imgui::imgui
+            # implot::implot imgui::imgui
             nfd::nfd
             fmt::fmt
             OpenBLAS::OpenBLAS
