@@ -3,12 +3,25 @@ project(bfexternal)
 
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
 
+# IMGUI ===================================================================
+add_library(
+  imgui STATIC
+  ./imgui/imgui.cpp ./imgui/imgui_draw.cpp ./imgui/imgui_widgets.cpp
+  ./imgui/imgui_tables.cpp ./imgui/backends/imgui_impl_vulkan.cpp
+  ./imgui/backends/imgui_impl_glfw.cpp)
+
+target_sources(imgui STATIC ./imgui/backends/imgui_impl_vulkan.h
+                     ./imgui/backends/imgui_impl_glfw.h)
+
+target_include_directories(imgui PUBLIC ./imgui/)
+
+# IMPLOT ===================================================================
 add_library(implot STATIC ./implot/implot.cpp ./implot/implot_items.cpp)
 target_include_directories(implot PUBLIC ./implot/)
-
 add_library(bfexternallib INTERFACE)
 
 target_link_libraries(bfexternallib INTERFACE implot)
+target_link_libraries(bfexternallib INTERFACE imgui)
 
 # Единственная non-vcpkg
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/splines-lib)
