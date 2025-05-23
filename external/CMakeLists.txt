@@ -99,6 +99,7 @@ target_link_libraries(
   bfexternallib
   INTERFACE xtl
             glfw
+            sol2
             ${OpenCASCADE_LIBRARIES}
             # Boost::bimap
             ${Boost_LIBRARIES}
