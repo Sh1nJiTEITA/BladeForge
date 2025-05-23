@@ -25,6 +25,42 @@ namespace obj
 {
 namespace section
 {
+// clang-format off
+SectionCreateInfo::SectionCreateInfo() 
+    : z { 0.0f }
+    , chord { 1.0f }
+    , installAngle { 80.0f }
+    , step { 0.4f }
+    , isEqMode { false }
+    , inletAngle { 180.0f - 66.0f - 30.f }
+    , outletAngle { 66.0f - 20.f }
+    , inletRadius { 0.043f }
+    , outletRadius { 0.017f }
+    , centerCircles { { {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f} } }
+    , initialBezierCurveOrder { 5 }
+    , renderBitSet { UINT32_MAX }
+     
+{
+   constexpr auto norm = glm::vec3{ 0.0f, 0.0f, 1.0f };
+
+   vertChordLeft = { glm::vec3{ 0.0f, 0.0f, z }, 
+                     glm::vec3{ 0.5f, 0.5f, 0.1f },
+                     norm };
+   
+   vertChordRight = { glm::vec3{ chord, 0.0f, z }, 
+                      glm::vec3{ 0.5f, 0.5f, 0.1f },
+                      norm };
+
+   vertLeftChordBorder = { glm::vec3{ 0.0f, chord, z }, 
+                           glm::vec3{ 0.5f, 0.5f, 0.1f },
+                           norm };
+
+   vertRightChordBorder = { glm::vec3{ chord, chord, z }, 
+                            glm::vec3{ 0.5f, 0.5f, 0.1f },
+                            norm };
+}
+// clang-format on
+
 void
 BfBladeSection::applyRenderToggle()
 {
@@ -288,16 +324,8 @@ BfBladeSection::_createChord()
    // clang-format off
    auto& g = m_info;
    auto oChord = _addPartF<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
-      BfVertex3{
-         glm::vec3{ 0.0f, 0.0f, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      },
-      BfVertex3{
-         glm::vec3{ g.get().chord, 0.0f, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertChordLeft),
+      BfVertex3Uni(&g.get().vertChordRight)
    );
    // oChord->toggleRender(false);
    // oChord->toggleRender(false);
@@ -306,22 +334,14 @@ BfBladeSection::_createChord()
 
    auto oChordLeft = _addPartF<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->left().getp(),
-      BfVertex3{
-         glm::vec3{ oChord->left().pos().x, g.get().chord, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertLeftChordBorder) 
    );
    // oChordLeft->toggleRender(false);
    // oChordLeft->toggleRender(false);
 
    auto oChordRight = _addPartF<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
-      BfVertex3{
-         glm::vec3{ oChord->right().pos().x, g.get().chord, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertRightChordBorder) 
    );
    // clang-format on
 }

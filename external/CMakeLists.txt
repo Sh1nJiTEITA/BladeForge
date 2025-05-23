@@ -4,6 +4,9 @@ project(bfexternal)
 list(APPEND CMAKE_PREFIX_PATH "~/.local/share/cmake/")
 list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local/share/cmake")
 
+# yaml ===================================================================
+find_package(yaml-cpp REQUIRED)
+
 # opencascade ============================================================
 set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
 find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
@@ -59,7 +62,6 @@ find_package(fmt CONFIG REQUIRED)
 # Проблемы с MINGW laplas решаются так
 if(WIN32)
   find_package(OpenBLAS CONFIG REQUIRED)
-
   set(LAPACK_LINKER_FLAGS "-lopenblas")
   set(LAPACK_LIBRARIES OpenBLAS::OpenBLAS)
   set(LAPACK_FOUND TRUE)
@@ -99,12 +101,11 @@ target_link_libraries(
   bfexternallib
   INTERFACE xtl
             glfw
+            yaml-cpp::yaml-cpp
             sol2
             ${OpenCASCADE_LIBRARIES}
-            # Boost::bimap
             ${Boost_LIBRARIES}
             ${LUA_LIBRARIES}
-            # implot::implot imgui::imgui
             xsimd
             nfd::nfd
             fmt::fmt
