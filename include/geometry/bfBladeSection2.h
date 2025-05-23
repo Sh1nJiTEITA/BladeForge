@@ -25,6 +25,8 @@ struct CenterCircle
 {
    float relativePos;
    float radius;
+   float backVertexAngle = 90.f;
+   float frontVertexAngle = 90.f;
 };
 
 struct SectionCreateInfo
@@ -73,7 +75,15 @@ struct SectionCreateInfo
    BfVertex3 vertLeftChordBorder;
    BfVertex3 vertRightChordBorder;
 
+   //! Control vertices of "average" "skelet" initial curve
    std::vector< BfVertex3 > initialCurveControlVertices;
+
+   //! Back & front angles for inlet / outlet circle
+   //! Which may one day be part of central circles
+   float inletBackVertexAngle;
+   float inletFrontVertexAngle;
+   float outletBackVertexAngle;
+   float outletFrontVertexAngle;
 };
 
 // clang-format off
@@ -122,7 +132,6 @@ public:
       _createIOCircles();
       _createChain();
       _createIOArc();
-
    }
 
    virtual void make() override

@@ -263,7 +263,7 @@ set(BF_GEOMETRY
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
 
-set(BF_SAVEAS "src/saveas/bfStep.cpp")
+set(BF_SAVEAS "src/saveas/bfStep.cpp" "src/saveas/bfYaml.cpp")
 add_library(bfsaveaslib STATIC ${BF_SAVEAS})
 target_link_libraries(bfsaveaslib PUBLIC bfexternallib)
 

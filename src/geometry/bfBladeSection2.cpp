@@ -570,15 +570,16 @@ void BfBladeSection::_processAverageInitialCurve() {
 }
 
 void BfBladeSection::_createCenterCircles() { 
-   auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>("Circles layer 2");
+   auto circ_layer = _addPartF<E::CenterCircles, obj::BfDrawLayer>("Circles layer 2");
    for (auto& circ : m_info.get().centerCircles) { 
       circ_layer->addf<curves::BfCirclePackWH>(
          BfVar< float >(&circ.relativePos),
          BfVar< float >(&circ.radius),
-         BfVar< float >(90.0f),
-         BfVar< float >(90.0f),
-         _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierIsolatedWH>()->curve()
-         , curves::BfCirclePackWH::Flag::SeparateHandles// | curves::BfCirclePackWH::Flag::FixedAngle
+         BfVar< float >(&circ.backVertexAngle),
+         BfVar< float >(&circ.frontVertexAngle),
+         _part<E::AverageInitialCurve, curves::BfBezierIsolatedWH>()->curve()
+         , curves::BfCirclePackWH::Flag::SeparateHandles// 
+         // | curves::BfCirclePackWH::Flag::FixedAngle
       );
    }
    circ_layer->make();
@@ -600,8 +601,8 @@ void BfBladeSection::_processCenterCircles() {
       circ_layer->addf< curves::BfCirclePackWH >(
           BfVar< float >(&c.back().relativePos),
           BfVar< float >(&c.back().radius),
-          BfVar< float >(90.0f),
-          BfVar< float >(90.0f),
+          BfVar< float >(&c.back().backVertexAngle),
+          BfVar< float >(&c.back().frontVertexAngle),
           _part< E::AverageInitialCurve, curves::BfBezierIsolatedWH >()->curve(
           ),
           curves::BfCirclePackWH::Flag::SeparateHandles
@@ -634,17 +635,18 @@ void BfBladeSection::_processCenterCircles() {
 void
 BfBladeSection::_createIOCircles()
 {
+   auto& g = m_info.get();
    _addPartF< E::InletEdge, curves::BfEdge >(
-       BfVar< float >(90.f),
-       BfVar< float >(90.f),
+       BfVar< float >(&g.inletBackVertexAngle),
+       BfVar< float >(&g.inletFrontVertexAngle),
        _part< E::InletDirection, curves::BfSingleLineWH >(),
        _part< E::InletCircle, curves::BfCircle2LinesWH >(),
        curves::BfEdge::Type::Inlet
    );
 
    _addPartF< E::OutletEdge, curves::BfEdge >(
-       BfVar< float >(90.f),
-       BfVar< float >(90.f),
+       BfVar< float >(&g.outletBackVertexAngle),
+       BfVar< float >(&g.outletFrontVertexAngle),
        _part< E::OutletDirection, curves::BfSingleLineWH >(),
        _part< E::OutletCircle, curves::BfCircle2LinesWH >(),
        curves::BfEdge::Type::Outlet

@@ -3,6 +3,7 @@
 #include "bfBladeSection2.h"
 #include "bfCascade.h"
 #include "bfStep.h"
+#include "bfYaml.h"
 #include <algorithm>
 #include <bfGuiFileDialog.h>
 #include <cmath>
@@ -14,6 +15,7 @@
 #include <iterator>
 #include <nfd.hpp>
 #include <type_traits>
+#include <yaml-cpp/node/node.h>
 
 namespace gui
 {
@@ -603,7 +605,7 @@ MainDock::presentCurrentFormattingSections()
       sec->isRender() = ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
       {
          presentSectionDock(sec);
-         if (presentSectionParameters(sec) || sec->isChanged()) { 
+         if (presentSectionParameters(sec) /* || sec->isChanged() */) { 
             sec->make();
             sec->control().updateBuffer();
             // sec->isChanged() = false;
@@ -664,70 +666,116 @@ void MainDock::presentSectionDock(pSection sec) {
 }
 
 void 
-MainDock::presentSaveButton(pSection sec) {
+MainDock::presentSectionSaveButton(pSection sec) {
+
+   // clang-format on
    const ImVec2 avail = ImGui::GetContentRegionAvail();
    static int selectedExportMode = -1;
-   static const char* exportModes[] = { "Vertices", "Default" };
+   static const char* exportModes[] =
+       {"Step vertices", "Step curves", "BladeForge format"};
    static bool openSavePopup = false;
 
    // Main "Save As" button
-   if (ImGui::Button("Save As", { avail.x, 20.f })) {
-       ImGui::OpenPopup("Choose Export Mode");
-       openSavePopup = true;
+   if (ImGui::Button("Save As", {avail.x, 20.f}))
+   {
+      ImGui::OpenPopup("Choose Export Mode");
+      openSavePopup = true;
    }
 
    // Popup content
-   if (ImGui::BeginPopupModal("Choose Export Mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-       ImGui::Text("How do you want to export?");
-       ImGui::Separator();
+   if (ImGui::BeginPopup("Choose Export Mode"))
+   {
+      ImGui::Text("How do you want to export?");
+      ImGui::Separator();
 
-       for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i) {
-           if (ImGui::Button(exportModes[i], ImVec2(200, 0))) {
-               selectedExportMode = i;
-               ImGui::CloseCurrentPopup();
-           }
-       }
+      for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i)
+      {
+         if (ImGui::Button(exportModes[i], ImVec2(200, 0)))
+         {
+            selectedExportMode = i;
+            ImGui::CloseCurrentPopup();
+         }
+      }
 
-       ImGui::EndPopup();
+      ImGui::EndPopup();
    }
 
    // After popup selection, show file dialog
-   if (selectedExportMode != -1) {
-       nfdu8char_t* outPath = nullptr;
+   if (selectedExportMode != -1)
+   {
+      nfdu8char_t* outPath = nullptr;
+      nfdu8filteritem_t filters_step[] = {
+          {"Universal CAD format", "step"},
+          {"All Files", "*"}
+      };
+      nfdu8filteritem_t filters_yaml[] = {
+          {"BladeForge default format", "yaml"},
+          {"All Files", "*"}
+      };
 
-       nfdu8filteritem_t filters[] = {
-           { "STEP file", "step" },
-           { "All Files", "*" }
-       };
+      nfdsavedialogu8args_t args = {0};
 
-       nfdsavedialogu8args_t args = {0};
-       args.filterList = filters;
-       args.filterCount = sizeof(filters) / sizeof(filters[0]);
-       args.defaultName = "section.step";
+      switch (selectedExportMode)
+      {
+      case 0:
+         args.filterList = filters_step;
+         args.filterCount = sizeof(filters_step) / sizeof(filters_step[0]);
+         args.defaultName = "section.step";
+         break;
+      case 1:
+         args.filterList = filters_step;
+         args.filterCount = sizeof(filters_step) / sizeof(filters_step[0]);
+         args.defaultName = "section.step";
+         break;
+      case 2:
+         args.filterList = filters_yaml;
+         args.filterCount = sizeof(filters_yaml) / sizeof(filters_yaml[0]);
+         args.defaultName = "section.yaml";
+         break;
+      }
 
-       nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
+      nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
 
-       if (result == NFD_OKAY) {
-           fmt::println("Saving as: {}", outPath);
-           std::vector<TopoDS_Shape> shapesToExport;
-           if (selectedExportMode == 0) {
-               auto shape = sec->outputShape();
-               shapesToExport.push_back(cascade::wireFromSection(sec));
-           } else {
-               shapesToExport = std::move(cascade::createSection(sec));
-           }
+      if (result == NFD_OKAY)
+      {
+         fmt::println("Saving as: {}", outPath);
+         std::vector< TopoDS_Shape > shapesToExport;
+         switch (selectedExportMode)
+         {
+         case 0: {
+            auto shape = sec->outputShape();
+            shapesToExport.push_back(cascade::wireFromSection(sec));
+            saveas::exportToSTEP(shapesToExport, outPath);
+         }
+         break;
+         case 1: {
+            shapesToExport = std::move(cascade::createSection(sec));
+            saveas::exportToSTEP(shapesToExport, outPath);
+         }
+         break;
+         case 2: {
+            auto yaml = YAML::Node(sec->info().get());
+            saveas::exportToYaml(yaml, outPath);
+         }
+         break;
+         }
 
-           saveas::exportToSTEP(shapesToExport, outPath);
-           NFD_FreePathU8(outPath);
-       } else if (result == NFD_CANCEL) {
-           fmt::println("User canceled");
-       } else {
-           fmt::println("NFD Error: {}", NFD_GetError());
-       }
+         NFD_FreePathU8(outPath);
+      }
+      else if (result == NFD_CANCEL)
+      {
+         fmt::println("User canceled");
+      }
+      else
+      {
+         fmt::println("NFD Error: {}", NFD_GetError());
+      }
 
-       // Reset selection for next time
-       selectedExportMode = -1;
+      // Reset selection for next time
+      selectedExportMode = -1;
    }
+
+   // clang-format off
 }
 
 bool
@@ -751,7 +799,7 @@ MainDock::presentSectionParameters(pSection sec)
    if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
    {
 
-      presentSaveButton(sec);
+      presentSectionSaveButton(sec);
 
       ImGui::Separator();
 
