@@ -51,7 +51,7 @@ presentBladeSectionTable(
             names[i]
          );
 
-         is_changed = is_changed || std::visit(
+         is_changed = std::visit(
              [&field_name](auto&& arg, auto&& speed) {
                 using T = std::remove_reference_t< decltype(arg) >;
                 using S = std::decay_t< decltype(speed) >;
@@ -69,7 +69,7 @@ presentBladeSectionTable(
                 }
              },
              values[i], speeds[i]
-         );
+         ) || is_changed;
          ImGui::PopStyleColor();
       }
       ImGui::EndTable();
@@ -604,8 +604,8 @@ MainDock::presentCurrentFormattingSections()
       {
          presentSectionDock(sec);
          if (presentSectionParameters(sec) || sec->isChanged()) { 
-            // sec->make();
-            // sec->control().updateBuffer();
+            sec->make();
+            sec->control().updateBuffer();
             // sec->isChanged() = false;
             // should_remake = true;
             // m_body->make();
@@ -760,31 +760,33 @@ MainDock::presentSectionParameters(pSection sec)
       inputTableField outer_values[] = { &info->chord, &info->installAngle, &info->step };
       inputTableFieldSpeed outer_speeds[] = { 0.001f, 0.5f, 0.01f };
       const char* outer_names[] = {"Chord", "Install Angle", "Step"};
-      is_changed = is_changed || presentBladeSectionTable("Outer", outer_values, outer_speeds, outer_names, 3);
+      is_changed = presentBladeSectionTable("Outer", outer_values, outer_speeds, outer_names, 3) || is_changed;
 
       ImGui::SeparatorText("Average curve");
       inputTableField ave_values[] = {&info->initialBezierCurveOrder};
       inputTableFieldSpeed ave_speeds[] = { 1 };
       const char* ave_names[] = {"Average curve order" };
-      is_changed = is_changed || presentBladeSectionTable("Ave", ave_values, ave_speeds, ave_names, 1);
+      is_changed = presentBladeSectionTable("Ave", ave_values, ave_speeds, ave_names, 1) 
+         || is_changed;
 
       ImGui::SeparatorText("Inlet");
       inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
       inputTableFieldSpeed inlet_speeds[] = { 0.5f, 0.001f };
       const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Inlet", inlet_values, inlet_speeds, inlet_names, 2);
+      is_changed = presentBladeSectionTable("Inlet", inlet_values, inlet_speeds, inlet_names, 2) || is_changed;
 
       ImGui::SeparatorText("Outlet");
       inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
       inputTableFieldSpeed outlet_speeds[] = { 0.5f, 0.001f };
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Outlet", outlet_values, outlet_speeds, outlet_names, 2);
+      is_changed = presentBladeSectionTable("Outlet", outlet_values, outlet_speeds, outlet_names, 2) || is_changed;
+      
    }
    ImGui::End();
 
    ImGui::Begin(circles_title.c_str());
    {
-      is_changed = is_changed || presentCenterCirclesEditor(info->centerCircles);
+      is_changed = presentCenterCirclesEditor(info->centerCircles) || is_changed;
    }
    ImGui::End();
 

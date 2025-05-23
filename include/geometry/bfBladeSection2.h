@@ -72,6 +72,8 @@ struct SectionCreateInfo
    //! Left & right chord borders (free vertices)
    BfVertex3 vertLeftChordBorder;
    BfVertex3 vertRightChordBorder;
+
+   std::vector< BfVertex3 > initialCurveControlVertices;
 };
 
 // clang-format off

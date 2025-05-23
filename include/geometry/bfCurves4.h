@@ -342,7 +342,6 @@ public:
       }
    }
 
-   
    void elevateOrder();
    void lowerateOrder();
    bool toggleHandle(size_t i, int status = -1);
@@ -351,6 +350,56 @@ public:
    
 private:
    std::vector<BfVertex3Uni> _genControlVerticesPointers();
+};
+
+class BfBezierIsolatedWH : public obj::BfDrawLayer
+{
+public:
+   BfBezierIsolatedWH(std::vector<BfVertex3>& ctrlv)
+       : obj::BfDrawLayer("Isolated Bezier curve with handles")
+       , m_ctrlvertices(ctrlv)
+   {
+      // FIXME: СУПЕР ВРЕМЕННОЕ РЕШЕНИЕ, если при добавлении точек
+      // внутренний вектор сделает ресайз -> все ручки, указывающие
+      // на точки вектора уйдут в segmentation fault
+      auto curve = std::make_shared<curves::BfBezierN>(
+          _genControlVerticesPointers()
+      );
+      this->add(curve);
+
+      auto handles_layer = std::make_shared<obj::BfDrawLayer>("Handles layer");
+      this->add(handles_layer);
+
+
+      for (auto& v : *curve) {
+         handles_layer->add(std::make_shared<curves::BfHandleCircle>(v.getp(), 0.01f));
+      }
+
+      auto lines_layer = std::make_shared<obj::BfDrawLayer>("Lines layer");
+      this->add(lines_layer);
+
+      for (auto i = 0; i < m_ctrlvertices.size() - 1; ++i) { 
+         
+         auto line = std::make_shared<curves::BfSingleLine>(
+            BfVertex3Uni(&m_ctrlvertices[i]),
+            BfVertex3Uni(&m_ctrlvertices[i + 1])
+         );
+         line->color() = glm::vec3(1.0f, 1.0f, 1.0f);
+         lines_layer->add(line);
+      }
+   }
+   
+   void elevateOrder();
+   void lowerateOrder();
+   bool toggleHandle(size_t i, int status = -1);
+   bool toggleBoundHandles(int sts = -1);
+   std::shared_ptr<curves::BfBezierN> curve();
+
+private:
+   std::vector<BfVertex3Uni> _genControlVerticesPointers();
+
+private:
+   std::vector<BfVertex3>& m_ctrlvertices;
 };
 
 class BfSingleLineWH : public obj::BfDrawLayer
@@ -502,6 +551,7 @@ public:
       glm::vec3 circle_center = circle->center().pos;
       glm::vec3 direction_to_handle =
           glm::normalize(circle_center - m_center.pos());
+
       auto handle = std::make_shared< curves::BfHandleCircle >(
           BfVertex3(
               circle_center + direction_to_handle * m_radius.get(),
@@ -526,6 +576,8 @@ private:
    glm::vec3 m_oldbegin;
    glm::vec3 m_oldcenter;
    glm::vec3 m_oldend;
+
+   float m_last_known_radius = -1.0f;
 
    BfVertex3Uni m_begin;
    BfVertex3Uni m_center;
