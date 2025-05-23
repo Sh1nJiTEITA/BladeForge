@@ -4,6 +4,7 @@
 #include "bfCascade.h"
 #include "bfStep.h"
 #include "bfYaml.h"
+#include "nfd.h"
 #include <algorithm>
 #include <bfGuiFileDialog.h>
 #include <cmath>
@@ -15,6 +16,7 @@
 #include <iterator>
 #include <nfd.hpp>
 #include <type_traits>
+#include <yaml-cpp/node/emit.h>
 #include <yaml-cpp/node/node.h>
 
 namespace gui
@@ -1039,9 +1041,70 @@ MainDock::presentMainDockCurrentExistingSections()
 
    if (ImGui::Button("New section", {x, y}))
    {
-      addSectionAndUpdateBuffer();
-      signal |= MainDockSignalEnum::RebuildDock;
+      ImGui::OpenPopup("New section choice");
    }
+
+   if (ImGui::BeginPopup("New section choice"))
+   {
+      if (ImGui::Button("New"))
+      {
+         addSectionAndUpdateBuffer();
+         signal |= MainDockSignalEnum::RebuildDock;
+      }
+      if (ImGui::Button("Load"))
+      {
+         nfdu8char_t* inPath = nullptr;
+         nfdu8filteritem_t filters[] = {
+             {"BladeForge format (yaml)", "yaml"},
+             {"All Files", "*"}
+         };
+
+         nfdopendialogu8args_t args = {0};
+
+         args.filterList = filters;
+         args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+         nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+         if (result == NFD_OKAY)
+         {
+            try
+            {
+               YAML::Node node; // = YAML::LoadFile(inPath);
+               if (!saveas::loadFromYaml(node, inPath))
+               {
+                  throw std::runtime_error("Internal error of loading");
+               }
+               fmt::println("Loaded YAML file with path={}", inPath);
+               fmt::println("Yaml content:\n{}", YAML::Dump(node));
+               auto base_info = node.as< obj::section::SectionCreateInfo >();
+               m_infos.push_back(SectionCreateInfoGui{std::move(base_info)});
+               auto sec = m_body->addSection(&m_infos.back());
+               sec->isRender() = false;
+               sec->make();
+               sec->make();
+               sec->make();
+               sec->control().updateBuffer();
+            }
+            catch (const std::exception& e)
+            {
+               fmt::println("YAML Load Error: {}", e.what());
+            }
+
+            NFD_FreePathU8(inPath);
+         }
+         else if (result == NFD_CANCEL)
+         {
+            fmt::println("User canceled loading.");
+         }
+         else
+         {
+            fmt::println("NFD Error: {}", NFD_GetError());
+         }
+      }
+      ImGui::EndPopup();
+   }
+
    ImGui::SeparatorText("Current sections");
 
    for (auto sec = m_body->beginSection(); sec != m_body->endSection(); ++sec)

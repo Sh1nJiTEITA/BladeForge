@@ -49,7 +49,7 @@ struct convert< BfVertex3 >
 
    static bool decode(const Node& node, BfVertex3& rhs)
    {
-      if (!node.IsSequence() || node.size() != 3)
+      if (!node.IsMap() || node.size() != 3)
       {
          return false;
       }
@@ -75,7 +75,7 @@ struct convert< obj::section::CenterCircle >
 
    static bool decode(const Node& node, obj::section::CenterCircle& rhs)
    {
-      if (!node.IsSequence() || node.size() != 4)
+      if (!node.IsMap() || node.size() != 4)
       {
          return false;
       }
@@ -133,11 +133,13 @@ struct convert< obj::section::SectionCreateInfo >
    static bool decode(const Node& node, obj::section::SectionCreateInfo& rhs)
    {
       // clang-format off
-      if (!node.IsSequence() || !node["centerCircles"].IsSequence() ||
-          !node["initialCurveControlVertices"].IsSequence())
+      
+      if (!node.IsMap() || !node["centerCircles"] || !node["centerCircles"].IsSequence() ||
+          !node["initialCurveControlVertices"] || !node["initialCurveControlVertices"].IsSequence())
       {
-         return false;
+          return false;
       }
+
       rhs.z = node["z"].as< float >();
       rhs.chord = node["chord"].as< float >();
       rhs.installAngle = node["installAngle"].as< float >();
@@ -173,7 +175,8 @@ namespace saveas
 {
 
 auto exportToYaml(const YAML::Node& node, const fs::path& path) -> bool;
+auto loadFromYaml(YAML::Node& node, const fs::path& path) -> bool;
 
-}
+} // namespace saveas
 
 #endif

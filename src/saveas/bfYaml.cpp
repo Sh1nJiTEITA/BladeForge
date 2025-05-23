@@ -1,6 +1,10 @@
 #include "bfYaml.h"
 #include "yaml-cpp/yaml.h"
 #include <fstream>
+#include <ios>
+#include <istream>
+#include <sstream>
+#include <yaml-cpp/node/parse.h>
 
 namespace saveas
 {
@@ -13,20 +17,54 @@ exportToYaml(const YAML::Node& node, const fs::path& path)
       std::ofstream file(path);
       if (!file.is_open())
       {
-         fmt::println("Cant open file with path=\"{}\"", path.string());
+         fmt::println("Can't open file with path=\"{}\"", path.string());
          return false;
       }
 
-      file << node;
+      YAML::Emitter out;
+      out << node;
+
+      if (!out.good())
+      {
+         fmt::println("YAML Emitter error: {}", out.GetLastError());
+         return false;
+      }
+
+      file << out.c_str();
+      file.close();
+
       if (!file)
       {
          fmt::println(
-             "Write to yaml file this path=\"{}\" failed",
+             "Failed to write YAML to file path=\"{}\"",
              path.string()
          );
          return false;
       }
 
+      return true;
+   }
+   catch (const std::exception& e)
+   {
+      fmt::println("Exception during YAML save:\n{}", e.what());
+      return false;
+   }
+}
+
+bool
+loadFromYaml(YAML::Node& node, const fs::path& path)
+{
+   try
+   {
+      std::ifstream file(path, std::ios_base::in);
+      if (!file.is_open())
+      {
+         fmt::println("Cant open file with path=\"{}\"", path.string());
+         return false;
+      }
+      std::stringstream con;
+      con << file.rdbuf();
+      node = YAML::Load(con.str());
       return true;
    }
    catch (const std::exception& e)
