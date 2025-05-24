@@ -9,6 +9,7 @@
 #include <bfGuiFileDialog.h>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <imgui.h>
@@ -677,11 +678,34 @@ MainDock::presentSectionSaveButton(pSection sec) {
        {"Step vertices", "Step curves", "BladeForge format"};
    static bool openSavePopup = false;
 
+   const bool is_ctrl = 0 || ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
+                        ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+
    // Main "Save As" button
    if (ImGui::Button("Save As", {avail.x, 20.f}))
    {
       ImGui::OpenPopup("Choose Export Mode");
       openSavePopup = true;
+   }
+
+   if (is_ctrl && ImGui::IsKeyReleased(ImGuiKey_S))
+   {
+      auto& info = static_cast< SectionCreateInfoGui& >(sec->info().get());
+      if (!info.savePath.has_value())
+      {
+         // openSavePopup = true;
+         selectedExportMode = 2;
+      }
+      else
+      {
+         auto yaml = YAML::Node(sec->info().get());
+         saveas::exportToYaml(yaml, info.savePath.value());
+         fmt::println(
+             "Overwriting existing file with path={}",
+             info.savePath->string()
+         );
+         return;
+      }
    }
 
    // Popup content
@@ -758,6 +782,14 @@ MainDock::presentSectionSaveButton(pSection sec) {
          case 2: {
             auto yaml = YAML::Node(sec->info().get());
             saveas::exportToYaml(yaml, outPath);
+            auto& info =
+                static_cast< SectionCreateInfoGui& >(sec->info().get());
+            info.savePath = outPath;
+            fmt::println(
+                "Save path for section with id={} is set to {}",
+                sec->id(),
+                info.savePath->string()
+            );
          }
          break;
          }
@@ -784,6 +816,10 @@ bool
 MainDock::presentSectionParameters(pSection sec)
 {
    // clang-format off
+   
+   
+
+
    const auto id = sec->id(); 
    const std::string param_title = fmt::format("Parameters##sec-{}", id);
    const std::string preview_title = fmt::format("Preview##sec-{}", id);
@@ -1070,6 +1106,7 @@ MainDock::presentMainDockCurrentExistingSections()
          {
             try
             {
+               // clang-format off
                YAML::Node node; // = YAML::LoadFile(inPath);
                if (!saveas::loadFromYaml(node, inPath))
                {
@@ -1085,6 +1122,15 @@ MainDock::presentMainDockCurrentExistingSections()
                sec->make();
                sec->make();
                sec->control().updateBuffer();
+
+               auto& info = static_cast< SectionCreateInfoGui& >(sec->info().get());
+               info.savePath = inPath;
+               fmt::println(
+                   "[LOADING] Save path for section with id={} is set to {}",
+                   sec->id(),
+                   info.savePath->string()
+               );
+               // clang-format on
             }
             catch (const std::exception& e)
             {

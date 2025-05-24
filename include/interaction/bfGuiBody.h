@@ -108,6 +108,7 @@ struct SectionCreateInfoGui : public obj::body::SectionCreateInfoExtended {
    bool isFormatting = false;
    bool isParametersDockBuild = false;
    bool isHandlesEnabled = true;
+   std::optional<fs::path> savePath;
    float relZ = 0.0f;
 };
 
