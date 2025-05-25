@@ -117,6 +117,7 @@ public:
        : BfCircleCenterFilled(std::forward<T>(center), radius, 
                               BF_PIPELINE(BfPipelineType_Handles))
    {
+      color() = glm::vec3(0.3123, 0.381, 0.541);
    }
 
    virtual void processDragging() override ;
@@ -1134,13 +1135,18 @@ public:
          bl.get().normals = n;
       }
 
+      m_oldbl = bl.pos();
+      m_oldbr = br.pos();
+      m_oldtl = tl.pos();
+      m_oldtr = tr.pos();
+
       auto quad = std::make_shared< BfTextureQuad >(
           rotateAngle,
           transp,
-          tl,
-          tr,
-          br,
-          bl
+          BfVertex3Uni(tl.getp()),
+          BfVertex3Uni(tr.getp()),
+          BfVertex3Uni(br.getp()),
+          BfVertex3Uni(bl.getp())
       );
 
       this->add(std::make_shared< BfHandleCircle >(quad->tl().getp(), 0.01f));

@@ -137,6 +137,7 @@ bool presentCenterCirclesEditor(std::list< obj::section::CenterCircle >& circles
       std::string child_title =
           fmt::format("##center-circle-input-data-child-name-{}", i);
 
+      ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.f, 0.f, 0.f, 0.f));
       ImGui::BeginChild(child_title.c_str(), ImVec2{child_x, child_y}, true);
       {
          std::string title = fmt::format(ICON_FA_LIST " {}", i);
@@ -218,6 +219,7 @@ bool presentCenterCirclesEditor(std::list< obj::section::CenterCircle >& circles
          }
       }
       ImGui::EndChild();
+      ImGui::PopStyleColor();
    }
    // clang-format on
    return should_remake;

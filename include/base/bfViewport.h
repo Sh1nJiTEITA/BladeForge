@@ -255,9 +255,10 @@ public: // PUBLIC METHODS
       const std::string button_title = 
          std::string("##splitter_button_inner") + 
          std::to_string(reinterpret_cast<std::uintptr_t>(this));
-      if (ImGui::Button(button_title.c_str(), button_sz)) {
-         
-      }
+
+      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.87f, 0.86f, 0.82f, 0.80f));
+      if (ImGui::Button(button_title.c_str(), button_sz)) { }
+      ImGui::PopStyleColor();
 
       if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
          const auto& io = ImGui::GetIO();
@@ -273,6 +274,7 @@ public: // PUBLIC METHODS
       }
 
       ImGui::End();
+      
       ImGui::PopStyleVar(2); 
    }
 

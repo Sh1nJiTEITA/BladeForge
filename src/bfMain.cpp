@@ -387,7 +387,7 @@ BfMain::_loop()
          //     node->ext()
          // );
          node->presentButton();
-         node->presentRect();
+         // node->presentRect();
       }
 
       if (!obj::BfDrawManager::getHovered())
@@ -400,13 +400,13 @@ BfMain::_loop()
       m_gui.presentTooltip();
       m_gui.presentSettings();
       m_gui.presentFileDialog();
-      m_gui.presentCameraWindow();
+      // m_gui.presentCameraWindow();
 
       // gui::presentImageControlWindow(tp);
       // m_gui.presentViewportRatioButton(m_base);
 
-      ImGui::ShowMetricsWindow();
-      // ImGui::ShowDemoWindow();
+      // ImGui::ShowMetricsWindow();
+      ImGui::ShowDemoWindow();
       m_dock.draw();
 
       // ImGui::Begin("Choose image");

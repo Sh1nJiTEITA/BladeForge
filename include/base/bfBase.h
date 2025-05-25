@@ -144,6 +144,8 @@ BfEvent bfCreateSyncObjects(BfBase& base);
 BfEvent bfDestorySyncObjects(BfBase& base);
 
 BfEvent bfInitImGUI(BfBase& base);
+BfEvent bfSetupImGuiColors(BfBase& base);
+BfEvent bfSetupImGuiDistanceVars(BfBase& base);
 BfEvent bfPostInitImGui(BfBase& base);
 BfEvent bfDestroyImGUI(BfBase& base);
 

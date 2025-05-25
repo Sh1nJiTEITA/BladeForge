@@ -18,6 +18,7 @@
 // #include "bfTexture.h"
 #include "bfUniforms.h"
 #include "bfViewport.h"
+#include "imgui.h"
 #include "implot.h"
 
 #define IMGUI_ENABLE_DOCKING
@@ -1787,6 +1788,68 @@ bfInitImGUI(BfBase& base)
 }
 
 BfEvent
+bfSetupImGuiDistanceVars(BfBase& base)
+{
+   auto& s = ImGui::GetStyle();
+   s.WindowRounding = 6;
+   s.ChildRounding = 6;
+   s.WindowTitleAlign.x = 0.5;
+   s.WindowTitleAlign.y = 0.0;
+   s.SeparatorTextBorderSize = 2.0;
+   s.SeparatorTextAlign = {0.5, 0.29};
+   s.FrameRounding = 5;
+   return {};
+}
+
+BfEvent
+bfSetupImGuiColors(BfBase& base)
+{
+   ImVec4* colors = ImGui::GetStyle().Colors;
+   colors[ImGuiCol_WindowBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.84f);
+   colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.53f);
+   colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.08f, 1.00f);
+   colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.16f);
+   colors[ImGuiCol_FrameBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.33f);
+   colors[ImGuiCol_FrameBgHovered] = ImVec4(0.31f, 0.22f, 0.13f, 0.40f);
+   colors[ImGuiCol_FrameBgActive] = ImVec4(0.31f, 0.22f, 0.13f, 0.69f);
+   colors[ImGuiCol_TitleBg] = ImVec4(0.01f, 0.01f, 0.01f, 0.87f);
+   colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.01f, 0.01f, 0.01f, 0.87f);
+   colors[ImGuiCol_TitleBgActive] = ImVec4(0.01f, 0.01f, 0.01f, 0.87f);
+   colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
+   colors[ImGuiCol_SliderGrabActive] = ImVec4(0.92f, 0.53f, 0.13f, 0.86f);
+
+   colors[ImGuiCol_Button] = ImVec4(0.00f, 0.00f, 0.00f, 0.68f);
+   colors[ImGuiCol_ButtonHovered] = ImVec4(0.31f, 0.22f, 0.13f, 0.79f);
+   colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 0.72f, 0.42f, 1.00f);
+
+   colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.68f);
+   colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.31f, 0.22f, 0.13f, 0.79f);
+   colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 0.72f, 0.42f, 1.00f);
+
+   colors[ImGuiCol_Separator] = ImVec4(0.00f, 0.00f, 0.00f, 0.24f);
+
+   colors[ImGuiCol_SeparatorHovered] = ImVec4(0.31f, 0.22f, 0.13f, 0.79f);
+   colors[ImGuiCol_SeparatorActive] = ImVec4(1.00f, 0.72f, 0.42f, 1.00f);
+
+   colors[ImGuiCol_Header] = ImVec4(0.31f, 0.22f, 0.13f, 0.45f);
+   colors[ImGuiCol_CheckMark] = ImVec4(0.31f, 0.22f, 0.13f, 0.45f);
+   colors[ImGuiCol_SliderGrab] = ImVec4(0.31f, 0.22f, 0.13f, 0.45f);
+   colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.72f, 0.42f, 0.72f);
+   colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.72f, 0.42f, 0.72f);
+
+   colors[ImGuiCol_TabHovered] = ImVec4(0.87f, 0.86f, 0.82f, 0.80f);
+   colors[ImGuiCol_Tab] = ImVec4(0.31f, 0.22f, 0.13f, 0.78f);
+   colors[ImGuiCol_TabSelected] = ImVec4(1.00f, 0.72f, 0.42f, 0.59f);
+   colors[ImGuiCol_TabSelectedOverline] = ImVec4(0.53f, 0.53f, 0.87f, 0.00f);
+   colors[ImGuiCol_TabDimmed] = ImVec4(0.31f, 0.22f, 0.13f, 0.82f);
+   colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.02f, 0.02f, 0.02f, 0.84f);
+   colors[ImGuiCol_TabDimmedSelectedOverline] =
+       ImVec4(0.53f, 0.53f, 0.87f, 0.00f);
+   colors[ImGuiCol_NavCursor] = ImVec4(0.94f, 0.94f, 0.94f, 0.80f);
+   return {};
+}
+
+BfEvent
 bfPostInitImGui(BfBase& base)
 {
    ImGuiIO& io = ImGui::GetIO();
@@ -1797,7 +1860,9 @@ bfPostInitImGui(BfBase& base)
    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-   ImGui::StyleColorsClassic();
+   bfSetupImGuiColors(base);
+   bfSetupImGuiDistanceVars(base);
+   // ImGui::StyleColorsClassic();
 
    // Setup Platform/Renderer bindings
    ImGui_ImplGlfw_InitForVulkan(base.window->pWindow, true);
