@@ -1042,13 +1042,13 @@ MainDock::presentSectionToggleView(pSection sec) {
 void
 MainDock::presentSectionDeleteMenu(pSection sec)
 {
-   constexpr const char* popupname = "Section delete popup";
+   const std::string popupname = fmt::format("del-sec-{}", sec->id());
    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
    {
-      ImGui::OpenPopup(popupname);
+      ImGui::OpenPopup(popupname.c_str());
    }
 
-   if (ImGui::BeginPopup(popupname))
+   if (ImGui::BeginPopup(popupname.c_str()))
    {
       if (ImGui::Button("Delete"))
       {
