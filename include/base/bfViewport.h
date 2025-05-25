@@ -4,7 +4,6 @@
 #define BF_VIEWPORT_CUSTOM_H
 
 #include "bfCamera.h"
-// #include "bfDrawObjectManager.h"
 #include "bfDescriptorStructs.h"
 #include "bfPipeline.h"
 #include "bfSingle.h"
@@ -683,6 +682,23 @@ bfCreateViewports() -> void
    root.split(base::viewport::SplitDirection::V);
    // root.right().split(base::viewport::SplitDirection::H);
    // root.right().right().split(base::viewport::SplitDirection::V);
+}
+
+inline auto
+bfRenderViewpors(uint32_t hovered_id) -> void
+{
+   auto& root = base::viewport::ViewportManager::root();
+   auto it = root.iter();
+   while (it.hasNext())
+   {
+      auto node = it.next();
+      node->presentButton();
+   }
+
+   if (!hovered_id)
+   {
+      base::viewport::ViewportManager::presentContextMenu();
+   }
 }
 
 }; // namespace viewport

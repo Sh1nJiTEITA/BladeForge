@@ -331,34 +331,12 @@ BfMain::_loop()
 
    // clang-format off
    auto mainRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
-   // auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
-   // clang-format on
 
-   // auto info = obj::section::SectionCreateInfo{};
-   // auto bs = std::make_shared< obj::section::BfBladeSection >(&info);
-   // bs->make();
-   // mainRoot->add(bs);
-
-   // auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
-   // tp->make();
-   // textRoot->add(tp);
-   //
-   auto body = std::make_shared< obj::body::BfBladeBody >(2);
+   auto body = std::make_shared< obj::body::BfBladeBody >(1);
    mainRoot->add(body);
-   //
-
    mainRoot->control().updateBuffer();
-   // textRoot->control().updateBuffer();
-
    m_dock.bindBody(body);
-
-   // auto top = std::make_shared< obj::BfDrawRootLayer >(3000, 30);
-   // top->addf< obj::curves::BfSingleLineWH >(BfVertex3{}, BfVertex3{});
-   // auto other_buf = top->addf< obj::BfDrawRootLayer >(2000, 5);
-   // auto other_buf2 = other_buf->addf< obj::BfDrawRootLayer >(2000, 5);
-
-   // top->make();
-   // top->control().updateBuffer();
+   
 
    base::viewport::bfCreateViewports();
 
@@ -371,74 +349,15 @@ BfMain::_loop()
       ImGui::NewFrame();
 
       _processSelfInteraction();
+      base::viewport::bfRenderViewpors(obj::BfDrawManager::getHovered());
 
-      auto& root = base::viewport::ViewportManager::root();
-      auto it = root.iter();
-      glm::vec2 cursor_pos = {ImGui::GetMousePos().x, ImGui::GetMousePos().y};
-      int i = 0;
-      while (it.hasNext())
-      {
-         auto node = it.next();
-         node->presentButton();
-         // node->presentRect();
-      }
-
-      if (!obj::BfDrawManager::getHovered())
-      {
-         base::viewport::ViewportManager::presentContextMenu();
-      }
       m_gui.presentInfo();
       m_gui.presentMenuBar();
       m_gui.presentEventLog();
       m_gui.presentTooltip();
       m_gui.presentSettings();
       m_gui.presentFileDialog();
-      // m_gui.presentCameraWindow();
-
-      // gui::presentImageControlWindow(tp);
-      // m_gui.presentViewportRatioButton(m_base);
-
-      // ImGui::ShowMetricsWindow();
-      ImGui::ShowDemoWindow();
       m_dock.draw();
-
-      // ImGui::Begin("Choose image");
-      // {
-      //    bool is_changed = false;
-      //    const char* var[]{
-      //        "./resources/test.jpg",
-      //        "./resources/test2.png",
-      //        "./resources/R.jpg",
-      //    };
-      //    static int current = 0;
-      //    if (ImGui::RadioButton(var[0], current == 0))
-      //    {
-      //       is_changed = true;
-      //       current = 0;
-      //    }
-      //    if (ImGui::RadioButton(var[1], current == 1))
-      //    {
-      //       is_changed = true;
-      //       current = 1;
-      //    }
-      //    if (ImGui::RadioButton(var[2], current == 2))
-      //    {
-      //       is_changed = true;
-      //       current = 2;
-      //    }
-      //    if (is_changed)
-      //    {
-      //       auto& man =
-      //       base::desc::own::BfDescriptorPipelineDefault::manager(); auto&
-      //       texture = man.get< base::desc::own::BfDescriptorTextureTest >(
-      //           base::desc::own::SetType::Texture,
-      //           0
-      //       );
-      //       texture.reload(var[current]);
-      //       man.updateSets();
-      //    }
-      // }
-      // ImGui::End();
 
       ImGui::Render();
       bfUpdateImGuiPlatformWindows();
