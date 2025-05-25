@@ -301,6 +301,7 @@ public:
    BfDrawDebugProxy debug() { return BfDrawDebugProxy(*this); };
 
    BfObj root();
+   BfObjWeak parent();
 
    virtual bool toggleRender(int sts = -1)
    {

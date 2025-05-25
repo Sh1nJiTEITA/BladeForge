@@ -471,6 +471,12 @@ BfDrawObjectBase::root()
    throw std::runtime_error("Reached top of tree but no buffer found.");
 }
 
+BfObjWeak
+BfDrawObjectBase::parent()
+{
+   return m_root;
+}
+
 std::vector< BfObjectData >
 BfDrawObjectBase::_objectData()
 {

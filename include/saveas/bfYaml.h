@@ -49,7 +49,7 @@ struct convert< BfVertex3 >
 
    static bool decode(const Node& node, BfVertex3& rhs)
    {
-      if (!node.IsMap() || node.size() != 3)
+      if (!node.IsMap())
       {
          return false;
       }
@@ -88,6 +88,65 @@ struct convert< obj::section::CenterCircle >
 };
 
 template <>
+struct convert< obj::section::ImageData >
+{
+   static Node encode(const obj::section::ImageData& rhs)
+   {
+      Node node;
+      std::string path;
+      if (rhs.imagePath.has_value())
+      {
+         path = rhs.imagePath->string();
+      }
+      else
+      {
+         path = "";
+      }
+      node["imagePath"] = path;
+      node["width"] = rhs.width;
+      node["height"] = rhs.height;
+      node["rotateAngle"] = rhs.rotateAngle;
+      node["transparency"] = rhs.transparency;
+      node["tl"] = rhs.tl;
+      node["tr"] = rhs.tr;
+      node["br"] = rhs.br;
+      node["bl"] = rhs.bl;
+      return node;
+   }
+
+   static bool decode(const Node& node, obj::section::ImageData& rhs)
+   {
+      if (!node.IsMap())
+      {
+         return false;
+      }
+      if (node["imagePath"])
+      {
+         std::string path = node["imagePath"].as< std::string >();
+         rhs.imagePath = path.empty()
+                             ? std::nullopt
+                             : std::optional< std::filesystem::path >(path);
+      }
+      else
+      {
+         rhs.imagePath = std::nullopt;
+      }
+
+      rhs.width = node["width"].as< float >();
+      rhs.height = node["height"].as< float >();
+      rhs.rotateAngle = node["rotateAngle"].as< float >();
+      rhs.transparency = node["transparency"].as< float >();
+
+      rhs.tl = node["tl"].as< BfVertex3 >();
+      rhs.tr = node["tr"].as< BfVertex3 >();
+      rhs.br = node["br"].as< BfVertex3 >();
+      rhs.bl = node["bl"].as< BfVertex3 >();
+
+      return true;
+   }
+};
+
+template <>
 struct convert< obj::section::SectionCreateInfo >
 {
    static Node encode(const obj::section::SectionCreateInfo& rhs)
@@ -113,6 +172,8 @@ struct convert< obj::section::SectionCreateInfo >
       node["outletBackVertexAngle"] = rhs.outletBackVertexAngle;
       node["outletFrontVertexAngle"] = rhs.outletFrontVertexAngle;
 
+      node["imageData"] = rhs.imageData;
+
       node["centerCircles"] = YAML::Node(YAML::NodeType::Sequence);
       for (const auto& circle : rhs.centerCircles)
       {
@@ -124,6 +185,8 @@ struct convert< obj::section::SectionCreateInfo >
       {
          node["initialCurveControlVertices"].push_back(vertex);
       }
+
+      
 
       return node;
 
@@ -162,6 +225,7 @@ struct convert< obj::section::SectionCreateInfo >
       rhs.outletFrontVertexAngle = node["outletFrontVertexAngle"].as< float >();
       rhs.centerCircles = node["centerCircles"].as< std::list< obj::section::CenterCircle > >();
       rhs.initialCurveControlVertices = node["initialCurveControlVertices"].as< std::vector< BfVertex3 > >();
+      rhs.imageData = node["imageData"].as < obj::section::ImageData >();
 
       return true;
 

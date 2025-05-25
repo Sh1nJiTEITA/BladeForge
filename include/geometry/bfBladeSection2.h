@@ -7,6 +7,7 @@
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 #include <memory>
+#include <optional>
 
 #include "bfBladeParts.h"
 #include "bfChain.h"
@@ -27,6 +28,19 @@ struct CenterCircle
    float radius;
    float backVertexAngle = 90.f;
    float frontVertexAngle = 90.f;
+};
+
+struct ImageData
+{
+   std::optional< fs::path > imagePath;
+   float width = 0.5f;
+   float height = 0.5f;
+   float rotateAngle = 0.0f;
+   float transparency = 0.0f;
+   BfVertex3 tl;
+   BfVertex3 tr;
+   BfVertex3 br;
+   BfVertex3 bl;
 };
 
 struct SectionCreateInfo
@@ -84,6 +98,8 @@ struct SectionCreateInfo
    float inletFrontVertexAngle;
    float outletBackVertexAngle;
    float outletFrontVertexAngle;
+
+   ImageData imageData;
 };
 
 // clang-format off
@@ -107,6 +123,7 @@ enum class BfBladeSectionEnum : uint32_t
    MassCenter           = 1 << 16,
    TriangularShape      = 1 << 17,
    GeometricCenter      = 1 << 18,
+   // TexturePlane         = 1 << 19,
    End                  = 1 << 19
 };
 // clang-format on
@@ -132,6 +149,7 @@ public:
       _createIOCircles();
       _createChain();
       _createIOArc();
+      _createTexturePlane();
    }
 
    virtual void make() override
@@ -265,6 +283,9 @@ private:
    void _processMassCenter();
    void _processTriangularShape();
    void _processGeometricCenter();
+
+   void _createTexturePlane();
+   void _processTexturePlane();
 
 private:
    int m_outputShapeSegments = std::nanf("");

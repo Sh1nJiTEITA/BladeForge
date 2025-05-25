@@ -316,8 +316,8 @@ createRootLayers()
    const auto mtype = obj::BfDrawManager::RootType::MAIN;
    obj::BfDrawManager::inst().addRoot< mtype >();
 
-   const auto ttype = obj::BfDrawManager::RootType::IMAGE_LOAD;
-   obj::BfDrawManager::inst().addRoot< ttype >();
+   // const auto ttype = obj::BfDrawManager::RootType::IMAGE_LOAD;
+   // obj::BfDrawManager::inst().addRoot< ttype >();
 };
 
 void
@@ -330,7 +330,7 @@ BfMain::_loop()
 
    // clang-format off
    auto mainRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::MAIN >();
-   auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
+   // auto textRoot = obj::BfDrawManager::inst().get< obj::BfDrawManager::RootType::IMAGE_LOAD >();
    // clang-format on
 
    // auto info = obj::section::SectionCreateInfo{};
@@ -338,16 +338,16 @@ BfMain::_loop()
    // bs->make();
    // mainRoot->add(bs);
 
-   auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
-   tp->make();
-   textRoot->add(tp);
+   // auto tp = std::make_shared< obj::curves::BfTexturePlane >(0.5f, 0.5f);
+   // tp->make();
+   // textRoot->add(tp);
    //
    auto body = std::make_shared< obj::body::BfBladeBody >(2);
    mainRoot->add(body);
    //
 
    mainRoot->control().updateBuffer();
-   textRoot->control().updateBuffer();
+   // textRoot->control().updateBuffer();
 
    m_dock.bindBody(body);
 
@@ -402,7 +402,7 @@ BfMain::_loop()
       m_gui.presentFileDialog();
       m_gui.presentCameraWindow();
 
-      gui::presentImageControlWindow(tp);
+      // gui::presentImageControlWindow(tp);
       // m_gui.presentViewportRatioButton(m_base);
 
       ImGui::ShowMetricsWindow();

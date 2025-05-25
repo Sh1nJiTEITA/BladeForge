@@ -39,7 +39,10 @@ SectionCreateInfo::SectionCreateInfo()
     , centerCircles { { {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f} } }
     , initialBezierCurveOrder { 5 }
     , renderBitSet { UINT32_MAX }
-     
+    , inletBackVertexAngle {90.f }
+    , inletFrontVertexAngle {90.f }
+    , outletBackVertexAngle {90.f }
+    , outletFrontVertexAngle {90.f }
 {
    constexpr auto norm = glm::vec3{ 0.0f, 0.0f, 1.0f };
 
@@ -847,6 +850,27 @@ BfBladeSection::_processGeometricCenter()
    // clang-format on
 }
 
+void
+BfBladeSection::_createTexturePlane()
+{
+   auto obj = addf< curves::BfTexturePlane >(
+       !m_info.get().imageData.imagePath.has_value(),
+       BfVar< float >(&m_info.get().imageData.width),
+       BfVar< float >(&m_info.get().imageData.height),
+       BfVar< float >(&m_info.get().imageData.transparency),
+       BfVar< float >(&m_info.get().imageData.rotateAngle),
+       BfVertex3Uni(&m_info.get().imageData.tl),
+       BfVertex3Uni(&m_info.get().imageData.tr),
+       BfVertex3Uni(&m_info.get().imageData.br),
+       BfVertex3Uni(&m_info.get().imageData.bl)
+   );
+}
+
+void
+BfBladeSection::_processTexturePlane()
+{
+}
+
 auto
 BfBladeSection::viewNone() -> void
 {
@@ -875,7 +899,7 @@ BfBladeSection::viewFormattingShapeOnly(bool init)
    if (!init) m_lastRenderBitSet = m_info.get().renderBitSet; 
    else m_info.get().renderBitSet = UINT32_MAX;
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
-   // m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
+   m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
    

@@ -2,6 +2,7 @@
 #include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCascade.h"
+#include "bfDescriptorStructs.h"
 #include "bfStep.h"
 #include "bfYaml.h"
 #include "nfd.h"
@@ -330,51 +331,96 @@ presentBladeSectionCreateWindow(pSection sec)
 bool
 presentImageControlWindow(pImage img)
 {
+   static fs::path file_path;
    ImGui::Begin("Image");
    {
-      static fs::path file_path;
-      static bool is_searching = false;
       img->quad()->presentContextMenu();
       if (ImGui::Button("Open Image"))
       {
-         BfGuiFileDialog::instance()->openFile(
-             &file_path,
-             /* {".*"} */ {".jpeg", ".png", ".jpg"}
-         );
-         is_searching = true;
+         nfdu8char_t* inPath = nullptr;
+         nfdu8filteritem_t filters[] = {
+             {"Image", "png"},
+             {"Image", "jpeg"},
+             {"Image", "jpg"},
+             {"All Files", "*"}
+         };
+
+         nfdopendialogu8args_t args = {0};
+
+         args.filterList = filters;
+         args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+         nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+         if (result == NFD_OKAY)
+         {
+            fmt::println("Found path: {}", inPath);
+            file_path = inPath;
+            if (fs::exists(inPath))
+            {
+               base::desc::own::BfDescriptorPipelineDefault::loadNewTexture(
+                   inPath
+               );
+            }
+         }
+         else if (result == NFD_CANCEL)
+         {
+            fmt::println("User canceled loading.");
+         }
+         else
+         {
+            fmt::println("NFD Error: {}", NFD_GetError());
+         }
       }
       ImGui::SameLine();
       ImGui::Text("Path: %s", file_path.string().c_str());
 
-      if (!BfGuiFileDialog::instance()->isActive() && is_searching)
-      {
-         is_searching = false;
-         fmt::println("Found path: {}", file_path.string());
-         if (fs::exists(file_path))
-         {
-            // FIXME: NEED TO PROVIDE FRAME INDEX
-            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-            {
-               auto& texture =
-                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
-                       0,
-                       base::desc::own::SetType::Texture,
-                       0
-                   );
-               texture.reload(file_path);
-            }
-            {
-               auto& texture =
-                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
-                       1,
-                       base::desc::own::SetType::Texture,
-                       0
-                   );
-               texture.reload(file_path);
-            }
-            man.updateSets();
-         }
-      }
+      // static fs::path file_path;
+      // static bool is_searching = false;
+      // img->quad()->presentContextMenu();
+      // if (ImGui::Button("Open Image"))
+      // {
+      //    BfGuiFileDialog::instance()->openFile(
+      //        &file_path,
+      //        /* {".*"} */ {".jpeg", ".png", ".jpg"}
+      //    );
+      //    is_searching = true;
+      // }
+      // ImGui::SameLine();
+      // ImGui::Text("Path: %s", file_path.string().c_str());
+      //
+      // if (!BfGuiFileDialog::instance()->isActive() && is_searching)
+      // {
+      //    is_searching = false;
+      //    fmt::println("Found path: {}", file_path.string());
+      //    if (fs::exists(file_path))
+      //    {
+      //       // FIXME: NEED TO PROVIDE FRAME INDEX
+      //       auto& man =
+      //       base::desc::own::BfDescriptorPipelineDefault::manager();
+      //       {
+      //          auto& texture =
+      //              man.getForFrame< base::desc::own::BfDescriptorTextureTest
+      //              >(
+      //                  0,
+      //                  base::desc::own::SetType::Texture,
+      //                  0
+      //              );
+      //          texture.reload(file_path);
+      //       }
+      //       {
+      //          auto& texture =
+      //              man.getForFrame< base::desc::own::BfDescriptorTextureTest
+      //              >(
+      //                  1,
+      //                  base::desc::own::SetType::Texture,
+      //                  0
+      //              );
+      //          texture.reload(file_path);
+      //       }
+      //       man.updateSets();
+      //    }
+      // }
    }
    ImGui::End();
    return false;
@@ -604,6 +650,7 @@ MainDock::presentCurrentFormattingSections()
          | ImGuiWindowFlags_NoTitleBar
       ;
 
+      bool init_status = sec->isRender();
       ImGui::SetNextWindowSize({700, 800}, ImGuiCond_Appearing);
       sec->isRender() = ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
       {
@@ -617,6 +664,21 @@ MainDock::presentCurrentFormattingSections()
             // m_body->root()->control().updateBuffer();
          }
       }
+
+      if (init_status != sec->isRender()) { 
+         auto& info = sec->info();
+         if (info.get().imageData.imagePath.has_value()) { 
+            auto& path = info.get().imageData.imagePath.value();
+            if (!fs::exists(path)) { 
+               fmt::println("Cant load image. Where are no image with path={}", path.string());
+            }
+            base::desc::own::BfDescriptorPipelineDefault::loadNewTexture(path);
+         }
+         else { 
+            fmt::println("Image path does not set!");
+         }
+      }
+
       ImGui::End();
    }
    if (fsections.empty())
@@ -913,8 +975,10 @@ MainDock::presentSectionToggleView(pSection sec) {
    ImGui::SeparatorText("Views");
    if (ImGui::Button("All", bsz)) { 
       sec->viewFormattingShapeOnly(true);
-      // info->renderBitSet = UINT32_MAX;
-      // info->renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+      no_remake = false;
+   }
+   if (ImGui::Button("None", bsz)) { 
+      sec->viewNone();
       no_remake = false;
    }
    // if (ImGui::Button("Triangular shape", bsz)) { 
@@ -1082,16 +1146,17 @@ MainDock::presentMainDockCurrentExistingSections()
 
    if (ImGui::BeginPopup("New section choice"))
    {
-      if (ImGui::Button("New"))
+      const ImVec2 sz{100, 20};
+      if (ImGui::Button("New", sz))
       {
          addSectionAndUpdateBuffer();
          signal |= MainDockSignalEnum::RebuildDock;
       }
-      if (ImGui::Button("Load"))
+      if (ImGui::Button("Load", sz))
       {
          nfdu8char_t* inPath = nullptr;
          nfdu8filteritem_t filters[] = {
-             {"BladeForge format (yaml)", "yaml"},
+             {"BladeForge format", "yaml"},
              {"All Files", "*"}
          };
 

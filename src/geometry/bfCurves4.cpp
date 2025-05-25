@@ -8,8 +8,10 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
+#include <nfd.hpp>
 #include <stdexcept>
 
+#include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfObjectMath.h"
 #include "imgui.h"
@@ -656,6 +658,7 @@ BfTextureQuad::presentContextMenu()
          casted->trHandle()->toggleRender(!m_isLocked);
          casted->brHandle()->toggleRender(!m_isLocked);
          casted->blHandle()->toggleRender(!m_isLocked);
+         fmt::println("Current image handles lock status={}", m_isLocked);
       }
       if (ImGui::Checkbox("Save ratio", &m_isRatio))
       {
@@ -663,8 +666,8 @@ BfTextureQuad::presentContextMenu()
          this->root()->make();
          this->root()->control().updateBuffer(true);
       }
-      ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
-      if (ImGui::DragFloat("Rotate", &m_rotateAngle, 1, 0, 360))
+      ImGui::SliderFloat("Transparency", m_transp.getp(), 0, 1);
+      if (ImGui::DragFloat("Rotate", m_rotateAngle.getp(), 1, 0, 360))
       {
          this->root()->make();
          this->root()->control().updateBuffer(true);
@@ -674,6 +677,58 @@ BfTextureQuad::presentContextMenu()
          casted->moveToCenter();
          this->root()->make();
          this->root()->control().updateBuffer(true);
+      }
+
+      if (auto base = root->parent().lock())
+      {
+         if (auto sec =
+                 std::dynamic_pointer_cast< obj::section::BfBladeSection >(base
+                 ))
+         {
+            if (ImGui::Button("Open Image"))
+            {
+               nfdu8char_t* inPath = nullptr;
+               nfdu8filteritem_t filters[] = {
+                   {"Image", "png"},
+                   {"Image", "jpeg"},
+                   {"Image", "jpg"},
+                   {"All Files", "*"}
+               };
+
+               nfdopendialogu8args_t args = {0};
+
+               args.filterList = filters;
+               args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+               nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+               if (result == NFD_OKAY)
+               {
+                  fmt::println("Found path: {}", inPath);
+                  if (fs::exists(inPath))
+                  {
+                     base::desc::own::BfDescriptorPipelineDefault::
+                         loadNewTexture(inPath);
+                     sec->info().get().imageData.imagePath = inPath;
+                  }
+               }
+               else if (result == NFD_CANCEL)
+               {
+                  fmt::println("User canceled loading.");
+               }
+               else
+               {
+                  fmt::println("NFD Error: {}", NFD_GetError());
+               }
+            }
+            ImGui::SameLine();
+            fs::path path = "";
+            if (sec->info().get().imageData.imagePath.has_value())
+            {
+               path = sec->info().get().imageData.imagePath.value();
+            }
+            ImGui::Text("Path: %s", path.c_str());
+         }
       }
    }
 }

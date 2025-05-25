@@ -147,10 +147,35 @@ struct BfDescriptorTextureTest : public BfDescriptorTexture
 
 struct BfDescriptorPipelineDefault : public BfDescriptorPipeline
 {
+
    static BfDescriptorManager< SetType >& manager()
    {
       static BfDescriptorManager< SetType > m{};
       return m;
+   }
+
+   static void loadNewTexture(const std::filesystem::path& path)
+   {
+      auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
+      {
+         auto& texture =
+             man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
+                 0,
+                 base::desc::own::SetType::Texture,
+                 0
+             );
+         texture.reload(path);
+      }
+      {
+         auto& texture =
+             man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
+                 1,
+                 base::desc::own::SetType::Texture,
+                 0
+             );
+         texture.reload(path);
+      }
+      man.updateSets();
    }
 
    // FIXME: HERE MUST BE PROVIDED FRAME INDEX AS INPUT ARGUMENT
