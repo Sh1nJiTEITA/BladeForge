@@ -6,3 +6,5 @@ build*/
 imgui.ini
 vcpkg_*
 vcpkg-*
+fake/
+bpkg/

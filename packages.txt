@@ -1,0 +1,8 @@
+vulkan-headers
+glfw3
+implot
+imgui
+
+xtensor 0.25.0
+xtensor-blas 0.21.0
+xtl 0.7.5

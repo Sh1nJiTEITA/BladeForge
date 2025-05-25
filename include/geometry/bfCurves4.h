@@ -342,7 +342,6 @@ public:
       }
    }
 
-   
    void elevateOrder();
    void lowerateOrder();
    bool toggleHandle(size_t i, int status = -1);
@@ -351,6 +350,56 @@ public:
    
 private:
    std::vector<BfVertex3Uni> _genControlVerticesPointers();
+};
+
+class BfBezierIsolatedWH : public obj::BfDrawLayer
+{
+public:
+   BfBezierIsolatedWH(std::vector<BfVertex3>& ctrlv)
+       : obj::BfDrawLayer("Isolated Bezier curve with handles")
+       , m_ctrlvertices(ctrlv)
+   {
+      // FIXME: СУПЕР ВРЕМЕННОЕ РЕШЕНИЕ, если при добавлении точек
+      // внутренний вектор сделает ресайз -> все ручки, указывающие
+      // на точки вектора уйдут в segmentation fault
+      auto curve = std::make_shared<curves::BfBezierN>(
+          _genControlVerticesPointers()
+      );
+      this->add(curve);
+
+      auto handles_layer = std::make_shared<obj::BfDrawLayer>("Handles layer");
+      this->add(handles_layer);
+
+
+      for (auto& v : *curve) {
+         handles_layer->add(std::make_shared<curves::BfHandleCircle>(v.getp(), 0.01f));
+      }
+
+      auto lines_layer = std::make_shared<obj::BfDrawLayer>("Lines layer");
+      this->add(lines_layer);
+
+      for (auto i = 0; i < m_ctrlvertices.size() - 1; ++i) { 
+         
+         auto line = std::make_shared<curves::BfSingleLine>(
+            BfVertex3Uni(&m_ctrlvertices[i]),
+            BfVertex3Uni(&m_ctrlvertices[i + 1])
+         );
+         line->color() = glm::vec3(1.0f, 1.0f, 1.0f);
+         lines_layer->add(line);
+      }
+   }
+   
+   void elevateOrder();
+   void lowerateOrder();
+   bool toggleHandle(size_t i, int status = -1);
+   bool toggleBoundHandles(int sts = -1);
+   std::shared_ptr<curves::BfBezierN> curve();
+
+private:
+   std::vector<BfVertex3Uni> _genControlVerticesPointers();
+
+private:
+   std::vector<BfVertex3>& m_ctrlvertices;
 };
 
 class BfSingleLineWH : public obj::BfDrawLayer
@@ -502,6 +551,7 @@ public:
       glm::vec3 circle_center = circle->center().pos;
       glm::vec3 direction_to_handle =
           glm::normalize(circle_center - m_center.pos());
+
       auto handle = std::make_shared< curves::BfHandleCircle >(
           BfVertex3(
               circle_center + direction_to_handle * m_radius.get(),
@@ -526,6 +576,8 @@ private:
    glm::vec3 m_oldbegin;
    glm::vec3 m_oldcenter;
    glm::vec3 m_oldend;
+
+   float m_last_known_radius = -1.0f;
 
    BfVertex3Uni m_begin;
    BfVertex3Uni m_center;
@@ -977,6 +1029,20 @@ protected:
 class BfTextureQuad : public BfQuad
 {
 public:
+   BfTextureQuad(
+       BfVar< float > rotateAngle,
+       BfVar< float > transparency,
+       BfVertex3Uni tl,
+       BfVertex3Uni tr,
+       BfVertex3Uni br,
+       BfVertex3Uni bl
+   ) // Is move useless here?
+       : BfQuad{std::move(tl), std::move(tr), std::move(br), std::move(bl)}
+       , m_rotateAngle{std::move(rotateAngle)}
+       , m_transp{std::move(transparency)}
+   {
+   }
+
    template < typename P1, typename P2, typename P3, typename P4 >
    BfTextureQuad(P1&& tl, P2&& tr, P3&& br, P4&& bl)
        : BfQuad{
@@ -999,7 +1065,7 @@ public:
 
       glm::mat4 r = glm::rotate(
           glm::mat4(1.0f),
-          glm::radians(m_rotateAngle),
+          glm::radians(m_rotateAngle.get()),
           m_bl.normals()
       );
       glm::vec3 center = (m_tl.pos() + m_br.pos()) * 0.5f;
@@ -1018,7 +1084,7 @@ public:
    {
       return {
           {.model_matrix = m_modelMatrix,
-           .select_color = glm::vec4(m_transp, 0.5f, 0.0f, 1.0f),
+           .select_color = glm::vec4(m_transp.get(), 0.5f, 0.0f, 1.0f),
            .index = static_cast< uint32_t >(m_isLocked ? 1 : 0),
            .id = id(),
            .line_thickness = 0.00025f}
@@ -1026,8 +1092,8 @@ public:
    }
 
 private:
-   float m_rotateAngle = 0.0f;
-   float m_transp = 0.0f;
+   BfVar< float > m_rotateAngle;
+   BfVar< float > m_transp;
    bool m_isLocked = false;
    bool m_isRatio = false;
 };
@@ -1035,6 +1101,57 @@ private:
 class BfTexturePlane : public obj::BfDrawLayer
 {
 public:
+   BfTexturePlane(
+       bool is_initial,
+       BfVar< float > w,
+       BfVar< float > h,
+       BfVar< float > transp,
+       BfVar< float > rotateAngle,
+       BfVertex3Uni tl,
+       BfVertex3Uni tr,
+       BfVertex3Uni br,
+       BfVertex3Uni bl
+   )
+       : obj::BfDrawLayer{"Texture plane"}, m_w{w.getp()}, m_h{h.getp()}
+   {
+      if (is_initial)
+      {
+         const auto n = glm::vec3{0.f, 0.f, 1.f};
+         tl.get().pos = glm::vec3(0, h.get(), -.1f);
+         tl.get().color = glm::vec3(0.0f, 0.0f, 0.0f);
+         tl.get().normals = n;
+
+         tr.get().pos = glm::vec3(w.get(), h.get(), -.1f);
+         tr.get().color = glm::vec3(1.0f, 0.0f, 0.0f);
+         tr.get().normals = n;
+
+         br.get().pos = glm::vec3(w.get(), 0, -.1f);
+         br.get().color = glm::vec3(1.0f, 1.0f, 0.0f);
+         br.get().normals = n;
+
+         bl.get().pos = glm::vec3(0, 0, -.1f);
+         bl.get().color = glm::vec3(0.0f, 1.0f, 0.0f);
+         bl.get().normals = n;
+      }
+
+      auto quad = std::make_shared< BfTextureQuad >(
+          rotateAngle,
+          transp,
+          tl,
+          tr,
+          br,
+          bl
+      );
+
+      this->add(std::make_shared< BfHandleCircle >(quad->tl().getp(), 0.01f));
+      this->add(std::make_shared< BfHandleCircle >(quad->tr().getp(), 0.01f));
+      this->add(std::make_shared< BfHandleCircle >(quad->br().getp(), 0.01f));
+      this->add(
+          std::make_shared< BfHandleRectangle >(quad->bl().getp(), 0.01f)
+      );
+      this->add(quad);
+   }
+
    BfTexturePlane(float w, float h)
        : obj::BfDrawLayer{"Texture plane"}
    {
@@ -1198,6 +1315,13 @@ public:
       m_oldbl = bl->center().pos();
 
       m_isRatioOld = isRatio;
+
+      glm::vec3 brPos = br->center().pos();
+      glm::vec3 tlPos = tl->center().pos();
+
+      // Compute new dimensions
+      m_w.get() = glm::length(brPos - blPos);
+      m_h.get() = glm::length(tlPos - blPos);
    }
 
 private:
@@ -1207,6 +1331,9 @@ private:
    glm::vec3 m_oldtr;
    glm::vec3 m_oldbr;
    glm::vec3 m_oldbl;
+
+   BfVar< float > m_w;
+   BfVar< float > m_h;
 };
 
 class BfChainElement

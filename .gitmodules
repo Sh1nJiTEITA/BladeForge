@@ -3,11 +3,17 @@
 	url = https://github.com/Sh1nJiTEITA/splines-lib.git
 [submodule "external/imgui"]
 	path = external/imgui
-	url = https://github.com/ocornut/imgui
+	url = https://github.com/ocornut/imgui.git
 	branch = docking
 [submodule "external/implot"]
 	path = external/implot
 	url = https://github.com/epezent/implot.git
 [submodule "external/sol2"]
 	path = external/sol2
-	url = https://github.com/ThePhD/sol2
+	url = https://github.com/ThePhD/sol2.git
+[submodule "external/nfd"]
+	path = external/nfd
+	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "external/vma"]
+	path = external/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

@@ -2,11 +2,15 @@
 #include "bfBladeBody.h"
 #include "bfBladeSection2.h"
 #include "bfCascade.h"
+#include "bfDescriptorStructs.h"
 #include "bfStep.h"
+#include "bfYaml.h"
+#include "nfd.h"
 #include <algorithm>
 #include <bfGuiFileDialog.h>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <imgui.h>
@@ -14,6 +18,8 @@
 #include <iterator>
 #include <nfd.hpp>
 #include <type_traits>
+#include <yaml-cpp/node/emit.h>
+#include <yaml-cpp/node/node.h>
 
 namespace gui
 {
@@ -51,7 +57,7 @@ presentBladeSectionTable(
             names[i]
          );
 
-         is_changed = is_changed || std::visit(
+         is_changed = std::visit(
              [&field_name](auto&& arg, auto&& speed) {
                 using T = std::remove_reference_t< decltype(arg) >;
                 using S = std::decay_t< decltype(speed) >;
@@ -69,7 +75,7 @@ presentBladeSectionTable(
                 }
              },
              values[i], speeds[i]
-         );
+         ) || is_changed;
          ImGui::PopStyleColor();
       }
       ImGui::EndTable();
@@ -325,51 +331,96 @@ presentBladeSectionCreateWindow(pSection sec)
 bool
 presentImageControlWindow(pImage img)
 {
+   static fs::path file_path;
    ImGui::Begin("Image");
    {
-      static fs::path file_path;
-      static bool is_searching = false;
       img->quad()->presentContextMenu();
       if (ImGui::Button("Open Image"))
       {
-         BfGuiFileDialog::instance()->openFile(
-             &file_path,
-             /* {".*"} */ {".jpeg", ".png", ".jpg"}
-         );
-         is_searching = true;
+         nfdu8char_t* inPath = nullptr;
+         nfdu8filteritem_t filters[] = {
+             {"Image", "png"},
+             {"Image", "jpeg"},
+             {"Image", "jpg"},
+             {"All Files", "*"}
+         };
+
+         nfdopendialogu8args_t args = {0};
+
+         args.filterList = filters;
+         args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+         nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+         if (result == NFD_OKAY)
+         {
+            fmt::println("Found path: {}", inPath);
+            file_path = inPath;
+            if (fs::exists(inPath))
+            {
+               base::desc::own::BfDescriptorPipelineDefault::loadNewTexture(
+                   inPath
+               );
+            }
+         }
+         else if (result == NFD_CANCEL)
+         {
+            fmt::println("User canceled loading.");
+         }
+         else
+         {
+            fmt::println("NFD Error: {}", NFD_GetError());
+         }
       }
       ImGui::SameLine();
       ImGui::Text("Path: %s", file_path.string().c_str());
 
-      if (!BfGuiFileDialog::instance()->isActive() && is_searching)
-      {
-         is_searching = false;
-         fmt::println("Found path: {}", file_path.string());
-         if (fs::exists(file_path))
-         {
-            // FIXME: NEED TO PROVIDE FRAME INDEX
-            auto& man = base::desc::own::BfDescriptorPipelineDefault::manager();
-            {
-               auto& texture =
-                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
-                       0,
-                       base::desc::own::SetType::Texture,
-                       0
-                   );
-               texture.reload(file_path);
-            }
-            {
-               auto& texture =
-                   man.getForFrame< base::desc::own::BfDescriptorTextureTest >(
-                       1,
-                       base::desc::own::SetType::Texture,
-                       0
-                   );
-               texture.reload(file_path);
-            }
-            man.updateSets();
-         }
-      }
+      // static fs::path file_path;
+      // static bool is_searching = false;
+      // img->quad()->presentContextMenu();
+      // if (ImGui::Button("Open Image"))
+      // {
+      //    BfGuiFileDialog::instance()->openFile(
+      //        &file_path,
+      //        /* {".*"} */ {".jpeg", ".png", ".jpg"}
+      //    );
+      //    is_searching = true;
+      // }
+      // ImGui::SameLine();
+      // ImGui::Text("Path: %s", file_path.string().c_str());
+      //
+      // if (!BfGuiFileDialog::instance()->isActive() && is_searching)
+      // {
+      //    is_searching = false;
+      //    fmt::println("Found path: {}", file_path.string());
+      //    if (fs::exists(file_path))
+      //    {
+      //       // FIXME: NEED TO PROVIDE FRAME INDEX
+      //       auto& man =
+      //       base::desc::own::BfDescriptorPipelineDefault::manager();
+      //       {
+      //          auto& texture =
+      //              man.getForFrame< base::desc::own::BfDescriptorTextureTest
+      //              >(
+      //                  0,
+      //                  base::desc::own::SetType::Texture,
+      //                  0
+      //              );
+      //          texture.reload(file_path);
+      //       }
+      //       {
+      //          auto& texture =
+      //              man.getForFrame< base::desc::own::BfDescriptorTextureTest
+      //              >(
+      //                  1,
+      //                  base::desc::own::SetType::Texture,
+      //                  0
+      //              );
+      //          texture.reload(file_path);
+      //       }
+      //       man.updateSets();
+      //    }
+      // }
    }
    ImGui::End();
    return false;
@@ -599,19 +650,35 @@ MainDock::presentCurrentFormattingSections()
          | ImGuiWindowFlags_NoTitleBar
       ;
 
+      bool init_status = sec->isRender();
       ImGui::SetNextWindowSize({700, 800}, ImGuiCond_Appearing);
       sec->isRender() = ImGui::Begin(sec_name.c_str(), nullptr, win_flags);
       {
          presentSectionDock(sec);
-         if (presentSectionParameters(sec) || sec->isChanged()) { 
-            // sec->make();
-            // sec->control().updateBuffer();
+         if (presentSectionParameters(sec) /* || sec->isChanged() */) { 
+            sec->make();
+            sec->control().updateBuffer();
             // sec->isChanged() = false;
             // should_remake = true;
             // m_body->make();
             // m_body->root()->control().updateBuffer();
          }
       }
+
+      if (init_status != sec->isRender()) { 
+         auto& info = sec->info();
+         if (info.get().imageData.imagePath.has_value()) { 
+            auto& path = info.get().imageData.imagePath.value();
+            if (!fs::exists(path)) { 
+               fmt::println("Cant load image. Where are no image with path={}", path.string());
+            }
+            base::desc::own::BfDescriptorPipelineDefault::loadNewTexture(path);
+         }
+         else { 
+            fmt::println("Image path does not set!");
+         }
+      }
+
       ImGui::End();
    }
    if (fsections.empty())
@@ -664,76 +731,157 @@ void MainDock::presentSectionDock(pSection sec) {
 }
 
 void 
-MainDock::presentSaveButton(pSection sec) {
+MainDock::presentSectionSaveButton(pSection sec) {
+
+   // clang-format on
    const ImVec2 avail = ImGui::GetContentRegionAvail();
    static int selectedExportMode = -1;
-   static const char* exportModes[] = { "Vertices", "Default" };
+   static const char* exportModes[] =
+       {"Step vertices", "Step curves", "BladeForge format"};
    static bool openSavePopup = false;
 
+   const bool is_ctrl = 0 || ImGui::IsKeyDown(ImGuiKey_LeftCtrl) ||
+                        ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+
    // Main "Save As" button
-   if (ImGui::Button("Save As", { avail.x, 20.f })) {
-       ImGui::OpenPopup("Choose Export Mode");
-       openSavePopup = true;
+   if (ImGui::Button("Save As", {avail.x, 20.f}))
+   {
+      ImGui::OpenPopup("Choose Export Mode");
+      openSavePopup = true;
+   }
+
+   if (is_ctrl && ImGui::IsKeyReleased(ImGuiKey_S))
+   {
+      auto& info = static_cast< SectionCreateInfoGui& >(sec->info().get());
+      if (!info.savePath.has_value())
+      {
+         // openSavePopup = true;
+         selectedExportMode = 2;
+      }
+      else
+      {
+         auto yaml = YAML::Node(sec->info().get());
+         saveas::exportToYaml(yaml, info.savePath.value());
+         fmt::println(
+             "Overwriting existing file with path={}",
+             info.savePath->string()
+         );
+         return;
+      }
    }
 
    // Popup content
-   if (ImGui::BeginPopupModal("Choose Export Mode", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-       ImGui::Text("How do you want to export?");
-       ImGui::Separator();
+   if (ImGui::BeginPopup("Choose Export Mode"))
+   {
+      ImGui::Text("How do you want to export?");
+      ImGui::Separator();
 
-       for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i) {
-           if (ImGui::Button(exportModes[i], ImVec2(200, 0))) {
-               selectedExportMode = i;
-               ImGui::CloseCurrentPopup();
-           }
-       }
+      for (int i = 0; i < IM_ARRAYSIZE(exportModes); ++i)
+      {
+         if (ImGui::Button(exportModes[i], ImVec2(200, 0)))
+         {
+            selectedExportMode = i;
+            ImGui::CloseCurrentPopup();
+         }
+      }
 
-       ImGui::EndPopup();
+      ImGui::EndPopup();
    }
 
    // After popup selection, show file dialog
-   if (selectedExportMode != -1) {
-       nfdu8char_t* outPath = nullptr;
+   if (selectedExportMode != -1)
+   {
+      nfdu8char_t* outPath = nullptr;
+      nfdu8filteritem_t filters_step[] = {
+          {"Universal CAD format", "step"},
+          {"All Files", "*"}
+      };
+      nfdu8filteritem_t filters_yaml[] = {
+          {"BladeForge default format", "yaml"},
+          {"All Files", "*"}
+      };
 
-       nfdu8filteritem_t filters[] = {
-           { "STEP file", "step" },
-           { "All Files", "*" }
-       };
+      nfdsavedialogu8args_t args = {0};
 
-       nfdsavedialogu8args_t args = {0};
-       args.filterList = filters;
-       args.filterCount = sizeof(filters) / sizeof(filters[0]);
-       args.defaultName = "section.step";
+      switch (selectedExportMode)
+      {
+      case 0:
+         args.filterList = filters_step;
+         args.filterCount = sizeof(filters_step) / sizeof(filters_step[0]);
+         args.defaultName = "section.step";
+         break;
+      case 1:
+         args.filterList = filters_step;
+         args.filterCount = sizeof(filters_step) / sizeof(filters_step[0]);
+         args.defaultName = "section.step";
+         break;
+      case 2:
+         args.filterList = filters_yaml;
+         args.filterCount = sizeof(filters_yaml) / sizeof(filters_yaml[0]);
+         args.defaultName = "section.yaml";
+         break;
+      }
 
-       nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
+      nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
 
-       if (result == NFD_OKAY) {
-           fmt::println("Saving as: {}", outPath);
-           std::vector<TopoDS_Shape> shapesToExport;
-           if (selectedExportMode == 0) {
-               auto shape = sec->outputShape();
-               shapesToExport.push_back(cascade::wireFromSection(sec));
-           } else {
-               shapesToExport = std::move(cascade::createSection(sec));
-           }
+      if (result == NFD_OKAY)
+      {
+         fmt::println("Saving as: {}", outPath);
+         std::vector< TopoDS_Shape > shapesToExport;
+         switch (selectedExportMode)
+         {
+         case 0: {
+            auto shape = sec->outputShape();
+            shapesToExport.push_back(cascade::wireFromSection(sec));
+            saveas::exportToSTEP(shapesToExport, outPath);
+         }
+         break;
+         case 1: {
+            shapesToExport = std::move(cascade::createSection(sec));
+            saveas::exportToSTEP(shapesToExport, outPath);
+         }
+         break;
+         case 2: {
+            auto yaml = YAML::Node(sec->info().get());
+            saveas::exportToYaml(yaml, outPath);
+            auto& info =
+                static_cast< SectionCreateInfoGui& >(sec->info().get());
+            info.savePath = outPath;
+            fmt::println(
+                "Save path for section with id={} is set to {}",
+                sec->id(),
+                info.savePath->string()
+            );
+         }
+         break;
+         }
 
-           saveas::exportToSTEP(shapesToExport, outPath);
-           NFD_FreePathU8(outPath);
-       } else if (result == NFD_CANCEL) {
-           fmt::println("User canceled");
-       } else {
-           fmt::println("NFD Error: {}", NFD_GetError());
-       }
+         NFD_FreePathU8(outPath);
+      }
+      else if (result == NFD_CANCEL)
+      {
+         fmt::println("User canceled");
+      }
+      else
+      {
+         fmt::println("NFD Error: {}", NFD_GetError());
+      }
 
-       // Reset selection for next time
-       selectedExportMode = -1;
+      // Reset selection for next time
+      selectedExportMode = -1;
    }
+
+   // clang-format off
 }
 
 bool
 MainDock::presentSectionParameters(pSection sec)
 {
    // clang-format off
+   
+   
+
+
    const auto id = sec->id(); 
    const std::string param_title = fmt::format("Parameters##sec-{}", id);
    const std::string preview_title = fmt::format("Preview##sec-{}", id);
@@ -751,7 +899,7 @@ MainDock::presentSectionParameters(pSection sec)
    if (ImGui::Begin(param_title.c_str(), nullptr, param_flags))
    {
 
-      presentSaveButton(sec);
+      presentSectionSaveButton(sec);
 
       ImGui::Separator();
 
@@ -760,31 +908,33 @@ MainDock::presentSectionParameters(pSection sec)
       inputTableField outer_values[] = { &info->chord, &info->installAngle, &info->step };
       inputTableFieldSpeed outer_speeds[] = { 0.001f, 0.5f, 0.01f };
       const char* outer_names[] = {"Chord", "Install Angle", "Step"};
-      is_changed = is_changed || presentBladeSectionTable("Outer", outer_values, outer_speeds, outer_names, 3);
+      is_changed = presentBladeSectionTable("Outer", outer_values, outer_speeds, outer_names, 3) || is_changed;
 
       ImGui::SeparatorText("Average curve");
       inputTableField ave_values[] = {&info->initialBezierCurveOrder};
       inputTableFieldSpeed ave_speeds[] = { 1 };
       const char* ave_names[] = {"Average curve order" };
-      is_changed = is_changed || presentBladeSectionTable("Ave", ave_values, ave_speeds, ave_names, 1);
+      is_changed = presentBladeSectionTable("Ave", ave_values, ave_speeds, ave_names, 1) 
+         || is_changed;
 
       ImGui::SeparatorText("Inlet");
       inputTableField inlet_values[] = {&info->inletAngle, &info->inletRadius};
       inputTableFieldSpeed inlet_speeds[] = { 0.5f, 0.001f };
       const char* inlet_names[] = {"Inlet Angle", "Inlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Inlet", inlet_values, inlet_speeds, inlet_names, 2);
+      is_changed = presentBladeSectionTable("Inlet", inlet_values, inlet_speeds, inlet_names, 2) || is_changed;
 
       ImGui::SeparatorText("Outlet");
       inputTableField outlet_values[] = {&info->outletAngle, &info->outletRadius};
       inputTableFieldSpeed outlet_speeds[] = { 0.5f, 0.001f };
       const char* outlet_names[] = {"Outlet Angle", "Outlet Radius"};
-      is_changed = is_changed || presentBladeSectionTable("Outlet", outlet_values, outlet_speeds, outlet_names, 2);
+      is_changed = presentBladeSectionTable("Outlet", outlet_values, outlet_speeds, outlet_names, 2) || is_changed;
+      
    }
    ImGui::End();
 
    ImGui::Begin(circles_title.c_str());
    {
-      is_changed = is_changed || presentCenterCirclesEditor(info->centerCircles);
+      is_changed = presentCenterCirclesEditor(info->centerCircles) || is_changed;
    }
    ImGui::End();
 
@@ -825,8 +975,10 @@ MainDock::presentSectionToggleView(pSection sec) {
    ImGui::SeparatorText("Views");
    if (ImGui::Button("All", bsz)) { 
       sec->viewFormattingShapeOnly(true);
-      // info->renderBitSet = UINT32_MAX;
-      // info->renderBitSet &= ~static_cast<uint32_t>(BfBladeSectionEnum::TriangularShape);
+      no_remake = false;
+   }
+   if (ImGui::Button("None", bsz)) { 
+      sec->viewNone();
       no_remake = false;
    }
    // if (ImGui::Button("Triangular shape", bsz)) { 
@@ -989,9 +1141,81 @@ MainDock::presentMainDockCurrentExistingSections()
 
    if (ImGui::Button("New section", {x, y}))
    {
-      addSectionAndUpdateBuffer();
-      signal |= MainDockSignalEnum::RebuildDock;
+      ImGui::OpenPopup("New section choice");
    }
+
+   if (ImGui::BeginPopup("New section choice"))
+   {
+      const ImVec2 sz{100, 20};
+      if (ImGui::Button("New", sz))
+      {
+         addSectionAndUpdateBuffer();
+         signal |= MainDockSignalEnum::RebuildDock;
+      }
+      if (ImGui::Button("Load", sz))
+      {
+         nfdu8char_t* inPath = nullptr;
+         nfdu8filteritem_t filters[] = {
+             {"BladeForge format", "yaml"},
+             {"All Files", "*"}
+         };
+
+         nfdopendialogu8args_t args = {0};
+
+         args.filterList = filters;
+         args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+         nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+         if (result == NFD_OKAY)
+         {
+            try
+            {
+               // clang-format off
+               YAML::Node node; // = YAML::LoadFile(inPath);
+               if (!saveas::loadFromYaml(node, inPath))
+               {
+                  throw std::runtime_error("Internal error of loading");
+               }
+               fmt::println("Loaded YAML file with path={}", inPath);
+               fmt::println("Yaml content:\n{}", YAML::Dump(node));
+               auto base_info = node.as< obj::section::SectionCreateInfo >();
+               m_infos.push_back(SectionCreateInfoGui{std::move(base_info)});
+               auto sec = m_body->addSection(&m_infos.back());
+               sec->isRender() = false;
+               sec->make();
+               sec->make();
+               sec->make();
+               sec->control().updateBuffer();
+
+               auto& info = static_cast< SectionCreateInfoGui& >(sec->info().get());
+               info.savePath = inPath;
+               fmt::println(
+                   "[LOADING] Save path for section with id={} is set to {}",
+                   sec->id(),
+                   info.savePath->string()
+               );
+               // clang-format on
+            }
+            catch (const std::exception& e)
+            {
+               fmt::println("YAML Load Error: {}", e.what());
+            }
+
+            NFD_FreePathU8(inPath);
+         }
+         else if (result == NFD_CANCEL)
+         {
+            fmt::println("User canceled loading.");
+         }
+         else
+         {
+            fmt::println("NFD Error: {}", NFD_GetError());
+         }
+      }
+      ImGui::EndPopup();
+   }
+
    ImGui::SeparatorText("Current sections");
 
    for (auto sec = m_body->beginSection(); sec != m_body->endSection(); ++sec)

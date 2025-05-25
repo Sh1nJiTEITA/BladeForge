@@ -7,6 +7,7 @@
 #include <glm/geometric.hpp>
 #include <glm/vector_relational.hpp>
 #include <memory>
+#include <optional>
 
 #include "bfBladeParts.h"
 #include "bfChain.h"
@@ -25,29 +26,80 @@ struct CenterCircle
 {
    float relativePos;
    float radius;
+   float backVertexAngle = 90.f;
+   float frontVertexAngle = 90.f;
+};
+
+struct ImageData
+{
+   std::optional< fs::path > imagePath;
+   float width = 0.5f;
+   float height = 0.5f;
+   float rotateAngle = 0.0f;
+   float transparency = 0.0f;
+   BfVertex3 tl;
+   BfVertex3 tr;
+   BfVertex3 br;
+   BfVertex3 bl;
 };
 
 struct SectionCreateInfo
 {
-   float z = 0.0f;
+   //! Default ctor for initial section view
+   //! FIXME: Change initial values to achieve more real section view
+   SectionCreateInfo();
 
-   float chord = 1.0f;
-   float installAngle = 80.0f;
-   float step = 0.4f;
+   //! Z position of section plane (assuming that plane lays in xOy plane)
+   //! Can be in range of [0..1]
+   float z;
 
-   bool isEqMode = false;
-   float inletAngle = 180.0f - 66.0f - 30.f;
-   float outletAngle = 66.0f - 20.f;
+   //! Chord - line between most far points of blade section
+   float chord;
 
-   float inletRadius = 0.043f;
-   float outletRadius = 0.017f;
+   //! Installation angle - angle to rotate from minus y-axis
+   //! If this angle is 90.f degrees -> no rotation relative
+   //! to formatting view
+   float installAngle;
 
-   std::list< CenterCircle > centerCircles = {
-       {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f}
-   };
-   int initialBezierCurveOrder = 5;
+   //! Useless (for now) var to show absolute distance between
+   //! 2 sections which are flow channel when combined
+   float step;
 
-   uint32_t renderBitSet = UINT32_MAX;
+   //! ...
+   bool isEqMode;
+   float inletAngle;
+   float outletAngle;
+
+   //! Radius of inlet/outlet (io) edges of section
+   float inletRadius;
+   float outletRadius;
+
+   //! List of center circles to form chain
+   std::list< CenterCircle > centerCircles;
+   //! Order of initial curve (this curves is not the average
+   //! curve between front/back curve chains!)
+   int initialBezierCurveOrder;
+
+   uint32_t renderBitSet;
+
+   BfVertex3 vertChordLeft;
+   BfVertex3 vertChordRight;
+
+   //! Left & right chord borders (free vertices)
+   BfVertex3 vertLeftChordBorder;
+   BfVertex3 vertRightChordBorder;
+
+   //! Control vertices of "average" "skelet" initial curve
+   std::vector< BfVertex3 > initialCurveControlVertices;
+
+   //! Back & front angles for inlet / outlet circle
+   //! Which may one day be part of central circles
+   float inletBackVertexAngle;
+   float inletFrontVertexAngle;
+   float outletBackVertexAngle;
+   float outletFrontVertexAngle;
+
+   ImageData imageData;
 };
 
 // clang-format off
@@ -71,6 +123,7 @@ enum class BfBladeSectionEnum : uint32_t
    MassCenter           = 1 << 16,
    TriangularShape      = 1 << 17,
    GeometricCenter      = 1 << 18,
+   // TexturePlane         = 1 << 19,
    End                  = 1 << 19
 };
 // clang-format on
@@ -88,11 +141,6 @@ public:
    {
 
       m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
-
-      // viewFormattingShapeOnly(); 
-
-      // m_lastRenderBitSet = m_info.get().renderBitSet;
-
       _createChord(); 
       _createCircleEdges();
       _createIOAngles();
@@ -101,7 +149,7 @@ public:
       _createIOCircles();
       _createChain();
       _createIOArc();
-
+      _createTexturePlane();
    }
 
    virtual void make() override
@@ -235,6 +283,9 @@ private:
    void _processMassCenter();
    void _processTriangularShape();
    void _processGeometricCenter();
+
+   void _createTexturePlane();
+   void _processTexturePlane();
 
 private:
    int m_outputShapeSegments = std::nanf("");

@@ -300,7 +300,7 @@ struct BfVar
    // clang-format off
    using var = std::variant< T, T* >;
 
-   BfVar() : m_value { BfVertex3{} } {}
+   BfVar() : m_value { T{} } {}
    explicit BfVar(var&& v) noexcept : m_value { std::move(v) } {}
    explicit BfVar(const var& v) : m_value { v } {}
    BfVar(const BfVar& o) : m_value { o.m_value } {}

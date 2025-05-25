@@ -5,7 +5,7 @@ if(WIN32)
   # зависимости использовать именно его
 
   # TODO: добавить поддержку MSVC - это реально, но пока что не нужно
-  set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
+  # set(VCPKG_TARGET_TRIPLET "x64-mingw-static")
 
   # Так как lapack не работает из коробки с MINGW, то используется OpenBLAS, но
   # так как в xtensor-blas - жестко прописан lapack - то таким образом можно
@@ -14,9 +14,8 @@ if(WIN32)
                         ${CMAKE_MODULE_PATH})
 endif()
 
-set(CMAKE_TOOLCHAIN_FILE
-    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
+# set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+# CACHE STRING "Vcpkg toolchain file")
 set(CMAKE_SUPPRESS_REGENERATION TRUE)
 
 set(CMAKE_CXX_FLAGS "-g -O0")
@@ -264,18 +263,9 @@ set(BF_GEOMETRY
 add_library(bfgeometrylib STATIC ${BF_GEOMETRY})
 target_link_libraries(bfgeometrylib PUBLIC bfexternallib)
 
-set(BF_SAVEAS "src/saveas/bfStep.cpp")
+set(BF_SAVEAS "src/saveas/bfStep.cpp" "src/saveas/bfYaml.cpp")
 add_library(bfsaveaslib STATIC ${BF_SAVEAS})
 target_link_libraries(bfsaveaslib PUBLIC bfexternallib)
-
-set(OpenCASCADE_COMPONENTS FoundationClasses ModelingData ModelingAlgorithms)
-find_package(OpenCASCADE REQUIRED COMPONENTS ${OpenCASCADE_COMPONENTS})
-
-target_link_libraries(bfsaveaslib PUBLIC ${OpenCASCADE_LIBRARIES})
-target_include_directories(bfsaveaslib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
-
-target_link_libraries(bfgeometrylib PUBLIC ${OpenCASCADE_LIBRARIES})
-target_include_directories(bfgeometrylib PUBLIC ${OpenCASCADE_INCLUDE_DIR})
 
 set(BF_INTERACTION
     "src/interaction/bfConsole.cpp"

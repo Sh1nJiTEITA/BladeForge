@@ -8,8 +8,10 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
+#include <nfd.hpp>
 #include <stdexcept>
 
+#include "bfBladeSection2.h"
 #include "bfCamera.h"
 #include "bfObjectMath.h"
 #include "imgui.h"
@@ -287,11 +289,10 @@ BfBezierN::make()
 void
 BfBezierWH::elevateOrder()
 {
+   // clang-format off
    bool oldstate = toggleBoundHandles(true);
-   auto handles_layer =
-       std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
-   auto lines_layer =
-       std::static_pointer_cast< obj::BfDrawLayer >(m_children[2]);
+   auto handles_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
+   auto lines_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[2]);
    auto new_vertices = math::BfBezierBase::elevateOrder(*this);
 
    for (size_t i = 0; i < new_vertices.size() - 1; ++i)
@@ -319,6 +320,8 @@ BfBezierWH::elevateOrder()
    auto new_pointers = this->_genControlVerticesPointers();
    casted_curve->assign(new_pointers.begin(), new_pointers.end());
    toggleBoundHandles(oldstate);
+
+   // clang-format on
 }
 
 void
@@ -395,6 +398,105 @@ BfVertex3Uni&
 BfSingleLineWH::right()
 {
    return m_right;
+}
+
+void
+BfBezierIsolatedWH::elevateOrder()
+{
+   // clang-format off
+   bool oldstate = toggleBoundHandles(true);
+   auto handles_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
+   auto lines_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[2]);
+   auto new_vertices = math::BfBezierBase::elevateOrder(_genControlVerticesPointers());
+
+   for (size_t i = 0; i < new_vertices.size() - 1; ++i)
+   {
+      m_ctrlvertices[i].pos = new_vertices[i].pos();
+      auto handle = std::static_pointer_cast< curves::BfHandleCircle >(
+          handles_layer->children()[i]
+      );
+      handle->resetPos();
+   }
+   m_ctrlvertices.push_back(new_vertices.rbegin()->get());
+   auto& end = m_ctrlvertices.back();
+   
+   handles_layer->add(
+       std::make_shared< curves::BfHandleCircle >(&end, 0.01f)
+   );
+   lines_layer->add(
+       std::make_shared< curves::BfSingleLine >(
+           &end,
+           &*(m_ctrlvertices.rbegin() + 1)
+       )
+   );
+
+   auto casted_curve = std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
+   auto new_pointers = this->_genControlVerticesPointers();
+   casted_curve->assign(new_pointers.begin(), new_pointers.end());
+   toggleBoundHandles(oldstate);
+
+   // clang-format on
+}
+void
+BfBezierIsolatedWH::lowerateOrder()
+{
+   // clang-format off
+   bool oldstate = toggleBoundHandles(true);
+   auto handles_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
+   auto lines_layer = std::static_pointer_cast< obj::BfDrawLayer >(m_children[2]);
+   auto new_vertices = math::BfBezierBase::lowerateOrder(_genControlVerticesPointers());
+
+   handles_layer->children().pop_back();
+   lines_layer->children().pop_back();
+   m_ctrlvertices.pop_back();
+
+   for (size_t i = 0; i < new_vertices.size(); ++i)
+   {
+      m_ctrlvertices[i].pos = new_vertices[i].pos();
+      auto handle = std::static_pointer_cast< curves::BfHandleCircle >(
+          handles_layer->children()[i]
+      );
+      handle->resetPos();
+   }
+
+   auto curve = std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
+   auto new_pointers = this->_genControlVerticesPointers();
+   curve->assign(new_pointers.begin(), new_pointers.end());
+   toggleBoundHandles(oldstate);
+   // clang-format on
+}
+bool
+BfBezierIsolatedWH::toggleHandle(size_t i, int status)
+{
+   auto handles = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
+   auto handle =
+       std::static_pointer_cast< curves::BfHandleCircle >(handles->children()[i]
+       );
+   return handle->toggleRender(status);
+}
+bool
+BfBezierIsolatedWH::toggleBoundHandles(int sts)
+{
+   bool f = toggleHandle(0, sts);
+   bool s = toggleHandle(m_ctrlvertices.size() - 1, sts);
+   return f && s;
+}
+std::shared_ptr< curves::BfBezierN >
+BfBezierIsolatedWH::curve()
+{
+   return std::static_pointer_cast< curves::BfBezierN >(m_children[0]);
+}
+
+std::vector< BfVertex3Uni >
+BfBezierIsolatedWH::_genControlVerticesPointers()
+{
+   std::vector< BfVertex3Uni > tmp;
+   tmp.reserve(m_ctrlvertices.size());
+   for (auto& it : m_ctrlvertices)
+   {
+      tmp.push_back(BfVertex3Uni(&it));
+   }
+   return tmp;
 }
 
 std::shared_ptr< curves::BfHandleCircle >
@@ -556,6 +658,7 @@ BfTextureQuad::presentContextMenu()
          casted->trHandle()->toggleRender(!m_isLocked);
          casted->brHandle()->toggleRender(!m_isLocked);
          casted->blHandle()->toggleRender(!m_isLocked);
+         fmt::println("Current image handles lock status={}", m_isLocked);
       }
       if (ImGui::Checkbox("Save ratio", &m_isRatio))
       {
@@ -563,8 +666,8 @@ BfTextureQuad::presentContextMenu()
          this->root()->make();
          this->root()->control().updateBuffer(true);
       }
-      ImGui::SliderFloat("Transparency", &m_transp, 0, 1);
-      if (ImGui::DragFloat("Rotate", &m_rotateAngle, 1, 0, 360))
+      ImGui::SliderFloat("Transparency", m_transp.getp(), 0, 1);
+      if (ImGui::DragFloat("Rotate", m_rotateAngle.getp(), 1, 0, 360))
       {
          this->root()->make();
          this->root()->control().updateBuffer(true);
@@ -575,6 +678,58 @@ BfTextureQuad::presentContextMenu()
          this->root()->make();
          this->root()->control().updateBuffer(true);
       }
+
+      if (auto base = root->parent().lock())
+      {
+         if (auto sec =
+                 std::dynamic_pointer_cast< obj::section::BfBladeSection >(base
+                 ))
+         {
+            if (ImGui::Button("Open Image"))
+            {
+               nfdu8char_t* inPath = nullptr;
+               nfdu8filteritem_t filters[] = {
+                   {"Image", "png"},
+                   {"Image", "jpeg"},
+                   {"Image", "jpg"},
+                   {"All Files", "*"}
+               };
+
+               nfdopendialogu8args_t args = {0};
+
+               args.filterList = filters;
+               args.filterCount = sizeof(filters) / sizeof(filters[0]);
+
+               nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
+
+               if (result == NFD_OKAY)
+               {
+                  fmt::println("Found path: {}", inPath);
+                  if (fs::exists(inPath))
+                  {
+                     base::desc::own::BfDescriptorPipelineDefault::
+                         loadNewTexture(inPath);
+                     sec->info().get().imageData.imagePath = inPath;
+                  }
+               }
+               else if (result == NFD_CANCEL)
+               {
+                  fmt::println("User canceled loading.");
+               }
+               else
+               {
+                  fmt::println("NFD Error: {}", NFD_GetError());
+               }
+            }
+            ImGui::SameLine();
+            fs::path path = "";
+            if (sec->info().get().imageData.imagePath.has_value())
+            {
+               path = sec->info().get().imageData.imagePath.value();
+            }
+            ImGui::Text("Path: %s", path.c_str());
+         }
+      }
    }
 }
 
@@ -583,51 +738,67 @@ BfCircle2LinesWH::make()
 {
    _assignRoots();
 
+   const glm::vec3 current_begin = m_begin.pos();
+   const glm::vec3 current_center = m_center.pos();
+   const glm::vec3 current_end = m_end.pos();
    glm::vec3 handle_pos = handle()->center().pos();
-   float distance_to_center_vertex = glm::distance(handle_pos, m_center.pos());
-   float distance_to_line =
-       curves::math::distanceToLine(handle_pos, m_begin, m_center);
 
-   if (glm::all(glm::equal(m_begin.pos(), m_oldbegin)) &&
-       glm::all(glm::equal(m_center.pos(), m_oldcenter)) &&
-       glm::all(glm::equal(m_end.pos(), m_oldend)))
+   const bool geometry_unchanged =
+       glm::all(glm::equal(current_begin, m_oldbegin)) &&
+       glm::all(glm::equal(current_center, m_oldcenter)) &&
+       glm::all(glm::equal(current_end, m_oldend));
+
+   const bool radius_changed_externally =
+       std::abs(m_last_known_radius - m_radius.get()) > 1e-5f;
+
+   // Recalculate radius if geometry hasn't changed and no external update
+   if (geometry_unchanged && !radius_changed_externally)
    {
+      const float dist_center_to_handle =
+          glm::distance(handle_pos, current_center);
+      const float dist_to_line =
+          curves::math::distanceToLine(handle_pos, m_begin, m_center);
 
-      m_radius.get() = (distance_to_center_vertex * distance_to_line) /
-                       (distance_to_center_vertex + distance_to_line);
+      m_radius.get() = (dist_center_to_handle * dist_to_line) /
+                       (dist_center_to_handle + dist_to_line);
    }
 
-   // accurate handle pos
-   float alpha = curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
-   glm::vec3 alpha_dir =
+   // --- Accurate handle position along bisector ---
+   const float alpha =
+       curves::math::angleBetween3Vertices(m_begin, m_center, m_end);
+   glm::vec3 alpha_direction =
        glm::rotate(
            glm::mat4(1.0f),
            -glm::radians(alpha * 0.5f),
            m_center.normals()
        ) *
-       glm::vec4(glm::normalize(m_center.pos() - m_begin.pos()), 1.0f);
+       glm::vec4(glm::normalize(current_center - current_begin), 1.0f);
 
    handle()->center().pos() = curves::math::closestPointOnLine(
        handle_pos,
        m_center,
-       m_center.pos() + alpha_dir
+       current_center + alpha_direction
    );
 
-   // FIXME Ручка создается 2 раза тут и еще ниже
+   // --- Recurse into children ---
    for (auto child : m_children)
    {
       child->make();
    }
-   glm::vec3 circle_center = circle()->center().pos;
+
+   // --- Final handle placement based on circle and radius ---
    glm::vec3 direction_to_handle =
-       glm::normalize(circle_center - m_center.pos());
+       glm::normalize(circle()->center().pos - current_center);
    handle()->center().pos() =
        circle()->center().pos + direction_to_handle * m_radius.get();
+
    handle()->make();
 
-   m_oldbegin = m_begin.pos();
-   m_oldcenter = m_center.pos();
-   m_oldend = m_end.pos();
+   // --- Save current state ---
+   m_oldbegin = current_begin;
+   m_oldcenter = current_center;
+   m_oldend = current_end;
+   m_last_known_radius = m_radius.get(); // Update cached radius
 }
 
 BfVertex3

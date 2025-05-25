@@ -25,6 +25,47 @@ namespace obj
 {
 namespace section
 {
+// clang-format off
+SectionCreateInfo::SectionCreateInfo() 
+    : z { 0.0f }
+    , chord { 1.0f }
+    , installAngle { 80.0f }
+    , step { 0.4f }
+    , isEqMode { false }
+    , inletAngle { 180.0f - 66.0f - 30.f }
+    , outletAngle { 66.0f - 20.f }
+    , inletRadius { 0.043f }
+    , outletRadius { 0.017f }
+    , centerCircles { { {0.214f, 0.063f}, {0.459f, 0.082f}, {0.853f, 0.025f} } }
+    , initialBezierCurveOrder { 5 }
+    , renderBitSet { UINT32_MAX }
+    , inletBackVertexAngle {90.f }
+    , inletFrontVertexAngle {90.f }
+    , outletBackVertexAngle {90.f }
+    , outletFrontVertexAngle {90.f }
+{
+   constexpr auto norm = glm::vec3{ 0.0f, 0.0f, 1.0f };
+
+   vertChordLeft = { glm::vec3{ 0.0f, 0.0f, z }, 
+                     glm::vec3{ 0.5f, 0.5f, 0.1f },
+                     norm };
+   
+   vertChordRight = { glm::vec3{ chord, 0.0f, z }, 
+                      glm::vec3{ 0.5f, 0.5f, 0.1f },
+                      norm };
+
+   vertLeftChordBorder = { glm::vec3{ 0.0f, chord, z }, 
+                           glm::vec3{ 0.5f, 0.5f, 0.1f },
+                           norm };
+
+   vertRightChordBorder = { glm::vec3{ chord, chord, z }, 
+                            glm::vec3{ 0.5f, 0.5f, 0.1f },
+                            norm };
+
+   initialCurveControlVertices.reserve(100);
+}
+// clang-format on
+
 void
 BfBladeSection::applyRenderToggle()
 {
@@ -288,16 +329,8 @@ BfBladeSection::_createChord()
    // clang-format off
    auto& g = m_info;
    auto oChord = _addPartF<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>(
-      BfVertex3{
-         glm::vec3{ 0.0f, 0.0f, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      },
-      BfVertex3{
-         glm::vec3{ g.get().chord, 0.0f, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertChordLeft),
+      BfVertex3Uni(&g.get().vertChordRight)
    );
    // oChord->toggleRender(false);
    // oChord->toggleRender(false);
@@ -306,22 +339,14 @@ BfBladeSection::_createChord()
 
    auto oChordLeft = _addPartF<BfBladeSectionEnum::_ChordLeftBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->left().getp(),
-      BfVertex3{
-         glm::vec3{ oChord->left().pos().x, g.get().chord, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertLeftChordBorder) 
    );
    // oChordLeft->toggleRender(false);
    // oChordLeft->toggleRender(false);
 
    auto oChordRight = _addPartF<BfBladeSectionEnum::_ChordRightBorder, curves::BfSingleLineWH>( 
       _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>()->right().getp(),
-      BfVertex3{
-         glm::vec3{ oChord->right().pos().x, g.get().chord, g.get().z }, 
-         glm::vec3{ 0.5f, 0.5f, 0.1f },
-         glm::vec3{ 0.0f, 0.0f, 1.0f }
-      }
+      BfVertex3Uni(&g.get().vertRightChordBorder) 
    );
    // clang-format on
 }
@@ -396,7 +421,6 @@ BfBladeSection::_processCircleEdges()
    // clang-format off
    // auto& g = m_info;
    // auto chord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
-
    // clang-format off
 }
 
@@ -465,29 +489,44 @@ void BfBladeSection::_createAverageInitialCurve()
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();   
    auto oChord = _part<BfBladeSectionEnum::Chord, curves::BfSingleLineWH>();
    
-   auto curve = _addPartF<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>(
-      BfVertex3Uni(inletCircle->circle()->center()),
-      BfVertex3Uni(BfVertex3(
+   auto& g = m_info.get();
+   bool isInitialCreation = g.initialCurveControlVertices.empty();
+
+   fmt::println("==== Creating new section initial curve ==== ");
+   fmt::println("initial curve has status: {}", isInitialCreation);
+   // adding initial points to if it is not set
+   if (isInitialCreation) { 
+      g.initialCurveControlVertices.push_back(inletCircle->circle()->center());
+      g.initialCurveControlVertices.push_back(BfVertex3(
          _ioIntersection(),
          inletCircle->circle()->center().color,
          inletCircle->circle()->center().normals
-      )),
-      BfVertex3Uni(outletCircle->circle()->center())
-   );
-   for (size_t i = 2; i < m_info.get().initialBezierCurveOrder; ++i) { 
-      curve->elevateOrder();
+      ));
+      g.initialCurveControlVertices.push_back(outletCircle->circle()->center());
    }
-   auto& inlet_vert = *(curve->begin() + 1);
-   auto& outlet_vert = *(curve->rbegin() + 1);
+
+   auto curve = _addPartF<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierIsolatedWH>(
+      g.initialCurveControlVertices
+   );
    
+   if (isInitialCreation) { 
+      fmt::println("Elevating initial curve order in ctor");
+      for (size_t i = 2; i < m_info.get().initialBezierCurveOrder; ++i) { 
+         fmt::println("Current order: {}", curve->curve()->size() - 1);
+         curve->elevateOrder();
+      }
+   }
+
+   auto& inlet_vert = *(g.initialCurveControlVertices.begin() + 1);
+   auto& outlet_vert = *(g.initialCurveControlVertices.rbegin() + 1);
    auto chord_line = oChord->line();
 
-   inlet_vert.pos() = curves::math::closestPointOnLine(
-      inlet_vert, 
+   inlet_vert.pos = curves::math::closestPointOnLine(
+      inlet_vert,
       chord_line->first().pos() + inletCircle->centerVertex().pos,
       _eqInletDirection()
    );
-   outlet_vert.pos() = curves::math::closestPointOnLine(
+   outlet_vert.pos = curves::math::closestPointOnLine(
       outlet_vert, 
       chord_line->second().pos() + outletCircle->centerVertex().pos, 
       _eqOutletDirection()
@@ -497,9 +536,12 @@ void BfBladeSection::_createAverageInitialCurve()
 void BfBladeSection::_processAverageInitialCurve() { 
    auto inletCircle = _part<BfBladeSectionEnum::InletCircle, curves::BfCircle2LinesWH>();
    auto outletCircle = _part<BfBladeSectionEnum::OutletCircle, curves::BfCircle2LinesWH>();
-   auto curve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>();
+
+   auto curve = _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierIsolatedWH>();
    
-   const int current_curve_order = curve->size() - 1;
+   auto& g = m_info.get();
+
+   const int current_curve_order = g.initialCurveControlVertices.size() - 1;
    const int needed_curve_order = m_info.get().initialBezierCurveOrder;
 
    if (current_curve_order < needed_curve_order) { 
@@ -514,32 +556,33 @@ void BfBladeSection::_processAverageInitialCurve() {
          curve->lowerateOrder();
       }
    }
-   auto& inlet_vert = *(curve->begin() + 1);
-   auto& outlet_vert = *(curve->rbegin() + 1);
+   auto& inlet_vert = *(g.initialCurveControlVertices.begin() + 1);
+   auto& outlet_vert = *(g.initialCurveControlVertices.rbegin() + 1);
 
    glm::vec3 iCenter = inletCircle->centerVertex().pos;
-   inlet_vert.pos() = curves::math::closestPointOnLine(inlet_vert, iCenter, iCenter + _eqInletDirection());
-   curve->begin()->pos() = iCenter;
+   inlet_vert.pos = curves::math::closestPointOnLine(inlet_vert, iCenter, iCenter + _eqInletDirection());
+   g.initialCurveControlVertices.front().pos = iCenter;
 
    glm::vec3 oCenter = outletCircle->centerVertex().pos;
-   outlet_vert.pos() = curves::math::closestPointOnLine(outlet_vert, oCenter, oCenter + _eqOutletDirection());
-   curve->rbegin()->pos() = oCenter;
+   outlet_vert.pos = curves::math::closestPointOnLine(outlet_vert, oCenter, oCenter + _eqOutletDirection());
+   g.initialCurveControlVertices.back().pos = oCenter;
 
    // FIXME: WORKS EVERY REMAKE
    float z = m_info.get().z;
-   for (auto& v : *curve) { v.pos().z = z; }
+   for (auto& v : g.initialCurveControlVertices) { v.pos.z = z; }
 }
 
 void BfBladeSection::_createCenterCircles() { 
-   auto circ_layer = _addPartF<BfBladeSectionEnum::CenterCircles, obj::BfDrawLayer>("Circles layer 2");
+   auto circ_layer = _addPartF<E::CenterCircles, obj::BfDrawLayer>("Circles layer 2");
    for (auto& circ : m_info.get().centerCircles) { 
       circ_layer->addf<curves::BfCirclePackWH>(
          BfVar< float >(&circ.relativePos),
          BfVar< float >(&circ.radius),
-         BfVar< float >(90.0f),
-         BfVar< float >(90.0f),
-         _part<BfBladeSectionEnum::AverageInitialCurve, curves::BfBezierWH>()->curve()
-         , curves::BfCirclePackWH::Flag::SeparateHandles// | curves::BfCirclePackWH::Flag::FixedAngle
+         BfVar< float >(&circ.backVertexAngle),
+         BfVar< float >(&circ.frontVertexAngle),
+         _part<E::AverageInitialCurve, curves::BfBezierIsolatedWH>()->curve()
+         , curves::BfCirclePackWH::Flag::SeparateHandles// 
+         // | curves::BfCirclePackWH::Flag::FixedAngle
       );
    }
    circ_layer->make();
@@ -561,9 +604,10 @@ void BfBladeSection::_processCenterCircles() {
       circ_layer->addf< curves::BfCirclePackWH >(
           BfVar< float >(&c.back().relativePos),
           BfVar< float >(&c.back().radius),
-          BfVar< float >(90.0f),
-          BfVar< float >(90.0f),
-          _part< E::AverageInitialCurve, curves::BfBezierWH >()->curve(),
+          BfVar< float >(&c.back().backVertexAngle),
+          BfVar< float >(&c.back().frontVertexAngle),
+          _part< E::AverageInitialCurve, curves::BfBezierIsolatedWH >()->curve(
+          ),
           curves::BfCirclePackWH::Flag::SeparateHandles
       );
    }
@@ -594,17 +638,18 @@ void BfBladeSection::_processCenterCircles() {
 void
 BfBladeSection::_createIOCircles()
 {
+   auto& g = m_info.get();
    _addPartF< E::InletEdge, curves::BfEdge >(
-       BfVar< float >(90.f),
-       BfVar< float >(90.f),
+       BfVar< float >(&g.inletBackVertexAngle),
+       BfVar< float >(&g.inletFrontVertexAngle),
        _part< E::InletDirection, curves::BfSingleLineWH >(),
        _part< E::InletCircle, curves::BfCircle2LinesWH >(),
        curves::BfEdge::Type::Inlet
    );
 
    _addPartF< E::OutletEdge, curves::BfEdge >(
-       BfVar< float >(90.f),
-       BfVar< float >(90.f),
+       BfVar< float >(&g.outletBackVertexAngle),
+       BfVar< float >(&g.outletFrontVertexAngle),
        _part< E::OutletDirection, curves::BfSingleLineWH >(),
        _part< E::OutletCircle, curves::BfCircle2LinesWH >(),
        curves::BfEdge::Type::Outlet
@@ -805,6 +850,27 @@ BfBladeSection::_processGeometricCenter()
    // clang-format on
 }
 
+void
+BfBladeSection::_createTexturePlane()
+{
+   auto obj = addf< curves::BfTexturePlane >(
+       !m_info.get().imageData.imagePath.has_value(),
+       BfVar< float >(&m_info.get().imageData.width),
+       BfVar< float >(&m_info.get().imageData.height),
+       BfVar< float >(&m_info.get().imageData.transparency),
+       BfVar< float >(&m_info.get().imageData.rotateAngle),
+       BfVertex3Uni(&m_info.get().imageData.tl),
+       BfVertex3Uni(&m_info.get().imageData.tr),
+       BfVertex3Uni(&m_info.get().imageData.br),
+       BfVertex3Uni(&m_info.get().imageData.bl)
+   );
+}
+
+void
+BfBladeSection::_processTexturePlane()
+{
+}
+
 auto
 BfBladeSection::viewNone() -> void
 {
@@ -833,7 +899,7 @@ BfBladeSection::viewFormattingShapeOnly(bool init)
    if (!init) m_lastRenderBitSet = m_info.get().renderBitSet; 
    else m_info.get().renderBitSet = UINT32_MAX;
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::OutputShape);
-   // m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
+   m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::TriangularShape);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::GeometricCenter);
    m_info.get().renderBitSet &= ~static_cast< uint32_t >(BfBladeSectionEnum::MassCenter);
    

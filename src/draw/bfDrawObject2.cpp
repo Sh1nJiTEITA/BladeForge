@@ -1,5 +1,7 @@
 #include "bfDrawObject2.h"
 
+#include <ctime>
+#include <fmt/chrono.h>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -107,6 +109,11 @@ BfDrawControlProxy::updateBuffer(
     size_t* off_i
 )
 {
+   // fmt::print(
+   //     fmt::emphasis::bold | fmt::fg(fmt::color::medium_orchid),
+   //     "[{:%H:%M:%S}] Upd buffer :)\n",
+   //     fmt::localtime(std::time(nullptr))
+   // );
    auto& g = m_obj;
 
    std::queue< std::shared_ptr< BfDrawObjectBase > > inner_q;
@@ -462,6 +469,12 @@ BfDrawObjectBase::root()
    }
 
    throw std::runtime_error("Reached top of tree but no buffer found.");
+}
+
+BfObjWeak
+BfDrawObjectBase::parent()
+{
+   return m_root;
 }
 
 std::vector< BfObjectData >
