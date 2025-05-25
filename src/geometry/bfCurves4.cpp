@@ -689,16 +689,14 @@ BfTextureQuad::presentContextMenu()
             {
                nfdu8char_t* inPath = nullptr;
                nfdu8filteritem_t filters[] = {
-                   {"Image", "png"},
-                   {"Image", "jpeg"},
-                   {"Image", "jpg"},
-                   {"All Files", "*"}
+                   // {"All Files", ".*"},
+                   // {"Image", "jpeg,jpg,png"},
                };
 
                nfdopendialogu8args_t args = {0};
 
                args.filterList = filters;
-               args.filterCount = sizeof(filters) / sizeof(filters[0]);
+               args.filterCount = 0;
 
                nfdresult_t result = NFD_OpenDialogU8_With(&inPath, &args);
 

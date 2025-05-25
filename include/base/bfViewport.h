@@ -732,7 +732,7 @@ bfRenderViewpors(uint32_t hovered_id) -> void
          }
       }
    }
-   if (!is)
+   if (!is && !hovered_id)
       // !ImGui::IsWindowHovered("Main create window"))
       base::viewport::ViewportManager::presentContextMenu();
 }

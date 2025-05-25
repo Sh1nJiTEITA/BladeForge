@@ -512,6 +512,10 @@ BfBladeBody::eraseUnaliveSections()
       }
       return false;
    });
+   if (auto sur = getSurface() && m_children.size() == 1)
+   {
+      m_children.clear();
+   }
 }
 
 void

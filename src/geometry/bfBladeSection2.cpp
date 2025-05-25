@@ -751,6 +751,7 @@ BfBladeSection::_processOutputShape()
    {
       auto shape = _part< E::OutputShape, curves::BfSectionOutputShape >();
       std::vector< BfVertex3 > v = genOutputShape();
+      if (v.empty()) return;
       if (std::isnan(outputShapeSegments()) || outputShapeSegments() == 0) { 
          outputShapeSegments() = v.size();
       }
