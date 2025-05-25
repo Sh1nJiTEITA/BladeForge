@@ -582,6 +582,7 @@ MainDock::draw()
    // clang-format on
 
    m_body->sortSections();
+   m_body->eraseUnaliveSections();
 
    ImGui::SetNextWindowSize({700, 800}, ImGuiCond_FirstUseEver);
    ImGui::SetWindowPos({1, 1}, ImGuiCond_FirstUseEver);
@@ -1038,6 +1039,27 @@ MainDock::presentSectionToggleView(pSection sec) {
    // clang-format on
 }
 
+void
+MainDock::presentSectionDeleteMenu(pSection sec)
+{
+   constexpr const char* popupname = "Section delete popup";
+   if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+   {
+      ImGui::OpenPopup(popupname);
+   }
+
+   if (ImGui::BeginPopup(popupname))
+   {
+      if (ImGui::Button("Delete"))
+      {
+         auto info = m_body->grabExtInfo(sec);
+         info.get().isAlive = false;
+         ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+   }
+}
+
 std::vector< pSection >
 MainDock::activeSections()
 {
@@ -1247,6 +1269,7 @@ MainDock::presentMainDockCurrentExistingSections()
          ginfo->isFormatting = !ginfo->isFormatting;
          signal |= MainDockSignalEnum::RebuildDock;
       }
+      presentSectionDeleteMenu(*sec);
    }
 
    ImGui::End();

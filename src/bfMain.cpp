@@ -75,7 +75,6 @@ BfMain::_pollEvents()
 {
    glfwPollEvents();
    auto& io = ImGui::GetIO();
-
    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
    {
       obj::BfDrawManager::inst().setHovered(0);

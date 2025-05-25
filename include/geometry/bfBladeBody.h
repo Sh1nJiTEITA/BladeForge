@@ -58,6 +58,7 @@ private:
 struct SectionCreateInfoExtended : public section::SectionCreateInfo
 {
    bool isActive = true;
+   bool isAlive = true;
 };
 //
 //
@@ -143,7 +144,7 @@ public: // ITERATOR
 
 public:
    void sortSections();
-   void eraseUnactiveSections();
+   void eraseUnaliveSections();
 
    // clang-format off
    template < typename INFO >

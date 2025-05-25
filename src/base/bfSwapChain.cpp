@@ -1,5 +1,7 @@
 #include "bfSwapChain.h"
 
+// clang-format off
+
 BfEvent bfGetSwapChainSupport(VkPhysicalDevice physical_device, VkSurfaceKHR surface,BfSwapChainSupport& support)
 {
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &support.capabilities);

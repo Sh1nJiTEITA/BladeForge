@@ -107,7 +107,6 @@ struct SectionCreateInfoGui : public obj::body::SectionCreateInfoExtended {
    bool isRender = true;
    bool isFormatting = false;
    bool isParametersDockBuild = false;
-   bool isHandlesEnabled = true;
    std::optional<fs::path> savePath;
    float relZ = 0.0f;
 };
@@ -148,6 +147,7 @@ public:
    auto presentSectionParameters(pSection sec) -> bool;
    auto presentSectionSaveButton(pSection sec) -> void;
    auto presentSectionToggleView(pSection sec) -> void; 
+   auto presentSectionDeleteMenu(pSection sec) -> void;
    
    auto activeSections() -> std::vector< pSection >;
    auto formattingSections() -> std::vector< pSection >;

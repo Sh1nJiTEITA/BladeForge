@@ -502,13 +502,13 @@ BfBladeBody::sortSections()
 }
 
 void
-BfBladeBody::eraseUnactiveSections()
+BfBladeBody::eraseUnaliveSections()
 {
    std::erase_if(this->m_children, [this](const auto& base) {
-      auto blade = std::dynamic_pointer_cast< BfBladeSection >(base);
+      auto blade = std::dynamic_pointer_cast< section::BfBladeSection >(base);
       if (blade)
       {
-         return !grabExtInfo(base).get().isActive;
+         return !grabExtInfo(base).get().isAlive;
       }
       return false;
    });

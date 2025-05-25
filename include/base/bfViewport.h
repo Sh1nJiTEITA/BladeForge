@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imgui_internal.h"
 #ifndef BF_VIEWPORT_CUSTOM_H
 #define BF_VIEWPORT_CUSTOM_H
 
@@ -199,6 +200,10 @@ public: // PUBLIC METHODS
    }
 
    
+   auto genTransparentWindowName() { 
+      return std::string("##splitter_button") + 
+      std::to_string(reinterpret_cast<std::uintptr_t>(this)); 
+   }
 
    auto presentButton() -> void { 
       if (m_isLeaf || m_splitType == SplitDirection::None) {
@@ -246,9 +251,10 @@ public: // PUBLIC METHODS
       ImGui::SetNextWindowPos(button_pos, ImGuiCond_Always);
       ImGui::SetNextWindowSize(button_sz, ImGuiCond_Always);
 
-      const std::string title = 
-         std::string("##splitter_button") + 
-         std::to_string(reinterpret_cast<std::uintptr_t>(this));
+      // const std::string title = 
+      //    std::string("##splitter_button") + 
+      //    std::to_string(reinterpret_cast<std::uintptr_t>(this));
+      const std::string title = genTransparentWindowName();
       ImGui::Begin(title.c_str(), nullptr, flags);
       
       const std::string button_title = 
@@ -695,10 +701,40 @@ bfRenderViewpors(uint32_t hovered_id) -> void
       node->presentButton();
    }
 
-   if (!hovered_id)
+   bool is = false;
+   ImGuiContext* ctx = ImGui::GetCurrentContext();
+   for (int i = 0; i < ctx->Windows.Size; i++)
    {
-      base::viewport::ViewportManager::presentContextMenu();
+      ImGuiWindow* window = ctx->Windows[i];
+      if (strcmp(window->Name, "Main create window") == 0)
+      {
+         // Check if this window is hovered
+         if (window->WasActive &&
+             ImGui::IsWindowHovered(
+                 ImGuiHoveredFlags_AllowWhenBlockedByPopup |
+                 ImGuiHoveredFlags_AnyWindow
+             ))
+         {
+            // But IsWindowHovered works on current window, so we do a
+            // workaround: Check if mouse pos is inside window rect:
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            if (ImRect(
+                    window->Pos,
+                    ImVec2(
+                        window->Pos.x + window->Size.x,
+                        window->Pos.y + window->Size.y
+                    )
+                )
+                    .Contains(mouse_pos))
+            {
+               is = true;
+            }
+         }
+      }
    }
+   if (!is)
+      // !ImGui::IsWindowHovered("Main create window"))
+      base::viewport::ViewportManager::presentContextMenu();
 }
 
 }; // namespace viewport

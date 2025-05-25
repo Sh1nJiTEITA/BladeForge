@@ -146,6 +146,7 @@ bfvSetGLFWProperties()
    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
    glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
    glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+   glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Window
