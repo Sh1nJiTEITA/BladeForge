@@ -667,7 +667,7 @@ MainDock::presentCurrentFormattingSections()
          }
       }
 
-      if (init_status != sec->isRender()) { 
+      if (!init_status && sec->isRender()) { 
          auto& info = sec->info();
          if (info.get().imageData.imagePath.has_value()) { 
             auto& path = info.get().imageData.imagePath.value();
