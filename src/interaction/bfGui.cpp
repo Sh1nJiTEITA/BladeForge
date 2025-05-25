@@ -741,6 +741,7 @@ BfGui::presentInfo()
          previousTime = currentTime;
       }
       ImGui::Text("Current FPS: %i", print_counter);
+      ImGui::Text("Current object-id: %i", obj::BfDrawManager::getHovered());
       ImGui::End();
    }
 }

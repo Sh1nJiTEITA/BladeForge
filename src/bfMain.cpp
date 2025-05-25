@@ -78,12 +78,15 @@ BfMain::_pollEvents()
 
    if (io.WantCaptureMouse || io.WantCaptureKeyboard)
    {
+      obj::BfDrawManager::inst().setHovered(0);
+      base::viewport::ViewportManager::setHoveredID(0);
    }
    else
    {
       auto hovered = bfGetCurrentObjectId(m_base);
       obj::BfDrawManager::inst().setHovered(hovered);
       base::viewport::ViewportManager::setHoveredID(hovered);
+      base::viewport::ViewportManager::update();
    }
 
    _processKeys();
@@ -94,8 +97,6 @@ BfMain::_pollEvents()
 
    // TODO: REMAKE !
    obj::BfGuiIntegration::runtimeID = 0;
-
-   base::viewport::ViewportManager::update();
 }
 
 void
@@ -378,14 +379,6 @@ BfMain::_loop()
       while (it.hasNext())
       {
          auto node = it.next();
-         // fmt::println(
-         //     "{}|Node.isHovered={} | mpos={} | npos={} | next={}",
-         //     i++,
-         //     node->isHovered(cursor_pos),
-         //     cursor_pos,
-         //     node->pos(),
-         //     node->ext()
-         // );
          node->presentButton();
          // node->presentRect();
       }

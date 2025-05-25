@@ -382,8 +382,12 @@ bfCreateWindow(BfWindow* window)
           //    }
           // }
 
+          auto& io = ImGui::GetIO();
+          bool is_any_gui_hovered =
+              (io.WantCaptureMouse || io.WantCaptureKeyboard);
+
           auto current = base::viewport::ViewportManager::currentHoveredNode();
-          if (current.has_value())
+          if (!is_any_gui_hovered && current.has_value())
           {
              current->get().camera().m_yScroll +=
                  glm::clamp(-1.0, 1.0, yoffset);

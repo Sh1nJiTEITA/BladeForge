@@ -581,7 +581,6 @@ public:
       //    return;
       // }
       
-
       auto current = self.currentHoveredNode() ;
       if (!current.has_value()) return;
 
