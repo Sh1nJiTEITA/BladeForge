@@ -667,7 +667,7 @@ BfTextureQuad::presentContextMenu()
          this->root()->control().updateBuffer(true);
       }
       ImGui::SliderFloat("Transparency", m_transp.getp(), 0, 1);
-      if (ImGui::DragFloat("Rotate", m_rotateAngle.getp(), 1, 0, 360))
+      if (ImGui::DragFloat("Rotate", m_rotateAngle.getp(), 0.2, -360, 360))
       {
          this->root()->make();
          this->root()->control().updateBuffer(true);
