@@ -2,6 +2,7 @@
 import os
 import re
 from collections.abc import MutableMapping
+from datetime import datetime, time
 from pprint import pprint
 
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from IPython.display import Markdown, display
 from livelossplot import PlotLossesKeras
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
+from tensorflow.keras import layers, models
 
 # %% [md]
 """
@@ -458,13 +460,17 @@ input_dim = X_train.shape[1]
 output_dim = y_train.shape[1]
 model = tf.keras.Sequential(
     [
-        tf.keras.layers.InputLayer(shape=(input_dim,)),
-        tf.keras.layers.Dense(32, activation="relu"),
-        tf.keras.layers.Dense(64, activation="relu"),
-        tf.keras.layers.Dense(128, activation="relu"),
-        tf.keras.layers.Dense(64, activation="relu"),
-        tf.keras.layers.Dense(32, activation="relu"),
-        tf.keras.layers.Dense(output_dim),  # no activation, regression output
+        layers.InputLayer(shape=(input_dim,)),
+        layers.Dense(128),
+        layers.Activation("gelu"),
+        layers.Dense(128),
+        layers.Activation("gelu"),
+        layers.Dense(64),
+        layers.Activation("relu"),
+        layers.Dense(64),
+        layers.Activation("relu"),
+        layers.Dense(32, activation="swish"),  # simpler head
+        layers.Dense(output_dim),  # Linear activation (default), good for regression
     ]
 )
 model.compile(optimizer="adam", loss="mse", metrics=["mae"])
@@ -483,7 +489,7 @@ else:
 
 # %%
 
-MAX_EPOCHS = 1000
+MAX_EPOCHS = 300
 
 
 def compile_and_fit(model, X_train, y_train, X_val, y_val, patience=3, earlystop=True):
@@ -526,5 +532,9 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, patience=3, earlystop
 
 # %%
 history = compile_and_fit(
-    model, X_train, y_train, X_test, y_test, patience=5, earlystop=True
+    model, X_train, y_train, X_test, y_test, patience=9, earlystop=False
 )
+# %%
+now = datetime.now()
+print(now)  # Example: 2025-05-26 13:45:12.345678
+model.save(f"my_model{now}.keras")
