@@ -5,6 +5,7 @@ from collections.abc import MutableMapping
 from datetime import datetime, time
 from pprint import pprint
 
+import keras_tuner as kt
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -14,7 +15,7 @@ from IPython.display import Markdown, display
 from livelossplot import PlotLossesKeras
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
-from tensorflow.keras import layers, models
+from tensorflow.keras import callbacks, layers, models
 
 # %% [md]
 """
@@ -448,82 +449,96 @@ output_cols = [
     "YAML.centerCircles[2].frontVertexAngle_NORM",
 ]
 
+
+# %%
+# Your existing data prep:
 X = bfDfNorm[input_cols].values.astype("float32")  # input matrix
 y = bfDfNorm[output_cols].values.astype("float32")  # output matrix
-# Optional: train/test split
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# %%
 input_dim = X_train.shape[1]
 output_dim = y_train.shape[1]
-model = tf.keras.Sequential(
-    [
-        layers.InputLayer(shape=(input_dim,)),
-        layers.Dense(128),
-        layers.Activation("gelu"),
-        layers.Dense(128),
-        layers.Activation("gelu"),
-        layers.Dense(64),
-        layers.Activation("relu"),
-        layers.Dense(64),
-        layers.Activation("relu"),
-        layers.Dense(32, activation="swish"),  # simpler head
-        layers.Dense(output_dim),  # Linear activation (default), good for regression
-    ]
+
+
+# %%
+# Define a model-building function for Keras Tuner
+def build_model(hp):
+    model = tf.keras.Sequential()
+    model.add(layers.InputLayer(shape=(input_dim,)))
+
+    # Number of layers fixed to 5 for example
+    for i in range(5):
+        units = hp.Int(f"units_{i}", min_value=32, max_value=516, step=32)
+        model.add(layers.Dense(units, activation="relu"))
+
+    model.add(layers.Dense(output_dim))  # Output layer, linear for regression
+
+    model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+    return model
+
+
+# %%
+# Setup tuner
+tuner = kt.RandomSearch(
+    build_model,
+    objective="val_loss",
+    max_trials=3,  # Number of models to try
+    executions_per_trial=1,
+    directory="ktuner_dir",
+    project_name="bfnn_3",
 )
-model.compile(optimizer="adam", loss="mse", metrics=["mae"])
-
-model.summary()
-
 
 # %%
-gpus = tf.config.list_physical_devices("GPU")
-if gpus:
-    print("CUDA-enabled GPU detected:")
-    for gpu in gpus:
-        print(" -", gpu)
-else:
-    print("No CUDA-enabled GPU detected")
+# Run tuner search
+tuner.search(
+    X_train,
+    y_train,
+    epochs=100,
+    validation_data=(X_test, y_test),
+    callbacks=[
+        callbacks.EarlyStopping(monitor="val_loss", patience=3),
+        PlotLossesKeras(),
+    ],
+    verbose=2,
+)
 
 # %%
+# Get the best model and summary
+best_model = tuner.get_best_models(num_models=1)[0]
+best_model.summary()
 
-MAX_EPOCHS = 300
+# %%
+# Train best model more if you want
+MAX_EPOCHS = 1200
 
 
-def compile_and_fit(model, X_train, y_train, X_val, y_val, patience=3, earlystop=True):
-    # Early stopping callback to stop training if validation loss doesn't improve
-    early_stopping = keras.callbacks.EarlyStopping(
+def compile_and_fit(model, X_train, y_train, X_val, y_val, patience=9, earlystop=False):
+    early_stopping = callbacks.EarlyStopping(
         monitor="val_loss", patience=patience, mode="min"
     )
 
     model.compile(
-        loss=keras.losses.MeanSquaredError(),
-        optimizer=keras.optimizers.Adam(),
+        loss=tf.keras.losses.MeanSquaredError(),
+        optimizer=tf.keras.optimizers.Adam(),
         metrics=[
-            keras.metrics.MeanAbsoluteError(),
-            keras.metrics.MeanAbsolutePercentageError(),
+            tf.keras.metrics.MeanAbsoluteError(),
+            tf.keras.metrics.MeanAbsolutePercentageError(),
         ],
     )
 
-    callbacks = [
-        keras.callbacks.TerminateOnNaN(),
-        PlotLossesKeras(),
-    ]  # Always good to have
-
+    cbs = [callbacks.TerminateOnNaN(), PlotLossesKeras()]
     if earlystop:
-        callbacks.append(early_stopping)
-
-    # Optional: you can add your PlotLossesKeras() callback if you have it
-    # callbacks.append(PlotLossesKeras())
+        cbs.append(early_stopping)
 
     history = model.fit(
         X_train,
         y_train,
         epochs=MAX_EPOCHS,
         validation_data=(X_val, y_val),
-        callbacks=callbacks,
+        callbacks=cbs,
         verbose=2,
     )
 
@@ -531,10 +546,14 @@ def compile_and_fit(model, X_train, y_train, X_val, y_val, patience=3, earlystop
 
 
 # %%
+# Optional: further training with the best model
 history = compile_and_fit(
-    model, X_train, y_train, X_test, y_test, patience=9, earlystop=False
+    best_model, X_train, y_train, X_test, y_test, patience=10, earlystop=True
 )
+
 # %%
-now = datetime.now()
-print(now)  # Example: 2025-05-26 13:45:12.345678
-model.save(f"my_model{now}.keras")
+# Save the best model
+now = datetime.now().strftime("%Y%m%d_%H%M%S")
+best_model.save(f"best_model_{now}.keras")
+
+print(f"Model saved as best_model_{now}.keras")
