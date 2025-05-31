@@ -57,19 +57,23 @@ protected:
    virtual inline void processIsPressed()
    {
       m_isPressed = m_isHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+      m_isPressed2 =
+          m_isHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right);
    }
 
    virtual inline void processIsDown()
    {
       m_isDown = m_isPressed ||
                  (m_isDown && ImGui::IsMouseDown(ImGuiMouseButton_Left));
+      m_isDown2 = m_isPressed2 ||
+                  (m_isDown2 && ImGui::IsMouseDown(ImGuiMouseButton_Right));
    }
 
    virtual inline void processDragging() override
    {
-      if (m_isDown)
+      if (m_isDown || m_isDown2)
       {
-         if (m_isPressed)
+         if (m_isPressed || m_isPressed2)
          {
             const glm::vec3 world =
                 base::viewport::ViewportManager::mouseWorldPos();
@@ -86,6 +90,7 @@ protected:
 
    virtual void processInteraction() override
    {
+      BfGuiIntegration::processInteraction();
       processHovered();
       processIsPressed();
       processIsDown();
@@ -103,10 +108,15 @@ protected:
           m_isPressed ? green : red,
           m_isPressed ? "true" : "false"
       );
+      ImGui::TextColored(
+          m_isPressed2 ? green : red,
+          m_isPressed2 ? "true" : "false"
+      );
 
       ImGui::Text("isDown =");
       ImGui::SameLine();
       ImGui::TextColored(m_isDown ? green : red, m_isDown ? "true" : "false");
+      ImGui::TextColored(m_isDown2 ? green : red, m_isDown2 ? "true" : "false");
 
       auto delta = delta3D();
       ImGui::Text("delta3D = (%.3f, %.3f, %.3f)", delta.x, delta.y, delta.z);
@@ -114,7 +124,9 @@ protected:
 
 protected:
    bool m_isPressed;
+   bool m_isPressed2;
    bool m_isDown;
+   bool m_isDown2;
 
    glm::vec3 m_initialMousePos{0.f, 0.f, 0.f};
 };
