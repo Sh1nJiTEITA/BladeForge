@@ -39,6 +39,7 @@ auto toCascadeBfPoints(const std::vector< BfVertex3Uni >& v) -> std::vector< BfV
 auto createWireFromShapes(const std::vector<TopoDS_Shape>& shapes) -> TopoDS_Wire;
 
 auto createSection(std::shared_ptr< obj::section::BfBladeSection > section) -> std::vector<TopoDS_Shape>;
+auto createSection2(std::shared_ptr< obj::section::BfBladeSection > section) -> TopoDS_Wire;
 
 auto wireFromBfPoints(const std::vector< BfVertex3 >& v) -> TopoDS_Wire;
 auto wireFromSection(std::shared_ptr< obj::section::BfBladeSection > sec) -> TopoDS_Wire;

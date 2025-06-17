@@ -68,6 +68,20 @@ for prefix, (b_col, e_col) in combined_cols.items():
     grids.drop(columns=[b_col, e_col], inplace=True)
 
 grids
+
+# %%
+gr = grids.copy(True)
+gr = gr.drop(columns=["ins_angle_expression", "type"])
+
+def inc(name):
+    gr[name] = gr[name] * 1000
+inc('b')
+inc('Delta_in')
+inc('Delta_out')
+gr['Delta'] = list(zip(gr['Delta_in'], gr['Delta_out']))
+gr.to_excel("./tmp.xlsx")
+
+gr
 # %% [md]
 """
 Так как разработанная программа на данном этапе никак не связана с углом установки и относительным шагом, то эти параметры учитываться не будут. Это обстоятельство обусловенно фактом, что угол установки и относительный шаг являются параметрами канала, а не профиля.

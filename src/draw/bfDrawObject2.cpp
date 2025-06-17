@@ -532,8 +532,8 @@ BfDrawLayer::BfDrawLayer(BfOTypeName typeName, Type type)
           typeName,
           nullptr,
           type,
-          type == BUFFER_LAYER ? 3000 : 0,
-          type == BUFFER_LAYER ? 30 : 0
+          type == BUFFER_LAYER ? 8000 : 0,
+          type == BUFFER_LAYER ? 100 : 0
       )
 {
 }

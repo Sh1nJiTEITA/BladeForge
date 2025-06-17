@@ -521,16 +521,16 @@ void BfBladeSection::_createAverageInitialCurve()
    auto& outlet_vert = *(g.initialCurveControlVertices.rbegin() + 1);
    auto chord_line = oChord->line();
 
-   inlet_vert.pos = curves::math::closestPointOnLine(
-      inlet_vert,
-      chord_line->first().pos() + inletCircle->centerVertex().pos,
-      _eqInletDirection()
-   );
-   outlet_vert.pos = curves::math::closestPointOnLine(
-      outlet_vert, 
-      chord_line->second().pos() + outletCircle->centerVertex().pos, 
-      _eqOutletDirection()
-   );
+   // inlet_vert.pos = curves::math::closestPointOnLine(
+   //    inlet_vert,
+   //    chord_line->first().pos() + inletCircle->centerVertex().pos,
+   //    _eqInletDirection()
+   // );
+   // outlet_vert.pos = curves::math::closestPointOnLine(
+   //    outlet_vert, 
+   //    chord_line->second().pos() + outletCircle->centerVertex().pos, 
+   //    _eqOutletDirection()
+   // );
 }
 
 void BfBladeSection::_processAverageInitialCurve() { 
