@@ -521,16 +521,16 @@ void BfBladeSection::_createAverageInitialCurve()
    auto& outlet_vert = *(g.initialCurveControlVertices.rbegin() + 1);
    auto chord_line = oChord->line();
 
-   inlet_vert.pos = curves::math::closestPointOnLine(
-      inlet_vert,
-      chord_line->first().pos() + inletCircle->centerVertex().pos,
-      _eqInletDirection()
-   );
-   outlet_vert.pos = curves::math::closestPointOnLine(
-      outlet_vert, 
-      chord_line->second().pos() + outletCircle->centerVertex().pos, 
-      _eqOutletDirection()
-   );
+   // inlet_vert.pos = curves::math::closestPointOnLine(
+   //    inlet_vert,
+   //    chord_line->first().pos() + inletCircle->centerVertex().pos,
+   //    _eqInletDirection()
+   // );
+   // outlet_vert.pos = curves::math::closestPointOnLine(
+   //    outlet_vert, 
+   //    chord_line->second().pos() + outletCircle->centerVertex().pos, 
+   //    _eqOutletDirection()
+   // );
 }
 
 void BfBladeSection::_processAverageInitialCurve() { 
@@ -606,8 +606,8 @@ void BfBladeSection::_processCenterCircles() {
           BfVar< float >(&c.back().radius),
           BfVar< float >(&c.back().backVertexAngle),
           BfVar< float >(&c.back().frontVertexAngle),
-          _part< E::AverageInitialCurve, curves::BfBezierIsolatedWH >()->curve(
-          ),
+          _part< E::AverageInitialCurve, curves::BfBezierIsolatedWH >()
+              ->curve(),
           curves::BfCirclePackWH::Flag::SeparateHandles
       );
    }
@@ -856,6 +856,7 @@ BfBladeSection::_createTexturePlane()
 {
    auto obj = addf< curves::BfTexturePlane >(
        !m_info.get().imageData.imagePath.has_value(),
+       BfVar< float >(1.0f),
        BfVar< float >(&m_info.get().imageData.width),
        BfVar< float >(&m_info.get().imageData.height),
        BfVar< float >(&m_info.get().imageData.transparency),

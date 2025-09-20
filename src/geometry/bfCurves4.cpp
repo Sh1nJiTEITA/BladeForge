@@ -166,8 +166,8 @@ BfHandleCircle::make()
    m_isChanged = false;
 }
 
-bool
-BfHandleCircle::isChanged() const noexcept
+bool&
+BfHandleCircle::isChanged() noexcept
 {
    return m_isChanged;
 }
@@ -225,8 +225,8 @@ BfHandleRectangle::center()
    return m_center;
 };
 
-bool
-BfHandleRectangle::isChanged() const noexcept
+bool&
+BfHandleRectangle::isChanged() noexcept
 {
    return m_isChanged;
 }
@@ -357,9 +357,9 @@ bool
 BfBezierWH::toggleHandle(size_t i, int status)
 {
    auto handles = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
-   auto handle =
-       std::static_pointer_cast< curves::BfHandleCircle >(handles->children()[i]
-       );
+   auto handle = std::static_pointer_cast< curves::BfHandleCircle >(
+       handles->children()[i]
+   );
    return handle->toggleRender(status);
 }
 
@@ -469,9 +469,9 @@ bool
 BfBezierIsolatedWH::toggleHandle(size_t i, int status)
 {
    auto handles = std::static_pointer_cast< obj::BfDrawLayer >(m_children[1]);
-   auto handle =
-       std::static_pointer_cast< curves::BfHandleCircle >(handles->children()[i]
-       );
+   auto handle = std::static_pointer_cast< curves::BfHandleCircle >(
+       handles->children()[i]
+   );
    return handle->toggleRender(status);
 }
 bool
@@ -647,6 +647,65 @@ BfCircle2Lines::center()
 }
 
 void
+BfTextureQuad::processDragging()
+{
+   if (isLocked())
+      return;
+
+   BfHandleBehavior::processDragging();
+   if (m_isPressed)
+   {
+      m_initialBL = bl().pos();
+   }
+   if (m_isDown)
+   {
+      bl().pos() = m_initialBL + delta3D();
+
+      if (auto top = m_root.lock())
+      {
+         if (auto cast = std::dynamic_pointer_cast< BfTexturePlane >(top))
+         {
+            cast->blHandle()->isChanged() = true;
+         }
+      }
+
+      m_isChanged = true;
+      this->root()->isChanged() = true;
+      // NOTE: THIS LOGIC MOVED TO GUI
+      this->root()->make();
+      this->root()->control().updateBuffer();
+   }
+
+   if (m_isPressed2)
+   {
+      m_initialTR = tr().pos();
+   }
+   if (m_isDown2)
+   {
+      tr().pos() = m_initialTR + delta3D();
+
+      if (auto top = m_root.lock())
+      {
+         if (auto cast = std::dynamic_pointer_cast< BfTexturePlane >(top))
+         {
+            cast->trHandle()->isChanged() = true;
+         }
+      }
+
+      m_isChanged = true;
+      this->root()->isChanged() = true;
+      // NOTE: THIS LOGIC MOVED TO GUI
+      this->root()->make();
+      this->root()->control().updateBuffer();
+   }
+}
+
+void
+BfTextureQuad::presentTooltipInfo()
+{
+}
+
+void
 BfTextureQuad::presentContextMenu()
 {
    if (auto root = m_root.lock())
@@ -666,6 +725,34 @@ BfTextureQuad::presentContextMenu()
          this->root()->make();
          this->root()->control().updateBuffer(true);
       }
+      if (ImGui::DragFloat(
+              "##Expand",
+              m_scale.getp(),
+              0.005f,
+              0.5f,
+              5.0f,
+              "",
+              ImGuiSliderFlags_AlwaysClamp
+          ))
+      {
+         fmt::println("Scale: {}", m_scale.get());
+         glm::vec3 base = m_bl.pos();
+
+         auto expand_vertex = [&](BfVertex3Uni& v) {
+            glm::vec3 dir = v.pos() - base;
+            v.get().pos = base + dir * m_scale.get();
+         };
+
+         expand_vertex(m_tl);
+         expand_vertex(m_tr);
+         expand_vertex(m_br);
+
+         this->root()->make();
+         this->root()->control().updateBuffer(true);
+      }
+      ImGui::SameLine();
+      ImGui::Text("Expand shape");
+
       ImGui::SliderFloat("Transparency", m_transp.getp(), 0, 1);
       if (ImGui::DragFloat("Rotate", m_rotateAngle.getp(), 0.2, -360, 360))
       {
@@ -682,7 +769,8 @@ BfTextureQuad::presentContextMenu()
       if (auto base = root->parent().lock())
       {
          if (auto sec =
-                 std::dynamic_pointer_cast< obj::section::BfBladeSection >(base
+                 std::dynamic_pointer_cast< obj::section::BfBladeSection >(
+                     base
                  ))
          {
             if (ImGui::Button("Open Image"))
@@ -1411,7 +1499,8 @@ BfBezierChain::_controlPoints()
       {
          auto pack = std::static_pointer_cast< BfCirclePack >(cp);
          vertices.push_back(BfVertex3Uni(pack->normalLine()->first().getp()));
-         vertices.push_back(BfVertex3Uni(pack->perpLineFirst()->second().getp())
+         vertices.push_back(
+             BfVertex3Uni(pack->perpLineFirst()->second().getp())
          );
       }
       vertices.pop_back();
@@ -1426,8 +1515,9 @@ BfBezierChain::_controlPoints()
       {
          auto pack = std::static_pointer_cast< BfCirclePack >(cp);
          vertices.push_back(BfVertex3Uni(pack->normalLine()->second().getp()));
-         vertices.push_back(BfVertex3Uni(pack->perpLineSecond()->second().getp()
-         ));
+         vertices.push_back(
+             BfVertex3Uni(pack->perpLineSecond()->second().getp())
+         );
       }
       vertices.pop_back();
       vertices.push_back(BfVertex3Uni(opack->firstLine()->second().getp()));

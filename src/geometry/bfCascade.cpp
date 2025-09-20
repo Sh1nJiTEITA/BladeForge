@@ -219,6 +219,48 @@ createSection(std::shared_ptr< obj::section::BfBladeSection > section)
 }
 
 
+auto createSection2(std::shared_ptr< obj::section::BfBladeSection > section) -> TopoDS_Wire { 
+   std::vector< TopoDS_Shape > shapes;
+   // clang-format off
+   auto inlet = section->inletCircle();
+   auto inlet_vertices = inlet->arcVertices();
+   auto cascade_inlet_circle = createArc(
+      static_cast<BfVertex3CASCADE>(inlet_vertices[0].get()), 
+      static_cast<BfVertex3CASCADE>(inlet_vertices[1].get()), 
+      static_cast<BfVertex3CASCADE>(inlet_vertices[2].get())
+   );
+   shapes.push_back(std::move(cascade_inlet_circle));
+
+   auto chain = section->chain();
+
+   fmt::println("Converting front bezier chain");
+   int i = 0;
+   for (auto &front_elem : chain->bezierCurveChain(obj::curves::BfChain::ChainType::Front)) { 
+      auto vert = toCascadeBfPoints(*front_elem);
+      shapes.push_back(createBezierCurve(vert));
+   }
+
+   auto outlet = section->outletCircle();
+   auto outlet_vertices = outlet->arcVertices();
+   auto cascade_outlet_circle = createArc(
+      static_cast<BfVertex3CASCADE>(outlet_vertices[2].get()), 
+      static_cast<BfVertex3CASCADE>(outlet_vertices[1].get()), 
+      static_cast<BfVertex3CASCADE>(outlet_vertices[0].get())
+   );
+   shapes.push_back(std::move(cascade_outlet_circle));
+
+   fmt::println("Converting back bezier chain");
+   i = 0;
+   for (auto &back_elem : chain->bezierCurveChain(obj::curves::BfChain::ChainType::Back)) { 
+      auto vert = toCascadeBfPoints(*back_elem);
+      shapes.push_back(createBezierCurve(vert));
+   }
+
+   TopoDS_Wire wire = createWireFromShapes(shapes);
+   return wire;
+}
+
+
 TopoDS_Wire wireFromBfPoints(const std::vector< BfVertex3 >& v) 
 {
 
@@ -364,7 +406,10 @@ wireFromSection(std::shared_ptr< obj::section::BfBladeSection > sec)
     for (int i = 0; i < n; ++i)
         arr.SetValue(i + 1, points[i]);
 
-    Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr).Curve();
+    Handle(Geom_BSplineCurve) spline = GeomAPI_PointsToBSpline(arr, 5, 14, GeomAbs_C2, 1.0e-5).Curve();
+   // GeomAPI_PointsToBSpline interpolator(arr);
+   // interpolator.Init(arr, GeomAbs_C2, 5, 16);  // degree=5, smooth curve, more segments
+   // Handle(Geom_BSplineCurve) spline = interpolator.Curve();
     TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(spline);
     TopoDS_Wire wire = BRepBuilderAPI_MakeWire(edge);
 

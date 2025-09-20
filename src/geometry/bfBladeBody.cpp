@@ -153,7 +153,9 @@ BfBladeSurface::_makeCascadeWire(uint32_t index)
 TopoDS_Shape
 BfBladeSurface::_loft()
 {
-   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false, /*ruled=*/false);
+   BRepOffsetAPI_ThruSections builder(/*isSolid=*/false,
+                                      /*ruled=*/false,
+                                      10e-9);
 
    // for (size_t i = 0; i < m_sections.size(); ++i)
    // {
@@ -172,6 +174,7 @@ BfBladeSurface::_loft()
        [&](auto& sec) {
           size_t idx = &sec - &m_sections[0];
           wires[idx] = cascade::wireFromSection(_section(idx));
+          // wires[idx] = cascade::createSection2(_section(idx));
           fmt::println("Made wire from section with index={}", idx);
        }
    );
@@ -320,13 +323,15 @@ BfBladeBody::InfoIterator::operator++(int)
 }
 
 bool
-BfBladeBody::InfoIterator::operator==(const BfBladeBody::InfoIterator& other
+BfBladeBody::InfoIterator::operator==(
+    const BfBladeBody::InfoIterator& other
 ) const
 {
    return m_begin == other.m_begin;
 }
 bool
-BfBladeBody::InfoIterator::operator!=(const BfBladeBody::InfoIterator& other
+BfBladeBody::InfoIterator::operator!=(
+    const BfBladeBody::InfoIterator& other
 ) const
 {
    return m_begin != other.m_begin;

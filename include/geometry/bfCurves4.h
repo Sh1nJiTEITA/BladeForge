@@ -123,7 +123,7 @@ public:
    virtual void processDragging() override ;
 
    virtual void make() override;
-   bool isChanged() const noexcept;
+   bool& isChanged() noexcept;
    void resetPos();
 
 protected:
@@ -169,7 +169,7 @@ public:
    void move(const glm::vec3& v);
    virtual void make() override;
    BfVertex3Uni& center();
-   bool isChanged() const noexcept;
+   bool& isChanged()  noexcept;
    void resetPos();
 
 protected:
@@ -1027,10 +1027,11 @@ protected:
    BfVertex3Uni m_bl;
 };
 
-class BfTextureQuad : public BfQuad
+class BfTextureQuad : public BfQuad, public virtual BfHandleBehavior
 {
 public:
    BfTextureQuad(
+       BfVar< float > scale,
        BfVar< float > rotateAngle,
        BfVar< float > transparency,
        BfVertex3Uni tl,
@@ -1041,7 +1042,9 @@ public:
        : BfQuad{std::move(tl), std::move(tr), std::move(br), std::move(bl)}
        , m_rotateAngle{std::move(rotateAngle)}
        , m_transp{std::move(transparency)}
+       , m_scale{std::move(scale)}
    {
+      m_initialBL = this->bl().pos();
    }
 
    template < typename P1, typename P2, typename P3, typename P4 >
@@ -1055,6 +1058,8 @@ public:
    {
    }
 
+   virtual void processDragging() override;
+   virtual void presentTooltipInfo() override;
    void presentContextMenu() override;
    bool isLocked() noexcept { return m_isLocked; }
    bool isRatio() noexcept { return m_isRatio; }
@@ -1093,6 +1098,10 @@ public:
    }
 
 private:
+   glm::vec3 m_initialBL;
+   glm::vec3 m_initialTR;
+
+   BfVar< float > m_scale;
    BfVar< float > m_rotateAngle;
    BfVar< float > m_transp;
    bool m_isLocked = false;
@@ -1104,6 +1113,7 @@ class BfTexturePlane : public obj::BfDrawLayer
 public:
    BfTexturePlane(
        bool is_initial,
+       BfVar< float > scale,
        BfVar< float > w,
        BfVar< float > h,
        BfVar< float > transp,
@@ -1141,6 +1151,7 @@ public:
       m_oldtr = tr.pos();
 
       auto quad = std::make_shared< BfTextureQuad >(
+          scale,
           rotateAngle,
           transp,
           BfVertex3Uni(tl.getp()),
