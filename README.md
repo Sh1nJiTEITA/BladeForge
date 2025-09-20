@@ -26,6 +26,7 @@ In addition, the study explores the potential of **neural networks** to automate
 - **Mathematical tools** for rotations, translations, and vector-based geometry.  
 - **Automation experiments** using machine learning for blade reconstruction and modification.  
 - **Verification** performed on the last-stage blades of a steam turbine and on modified atlas profiles.  
+![giffffffffffffffffff](https://github.com/user-attachments/assets/b23d9c4a-4352-43e6-8c24-a73507a4c750)
 
 ## Structure
 
